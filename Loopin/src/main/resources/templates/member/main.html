@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+	<head>
+		<meta charset="UTF-8">
+		<title>main title</title>
+	</head>
+	<body>
+		<h1>main.html</h1>
+		<span sec:authentication="principal"></span><br>
+		<div sec:authorize="isAuthenticated()">
+			<span sec:authentication="name"></span>님 로그인 , 
+			<a th:href="@{/logout}">로그아웃</a><br>
+			<!-- <a href="logout">로그아웃</a><br> -->			
+		</div>
+		<a href="/info">나의 정보 조회</a> <br>
+		<a href="/update">나의 정보 수정</a> <br>
+		<a href="/delete">나의 정보 삭제</a> <br>
+		
+		<!-- <div th:if="${#authentication.principal.Username}=='admin'">
+			<a href="/list">회원목록</a><br>			
+		</div> -->
+		<div sec:authorize="hasRole('ADMIN')">
+			<a href="/list">회원목록</a><br>			
+		</div>
+		
+		<a href="/boardwrite">게시판 글쓰기</a>
+		<a href="/boardlist">게시판 글목록</a>
+
+		
+		<a href="/fboardwrite">파일게시판 글쓰기</a>
+	</body>
+</html>

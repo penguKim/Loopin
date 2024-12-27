@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 @EnableWebSecurity
 public class SecurityConfig {
 
-//	private final MyUserDetailsService myUserDetailsService;
+	private final MyUserDetailsService myUserDetailsService;
 	
 //	 암호화 설정
 //	@Bean => 서버 시작 시 객체 생성
@@ -38,7 +38,7 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
 					authorizeHttpRequestsCustomizer
-					.requestMatchers("/").permitAll() // 이 주소는 모든 권한
+					.requestMatchers("/", "/login", "insert", "/mapper").permitAll() // 이 주소는 모든 권한
 					.anyRequest() // 어느 요청이든
 					.authenticated() // 권한이 적용된다.
 						)
@@ -56,7 +56,7 @@ public class SecurityConfig {
 					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")) 
 					.logoutSuccessUrl("/")
 						)
-//				.userDetailsService(myUserDetailsService)
+				.userDetailsService(myUserDetailsService)
 				.build();
 	}
 	
