@@ -3,134 +3,138 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
-
+<link rel="stylesheet" href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css"/>
 <body>
+	
 	<main id="main" class="main">
 		<div class="pagetitle" >
-			<h1>Dashboard</h1>
-			<nav>
-				<ol class="breadcrumb">
-					<li class="breadcrumb-item"><a href="index.html">Home</a></li>
-					<li class="breadcrumb-item active">Dashboard</li>
-				</ol>
-			</nav>
+<!--			<h1>Dashboard</h1>-->
+<!--			<nav>-->
+<!--				<ol class="breadcrumb">-->
+<!--					<li class="breadcrumb-item"><a href="index.html">Home</a></li>-->
+<!--					<li class="breadcrumb-item active">Dashboard</li>-->
+<!--				</ol>-->
+<!--			</nav>-->
 		</div><!-- End Page Title -->
 
 		<section class="section dashboard">
 			<div class="row">
-
-				<!-- Left side columns -->
+			
+<!--				 왼쪽 시작 -->
 				<div class="col-lg-8">
+<!--				 왼쪽 1번째 위 -->
 					<div class="row">
+						<div id="calendar" style="height: 800px; margin-bottom: 30px;">
+						</div>
 
-						<!-- Sales Card -->
-						<div class="col-xxl-4 col-md-6">
-							<div class="card info-card sales-card">
+<!--						 Sales Card -->
+<!--						<div class="col-xxl-4 col-md-6">-->
+<!--							<div class="card info-card sales-card">-->
 
-								<div class="filter">
-									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-										<li class="dropdown-header text-start">
-											<h6>Filter</h6>
-										</li>
+<!--								<div class="filter">-->
+<!--									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>-->
+<!--									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">-->
+<!--										<li class="dropdown-header text-start">-->
+<!--											<h6>Filter</h6>-->
+<!--										</li>-->
 
-										<li><a class="dropdown-item" href="#">Today</a></li>
-										<li><a class="dropdown-item" href="#">This Month</a></li>
-										<li><a class="dropdown-item" href="#">This Year</a></li>
-									</ul>
-								</div>
+<!--										<li><a class="dropdown-item" href="#">Today</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Month</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Year</a></li>-->
+<!--									</ul>-->
+<!--								</div>-->
 
-								<div class="card-body">
-									<h5 class="card-title">Sales <span>| Today</span></h5>
+<!--								<div class="card-body">-->
+<!--									<h5 class="card-title">Sales <span>| Today</span></h5>-->
 
-									<div class="d-flex align-items-center">
-										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-											<i class="bi bi-cart"></i>
-										</div>
-										<div class="ps-3">
-											<h6>145</h6>
-											<span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+<!--									<div class="d-flex align-items-center">-->
+<!--										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">-->
+<!--											<i class="bi bi-cart"></i>-->
+<!--										</div>-->
+<!--										<div class="ps-3">-->
+<!--											<h6>145</h6>-->
+<!--											<span class="text-success small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">increase</span>-->
 
-										</div>
-									</div>
-								</div>
+<!--										</div>-->
+<!--									</div>-->
+<!--								</div>-->
 
-							</div>
-						</div><!-- End Sales Card -->
+<!--							</div>-->
+<!--						</div> End Sales Card -->
 
-						<!-- Revenue Card -->
-						<div class="col-xxl-4 col-md-6">
-							<div class="card info-card revenue-card">
+<!--						 Revenue Card -->
+<!--						<div class="col-xxl-4 col-md-6">-->
+<!--							<div class="card info-card revenue-card">-->
 
-								<div class="filter">
-									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-										<li class="dropdown-header text-start">
-											<h6>Filter</h6>
-										</li>
+<!--								<div class="filter">-->
+<!--									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>-->
+<!--									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">-->
+<!--										<li class="dropdown-header text-start">-->
+<!--											<h6>Filter</h6>-->
+<!--										</li>-->
 
-										<li><a class="dropdown-item" href="#">Today</a></li>
-										<li><a class="dropdown-item" href="#">This Month</a></li>
-										<li><a class="dropdown-item" href="#">This Year</a></li>
-									</ul>
-								</div>
+<!--										<li><a class="dropdown-item" href="#">Today</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Month</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Year</a></li>-->
+<!--									</ul>-->
+<!--								</div>-->
 
-								<div class="card-body">
-									<h5 class="card-title">Revenue <span>| This Month</span></h5>
+<!--								<div class="card-body">-->
+<!--									<h5 class="card-title">Revenue <span>| This Month</span></h5>-->
 
-									<div class="d-flex align-items-center">
-										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-											<i class="bi bi-currency-dollar"></i>
-										</div>
-										<div class="ps-3">
-											<h6>$3,264</h6>
-											<span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>
+<!--									<div class="d-flex align-items-center">-->
+<!--										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">-->
+<!--											<i class="bi bi-currency-dollar"></i>-->
+<!--										</div>-->
+<!--										<div class="ps-3">-->
+<!--											<h6>$3,264</h6>-->
+<!--											<span class="text-success small pt-1 fw-bold">8%</span> <span class="text-muted small pt-2 ps-1">increase</span>-->
 
-										</div>
-									</div>
-								</div>
+<!--										</div>-->
+<!--									</div>-->
+<!--								</div>-->
 
-							</div>
-						</div><!-- End Revenue Card -->
+<!--							</div>-->
+<!--						</div> End Revenue Card -->
 
-						<!-- Customers Card -->
-						<div class="col-xxl-4 col-xl-12">
+<!--						 Customers Card -->
+<!--						<div class="col-xxl-4 col-xl-12">-->
 
-							<div class="card info-card customers-card">
+<!--							<div class="card info-card customers-card">-->
 
-								<div class="filter">
-									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-										<li class="dropdown-header text-start">
-											<h6>Filter</h6>
-										</li>
+<!--								<div class="filter">-->
+<!--									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>-->
+<!--									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">-->
+<!--										<li class="dropdown-header text-start">-->
+<!--											<h6>Filter</h6>-->
+<!--										</li>-->
 
-										<li><a class="dropdown-item" href="#">Today</a></li>
-										<li><a class="dropdown-item" href="#">This Month</a></li>
-										<li><a class="dropdown-item" href="#">This Year</a></li>
-									</ul>
-								</div>
+<!--										<li><a class="dropdown-item" href="#">Today</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Month</a></li>-->
+<!--										<li><a class="dropdown-item" href="#">This Year</a></li>-->
+<!--									</ul>-->
+<!--								</div>-->
 
-								<div class="card-body">
-									<h5 class="card-title">Customers <span>| This Year</span></h5>
+<!--								<div class="card-body">-->
+<!--									<h5 class="card-title">Customers <span>| This Year</span></h5>-->
 
-									<div class="d-flex align-items-center">
-										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
-											<i class="bi bi-people"></i>
-										</div>
-										<div class="ps-3">
-											<h6>1244</h6>
-											<span class="text-danger small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">decrease</span>
+<!--									<div class="d-flex align-items-center">-->
+<!--										<div class="card-icon rounded-circle d-flex align-items-center justify-content-center">-->
+<!--											<i class="bi bi-people"></i>-->
+<!--										</div>-->
+<!--										<div class="ps-3">-->
+<!--											<h6>1244</h6>-->
+<!--											<span class="text-danger small pt-1 fw-bold">12%</span> <span class="text-muted small pt-2 ps-1">decrease</span>-->
 
-										</div>
-									</div>
+<!--										</div>-->
+<!--									</div>-->
 
-								</div>
-							</div>
+<!--								</div>-->
+<!--							</div>-->
 
-						</div><!-- End Customers Card -->
+<!--						</div> End Customers Card -->
 
-						<!-- Reports -->
+<!--						 왼쪽 2번째 중간 -->
 						<div class="col-12">
 							<div class="card">
 
@@ -150,7 +154,7 @@
 								<div class="card-body">
 									<h5 class="card-title">Reports <span>/Today</span></h5>
 
-									<!-- Line Chart -->
+									 Line Chart 
 									<div id="reportsChart"></div>
 
 									<script>
@@ -205,88 +209,14 @@
 											}).render();
 										});
 									</script>
-									<!-- End Line Chart -->
+<!--									 End Line Chart -->
 
 								</div>
-
 							</div>
-						</div><!-- End Reports -->
+						</div> <!--	End Reports -->
 
-						<!-- Recent Sales -->
-						<div class="col-12">
-							<div class="card recent-sales overflow-auto">
 
-								<div class="filter">
-									<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-									<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-										<li class="dropdown-header text-start">
-											<h6>Filter</h6>
-										</li>
-
-										<li><a class="dropdown-item" href="#">Today</a></li>
-										<li><a class="dropdown-item" href="#">This Month</a></li>
-										<li><a class="dropdown-item" href="#">This Year</a></li>
-									</ul>
-								</div>
-
-								<div class="card-body">
-									<h5 class="card-title">Recent Sales <span>| Today</span></h5>
-
-									<table class="table table-borderless datatable">
-										<thead>
-											<tr>
-												<th scope="col">#</th>
-												<th scope="col">Customer</th>
-												<th scope="col">Product</th>
-												<th scope="col">Price</th>
-												<th scope="col">Status</th>
-											</tr>
-										</thead>
-										<tbody>
-											<tr>
-												<th scope="row"><a href="#">#2457</a></th>
-												<td>Brandon Jacob</td>
-												<td><a href="#" class="text-primary">At praesentium minu</a></td>
-												<td>$64</td>
-												<td><span class="badge bg-success">Approved</span></td>
-											</tr>
-											<tr>
-												<th scope="row"><a href="#">#2147</a></th>
-												<td>Bridie Kessler</td>
-												<td><a href="#" class="text-primary">Blanditiis dolor omnis similique</a></td>
-												<td>$47</td>
-												<td><span class="badge bg-warning">Pending</span></td>
-											</tr>
-											<tr>
-												<th scope="row"><a href="#">#2049</a></th>
-												<td>Ashleigh Langosh</td>
-												<td><a href="#" class="text-primary">At recusandae consectetur</a></td>
-												<td>$147</td>
-												<td><span class="badge bg-success">Approved</span></td>
-											</tr>
-											<tr>
-												<th scope="row"><a href="#">#2644</a></th>
-												<td>Angus Grady</td>
-												<td><a href="#" class="text-primar">Ut voluptatem id earum et</a></td>
-												<td>$67</td>
-												<td><span class="badge bg-danger">Rejected</span></td>
-											</tr>
-											<tr>
-												<th scope="row"><a href="#">#2644</a></th>
-												<td>Raheem Lehner</td>
-												<td><a href="#" class="text-primary">Sunt similique distinctio</a></td>
-												<td>$165</td>
-												<td><span class="badge bg-success">Approved</span></td>
-											</tr>
-										</tbody>
-									</table>
-
-								</div>
-
-							</div>
-						</div><!-- End Recent Sales -->
-
-						<!-- Top Selling -->
+<!--						 왼쪽 3번째 아래 -->
 						<div class="col-12">
 							<div class="card top-selling overflow-auto">
 
@@ -356,90 +286,33 @@
 									</table>
 
 								</div>
+								</div>
 
-							</div>
-						</div><!-- End Top Selling -->
+						</div>
+<!--						 End Top Selling -->
 
 					</div>
-				</div><!-- End Left side columns -->
+				</div> <!-- End Left side columns -->
 
-				<!-- Right side columns -->
+				<!-- 오른쪽 시작 -->
 				<div class="col-lg-4">
 
-					<!-- Recent Activity -->
+					<!-- 오른쪽 1번째 위 -->
 					<div class="card">
-						<div class="filter">
-							<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-							<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-								<li class="dropdown-header text-start">
-									<h6>Filter</h6>
-								</li>
-
-								<li><a class="dropdown-item" href="#">Today</a></li>
-								<li><a class="dropdown-item" href="#">This Month</a></li>
-								<li><a class="dropdown-item" href="#">This Year</a></li>
-							</ul>
-						</div>
 
 						<div class="card-body">
-							<h5 class="card-title">Recent Activity <span>| Today</span></h5>
-
-							<div class="activity">
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">32 min</div>
-									<i class='bi bi-circle-fill activity-badge text-success align-self-start'></i>
-									<div class="activity-content">
-										Quia quae rerum <a href="#" class="fw-bold text-dark">explicabo officiis</a> beatae
-									</div>
-								</div><!-- End activity item-->
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">56 min</div>
-									<i class='bi bi-circle-fill activity-badge text-danger align-self-start'></i>
-									<div class="activity-content">
-										Voluptatem blanditiis blanditiis eveniet
-									</div>
-								</div><!-- End activity item-->
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">2 hrs</div>
-									<i class='bi bi-circle-fill activity-badge text-primary align-self-start'></i>
-									<div class="activity-content">
-										Voluptates corrupti molestias voluptatem
-									</div>
-								</div><!-- End activity item-->
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">1 day</div>
-									<i class='bi bi-circle-fill activity-badge text-info align-self-start'></i>
-									<div class="activity-content">
-										Tempore autem saepe <a href="#" class="fw-bold text-dark">occaecati voluptatem</a> tempore
-									</div>
-								</div><!-- End activity item-->
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">2 days</div>
-									<i class='bi bi-circle-fill activity-badge text-warning align-self-start'></i>
-									<div class="activity-content">
-										Est sit eum reiciendis exercitationem
-									</div>
-								</div><!-- End activity item-->
-
-								<div class="activity-item d-flex">
-									<div class="activite-label">4 weeks</div>
-									<i class='bi bi-circle-fill activity-badge text-muted align-self-start'></i>
-									<div class="activity-content">
-										Dicta dolorem harum nulla eius. Ut quidem quidem sit quas
-									</div>
-								</div><!-- End activity item-->
-
-							</div>
-
+							<!-- Card with titles, buttons, and links -->
+							<h5 class="card-title">오늘 근무</h5>
+							<h6 class="card-subtitle mb-2 text-muted">날짜 2024-12-30</h6>
+							<p class="card-text">근무일정 09:00 - 18:00 | 인사팀</p>
+							<p class="card-text"><a href="#" class="btn btn-primary">출근</a></p>
+							<p class="card-text"><a href="#" class="btn btn-primary">퇴근</a></p>
+							<p class="card-text">2024-12-30 08:48:39</p>
+							<p class="card-text"><a href="#" class="btn btn-outline-secondary">출근요청</a></p>
 						</div>
 					</div><!-- End Recent Activity -->
 
-					<!-- Budget Report -->
+					<!-- 오른쪽 2번째 중간 -->
 					<div class="card">
 						<div class="filter">
 							<a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
@@ -653,5 +526,33 @@
 	</main><!-- End #main -->
 	
 </body>
+<script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
+<script>
+	const calendar = new tui.Calendar('#calendar', {
+		defaultView: 'month',
+		template: {
+			time(event) {
+				const { start, end, title } = event;
+
+				return `<span style="color: white;">${formatTime(start)}~${formatTime(end)} ${title}</span>`;
+		},
+			allday(event) {
+				return `<span style="color: gray;">${event.title}</span>`;
+			},
+		},
+		calendars: [
+			{
+				id: 'cal1',
+				name: 'Personal',
+				backgroundColor: '#03bd9e',
+			},
+			{
+				id: 'cal2',
+				name: 'Work',
+				backgroundColor: '#00a9ff',
+			},
+		],
+	});
+</script>
 
 </html>

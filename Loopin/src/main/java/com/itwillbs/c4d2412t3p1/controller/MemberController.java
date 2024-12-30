@@ -62,6 +62,10 @@ public class MemberController {
 	public String log() {
 		return "/log";
 	}
+	@GetMapping("/temp")
+	public String temp() {
+		return "/temp";
+	}
 	
 	@PostMapping("/insert")
 	public String insertPro(MemberDTO memberDTO) {
