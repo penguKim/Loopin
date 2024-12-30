@@ -2,13 +2,13 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org" 
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 				
-<head th:replace="fragments/head::head"></head>
+<head th:replace="~{fragments/head::head}"></head>
 
 <body>
-    <header th:replace="fragments/header::header"></header>
-    <aside th:replace="fragments/aside::aside"></aside>
+    <script th:replace="~{fragments/script::script}"></script>
+    <header th:replace="~{fragments/header::header}"></header>
+    <aside th:replace="~{fragments/aside::aside}"></aside>
     <th:block layout:fragment="content"></th:block>
-    <footer th:replace="fragments/footer::footer"></footer>
-    <script th:replace="fragments/script::script"></script>
+    <footer th:replace="~{fragments/footer::footer}"></footer>
 </body>
 </html>
