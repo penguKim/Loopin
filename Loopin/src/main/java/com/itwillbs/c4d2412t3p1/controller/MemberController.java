@@ -53,6 +53,15 @@ public class MemberController {
 		log.info("get insert");
 		return "/member/insert";
 	}
+	@GetMapping("/index2")
+	public String index2() {
+		return "/index2";
+	}
+	
+	@GetMapping("/log")
+	public String log() {
+		return "/log";
+	}
 	
 	@PostMapping("/insert")
 	public String insertPro(MemberDTO memberDTO) {
