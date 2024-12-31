@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommonMapper">
+    <select id="SELECT_COMMON_CODE" resultType="map">
+        SELECT * 
+        FROM COMMON_CODE
+        <choose>
+        	<when test="code == null or code == ''">
+		        WHERE COMMON_GC = '00'
+        	</when>
+        	<otherwise>
+        		WHERE COMMON_GC = #{code}
+        	</otherwise>
+        </choose>
+    </select>
+</mapper>
