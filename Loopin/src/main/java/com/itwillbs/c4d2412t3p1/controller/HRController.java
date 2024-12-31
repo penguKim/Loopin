@@ -16,4 +16,8 @@ public class HRController {
 		return "/HR_register";
 	}
 	
+	@GetMapping("/registerSuccess")	
+	public String success() {
+		return "/success";
+	}
 }
