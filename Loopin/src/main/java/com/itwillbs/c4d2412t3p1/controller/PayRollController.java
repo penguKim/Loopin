@@ -13,7 +13,7 @@ public class PayRollController {
 
 	@GetMapping("/checkSalary")
 	public String checkSalary() {
-		return "/checkSalary";
+		return "payroll/checkSalary";
 	}
 	
 }

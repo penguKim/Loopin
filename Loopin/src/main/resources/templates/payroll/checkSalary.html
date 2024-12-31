@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<!-- 부트스트랩 CSS 파일 -->
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<main id="main" class="main">
+	<div class="pagetitle">
+
+		<!-- Page Title -->
+		<h1>급여</h1>
+		<!-- Start Page Title -->
+		<nav>
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item"><a href="/log">급여</a></li>
+				<li class="breadcrumb-item">급여 조회</li>
+			</ol>
+		</nav>
+	</div>
+	<!-- End Page Title -->
+	<div id="grid"></div>
+</main>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+	$(function() {
+		const grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			columns : [ 
+				{
+					header : 'NO.',
+					name : 'num'
+				}, 
+				{
+					header : '지급년월',
+					name : 'givedate'
+				}, 
+				{
+					header : '귀속년월',
+					name : 'workdate'
+				}, 
+				{
+					header : '실지급액',
+					name : 'codename'
+				}, 
+				{
+					header : '명세서',
+					name : 'details',
+					formatter: function() {
+                        return `
+                            <button type="button" class="btn btn-link" name="btn_detail">조회</button>
+                            <button type="button" class="btn btn-link" name="btn_email">이메일</button>
+                        `;
+                    }
+				} 
+			],
+			data : [ 
+				{
+					num: 1,
+					givedate: '24.11',
+					workdate: '24.10',
+					codename: '1800000'
+				}
+			]
+		});
+		
+		// 버튼 클릭 이벤트 처리
+		grid.on('cellClicked', (ev) => {
+			const { columnName, rowKey } = ev;
+			const rowData = grid.getRow(rowKey);
+			const target = ev.target;
+
+			console.log('클릭한 요소:', target);
+			
+			// "조회" 버튼 클릭 시
+			if (target.name === 'btn_detail') {
+				alert(`조회 버튼 클릭! 데이터: ${JSON.stringify(rowData)}`);
+			}
+
+			// "이메일" 버튼 클릭 시
+			if (target.name === 'btn_email') {
+				alert(`이메일 버튼 클릭! 데이터: ${JSON.stringify(rowData)}`);
+			}
+		});
+		
+		/* // Ajax로 급여 데이터 조회
+		$.ajax({
+			url : "/checkSalary",
+			method : "GET",
+			dataType : "JSON",
+			success : function(result) {
+				grid.resetData(result); // grid로 바로 데이터 전송
+			},
+			error : function(xhr, status, error) {
+				console.error("급여 조회 데이터를 불러오는 데 실패했습니다.", error);
+			}
+		}); */
+	});
+</script>
+</html>
