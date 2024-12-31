@@ -3,6 +3,31 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
+				
+				
+				
+<!-- 우편번호 daum api -->
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+    function findAddr(){
+        new daum.Postcode({
+            oncomplete: function(data) {
+            	// 우편번호
+                $("#zipCode").val(data.zonecode);
+                // 도로명 및 지번주소
+                $("#streetAdr").val(data.roadAddress);
+            }
+        }).open();
+    }
+</script>
+<script type="text/javascript">
+    function addrCheck() {
+        if($("#zipCode").val() == '' && $("#streetAdr").val() == ''){
+            alert("우편번호를 클릭하여 주소를 검색해주세요.");
+            $("#zipCode").focus();
+        }
+    }
+</script>
 <body>
 
 	<main id="main" class="main">
@@ -47,6 +72,23 @@
 									<label for="inputEmail" class="col-sm-1 col-form-label">직급코드</label>
 									<div class="col-sm-4">
 										<input type="email" class="form-control">
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-1 col-form-label">우편번호</label>
+									<div class="col-sm-4">
+										<input type="text" class="form-control form-control-user"
+											id="zipCode" name="zipCode" placeholder="우편번호" readonly onclick="findAddr()">
+									</div>
+								</div>
+								<div class="row mb-3">
+									<label for="inputText" class="col-sm-1 col-form-label">기본주소</label>
+									<div class="col-sm-4">
+										<input type="text" class="form-control form-control-user" id="streetAdr" name="streetAdr" placeholder="도로명 주소" readonly>
+									</div>
+									<label for="inputEmail" class="col-sm-1 col-form-label">상세주소</label>
+									<div class="col-sm-4">
+										<input type="text" class="form-control form-control-user" id="detailAdr" name="detailAdr" placeholder="상세 주소" onclick="addrCheck()">
 									</div>
 								</div>
 								<div class="row mb-3">
