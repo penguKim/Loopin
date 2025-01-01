@@ -32,7 +32,7 @@
 
 							<button type="button" class="btn btn-primary" data-bs-toggle="modal"
 								data-bs-target="#modal_appointment_save">신규</button>
-							<button type="button" class="btn btn-primary">삭제</button>
+							<button type="button" id="btn_transfer_delete" class="btn btn-primary">삭제</button>
 
 							<!-- End General Form Elements -->
 
@@ -182,56 +182,147 @@
 </body>
 <script th:inline="javascript">
 
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
 	const transferData = /*[[${transferList}]]*/[];
 	console.log(transferData);
-	// Grid initiation
-	const grid = new tui.Grid({
-		el: document.getElementById('grid'),
-		data: transferData,
-		columns: [
-			{header: '이름', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
-			{header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
-			{header: '인사발령일', name: 'transfer_ad', align: 'center', filter: {type: 'date', showApplyBtn: true}, sortable: true},
-			{header: '발령구분', name: 'transfer_ac', align: 'center', filter: {type: 'select', options: ['승진', '전근', '복직']}, sortable: true},
-			{header: '기존직위', name: 'transfer_og', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
-			{header: '변경직위', name: 'transfer_ag', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
-			{header: '기존부서', name: 'transfer_od', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true},
-			{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true}
-		],
-		rowHeaders: ['checkbox'],
-		autoWidth: true,
-		rowHeight: 'auto',
-		bodyHeight: 'auto',
-		scrollX: true,
-		scrollY: true
-	});
 
-	// TOAST UI Date Picker
+
 	document.addEventListener('DOMContentLoaded', function () {
+
+		fetch('/select_TRANSFER', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('네트워크 응답이 실패했습니다.');
+				}
+				return response.json();
+			})
+			.then(transferData => {
+				console.log('서버 응답 데이터:', transferData);
+
+				// Grid 초기화
+				grid = new tui.Grid({
+					el: document.getElementById('grid'),
+					data: transferData.map(row => ({
+						transfer_id: row.transfer_id,
+						employee_nm: '', // 빈 값 처리
+						employee_cd: row.employee_cd,
+						transfer_ad: row.transfer_ad,
+						transfer_ac: row.transfer_ac,
+						transfer_og: row.transfer_og,
+						transfer_ag: row.transfer_ag,
+						transfer_od: row.transfer_od,
+						transfer_adp: row.transfer_adp,
+						
+					})),
+					columns: [
+						{header: '이름', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
+						{header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
+						{header: '인사발령일', name: 'transfer_ad', align: 'center', filter: {type: 'date', showApplyBtn: true}, sortable: true},
+						{header: '발령구분', name: 'transfer_ac', align: 'center', filter: {type: 'select', options: ['승진', '전근', '복직']}, sortable: true},
+						{header: '기존직위', name: 'transfer_og', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
+						{header: '변경직위', name: 'transfer_ag', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
+						{header: '기존부서', name: 'transfer_od', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true},
+						{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true}
+					],
+					rowHeaders: ['checkbox'],
+					autoWidth: true,
+					rowHeight: 'auto',
+					bodyHeight: 'auto',
+					scrollX: true,
+					scrollY: true
+				});
+			})
+			.catch(error => {
+				console.error('오류 발생:', error);
+			});
+
+		// 삭제 버튼 클릭 이벤트
+		document.querySelector('#btn_transfer_delete').addEventListener('click', function () {
+			if (!grid) {
+				alert('Grid가 초기화되지 않았습니다.');
+				return;
+			}
+
+			// 체크된 행 데이터 가져오기
+			const checkedRows = grid.getCheckedRows();
+			console.log('체크된 행 데이터:', checkedRows);
+
+			if (checkedRows.length === 0) {
+				alert('삭제할 데이터를 선택하세요.');
+				return;
+			}
+
+			// transfer_id만 추출
+			const idsToDelete = checkedRows.map(row => row.transfer_id);
+			console.log('삭제할 ID 리스트:', idsToDelete); // 로그로 확인
+
+			if (!confirm('선택한 데이터를 삭제하시겠습니까?')) {
+				return;
+			}
+
+			// AJAX 요청으로 삭제
+			fetch('/delete_TRANSFER', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					[csrfHeader]: csrfToken // CSRF 토큰 추가
+				},
+				body: JSON.stringify({ids: idsToDelete}) // 삭제할 ID 배열 전달
+			})
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('삭제 요청 실패');
+					}
+					return response.json();
+				})
+				.then(data => {
+					if (data.success) {
+						alert('삭제가 완료되었습니다.');
+						location.reload(); // 페이지 새로고침
+					} else {
+						alert('삭제에 실패했습니다: ' + data.message);
+					}
+				})
+				.catch(error => {
+					console.error('오류 발생:', error);
+					alert('삭제 중 오류가 발생했습니다.');
+				});
+		});
+
+		// TOAST UI Date Picker
 		// 모달 열릴 때 Date Picker 초기화
 		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
 			// Date Picker 초기화
 			new tui.DatePicker('#transfer_ad', {
-				language: 'ko', // 한국어 설정
+				language: 'ko',
 				input: {
-					element: '#transfer_ad', // 발령일 필드 ID
-					format: 'yyyy-MM-dd' // 날짜 포맷
+					element: '#transfer_ad',
+					format: 'yyyy-MM-dd'
 				},
-				date: new Date() // 초기값 설정 (오늘 날짜)
+				// 오늘 날짜
+				date: new Date()
 			});
 		});
 	});
 
 
+
 	// 이름 또는 사원코드 클릭 시 사원 선택 모달 열기
 	document.getElementById('employee_nm').addEventListener('click', function () {
-		const selectEmpModal = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-		selectEmpModal.show();
+		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+		modal_employee_list.show();
 	});
 
 	document.getElementById('employee_cd').addEventListener('click', function () {
-		const selectEmpModal = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-		selectEmpModal.show();
+		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+		modal_employee_list.show();
 	});
 
 	// 선택 버튼 클릭 이벤트 처리
@@ -242,25 +333,22 @@
 			const selectedRow = event.target.closest('tr');
 
 			// 행의 각 열(`td`)에서 데이터를 가져옴
-			const empCode = selectedRow.cells[0].textContent; // 사원코드
-			const name = selectedRow.cells[1].textContent;    // 이름
+			const employee_cd = selectedRow.cells[0].textContent; // 사원코드
+			const employee_nm = selectedRow.cells[1].textContent;    // 이름
 
 			// 기존 모달의 필드에 값 설정
-			document.getElementById('employee_cd').value = empCode;
-			document.getElementById('employee_nm').value = name;
+			document.getElementById('employee_cd').value = employee_cd;
+			document.getElementById('employee_nm').value = employee_nm;
 
 			// 사원 선택 모달 닫기
-			const selectEmpModal = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
-			selectEmpModal.hide();
+			const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
+			modal_employee_list.hide();
 		}
 	});
 
 	// 모달 저장 버튼 클릭 시 이벤트 처리
 	document.getElementById('modal_appointment_save').addEventListener('submit', function (event) {
 		event.preventDefault(); // 폼 기본 동작 방지
-
-		const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-		const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
 		// 모달 입력값 가져오기
 		const employee_cd = document.getElementById('employee_cd').value;
@@ -288,10 +376,13 @@
 				transfer_adp: transfer_adp,
 			}),
 		})
-			.then(response => response.json()) // JSON 응답 처리
+			// JSON 응답 처리
+			.then(response => response.json())
+			// 서버 응답 메시지 표시
 			.then(data => {
-				alert(data.message); // 서버 응답 메시지 표시
-				location.reload(); // 페이지 새로고침
+				alert(data.message);
+				// 페이지 새로고침
+				location.reload();
 			})
 			.catch(error => {
 				console.error('오류 발생:', error);

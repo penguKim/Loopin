@@ -24,12 +24,18 @@ public class TransferService {
 	}
 
 	public void insert_TRANSFER(TransferDTO transferDTO) {
-		
+
 		Transfer transfer = Transfer.setTransferEntity(transferDTO);
-		
+
 		transfer.setTransfer_aw("대기");
+
+		transferRepository.save(transfer);
+
+	}
+
+	public void delete_TRANSFER(List<Long> ids) {
 		
-		transferRepository.save(transfer); 
+		transferRepository.deleteAllById(ids);
 
 	}
 }
