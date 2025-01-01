@@ -3,7 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommonMapper">
-    <select id="SELECT_COMMON_CODE" resultType="map">
+    <select id="SELECT_COMMON_CODE" resultType="CommonCode">
         SELECT * 
         FROM COMMON_CODE
         <choose>
@@ -15,4 +15,38 @@
         	</otherwise>
         </choose>
     </select>
+    
+	<insert id="insertCommonCodes">
+	    INSERT ALL
+	    <foreach collection="list" item="code">
+	        INTO COMMON_CODE (
+	            COMMON_GC
+	            , COMMON_CC
+	            , COMMON_NM
+	            , COMMON_CT
+	            , COMMON_US
+	            <if test="code.COMMON_IN != null">, COMMON_IN</if>
+	            , COMMON_RU
+	            , COMMON_RD
+	        ) VALUES (
+	            #{code.COMMON_GC}
+	            , #{code.COMMON_CC}
+	            , #{code.COMMON_NM}
+	            , #{code.COMMON_CT}
+	            , #{code.COMMON_US}
+	            <if test="code.COMMON_IN != null">, #{code.COMMON_IN}</if>
+	            , #{code.COMMON_RU}
+	            , #{code.COMMON_RD}
+	        )
+	    </foreach>
+	    SELECT * FROM dual
+	</insert>
+	
+	<delete id="delete_group_code">
+		DELETE FROM COMMON_CODE
+		WHERE
+	    <foreach collection="list" item="item" separator="OR">
+        	(COMMON_GC = #{item.COMMON_GC} AND COMMON_CC = #{item.COMMON_CC})
+    	</foreach>
+	</delete>
 </mapper>

@@ -4,6 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.springframework.boot.jackson.JsonObjectDeserializer;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.Common_code_listDTO;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 
 import lombok.RequiredArgsConstructor;
@@ -34,18 +39,16 @@ public class CommonController {
 	@ResponseBody
 	@GetMapping("test222")
 	public Map<String, Object> SELECT_COMMON_CODE(@RequestParam(name = "code", defaultValue = "") String code) {
-		log.info("--------------------------------test-----------------------------------");
-		
-		log.info("파라미터로 넘어온건 무엇이" + code);
-		List<Map<String, Object>> list =  commonService.SELECT_COMMON_CODE(code);
-//		
-	    // Toast Grid에 맞는 응답 형식으로 변환
+	    List<Common_codeDTO> list = commonService.SELECT_COMMON_CODE(code);
+
 	    Map<String, Object> response = new HashMap<>();
 	    response.put("result", true);
+
 	    Map<String, Object> data = new HashMap<>();
 	    data.put("contents", list);
-	    response.put("data", data);
 
+	    response.put("data", data);
+	    
 	    return response;
 	}
 	
@@ -55,7 +58,57 @@ public class CommonController {
 	    return "";
 	}
 
+	@ResponseBody
+	@PostMapping("/delete_group_code")
+	public String delete_group_code(@RequestBody List<Map<String, Object>> list) {
+		log.info(list.toString());
+		
+		if(list.size() > 0) {
+			commonService.delete_group_code(list);
+		}
+		
+		return "성공";
+	}
 	
+	@ResponseBody
+	@PostMapping("/insert_group_code")
+	public Map<String, Object> update_group_code(@RequestBody Common_code_listDTO list) {
+//		public Map<String, Object> update_group_code(@RequestBody List<Map<String, Object>> createdRows,
+//				@RequestBody List<Map<String, Object>> updatedRows, @RequestParam(name = "code", defaultValue = "") String code) {
+		log.info(list.toString());
+		List<Common_codeDTO> createdRows = list.getCreatedRows();
+		List<Common_codeDTO> updatedRows = list.getUpdatedRows();
+		String code = list.getCode();
+		
+		
+
+//		log.info(createdRows.toString());
+//		log.info(updatedRows.toString());
+//		log.info(code);
+//
+		// 신규 행
+		if(createdRows.size() > 0) {
+			commonService.save(createdRows, code);
+		}
+		
+		// 수정 행
+		if(updatedRows.size() > 0) {
+			
+		}
+//		
+//		
+//	    List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
+
+	    Map<String, Object> response = new HashMap<>();
+//	    response.put("result", true);
+//
+//	    Map<String, Object> data = new HashMap<>();
+//	    data.put("contents", codeList);
+//
+//	    response.put("data", data);
+		
+		return response;
+	}
 
 	
 	@ResponseBody
