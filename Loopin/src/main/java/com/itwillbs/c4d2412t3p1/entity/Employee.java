@@ -29,70 +29,70 @@ public class Employee {
 	
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "employee_id", length = 20)
+    @Column(name = "employee_id")
     private Long employee_id;
 
-    @Column(name = "employee_pw", length = 20)
+    @Column(name = "employee_pw")
     private String employee_pw;
 
-    @Column(name = "employee_dp", length = 20)
+    @Column(name = "employee_dp")
     private String employee_dp;
 
-    @Column(name = "employee_gd", length = 20)
+    @Column(name = "employee_gd")
     private String employee_gd;
 
-    @Column(name = "employee_hd", length = 20)
+    @Column(name = "employee_hd")
     private String employee_hd;
 
-    @Column(name = "employee_rd", length = 20)
+    @Column(name = "employee_rd")
     private String employee_rd;
 
-    @Column(name = "employee_rr", length = 20)
+    @Column(name = "employee_rr")
     private String employee_rr;
 
-    @Column(name = "employee_cg", length = 20)
+    @Column(name = "employee_cg")
     private String employee_cg;
 
-    @Column(name = "employee_cm", length = 20)
+    @Column(name = "employee_cm")
     private String employee_cm;
 
-    @Column(name = "employee_nm", length = 20)
+    @Column(name = "employee_nm")
     private String employee_nm;
 
-    @Column(name = "employee_bd", length = 20)
+    @Column(name = "employee_bd")
     private String employee_bd;
 
-    @Column(name = "employee_ad", length = 20)
+    @Column(name = "employee_ad")
     private String employee_ad;
 
-    @Column(name = "employee_sb", length = 20)
+    @Column(name = "employee_sb")
     private String employee_sb;
 
-    @Column(name = "employee_ph", length = 20)
+    @Column(name = "employee_ph")
     private String employee_ph;
 
-    @Column(name = "employee_em", length = 20)
+    @Column(name = "employee_em")
     private String employee_em;
 
-    @Column(name = "employee_pi", length = 20)
+    @Column(name = "employee_pi")
     private String employee_pi;
 
-    @Column(name = "employee_bk", length = 20)
+    @Column(name = "employee_bk")
     private String employee_bk;
 
-    @Column(name = "employee_an", length = 20)
+    @Column(name = "employee_an")
     private String employee_an;
 
-    @Column(name = "employee_wr", length = 20)
+    @Column(name = "employee_wr")
     private String employee_wr;
 
-    @Column(name = "employee_dt", length = 20)
+    @Column(name = "employee_dt")
     private String employee_dt;
 
     @Column(name = "employee_wd")
     private Timestamp employee_wd;
 
-    @Column(name = "employee_mf", length = 20)
+    @Column(name = "employee_mf")
     private String employee_mf;
 
     @Column(name = "employee_md")
