@@ -3,48 +3,245 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
-<link rel="stylesheet" href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css"/>
-<body>
-	<main id="main" class="main">
-		<div class="pagetitle">
-			<h1>근태 조회</h1>
-			<nav>
-				<ol class="breadcrumb">
-					<li class="breadcrumb-item"><a href="/log">근태 관리</a></li>
-					<li class="breadcrumb-item">근태 조회</li>
-					<li class="breadcrumb-item active">월별 조회</li>
-				</ol>
-			</nav>
-		</div><!-- End Page Title -->
-		<div id="calendar" style="height: 800px"></div>
-	</main><!-- End #main -->
-</body>
-<script src="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.js"></script>
-<script>
-	const calendar = new tui.Calendar('#calendar', {
-		defaultView: 'month',
-		template: {
-			time(event) {
-				const { start, end, title } = event;
 
-				return `<span style="color: white;">${formatTime(start)}~${formatTime(end)} ${title}</span>`;
-		},
-			allday(event) {
-				return `<span style="color: gray;">${event.title}</span>`;
-			},
-		},
-		calendars: [
-			{
-				id: 'cal1',
-				name: 'Personal',
-				backgroundColor: '#03bd9e',
-			},
-			{
-				id: 'cal2',
-				name: 'Work',
-				backgroundColor: '#00a9ff',
-			},
-		],
-	});
-</script>
+	<body>
+		<main id="main" class="main">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">근태현황</h5>
+					<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+						<li class="nav-item" role="presentation">
+							<button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
+								type="button" role="tab" aria-controls="pills-home" aria-selected="true">달력</button>
+						</li>
+						<li class="nav-item" role="presentation">
+							<button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
+								type="button" role="tab" aria-controls="pills-profile" aria-selected="false" onclick="grid()">그리드</button>
+						</li>
+					</ul>
+					
+					<!-- 본문 -->
+					<div class="tab-content pt-2" id="myTabContent"> 
+						<!-- 달력 -->
+						<div class="text-center" id='btn_calendar'>
+							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_prev'>이전</button>
+							<span></span>
+							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_next'>다음</button>
+						</div>
+						<div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="home-tab" style="height: 600px;">
+						</div>
+						
+						<!-- 그리드 -->
+						<div id='btn_grid'>
+							<button type='button' class='btn btn-outline-secondary' id='btn_grid_filter' style="display: none;">필터</button>
+						</div>
+						<div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="profile-tab">
+						</div>
+					</div>
+				</div>
+			</div>
+			
+		</main>
+	</body>
+	
+	<script>
+		const calendar_container = document.getElementById('pills-home');
+		const grid_container = document.getElementById('pills-profile');
+		const btn_calendar = document.getElementById('btn_calendar');
+		const btn_grid_filter = document.getElementById('btn_grid_filter');
+		const btn_calendar_prev = document.getElementById('btn_calendar_prev');
+		const btn_calendar_next = document.getElementById('btn_calendar_next');
+		const tab = document.getElementById('pills-home-tab');
+		
+		window.onload = function(){
+			calendar();
+		}
+		
+		// 캘린더 버튼 이벤트
+		tab.addEventListener('click', function(){
+			btn_grid_filter.style.display = "none";
+		});
+		
+		function calendar(){ // 캘린더 호출 함수
+			
+			let options = {  
+				defaultView: 'month',
+				useDetailPopup: true,
+				isReadOnly: true,
+				calendars: [
+					{
+						id: 'cal1',
+						name: '총결원',
+						backgroundColor: '#03bd9e',
+					},
+					{
+						id: 'cal2',
+						name: '휴가자',
+						backgroundColor: '#ffffff',
+						borderLeft: '#ffffff',
+					},
+					{
+						id: 'cal3',
+						name: '출장',
+						backgroundColor: '#ffffff',
+					},
+				],
+		
+			};
+		
+			let calendar = new tui.Calendar(calendar_container, options);
+			
+			
+			calendar.createEvents([
+				{
+					id: 'event1',
+					calendarId: 'cal1',
+					title: '10/1',
+					start: '2025-01-01',
+					end: '2025-01-01',
+					isAllday: true,  // allday 타임스탬프 노상관
+					category: 'allday',
+				}, 
+				{
+					id: 'event2',
+					calendarId: 'cal2',
+					title: '김길동',
+					start: '2025-01-01T09:36:50',
+					end: '2025-01-01T09:36:37',
+					isAllday: true,
+					category: 'allday',
+				},
+				{
+					id: 'event3',
+					calendarId: 'cal3',
+					title: '홍길동',
+					start: '2025-01-01T09:36:50',
+					end: '2025-01-01T09:36:37',
+					isAllday: true,
+					category: 'allday',
+				},
+			]);
+			
+			
+			calendar.setOptions({
+				month: {
+					isAlways6Weeks: false, // 6주가 아니라 달만 보여주기
+				},
+			});
+			calendar.setTheme({
+				month: {
+						weekend: {
+							backgroundColor: 'rgba(255, 64, 64, 0.1)',
+						},
+				},
+			});
+			
+			
+			// getDate()로 Date 객체 가져오기
+			const originalDate = calendar.getDate(); 
+			// 원래의 Date 객체를 문자열 형식으로 변환
+			const year = originalDate.getFullYear(); // 연도
+			const month = originalDate.getMonth() + 1; // 월 (0부터 시작하므로 +1 필요)
+			const formattedDate = `${year}년 ${month}월`;
+			$("#btn_calendar span").text(formattedDate);
+			
+			btn_calendar_prev.addEventListener('click', function(){ // 그리드 버튼 출력 이벤트
+				
+				calendar.prev();
+				
+				// getDate()로 Date 객체 가져오기
+				const originalDate = calendar.getDate(); 
+				// 원래의 Date 객체를 문자열 형식으로 변환
+				const year = originalDate.getFullYear(); // 연도
+				const month = originalDate.getMonth() + 1; // 월 (0부터 시작하므로 +1 필요)
+				const formattedDate = `${year}년 ${month}월`;
+				$("#btn_calendar span").text(formattedDate);
+			
+			});
+			
+			btn_calendar_next.addEventListener('click', function(){ // 그리드 버튼 출력 이벤트
+				
+				calendar.next();
+
+				// getDate()로 Date 객체 가져오기
+				const originalDate = calendar.getDate(); 
+				// 원래의 Date 객체를 문자열 형식으로 변환
+				const year = originalDate.getFullYear(); // 연도
+				const month = originalDate.getMonth() + 1; // 월 (0부터 시작하므로 +1 필요)
+				const formattedDate = `${year}년 ${month}월`;
+				$("#btn_calendar span").text(formattedDate);
+				
+				
+			});
+	
+		};
+		
+		
+		function grid(){ // 그리드 호출 함수
+			btn_calendar.innerHTML = '';
+			grid_container.innerHTML = '';
+			btn_grid_filter.style.display = "block";
+			
+			let grid = new tui.Grid({
+				el: grid_container,
+				columns: [
+					{
+						header: '이름', // 출력명
+						name: 'name' // 칼럼명
+					},
+					{
+						header: '부서명',
+						name: 'dept'
+					},
+					{
+						header: '입사일',
+						name: 'hire'
+					},
+					{
+						header: '근속연수',
+						name: 'period'
+					},
+					{
+						header: '사용연차',
+						name: 'use'
+					},
+					{
+						header: '잔여일수',
+						name: 'available'
+					},
+					{
+						header: '총연차',
+						name: 'total'
+					},
+				],
+			});
+			
+			let data= [ // 나중에 ajax로 데이터 받아오기 1. 처음 출력할때 데이터 2. 필터 클릭할때마다 데이터
+					{
+						name: '홍길동',
+						dept: '인사팀',
+						hire: '2016-01-06',
+						period: '3년',
+						use: '1일',
+						available: '14일',
+						total: '15일',
+					},
+					{
+						name: '김아무개',
+						dept: '기획팀',
+						hire: '2016-01-06',
+						period: '3년',
+						use: '3.5일',
+						available: '7일',
+						total: '15일',
+					},
+			]
+			
+			grid.resetData(data); // 데이터 초기화
+		} 
+		
+		
+		
+		
+	</script>
 </html>
