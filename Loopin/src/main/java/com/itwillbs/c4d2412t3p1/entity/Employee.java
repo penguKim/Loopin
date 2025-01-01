@@ -2,11 +2,17 @@ package com.itwillbs.c4d2412t3p1.entity;
 
 import java.sql.Timestamp;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
+import com.itwillbs.c4d2412t3p1.domain.MemberDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,8 +28,9 @@ import lombok.ToString;
 public class Employee {
 	
     @Id
-    @Column(name = "employee_id", nullable = false, length = 20)
-    private String employee_id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "employee_id", length = 20)
+    private Long employee_id;
 
     @Column(name = "employee_pw", length = 20)
     private String employee_pw;
@@ -97,7 +104,7 @@ public class Employee {
 	}
 	
     public Employee(
-		    		String employee_id
+		    		Long employee_id
 		    		, String employee_pw
 		    		, String employee_dp
 		    		, String employee_gd
@@ -178,5 +185,35 @@ public class Employee {
 
         return employee;
     }
+    
+	public static Employee createEmployee(EmployeeDTO employeeDto) {
+
+		return new Employee(
+		        employeeDto.getEmployee_id()
+		        ,employeeDto.getEmployee_pw()
+		        ,employeeDto.getEmployee_dp()
+		        ,employeeDto.getEmployee_gd()
+		        ,employeeDto.getEmployee_hd()
+		        ,employeeDto.getEmployee_rd()
+		        ,employeeDto.getEmployee_rr()
+		        ,employeeDto.getEmployee_cg()
+		        ,employeeDto.getEmployee_cm()
+		        ,employeeDto.getEmployee_nm()
+		        ,employeeDto.getEmployee_bd()
+		        ,employeeDto.getEmployee_ad()
+		        ,employeeDto.getEmployee_sb()
+		        ,employeeDto.getEmployee_ph()
+		        ,employeeDto.getEmployee_em()
+		        ,employeeDto.getEmployee_pi()
+		        ,employeeDto.getEmployee_bk()
+		        ,employeeDto.getEmployee_an()
+		        ,employeeDto.getEmployee_wr()
+		        ,employeeDto.getEmployee_dt()
+		        ,employeeDto.getEmployee_wd()
+		        ,employeeDto.getEmployee_mf()
+		        ,employeeDto.getEmployee_md());
+	}
+    
+    
 }
 	
