@@ -23,11 +23,18 @@ public class EmployeeService {
 		return EmployeeRepository.findAll();
 	}
 
-	public void save(EmployeeDTO employeeDTO) {
 
+	public void insert_EMPLOYEE(EmployeeDTO employeeDTO) {
+		
 		Employee employee = Employee.createEmployee(employeeDTO);
 		
 		EmployeeRepository.save(employee);
+	}
+
+
+	public void delete_EMPLOYEE(List<String> ids) {
+		EmployeeRepository.deleteAllByEmployeeIdIn(ids);
+		
 	}
 	
 	

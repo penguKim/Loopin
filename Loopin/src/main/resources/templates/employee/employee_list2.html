@@ -8,16 +8,17 @@
 <body>
 	<main id="main" class="main">
 		<!-- 인사카드 등록 모달 -->
-		<div class="modal fade" id="modal_appointment_save" tabindex="-1">
-			<div class="modal-dialog modal-xl">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title">인사카드 등록</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post">
+		<form th:action="@{/employee_list2}" method="post">
+			<div class="modal fade" id="registerModal" tabindex="-1">
+				<div class="modal-dialog modal-xl">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">인사카드 등록</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<!-- General Form Elements -->
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-1 col-form-label">아이디</label>
 								<div class="col-sm-4">
@@ -180,14 +181,28 @@
 									<input type="text" class="form-control" id="employee_dt" name="employee_dt">
 								</div>
 							</div>
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">닫기</button>
 							<button type="submit" class="btn btn-primary">등록</button>
-						</form>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</form>
 		<!-- End Extra Large Modal-->
+		<div class="pagetitle">
+			<h1>Form Elements</h1>
+			<nav>
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item"><a href="index.html">Home</a></li>
+					<li class="breadcrumb-item">Forms</li>
+					<li class="breadcrumb-item active">Elements</li>
+				</ol>
+			</nav>
+		</div>
+		<!-- End Page Title -->
 		<section class="section">
 			<div class="row">
 				<div class="col-lg-12">
@@ -199,8 +214,7 @@
 								<div class="col-sm-10">
 									<div id="grid"></div>
 									<button type="button" class="btn btn-primary" data-bs-toggle="modal"
-										data-bs-target="#modal_appointment_save">등록</button>
-									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
+									data-bs-target="#registerModal">등록</button>
 								</div>
 							</div>
 						</div>
@@ -302,171 +316,76 @@
 
 	
 <script th:inline="javascript">
-	
-const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    // 서버에서 전달된 데이터를 JavaScript 변수로 설정
+    const employeeList = /*[[${employeeList}]]*/ [];
+</script>
 
-// 서버에서 전달된 데이터를 JavaScript 변수로 설정
-// const employeeData = /*[[${employeeList}]]*/[];
-// console.log(employeeData);
+<script>
+	
+$(function () {
+	    const grid = new tui.Grid({
+	        el: document.getElementById('grid'), // 그리드 컨테이너
+	        data: employeeList, // 데이터를 설정
+	        scrollX: false, // 가로 스크롤 비활성화
+	        scrollY: false, // 세로 스크롤 비활성화
+            rowHeaders: ['checkbox'],
+            autoWidth: true,
+	        columns: [
+				{
+				    header: '사원명',
+				    name: 'employee_nm'
+				},
+				{
+				    header: '부서',
+				    name: 'employee_dp'
+				},
+				{
+				    header: '직급',
+				    name: 'employee_gd'
+				},
+				{
+				    header: '생년월일',
+				    name: 'employee_bd'
+				},
+				{
+				    header: '주소',
+				    name: 'employee_ad'
+				},
+				{
+				    header: '연락처',
+				    name: 'employee_ph'
+				},
+				{
+				    header: '이메일',
+				    name: 'employee_em'
+				},
+				{
+				    header: '입사일',
+				    name: 'employee_hd'
+				}
 
-let grid;
+	        ]
+	    });
 
-$(document).ready(function () {
-    // 데이터 가져오기 (GET 요청)
-	$.ajax({
-	    url: '/select_EMPLOYEE',
-	    method: 'GET',
-	    success: function (employeeList) {
-	        console.log('서버 응답 데이터:', employeeList);
-	
-	            // Grid 초기화
-            grid = new tui.Grid({
-                el: document.getElementById('grid'),
-                data: employeeList,
-                scrollX: true,
-                scrollY: true,
-                rowHeaders: ['checkbox'],
-                autoWidth: true,
-				data: employeeList.map(row => ({
-		            employee_nm: row.employee_nm,
-		            employee_dp: row.employee_dp,
-		            employee_gd: row.employee_gd,
-		            employee_bd: row.employee_bd,
-		            employee_ad: row.employee_ad,
-		            employee_ph: row.employee_ph,
-		            employee_em: row.employee_em,
-		            employee_hd: row.employee_hd,
-                
-				})),
-                columns: [
-                    {header: '사원명', name: 'employee_nm', align: 'center', sortable: true},
-                    {header: '부서', name: 'employee_dp', align: 'center', sortable: true},
-                    {header: '직급', name: 'employee_gd', align: 'center', sortable: true},
-                    {header: '생년월일', name: 'employee_bd', align: 'center', sortable: true},
-                    {header: '주소', name: 'employee_ad', align: 'center', sortable: true},
-                    {header: '연락처', name: 'employee_ph', align: 'center', sortable: true},
-                    {header: '이메일', name: 'employee_em', align: 'center', sortable: true},
-                    {header: '입사일', name: 'employee_hd', align: 'center', sortable: true}
-                ]
-            
-            });
-	    },
-	    error: function (error) {
-	        console.error('오류 발생:', error);
-	    }
-	});
-
-
-	$(document).ready(function () {
-	    // 사원 등록 폼 제출 처리
-	    $('#appointment_form').on('submit', function (event) {
-	        event.preventDefault(); // 기본 제출 동작 방지
-	
-	        const formData = {
-	            employeeId : $('#employee_id').val(),
-	            employee_pw: $('#employee_pw').val(),
-	            employee_dp: $('#employee_dp').val(),
-	            employee_gd: $('#employee_gd').val(),
-	            employee_hd: $('#employee_hd').val(),
-	            employee_rd: $('#employee_rd').val(),
-	            employee_rr: $('#employee_rr').val(),
-	            employee_cg: $('#employee_cg').val(),
-	            employee_nm: $('#employee_nm').val(),
-	            employee_bd: $('#employee_bd').val(),
-	            employee_ad: $('#employee_ad').val(),
-	            employee_em: $('#employee_em').val(),
-	        };
-	
-	        $.ajax({
-	            url: '/insert_EMPLOYEE',
-	            method: 'POST',
-	            contentType: 'application/json',
-	            headers: {
-	                'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content'),
-	            },
-	            data: JSON.stringify(formData),
-	            success: function () {
-	                alert('등록이 완료되었습니다.');
-	                $('#appointment_form')[0].reset();
-	
-	                const modalSave = bootstrap.Modal.getInstance($('#modal_appointment_save')[0]);
-	                if (modalSave) modalSave.hide();
-	
-	                location.reload();
-	            },
-	            error: function (xhr, status, error) {
-	                console.error('AJAX Error:', xhr.responseText, status, error);
-	                alert('등록 중 오류가 발생했습니다.');
-	            },
+	    // 반복문으로 데이터를 추가할 경우
+	    const newData = [];
+	    employeeList.forEach(employee => {
+	        newData.push({
+	            employee_nm: employee.employee_nm,
+	            employee_dp: employee.employee_dp,
+	            employee_gd: employee.employee_gd,
+	            employee_bd: employee.employee_bd,
+	            employee_ad: employee.employee_ad,
+	            employee_ph: employee.employee_ph,
+	            employee_em: employee.employee_em,
+	            employee_hd: employee.employee_hd,
 	        });
 	    });
-	
-// 	    // 사원 선택 모달 초기화 및 열기
-// 	    const modalEmployeeList = new bootstrap.Modal($('#modal_employee_list')[0]);
-	
-// 	    $('#employee_nm, #employee_cd').on('click', function () {
-// 	        modalEmployeeList.show();
-// 	    });
-	
-// 	    // 사원 선택 버튼 클릭 처리
-// 	    $(document).on('click', '.select-emp-btn', function () {
-// 	        const selectedRow = $(this).closest('tr');
-// 	        const employee_cd = selectedRow.find('td').eq(0).text() || 'N/A';
-// 	        const employee_nm = selectedRow.find('td').eq(1).text() || 'N/A';
-	
-// 	        $('#employee_cd').val(employee_cd);
-// 	        $('#employee_nm').val(employee_nm);
-	
-// 	        modalEmployeeList.hide();
-// 	    });
+
+	    // 그리드 데이터 갱신
+	    grid.resetData(newData);
 	});
-	
-	
-	$('#btn_employee_delete').on('click', function () {
-	    if (!grid) {
-	        alert('Grid가 초기화되지 않았습니다.');
-	        return;
-	    }
 
-	    const checkedRows = grid.getCheckedRows();
-	    console.log('체크된 행 데이터:', checkedRows);
 
-	    if (checkedRows.length === 0) {
-	        alert('삭제할 데이터를 선택하세요.');
-	        return;
-	    }
-
-	    const idsToDelete = checkedRows.map(row => row.employee_id || row.employeeId); // 필드명 확인 후 수정
-	    console.log('삭제할 ID 리스트:', idsToDelete);
-
-	    if (!confirm('선택한 데이터를 삭제하시겠습니까?')) {
-	        return;
-	    }
-
-	    $.ajax({
-	        url: '/delete_EMPLOYEE',
-	        method: 'POST',
-	        contentType: 'application/json',
-	        headers: {
-	            [csrfHeader]: csrfToken // CSRF 토큰 추가
-	        },
-	        data: JSON.stringify({ ids: idsToDelete }),
-	        success: function (data) {
-	            console.log('서버 응답:', data); // 응답 확인
-	            if (data.success) {
-	                alert('삭제가 완료되었습니다.');
-	                location.reload();
-	            } else {
-	                alert('삭제에 실패했습니다: ' + data.message);
-	            }
-	        },
-	        error: function (xhr, status, error) {
-	            console.error('오류 발생:', xhr.responseText, status, error);
-	            alert('삭제 중 오류가 발생했습니다.');
-	        }
-	    });
-	});
-});
 </script>
 </html>

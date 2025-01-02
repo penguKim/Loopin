@@ -30,7 +30,7 @@ public class Employee {
     @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "employee_id")
-    private String employee_id;
+    private String employeeId;
 
     @Column(name = "employee_pw")
     private String employee_pw;
@@ -129,7 +129,7 @@ public class Employee {
 		    		, Timestamp employee_md
     			) {
     	
-    	this.employee_id = employee_id;
+    	this.employeeId = employee_id;
     	this.employee_pw = employee_pw;
     	this.employee_dp = employee_dp;
     	this.employee_gd = employee_gd;
@@ -158,7 +158,7 @@ public class Employee {
 
     public static Employee setEmployeeEntity(EmployeeDTO employeeDto) {
         Employee employee = new Employee();
-        employee.setEmployee_id(employeeDto.getEmployee_id());
+        employee.setEmployeeId(employeeDto.getEmployeeId());
         employee.setEmployee_pw(employeeDto.getEmployee_pw());
         employee.setEmployee_dp(employeeDto.getEmployee_dp());
         employee.setEmployee_gd(employeeDto.getEmployee_gd());
@@ -189,7 +189,7 @@ public class Employee {
 	public static Employee createEmployee(EmployeeDTO employeeDto) {
 
 		return new Employee(
-		        employeeDto.getEmployee_id()
+		        employeeDto.getEmployeeId()
 		        ,employeeDto.getEmployee_pw()
 		        ,employeeDto.getEmployee_dp()
 		        ,employeeDto.getEmployee_gd()
