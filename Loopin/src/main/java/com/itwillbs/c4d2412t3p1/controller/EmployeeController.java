@@ -44,6 +44,7 @@ public class EmployeeController {
 
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
+	        row.put("employeeId", employee.getEmployeeId());
 	        row.put("employee_nm", employee.getEmployee_nm());
 	        row.put("employee_dp", employee.getEmployee_dp());
 	        row.put("employee_gd", employee.getEmployee_gd());
@@ -73,11 +74,9 @@ public class EmployeeController {
 	
 //	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
-	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
-		List<String> ids = request.get("ids"); 
-		log.info("삭제 요청 데이터: " + request.toString());
+	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody List<String> ids) {
+		log.info("삭제 요청 데이터: " + ids.toString());
 		
-		log.info(ids.toString());
 		Map<String, Object> response = new HashMap<>();
 
 		try {

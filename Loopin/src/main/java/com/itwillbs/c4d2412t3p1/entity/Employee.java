@@ -104,7 +104,7 @@ public class Employee {
 	}
 	
     public Employee(
-		    		String employee_id
+		    		String employeeId
 		    		, String employee_pw
 		    		, String employee_dp
 		    		, String employee_gd
@@ -129,7 +129,7 @@ public class Employee {
 		    		, Timestamp employee_md
     			) {
     	
-    	this.employeeId = employee_id;
+    	this.employeeId = employeeId;
     	this.employee_pw = employee_pw;
     	this.employee_dp = employee_dp;
     	this.employee_gd = employee_gd;

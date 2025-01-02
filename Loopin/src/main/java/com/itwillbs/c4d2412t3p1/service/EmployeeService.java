@@ -8,6 +8,7 @@ import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -32,6 +33,7 @@ public class EmployeeService {
 	}
 
 
+	@Transactional
 	public void delete_EMPLOYEE(List<String> ids) {
 		EmployeeRepository.deleteAllByEmployeeIdIn(ids);
 		
