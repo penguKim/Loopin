@@ -38,6 +38,14 @@ public class EmployeeService {
 		EmployeeRepository.deleteAllByEmployeeIdIn(ids);
 		
 	}
+
+
+	public void update_EMPLOYEE(EmployeeDTO employeeDTO) {
+
+		Employee employee = Employee.setEmployeeEntity(employeeDTO);
+		
+		EmployeeRepository.save(employee);
+	}
 	
 	
 	

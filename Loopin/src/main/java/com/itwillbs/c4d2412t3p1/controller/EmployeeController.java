@@ -71,6 +71,19 @@ public class EmployeeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+
+	@PostMapping("/update_EMPLOYEE")
+	public ResponseEntity<Map<String, String>> update_EMPLOYEE(@RequestBody EmployeeDTO employeeDTO) {
+	    Map<String, String> response = new HashMap<>();
+	    try {
+	        employeeService.update_EMPLOYEE(employeeDTO);
+	        response.put("message", "데이터가 성공적으로 수정되었습니다.");
+	        return ResponseEntity.ok(response); // JSON 형식으로 반환
+	    } catch (Exception e) {
+	        response.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
 	
 //	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
