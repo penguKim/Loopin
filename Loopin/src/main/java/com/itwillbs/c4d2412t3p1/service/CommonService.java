@@ -37,15 +37,15 @@ public class CommonService {
 		for (Common_codeDTO data : createdRows) {
 			
 			if(code == null || code.equals("")) {
-				data.setCOMMON_GC("00");
+				data.setCommon_gc("00");
 			} else {
-				data.setCOMMON_GC(code);
+				data.setCommon_gc(code);
 			}
 
-			data.setCOMMON_CT("");
-			data.setCOMMON_US("true");
-			data.setCOMMON_RU(regUser);
-			data.setCOMMON_RD(new Timestamp(System.currentTimeMillis()));
+			data.setCommon_ct("");
+			data.setCommon_us("true");
+			data.setCommon_ru(regUser);
+			data.setCommon_rd(new Timestamp(System.currentTimeMillis()));
 		}
 		
 		commonMapper.insertCommonCodes(createdRows);

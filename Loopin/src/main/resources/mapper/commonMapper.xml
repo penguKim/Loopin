@@ -9,9 +9,11 @@
         <choose>
         	<when test="code == null or code == ''">
 		        WHERE COMMON_GC = '00'
+		        ORDER BY COMMON_NM
         	</when>
         	<otherwise>
         		WHERE COMMON_GC = #{code}
+		        ORDER BY COMMON_IN
         	</otherwise>
         </choose>
     </select>
@@ -25,18 +27,18 @@
 	            , COMMON_NM
 	            , COMMON_CT
 	            , COMMON_US
-	            <if test="code.COMMON_IN != null">, COMMON_IN</if>
+	            <if test="code.common_in != null">, COMMON_IN</if>
 	            , COMMON_RU
 	            , COMMON_RD
 	        ) VALUES (
-	            #{code.COMMON_GC}
-	            , #{code.COMMON_CC}
-	            , #{code.COMMON_NM}
-	            , #{code.COMMON_CT}
-	            , #{code.COMMON_US}
-	            <if test="code.COMMON_IN != null">, #{code.COMMON_IN}</if>
-	            , #{code.COMMON_RU}
-	            , #{code.COMMON_RD}
+	            #{code.common_gc}
+	            , #{code.common_cc}
+	            , #{code.common_nm}
+	            , #{code.common_ct}
+	            , #{code.common_us}
+	            <if test="code.common_in != null">, #{code.common_in}</if>
+	            , #{code.common_ru}
+	            , #{code.common_rd}
 	        )
 	    </foreach>
 	    SELECT * FROM dual
@@ -46,7 +48,7 @@
 		DELETE FROM COMMON_CODE
 		WHERE
 	    <foreach collection="list" item="item" separator="OR">
-        	(COMMON_GC = #{item.COMMON_GC} AND COMMON_CC = #{item.COMMON_CC})
+        	(COMMON_GC = #{item.common_gc} AND COMMON_CC = #{item.common_cc})
     	</foreach>
 	</delete>
 </mapper>

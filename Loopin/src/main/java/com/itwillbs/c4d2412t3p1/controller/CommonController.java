@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.springframework.boot.jackson.JsonObjectDeserializer;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +34,7 @@ public class CommonController {
 	}
 	
 	@ResponseBody
-	@GetMapping("test222")
+	@GetMapping("/select_common_code")
 	public Map<String, Object> SELECT_COMMON_CODE(@RequestParam(name = "code", defaultValue = "") String code) {
 	    List<Common_codeDTO> list = commonService.SELECT_COMMON_CODE(code);
 
@@ -60,14 +57,24 @@ public class CommonController {
 
 	@ResponseBody
 	@PostMapping("/delete_group_code")
-	public String delete_group_code(@RequestBody List<Map<String, Object>> list) {
+	public Map<String, Object> delete_group_code(@RequestBody List<Map<String, Object>> list) {
 		log.info(list.toString());
 		
 		if(list.size() > 0) {
 			commonService.delete_group_code(list);
 		}
 		
-		return "성공";
+//	    List<Common_codeDTO> list = commonService.SELECT_COMMON_CODE(code);
+
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("result", true);
+
+	    Map<String, Object> data = new HashMap<>();
+//	    data.put("contents", list);
+
+	    response.put("data", data);
+	    
+	    return response;
 	}
 	
 	@ResponseBody
@@ -80,12 +87,6 @@ public class CommonController {
 		List<Common_codeDTO> updatedRows = list.getUpdatedRows();
 		String code = list.getCode();
 		
-		
-
-//		log.info(createdRows.toString());
-//		log.info(updatedRows.toString());
-//		log.info(code);
-//
 		// 신규 행
 		if(createdRows.size() > 0) {
 			commonService.save(createdRows, code);
@@ -97,15 +98,15 @@ public class CommonController {
 		}
 //		
 //		
-//	    List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
+	    List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
 
 	    Map<String, Object> response = new HashMap<>();
-//	    response.put("result", true);
+	    response.put("result", true);
 //
-//	    Map<String, Object> data = new HashMap<>();
-//	    data.put("contents", codeList);
+	    Map<String, Object> data = new HashMap<>();
+	    data.put("contents", codeList);
 //
-//	    response.put("data", data);
+	    response.put("data", data);
 		
 		return response;
 	}
