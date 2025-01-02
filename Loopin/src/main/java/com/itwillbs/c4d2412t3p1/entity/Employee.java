@@ -28,9 +28,9 @@ import lombok.ToString;
 public class Employee {
 	
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "employee_id")
-    private Long employee_id;
+    private String employee_id;
 
     @Column(name = "employee_pw")
     private String employee_pw;
@@ -104,7 +104,7 @@ public class Employee {
 	}
 	
     public Employee(
-		    		Long employee_id
+		    		String employee_id
 		    		, String employee_pw
 		    		, String employee_dp
 		    		, String employee_gd
