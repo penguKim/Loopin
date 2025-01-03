@@ -37,7 +37,7 @@
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
 								</div>
-								<label for="inputText" class="col-sm-1 col-form-label">직급코드</label>
+								<label for="inputText" class="col-sm-1 col-form-label">직위코드</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
 								</div>
@@ -80,7 +80,6 @@
 									</select>
 								</div>
 							</div>
-							<!-- 비고 -->
 							<div class="row mb-3">
 								<label for="inputPassword" class="col-sm-1 col-form-label">비고</label>
 								<div class="col-sm-5">
@@ -127,21 +126,19 @@
 							</div>
 							<!-- 주소 값 히든 -->
 							<input type="hidden" id="employee_ad" name="employee_ad">
-							<fieldset class="row mb-3">
-								<legend class="col-form-label col-sm-1 pt-0">성별</legend>
-								<div class="col-sm-10">
-									<div class="form-check">
-										<input class="form-check-input" type="radio" 
-											id="employee_sb1" name="employee_sb1" value="option1" checked> <label
-											class="form-check-label" for="gridRadios1"> 남 </label>
-									</div>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" 
-											id="employee_sb2" name="employee_sb2" value="option2"> <label
-											class="form-check-label" for="gridRadios2"> 여 </label>
-									</div>
+							<!-- 성별 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">성별</label>
+								<div class="col-sm-4">
+									<select class="form-select" aria-label="Default select example"
+										id="employee_sb" name="employee_sb">
+										<option value="남자" selected>남자</option>
+										<option value="여자">여자</option>
+									</select>
 								</div>
-							</fieldset>
+							</div>
+							<!-- 비고 -->
+
 							<!-- 이메일 -->
 							<div class="row mb-3">
 							    <label for="inputText" class="col-sm-1 col-form-label">이메일</label>
@@ -171,6 +168,10 @@
 								</div>
 							</div>
 							<div class="row mb-3">
+							        <img id="photoPreview" src="#" alt="미리보기" style="max-width: 100%; max-height: 150px; display: none; border: 1px solid #ddd; padding: 5px; border-radius: 5px;">
+							        </div>
+							<div class="row mb-3">
+							
 								<label for="inputText" class="col-sm-1 col-form-label">기본급</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bs" name="employee_bs">
@@ -399,6 +400,7 @@ $(document).ready(function () {
                     { header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
                     { header: '부서', name: 'employee_dp', align: 'center', sortable: true },
                     { header: '직급', name: 'employee_gd', align: 'center', sortable: true },
+                    { header: '성별', name: 'employee_sb', align: 'center', sortable: true },
                     { header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
                     { header: '주소', name: 'employee_ad', align: 'center', sortable: true },
                     { header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
@@ -413,14 +415,16 @@ $(document).ready(function () {
                 const columnName = ev.columnName;
                 const rowKey = ev.rowKey;
                 const rowData = grid.getRow(rowKey);
+                const targetType = ev.targetType;
+
+                if (targetType === 'columnHeader' || targetType === 'rowHeader') {
+                    return;
+                }
                 
                 if (columnName === 'employee_cd' || columnName === 'employee_nm' || columnName === 'employee_nm' ) {
                     openModal('edit', rowData); // 수정 모드로 모달 열기
                 }
 
-//                 if (targetType === 'columnHeader' || targetType === 'rowHeader') {
-//                     return;
-//                 }
                 
             });
         },

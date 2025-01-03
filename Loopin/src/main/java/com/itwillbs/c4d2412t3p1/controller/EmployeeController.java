@@ -49,6 +49,7 @@ public class EmployeeController {
 	        row.put("employee_nm", employee.getEmployee_nm());
 	        row.put("employee_dp", employee.getEmployee_dp());
 	        row.put("employee_gd", employee.getEmployee_gd());
+	        row.put("employee_sb", employee.getEmployee_sb());
 	        row.put("employee_bd", employee.getEmployee_bd());
 	        row.put("employee_ad", employee.getEmployee_ad());
 	        row.put("employee_ph", employee.getEmployee_ph());
