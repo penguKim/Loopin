@@ -18,11 +18,35 @@
         </choose>
     </select>
     
-	<insert id="insertCommonCodes">
+	<insert id="insertCommonCode">
+	    INSERT INTO COMMON_CODE (
+	    	COMMON_CD
+	        , COMMON_GC
+	        , COMMON_CC
+	        , COMMON_NM
+	        , COMMON_CT
+	        , COMMON_US
+	        <if test="code.common_in != null">, COMMON_IN</if>
+	        , COMMON_RU
+	        , COMMON_RD
+	    ) VALUES (
+	    	#{code.common_gc} || '-' || LPAD((COMMON_SEQ.NEXTVAL), 3, '0')
+	        , #{code.common_gc}
+	        , #{code.common_cc}
+	        , #{code.common_nm}
+	        , #{code.common_ct}
+	        , #{code.common_us}
+	        <if test="code.common_in != null">, #{code.common_in}</if>
+	        , #{code.common_ru}
+	        , #{code.common_rd}
+	    )
+	</insert>
+	<insert id="insertCommonCodeList">
 	    INSERT ALL
 	    <foreach collection="list" item="code">
 	        INTO COMMON_CODE (
-	            COMMON_GC
+	        	COMMON_CD
+	            , COMMON_GC
 	            , COMMON_CC
 	            , COMMON_NM
 	            , COMMON_CT
@@ -31,7 +55,8 @@
 	            , COMMON_RU
 	            , COMMON_RD
 	        ) VALUES (
-	            #{code.common_gc}
+	        	#{code.common_gc} || '-' || LPAD((COMMON_SEQ.NEXTVAL), 3, '0')
+	            , #{code.common_gc}
 	            , #{code.common_cc}
 	            , #{code.common_nm}
 	            , #{code.common_ct}
@@ -48,7 +73,9 @@
 		DELETE FROM COMMON_CODE
 		WHERE
 	    <foreach collection="list" item="item" separator="OR">
-        	(COMMON_GC = #{item.common_gc} AND COMMON_CC = #{item.common_cc})
+	    	<if test="item.common_gc != null and item.common_cc != null">
+        		(COMMON_GC = #{item.common_gc} AND COMMON_CC = #{item.common_cc})
+       		</if>
     	</foreach>
 	</delete>
 </mapper>

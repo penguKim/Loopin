@@ -13,6 +13,7 @@ import lombok.ToString;
 @ToString
 public class Common_codeDTO {
 	
+	private String common_cd;
 //	@JsonProperty("COMMON_GC")
 	private String common_gc;
 //	@JsonProperty("COMMON_CC")

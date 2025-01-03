@@ -54,62 +54,70 @@ public class CommonController {
 	    System.out.println("복합 작업 데이터:" + changes);
 	    return "";
 	}
-
-	@ResponseBody
-	@PostMapping("/delete_group_code")
-	public Map<String, Object> delete_group_code(@RequestBody List<Map<String, Object>> list) {
-		log.info(list.toString());
-		
-		if(list.size() > 0) {
-			commonService.delete_group_code(list);
-		}
-		
-//	    List<Common_codeDTO> list = commonService.SELECT_COMMON_CODE(code);
-
-	    Map<String, Object> response = new HashMap<>();
-	    response.put("result", true);
-
-	    Map<String, Object> data = new HashMap<>();
-//	    data.put("contents", list);
-
-	    response.put("data", data);
-	    
-	    return response;
-	}
 	
 	@ResponseBody
-	@PostMapping("/insert_group_code")
+	@PostMapping("/insert_common_code")
 	public Map<String, Object> update_group_code(@RequestBody Common_code_listDTO list) {
-//		public Map<String, Object> update_group_code(@RequestBody List<Map<String, Object>> createdRows,
-//				@RequestBody List<Map<String, Object>> updatedRows, @RequestParam(name = "code", defaultValue = "") String code) {
 		log.info(list.toString());
 		List<Common_codeDTO> createdRows = list.getCreatedRows();
 		List<Common_codeDTO> updatedRows = list.getUpdatedRows();
 		String code = list.getCode();
+		int insertCount = 0;
+		int updateCount = 0;
 		
 		// 신규 행
 		if(createdRows.size() > 0) {
-			commonService.save(createdRows, code);
+			insertCount = commonService.save(createdRows, code);
 		}
 		
 		// 수정 행
 		if(updatedRows.size() > 0) {
 			
 		}
-//		
-//		
-	    List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
-
-	    Map<String, Object> response = new HashMap<>();
-	    response.put("result", true);
-//
-	    Map<String, Object> data = new HashMap<>();
-	    data.put("contents", codeList);
-//
-	    response.put("data", data);
+		
+		log.info(String.valueOf(insertCount));
+		log.info(String.valueOf(updateCount));
+		
+		Map<String, Object> response = new HashMap<>();
+		if(insertCount <= 0 && updateCount <= 0) {
+			response.put("result", false);			
+		} else {
+			List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
+			response.put("result", true);			
+			Map<String, Object> data = new HashMap<>();
+			data.put("contents", codeList);
+			response.put("data", data);
+		}
 		
 		return response;
 	}
+
+	@ResponseBody
+	@PostMapping("/delete_common_code")
+	public Map<String, Object> delete_group_code(@RequestBody Common_code_listDTO list) {
+		log.info(list.toString());
+		List<Common_codeDTO> deletedRows = list.getDeletedRows();
+		String code = list.getCode();
+		int deleteCount = 0;
+		
+		if(deletedRows.size() > 0) {
+			deleteCount = commonService.delete_group_code(deletedRows);
+		}
+		
+		Map<String, Object> response = new HashMap<>();
+		if(deleteCount <= 0) {
+			response.put("result", false);			
+		} else {
+			List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
+			response.put("result", true);			
+			Map<String, Object> data = new HashMap<>();
+			data.put("contents", codeList);
+			response.put("data", data);
+		}
+		
+		return response;
+	}
+	
 
 	
 	@ResponseBody
