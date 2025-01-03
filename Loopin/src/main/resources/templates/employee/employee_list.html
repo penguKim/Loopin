@@ -12,17 +12,19 @@
 			<div class="modal-dialog modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title">인사카드 등록</h5>
+						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post">
+							<input type="hidden" id="modalMode" name="modalMode" value="create">
+                    		<input type="hidden" id="employee_cd" name="employee_cd"> <!-- 수정 시 사용 -->
 							<!-- 아이디 및 비밀번호 -->
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-1 col-form-label">아이디</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employeeId" name="employeeId">
+									<input type="text" class="form-control" id="employee_id" name="employee_id">
 								</div>
 								<label for="inputEmail" class="col-sm-1 col-form-label">비밀번호</label>
 								<div class="col-sm-4">
@@ -211,8 +213,7 @@
 							<div class="row mb-3">
 								<div class="col-sm-10">
 									<div id="grid"></div>
-									<button type="button" class="btn btn-primary" data-bs-toggle="modal"
-										data-bs-target="#modal_appointment_save">등록</button>
+									<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">등록</button>
 									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
 								</div>
 							</div>
@@ -315,56 +316,41 @@
 
 	
 <script th:inline="javascript">
-
-const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-let grid;
-
 $(document).ready(function () {
-	
-	// 모달이 닫힐 때 입력값 초기화
-	$('#modal_appointment_save').on('hide.bs.modal', function () {
-	    $('#appointment_form')[0].reset();
-	});
-	
-	
-    // 데이터 가져오기 (GET 요청)
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    let grid;
+
+    // 데이터 가져오기 및 그리드 초기화
     $.ajax({
         url: '/select_EMPLOYEE',
         method: 'GET',
         success: function (employeeList) {
-            console.log('서버 응답 데이터:', employeeList);
-
-            // Grid 초기화
             grid = new tui.Grid({
                 el: document.getElementById('grid'),
-                data: employeeList.map(row => ({
-                    employeeId: row.employeeId,
-                    employee_nm: row.employee_nm,
-                    employee_dp: row.employee_dp,
-                    employee_gd: row.employee_gd,
-                    employee_bd: row.employee_bd,
-                    employee_ad: row.employee_ad,
-                    employee_ph: row.employee_ph,
-                    employee_em: row.employee_em,
-                    employee_hd: row.employee_hd,
-                })),
+                data: employeeList,
                 scrollX: true,
                 scrollY: true,
                 rowHeaders: ['checkbox'],
-                autoWidth: true,
                 columns: [
-                    { header: '아이디', name: 'employeeId', align: 'center', sortable: true },
+                    { header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
+                    { header: '아이디', name: 'employee_id', align: 'center', sortable: true },
                     { header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
                     { header: '부서', name: 'employee_dp', align: 'center', sortable: true },
                     { header: '직급', name: 'employee_gd', align: 'center', sortable: true },
-                    { header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
-                    { header: '주소', name: 'employee_ad', align: 'center', sortable: true },
-                    { header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
-                    { header: '이메일', name: 'employee_em', align: 'center', sortable: true },
-                    { header: '입사일', name: 'employee_hd', align: 'center', sortable: true }
                 ]
+            });
+
+            // 그리드 클릭 이벤트 등록
+            grid.on('click', (ev) => {
+                const columnName = ev.columnName;
+                const rowKey = ev.rowKey;
+                const rowData = grid.getRow(rowKey);
+
+                if (columnName === 'employee_cd' || columnName === 'employee_id') {
+                    openModal('edit', rowData); // 수정 모드로 모달 열기
+                }
             });
         },
         error: function (error) {
@@ -372,13 +358,49 @@ $(document).ready(function () {
         }
     });
 
-	
-    // 사원 등록 폼 제출 처리
+    // 모달 열기 함수
+    function openModal(mode, data = null) {
+        const $modalTitle = $('#modalTitle');
+        const $modalMode = $('#modalMode');
+        const $submitButton = $('#modal_submit_button');
+
+        if (mode === 'create') {
+            $modalTitle.text('인사카드 등록');
+            $submitButton.text('등록');
+            $modalMode.val('create');
+            $('#appointment_form')[0].reset();
+        } else if (mode === 'edit') {
+            $modalTitle.text('인사카드 수정');
+            $submitButton.text('수정');
+            $modalMode.val('edit');
+            console.log('모달 모드 설정:', $modalMode.val()); // 디버깅 출력
+
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    $(`#${key}`).val(data[key]);
+                });
+            }
+        }
+
+        $('#modal_appointment_save').modal('show');
+    }
+
+    // 모달 닫힘 처리
+    $('#modal_appointment_save').on('hide.bs.modal', function () {
+        $('#appointment_form')[0].reset();
+    });
+
+    // 폼 제출 처리
     $('#appointment_form').off('submit').on('submit', function (event) {
-        event.preventDefault(); // 기본 제출 동작 방지
+        event.preventDefault();
+
+        const mode = $('#modalMode').val();
+        const url = mode === 'create' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
+        const method = mode === 'create' ? 'POST' : 'POST';
 
         const formData = {
-            employeeId: $('#employeeId').val(),
+            employee_cd: $('#employee_cd').val(),
+            employee_id: $('#employee_id').val(),
             employee_pw: $('#employee_pw').val(),
             employee_dp: $('#employee_dp').val(),
             employee_gd: $('#employee_gd').val(),
@@ -393,29 +415,24 @@ $(document).ready(function () {
         };
 
         $.ajax({
-            url: '/insert_EMPLOYEE',
-            method: 'POST',
+            url: url,
+            method: method,
             contentType: 'application/json',
-            headers: {
-                'X-CSRF-TOKEN': csrfToken,
-            },
+            headers: { 'X-CSRF-TOKEN': csrfToken },
             data: JSON.stringify(formData),
             success: function () {
-                alert('등록이 완료되었습니다.');
+                alert(mode === 'create' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
                 $('#appointment_form')[0].reset();
-
-                const modalSave = bootstrap.Modal.getInstance($('#modal_appointment_save')[0]);
-                if (modalSave) modalSave.hide();
-
-                setTimeout(() => location.reload(), 500);
+                $('#modal_appointment_save').modal('hide');
+                location.reload();
             },
             error: function (xhr, status, error) {
                 console.error('AJAX Error:', xhr.responseText, status, error);
-                alert('등록 중 오류가 발생했습니다.');
+                alert('작업 중 오류가 발생했습니다.');
             },
         });
     });
-
+    
     // 삭제 버튼 클릭 처리
     $('#btn_employee_delete').off('click').on('click', function () {
         const checkedRows = grid.getCheckedRows();
@@ -426,8 +443,8 @@ $(document).ready(function () {
             return;
         }
 
-        const idsToDelete = checkedRows.map(row => row['employeeId']);
-        console.log('삭제할 ID 리스트:', idsToDelete);
+        const cdsToDelete = checkedRows.map(row => row['employee_cd']);
+        console.log('삭제할 ID 리스트:', cdsToDelete);
 
         if (!confirm('선택한 데이터를 삭제하시겠습니까?')) {
             return;
@@ -440,7 +457,7 @@ $(document).ready(function () {
             headers: {
                 [csrfHeader]: csrfToken
             },
-            data: JSON.stringify(idsToDelete),
+            data: JSON.stringify({cds: cdsToDelete}),
             success: function (data) {
                 console.log('서버 응답:', data);
                 if (data.success) {
@@ -456,77 +473,8 @@ $(document).ready(function () {
             }
         });
     });
-
-    // 그리드 행 클릭 시 수정 모달 표시
-	$('#grid').off('click').on('click', '.tui-grid-cell', function () {
-	    const columnName = $(this).data('column-name');
-	    const rowIndex = $(this).closest('tr').index();
-
-	    if (columnName === 'employeeId' || columnName === 'employee_nm') {
-	        const selectedRowData = grid.getData()[rowIndex];
-	        $('#employeeId').val(selectedRowData.employeeId);
-	        $('#employee_pw').val(selectedRowData.employee_pw);
-	        $('#employee_dp').val(selectedRowData.employee_dp);
-	        $('#employee_gd').val(selectedRowData.employee_gd);
-	        $('#employee_hd').val(selectedRowData.employee_hd);
-	        $('#employee_rd').val(selectedRowData.employee_rd);
-	        $('#employee_rr').val(selectedRowData.employee_rr);
-	        $('#employee_cg').val(selectedRowData.employee_cg);
-	        $('#employee_nm').val(selectedRowData.employee_nm);
-	        $('#employee_bd').val(selectedRowData.employee_bd);
-	        $('#employee_ad').val(selectedRowData.employee_ad);
-	        $('#employee_em').val(selectedRowData.employee_em);
-
-			
-			$('#modal_submit_button').text('수정');
-			
-	        // 모달 창 열기
-	        $('#modal_appointment_save').modal('show');
-
-	        // 수정 완료 시 알림 표시
-	        $('#appointment_form').off('submit').on('submit', function (event) {
-	            event.preventDefault();
-
-	            const formData = {
-	                employeeId: $('#employeeId').val(),
-	                employee_pw: $('#employee_pw').val(),
-	                employee_dp: $('#employee_dp').val(),
-	                employee_gd: $('#employee_gd').val(),
-	                employee_hd: $('#employee_hd').val(),
-	                employee_rd: $('#employee_rd').val(),
-	                employee_rr: $('#employee_rr').val(),
-	                employee_cg: $('#employee_cg').val(),
-	                employee_nm: $('#employee_nm').val(),
-	                employee_bd: $('#employee_bd').val(),
-	                employee_ad: $('#employee_ad').val(),
-	                employee_em: $('#employee_em').val(),
-	            };
-
-	            $.ajax({
-	                url: '/update_EMPLOYEE', // 수정 API 호출
-	                method: 'POST',
-	                contentType: 'application/json',
-	                headers: {
-	                    'X-CSRF-TOKEN': $('meta[name="_csrf"]').attr('content'),
-	                },
-	                data: JSON.stringify(formData),
-	                success: function () {
-	                    alert('수정이 완료되었습니다.');
-	                    $('#appointment_form')[0].reset();
-
-	                    const modalSave = bootstrap.Modal.getInstance($('#modal_appointment_save')[0]);
-	                    if (modalSave) modalSave.hide();
-
-	                    setTimeout(() => location.reload(), 500);
-	                },
-	                error: function (xhr, status, error) {
-	                    console.error('AJAX Error:', xhr.responseText, status, error);
-	                    alert('수정 중 오류가 발생했습니다.');
-	                }
-	            });
-	        });
-	    }
-	});
+    
+    
 });
 </script>
 </html>

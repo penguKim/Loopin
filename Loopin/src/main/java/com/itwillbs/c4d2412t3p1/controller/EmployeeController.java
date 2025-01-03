@@ -44,7 +44,8 @@ public class EmployeeController {
 
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
-	        row.put("employeeId", employee.getEmployeeId());
+	        row.put("employee_cd", employee.getEmployee_cd());
+	        row.put("employee_id", employee.getEmployee_id());
 	        row.put("employee_nm", employee.getEmployee_nm());
 	        row.put("employee_dp", employee.getEmployee_dp());
 	        row.put("employee_gd", employee.getEmployee_gd());
@@ -85,15 +86,19 @@ public class EmployeeController {
 	    }
 	}
 	
+	
 //	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
-	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody List<String> ids) {
-		log.info("삭제 요청 데이터: " + ids.toString());
+	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<Long>> request) {
+		
+		List<Long> cds = request.get("cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
 		
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			employeeService.delete_EMPLOYEE(ids); // Service 계층에서 삭제 처리
+			employeeService.delete_EMPLOYEE(cds); // Service 계층에서 삭제 처리
 			response.put("success", true);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {

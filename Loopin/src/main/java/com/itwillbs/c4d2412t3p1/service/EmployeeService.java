@@ -33,9 +33,10 @@ public class EmployeeService {
 	}
 
 
-	@Transactional
-	public void delete_EMPLOYEE(List<String> ids) {
-		EmployeeRepository.deleteAllByEmployeeIdIn(ids);
+
+
+	public void delete_EMPLOYEE(List<Long> cds) {
+		EmployeeRepository.deleteAllById(cds);
 		
 	}
 

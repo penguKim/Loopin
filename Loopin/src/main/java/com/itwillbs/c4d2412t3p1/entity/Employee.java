@@ -27,11 +27,14 @@ import lombok.ToString;
 @ToString
 public class Employee {
 	
-    @Id
-//    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "employee_id")
-    private String employeeId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "employee_cd")
+	private Long employee_cd;
 
+    @Column(name = "employee_id")
+    private String employee_id;
+    
     @Column(name = "employee_pw")
     private String employee_pw;
 
@@ -104,7 +107,8 @@ public class Employee {
 	}
 	
     public Employee(
-		    		String employeeId
+    				 Long employee_cd
+		    		, String employee_id
 		    		, String employee_pw
 		    		, String employee_dp
 		    		, String employee_gd
@@ -129,7 +133,8 @@ public class Employee {
 		    		, Timestamp employee_md
     			) {
     	
-    	this.employeeId = employeeId;
+    	this.employee_cd = employee_cd;
+    	this.employee_id = employee_id;
     	this.employee_pw = employee_pw;
     	this.employee_dp = employee_dp;
     	this.employee_gd = employee_gd;
@@ -158,7 +163,8 @@ public class Employee {
 
     public static Employee setEmployeeEntity(EmployeeDTO employeeDto) {
         Employee employee = new Employee();
-        employee.setEmployeeId(employeeDto.getEmployeeId());
+        employee.setEmployee_cd(employeeDto.getEmployee_cd());
+        employee.setEmployee_id(employeeDto.getEmployee_id());
         employee.setEmployee_pw(employeeDto.getEmployee_pw());
         employee.setEmployee_dp(employeeDto.getEmployee_dp());
         employee.setEmployee_gd(employeeDto.getEmployee_gd());
@@ -189,7 +195,8 @@ public class Employee {
 	public static Employee createEmployee(EmployeeDTO employeeDto) {
 
 		return new Employee(
-		        employeeDto.getEmployeeId()
+				employeeDto.getEmployee_cd()
+		        ,employeeDto.getEmployee_id()
 		        ,employeeDto.getEmployee_pw()
 		        ,employeeDto.getEmployee_dp()
 		        ,employeeDto.getEmployee_gd()
