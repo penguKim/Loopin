@@ -37,7 +37,7 @@
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
 								</div>
-								<label for="inputEmail" class="col-sm-1 col-form-label">직급코드</label>
+								<label for="inputText" class="col-sm-1 col-form-label">직급코드</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
 								</div>
@@ -75,8 +75,8 @@
 								<div class="col-sm-4">
 									<select class="form-select" aria-label="Default select example"
 										id="employee_cg" name="employee_cg">
-										<option value="">신입</option>
-										<option value="">경력</option>
+										<option value="신입" selected>신입</option>
+										<option value="경력">경력</option>
 									</select>
 								</div>
 							</div>
@@ -200,6 +200,63 @@
 			</div>
 		</div>
 		
+		<div class="modal fade" id="modal_department_list" tabindex="-1" aria-labelledby="modal_department_list_label" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modal_department_list_label">부서 선택</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<table id="dpTable" class="table table-striped">
+							<thead>
+								<tr>
+									<th>부서코드</th>
+									<th>부서명</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>DEPT001</td>
+									<td>영업부</td>
+									<td><button class="btn btn-primary select-dp-btn">선택</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modal_grade_list" tabindex="-1" aria-labelledby="modal_grade_list_label" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modal_grade_list_label">직위 선택</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<table id="gdTable" class="table table-striped">
+							<thead>
+								<tr>
+									<th>직위코드</th>
+									<th>과장</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>GD001</td>
+									<td>차장</td>
+									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
 		
 		
 		<!-- 그리드 및 등록 버튼 -->
@@ -211,7 +268,7 @@
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
 							<div class="row mb-3">
-								<div class="col-sm-10">
+								<div class="col-sm-12">
 									<div id="grid"></div>
 									<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">등록</button>
 									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
@@ -281,36 +338,36 @@
 	});
 	
 	// 이메일 관련 처리
-	document.getElementById('employee_domain').addEventListener('change', function() {
-	    const customDomainInput = document.getElementById('custom_domain');
-	    if (this.value !== "custom") {
-	        customDomainInput.value = this.value;
-	        customDomainInput.disabled = true;
+	$('#employee_domain').on('change', function () {
+	    const customDomainInput = $('#custom_domain');
+	    if ($(this).val() !== "custom") {
+	        customDomainInput.val($(this).val()).prop('disabled', true);
 	    } else {
-	        customDomainInput.value = "";
-	        customDomainInput.disabled = false;
-	        customDomainInput.placeholder = "직접 입력";
+	        customDomainInput.val('').prop('disabled', false).attr('placeholder', '직접 입력');
 	    }
 	});
-	
+
 	// 이메일 합치기
 	function updateFullEmail() {
-	    const username = document.getElementById('employee_username').value.trim();
-	    const domainSelect = document.getElementById('employee_domain');
-	    const customDomainInput = document.getElementById('custom_domain');
-	    const fullEmailInput = document.getElementById('employee_em');
+	    const username = $('#employee_username').val().trim();
+	    const domainSelect = $('#employee_domain');
+	    const customDomainInput = $('#custom_domain');
+	    const fullEmailInput = $('#employee_em');
 
-	    let domain = domainSelect.value;
+	    let domain = domainSelect.val();
 	    if (domain === "custom") {
-	        domain = customDomainInput.value.trim();
+	        domain = customDomainInput.val().trim();
 	    }
 
-	    fullEmailInput.value = `${username}@${domain}`;
+	    fullEmailInput.val(username + '@' + domain);
 	}
 
-	document.getElementById('employee_username').addEventListener('input', updateFullEmail);
-	document.getElementById('employee_domain').addEventListener('change', updateFullEmail);
-	document.getElementById('custom_domain').addEventListener('input', updateFullEmail);
+	// 이벤트 핸들러 등록
+	$('#employee_username').on('input', updateFullEmail);
+	$('#employee_domain').on('change', updateFullEmail);
+	$('#custom_domain').on('input', updateFullEmail);
+	
+	
 	
 </script>
 
@@ -322,11 +379,15 @@ $(document).ready(function () {
 
     let grid;
 
+    
     // 데이터 가져오기 및 그리드 초기화
     $.ajax({
         url: '/select_EMPLOYEE',
         method: 'GET',
         success: function (employeeList) {
+        	
+        	console.log(employeeList);
+        	
             grid = new tui.Grid({
                 el: document.getElementById('grid'),
                 data: employeeList,
@@ -335,10 +396,15 @@ $(document).ready(function () {
                 rowHeaders: ['checkbox'],
                 columns: [
                     { header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
-                    { header: '아이디', name: 'employee_id', align: 'center', sortable: true },
                     { header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
                     { header: '부서', name: 'employee_dp', align: 'center', sortable: true },
                     { header: '직급', name: 'employee_gd', align: 'center', sortable: true },
+                    { header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
+                    { header: '주소', name: 'employee_ad', align: 'center', sortable: true },
+                    { header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
+                    { header: '이메일', name: 'employee_em', align: 'center', sortable: true },
+                    { header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
+                    { header: '채용구분', name: 'employee_cg', align: 'center', sortable: true },
                 ]
             });
 
@@ -347,10 +413,15 @@ $(document).ready(function () {
                 const columnName = ev.columnName;
                 const rowKey = ev.rowKey;
                 const rowData = grid.getRow(rowKey);
-
-                if (columnName === 'employee_cd' || columnName === 'employee_id') {
+                
+                if (columnName === 'employee_cd' || columnName === 'employee_nm' || columnName === 'employee_nm' ) {
                     openModal('edit', rowData); // 수정 모드로 모달 열기
                 }
+
+//                 if (targetType === 'columnHeader' || targetType === 'rowHeader') {
+//                     return;
+//                 }
+                
             });
         },
         error: function (error) {
@@ -393,25 +464,38 @@ $(document).ready(function () {
     // 폼 제출 처리
     $('#appointment_form').off('submit').on('submit', function (event) {
         event.preventDefault();
-
+        
+        
         const mode = $('#modalMode').val();
         const url = mode === 'create' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
         const method = mode === 'create' ? 'POST' : 'POST';
-
+	
+        
         const formData = {
-            employee_cd: $('#employee_cd').val(),
-            employee_id: $('#employee_id').val(),
-            employee_pw: $('#employee_pw').val(),
-            employee_dp: $('#employee_dp').val(),
-            employee_gd: $('#employee_gd').val(),
-            employee_hd: $('#employee_hd').val(),
-            employee_rd: $('#employee_rd').val(),
-            employee_rr: $('#employee_rr').val(),
-            employee_cg: $('#employee_cg').val(),
-            employee_nm: $('#employee_nm').val(),
-            employee_bd: $('#employee_bd').val(),
-            employee_ad: $('#employee_ad').val(),
-            employee_em: $('#employee_em').val(),
+       		employee_id : $('#employee_id').val(),
+       		employee_pw : $('#employee_pw').val(),
+       		employee_dp : $('#employee_dp').val(),
+       		employee_gd : $('#employee_gd').val(),
+       		employee_hd : $('#employee_hd').val(),
+       		employee_rd : $('#employee_rd').val(),
+       		employee_rr : $('#employee_rr').val(),
+       		employee_cg : $('#employee_cg').val(),
+       		employee_nt : $('#employee_nt').val(),
+       		employee_nm : $('#employee_nm').val(),
+       		employee_bd : $('#employee_bd').val(),
+       		employee_ad : $('#employee_ad').val(),
+       		employee_sb : $('#employee_sb').val(),
+       		employee_ph : $('#employee_ph').val(),
+       		employee_em : $('#employee_em').val(),
+       		employee_pi : $('#employee_pi').val(),
+       		employee_bs : $('#employee_bs').val(),
+       		employee_bk : $('#employee_bk').val(),
+       		employee_an : $('#employee_an').val(),
+       		employee_dt : $('#employee_dt').val(),
+       		employee_wr : $('#employee_wr').val(),
+       		employee_wd : $('#employee_wd').val(),
+       		employee_mf : $('#employee_mf').val(),
+       		employee_md : $('#employee_md').val()
         };
 
         $.ajax({
@@ -474,6 +558,47 @@ $(document).ready(function () {
         });
     });
     
+    $('#employee_dp').on('click', function () {
+        const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
+        modalDepartmentList.show();
+    });
+
+    $('#employee_gd').on('click', function () {
+        const modalDepartmentList = new bootstrap.Modal($('#modal_grade_list')[0]);
+        modalDepartmentList.show();
+    });
+
+ 	// 부서 선택 버튼 클릭 이벤트 처리
+	$(document).on('click', '.select-dp-btn', function () {
+		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
+		const selectedRow = $(this).closest('tr');
+
+		// 행의 각 열(`td`)에서 데이터를 가져옴
+		const departmentName  = selectedRow.find('td').eq(1).text(); // 부서명
+
+		// 기존 모달의 필드에 값 설정
+		$('#employee_dp').val(departmentName);
+
+		// 부서 선택 모달 닫기
+		const modalDepartmentList = bootstrap.Modal.getInstance($('#modal_department_list')[0]);
+		modalDepartmentList.hide();
+	});
+ 	
+ 	// 직위 선택 버튼 클릭 이벤트 처리
+	$(document).on('click', '.select-gd-btn', function () {
+		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
+		const selectedRow = $(this).closest('tr');
+
+		// 행의 각 열(`td`)에서 데이터를 가져옴
+		const gradeName = selectedRow.find('td').eq(1).text(); // 직위명
+
+		// 기존 모달의 필드에 값 설정
+		$('#employee_gd').val(gradeName);
+
+		// 부서 선택 모달 닫기
+		const modalGradeList = bootstrap.Modal.getInstance($('#modal_grade_list')[0]);
+		modalGradeList.hide();
+	});
     
 });
 </script>

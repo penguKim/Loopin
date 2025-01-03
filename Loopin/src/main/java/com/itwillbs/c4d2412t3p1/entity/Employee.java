@@ -1,18 +1,16 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
-import com.itwillbs.c4d2412t3p1.domain.MemberDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,8 +54,8 @@ public class Employee {
     @Column(name = "employee_cg")
     private String employee_cg;
 
-    @Column(name = "employee_cm")
-    private String employee_cm;
+    @Column(name = "employee_nt")
+    private String employee_nt;
 
     @Column(name = "employee_nm")
     private String employee_nm;
@@ -80,17 +78,20 @@ public class Employee {
     @Column(name = "employee_pi")
     private String employee_pi;
 
+    @Column(name = "employee_bs")
+    private BigDecimal employee_bs;
+
     @Column(name = "employee_bk")
     private String employee_bk;
 
     @Column(name = "employee_an")
     private String employee_an;
+    
+    @Column(name = "employee_dt")
+    private String employee_dt;
 
     @Column(name = "employee_wr")
     private String employee_wr;
-
-    @Column(name = "employee_dt")
-    private String employee_dt;
 
     @Column(name = "employee_wd")
     private Timestamp employee_wd;
@@ -107,7 +108,7 @@ public class Employee {
 	}
 	
     public Employee(
-    				 Long employee_cd
+		    		Long employee_cd
 		    		, String employee_id
 		    		, String employee_pw
 		    		, String employee_dp
@@ -116,7 +117,7 @@ public class Employee {
 		    		, String employee_rd
 		    		, String employee_rr
 		    		, String employee_cg
-		    		, String employee_cm
+		    		, String employee_nt
 		    		, String employee_nm
 		    		, String employee_bd
 		    		, String employee_ad
@@ -124,13 +125,15 @@ public class Employee {
 		    		, String employee_ph
 		    		, String employee_em
 		    		, String employee_pi
+		    		, BigDecimal employee_bs
 		    		, String employee_bk
 		    		, String employee_an
-		    		, String employee_wr
 		    		, String employee_dt
+		    		, String employee_wr
 		    		, Timestamp employee_wd
-		    		, String employee_mf
+		    		, String employee_mf	
 		    		, Timestamp employee_md
+		    		
     			) {
     	
     	this.employee_cd = employee_cd;
@@ -142,7 +145,7 @@ public class Employee {
     	this.employee_rd = employee_rd;
     	this.employee_rr = employee_rr;
     	this.employee_cg = employee_cg;
-    	this.employee_cm = employee_cm;
+    	this.employee_nt = employee_nt;
     	this.employee_nm = employee_nm;
     	this.employee_bd = employee_bd;
     	this.employee_ad = employee_ad;
@@ -150,13 +153,15 @@ public class Employee {
     	this.employee_ph = employee_ph;
     	this.employee_em = employee_em;
     	this.employee_pi = employee_pi;
+    	this.employee_bs = employee_bs;
     	this.employee_bk = employee_bk;
     	this.employee_an = employee_an;
-    	this.employee_wr = employee_wr;
     	this.employee_dt = employee_dt;
+    	this.employee_wr = employee_wr;
     	this.employee_wd = employee_wd;
-    	this.employee_mf = employee_mf;
+    	this.employee_mf = employee_mf;	
     	this.employee_md = employee_md;
+
     	
      
     }
@@ -172,7 +177,7 @@ public class Employee {
         employee.setEmployee_rd(employeeDto.getEmployee_rd());
         employee.setEmployee_rr(employeeDto.getEmployee_rr());
         employee.setEmployee_cg(employeeDto.getEmployee_cg());
-        employee.setEmployee_cm(employeeDto.getEmployee_cm());
+        employee.setEmployee_nt(employeeDto.getEmployee_nt());
         employee.setEmployee_nm(employeeDto.getEmployee_nm());
         employee.setEmployee_bd(employeeDto.getEmployee_bd());
         employee.setEmployee_ad(employeeDto.getEmployee_ad());
@@ -180,10 +185,11 @@ public class Employee {
         employee.setEmployee_ph(employeeDto.getEmployee_ph());
         employee.setEmployee_em(employeeDto.getEmployee_em());
         employee.setEmployee_pi(employeeDto.getEmployee_pi());
+        employee.setEmployee_bs(employeeDto.getEmployee_bs());
         employee.setEmployee_bk(employeeDto.getEmployee_bk());
         employee.setEmployee_an(employeeDto.getEmployee_an());
-        employee.setEmployee_wr(employeeDto.getEmployee_wr());
         employee.setEmployee_dt(employeeDto.getEmployee_dt());
+        employee.setEmployee_wr(employeeDto.getEmployee_wr());
         employee.setEmployee_wd(employeeDto.getEmployee_wd());
         employee.setEmployee_mf(employeeDto.getEmployee_mf());
         employee.setEmployee_md(employeeDto.getEmployee_md());
@@ -196,29 +202,30 @@ public class Employee {
 
 		return new Employee(
 				employeeDto.getEmployee_cd()
-		        ,employeeDto.getEmployee_id()
-		        ,employeeDto.getEmployee_pw()
-		        ,employeeDto.getEmployee_dp()
-		        ,employeeDto.getEmployee_gd()
-		        ,employeeDto.getEmployee_hd()
-		        ,employeeDto.getEmployee_rd()
-		        ,employeeDto.getEmployee_rr()
-		        ,employeeDto.getEmployee_cg()
-		        ,employeeDto.getEmployee_cm()
-		        ,employeeDto.getEmployee_nm()
-		        ,employeeDto.getEmployee_bd()
-		        ,employeeDto.getEmployee_ad()
-		        ,employeeDto.getEmployee_sb()
-		        ,employeeDto.getEmployee_ph()
-		        ,employeeDto.getEmployee_em()
-		        ,employeeDto.getEmployee_pi()
-		        ,employeeDto.getEmployee_bk()
-		        ,employeeDto.getEmployee_an()
-		        ,employeeDto.getEmployee_wr()
-		        ,employeeDto.getEmployee_dt()
-		        ,employeeDto.getEmployee_wd()
-		        ,employeeDto.getEmployee_mf()
-		        ,employeeDto.getEmployee_md());
+				, employeeDto.getEmployee_id()
+				, employeeDto.getEmployee_pw()
+				, employeeDto.getEmployee_dp()
+				, employeeDto.getEmployee_gd()
+				, employeeDto.getEmployee_hd()
+				, employeeDto.getEmployee_rd()
+				, employeeDto.getEmployee_rr()
+				, employeeDto.getEmployee_cg()
+				, employeeDto.getEmployee_nt()
+				, employeeDto.getEmployee_nm()
+				, employeeDto.getEmployee_bd()
+				, employeeDto.getEmployee_ad()
+				, employeeDto.getEmployee_sb()
+				, employeeDto.getEmployee_ph()
+				, employeeDto.getEmployee_em()
+				, employeeDto.getEmployee_pi()
+				, employeeDto.getEmployee_bs()
+				, employeeDto.getEmployee_bk()
+				, employeeDto.getEmployee_an()
+				, employeeDto.getEmployee_dt()
+				, employeeDto.getEmployee_wr()
+				, employeeDto.getEmployee_wd()
+				, employeeDto.getEmployee_mf()
+				, employeeDto.getEmployee_md());
 	}
     
     

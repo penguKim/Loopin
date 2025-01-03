@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.domain;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import lombok.Getter;
@@ -20,7 +21,7 @@ public class EmployeeDTO {
 	private String employee_rd;
 	private String employee_rr;
 	private String employee_cg;
-	private String employee_cm;
+	private String employee_nt;
 	private String employee_nm;
 	private String employee_bd;
 	private String employee_ad;
@@ -28,10 +29,11 @@ public class EmployeeDTO {
 	private String employee_ph;
 	private String employee_em;
 	private String employee_pi;
+	private BigDecimal employee_bs;
 	private String employee_bk;
 	private String employee_an;
-	private String employee_wr;
 	private String employee_dt;
+	private String employee_wr;
 	private Timestamp employee_wd;
 	private String employee_mf;
 	private Timestamp employee_md;

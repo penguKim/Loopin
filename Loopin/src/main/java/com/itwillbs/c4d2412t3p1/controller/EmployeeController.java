@@ -54,6 +54,7 @@ public class EmployeeController {
 	        row.put("employee_ph", employee.getEmployee_ph());
 	        row.put("employee_em", employee.getEmployee_em());
 	        row.put("employee_hd", employee.getEmployee_hd());
+	        row.put("employee_cg", employee.getEmployee_cg());
 	        return row;
 	    }).collect(Collectors.toList());
 
