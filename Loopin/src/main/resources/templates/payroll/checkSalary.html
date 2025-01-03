@@ -5,24 +5,30 @@
 <!-- Toast UI grid CSS File-->
 <link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
 <main id="main" class="main">
-	<div class="pagetitle">
-		<!-- Page Title -->
-		<h1>급여</h1>
-		<!-- Start Page Title -->
-		<nav>
-			<ol class="breadcrumb">
-				<li class="breadcrumb-item"><a href="/log">급여</a></li>
-				<li class="breadcrumb-item">급여 조회</li>
-			</ol>
-		</nav>
-	</div>
-	<!-- End Page Title -->
 	<div id="grid"></div>
 </main>
 <!-- Toast UI grid JS File -->
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
-	$(function() {
+		const employee_cd = 1; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
+		const employee_nm = '테스터'; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
+		// Ajax로 급여 데이터 조회
+		$.ajax({
+			url : "/checkpr",
+			method : "GET",
+			dataType : "JSON",
+			data:{
+				employee_cd : employee_cd
+			}, 
+			success : function(result) {
+				console.log('가져온데이터',result);
+				grid.resetData(result);
+			},
+			error : function(xhr, status, error) {
+				console.error("급여 조회 데이터를 불러오는 데 실패했습니다.", error);
+			}
+		}); 
+		
 		const grid = new tui.Grid({
 			el : document.getElementById('grid'),
 			responsive: true,
@@ -31,19 +37,19 @@
 			columns : [ 
 				{
 					header : 'NO.',
-					name : 'num'
+					name : 'PR_ID'
 				}, 
 				{
 					header : '지급년월',
-					name : 'givedate'
+					name : 'PR_GM'
 				}, 
 				{
 					header : '귀속년월',
-					name : 'workdate'
+					name : 'PR_WM'
 				}, 
 				{
 					header : '실지급액',
-					name : 'codename'
+					name : 'PRDETAIL_RS'
 				}, 
 				{
 					header : '명세서',
@@ -56,20 +62,6 @@
                     }
 				} 
 			],
-			data : [ 
-				{
-					num: 1,
-					givedate: '24.11',
-					workdate: '24.10',
-					codename: '1800000'
-				},
-				{
-					num: 2,
-					givedate: '24.10',
-					workdate: '24.11',
-					codename: '1800000'
-				},
-			]
 		});
 		
 		// 이벤트 위임 방식으로 클릭 이벤트 처리
@@ -97,7 +89,7 @@
 	                       <div class="modal-dialog modal-dialog-centered modal-xl">
 	                           <div class="modal-content">
 	                               <div class="modal-header">
-	                                   <h5 class="modal-title">${rowData.workdate}(귀속년월) 명세서</h5>
+	                                   <h5 class="modal-title">${rowData.PR_WM}(귀속년월) 명세서</h5>
 	                                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 	                               </div>
 	                               <div class="modal-body">
@@ -117,20 +109,127 @@
 					// 모달이 열리고 나서 그리드를 초기화
 	                const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
 	                modalElement.addEventListener('shown.bs.modal', function () {
+	                	const pr_id = rowData.PR_ID;
+	    				console.log('id 데이터:', pr_id);
+	            		$.ajax({
+	            			url : "/checkprmodal",
+	            			method : "GET",
+	            			dataType : "JSON",
+	            			data:{
+	            				employee_cd : employee_cd,
+	            				pr_id : pr_id
+	            			}, 
+	            			success : function(result) {
+	            				console.log('모달데이터',result);
+	            				const transresult = result.map(item =>({
+	            					...item,
+	            					EMPLOYEE_CD : employee_cd,
+	            					EMPLOYEE_NM : employee_nm
+	            				}));
+	            				gridOnespe.resetData(transresult);
+	            			},
+	            			error : function(xhr, status, error) {
+	            				console.error("급여 모달 조회 데이터를 불러오는 데 실패했습니다.", error);
+	            			}
+	            		}); 
 	                    // 모달이 열릴 때 그리드 초기화
 	                    const gridOnespe = new tui.Grid({
 	                        el: document.getElementById('gridOnespe'),
 	                        scrollX: true,
 	                        scrollY: true,
+	                        header: {
+	                        	complexColumns:[
+		            				{
+		            					header : '지급액',
+		            					name : 'PAY',
+		            					childNames: ['PRDETAIL_BS','PRDETAIL_MT','PRDETAIL_OT','PRDETAIL_NA','PRDETAIL_WA','PRDETAIL_HA','PRDETAIL_AA','PRDETAIL_BN']
+		            				}, 
+		            				{
+		            					header : '공제액',
+		            					name : 'DEDUCATION',
+		            					childNames: ['PRDETAIL_GM','PRDETAIL_GY','PRDETAIL_GG','PRDETAIL_LG']
+		            				}, 
+		            				{
+		            					header : '명세서',
+		            					name : 'SEPC',
+		            					childNames: ['PRDETAIL_RS','PRDETAIL_TA','PAY','PRDETAIL_TD','DEDUCATION']
+		            				}, 
+	                        		
+	                        	]
+	                        },
 	                        columns: [
-	                            { header: 'NO.', name: 'num' }
+	                        	{
+	            					header : '사원번호',
+	            					name : 'EMPLOYEE_CD'
+	            				}, 
+	            				{
+	            					header : '사원명',
+	            					name : 'EMPLOYEE_NM'
+	            				}, 
+	            				{
+	            					header : '실지급액',
+	            					name : 'PRDETAIL_RS'
+	            				}, 
+	            				{
+	            					header : '총지급액',
+	            					name : 'PRDETAIL_TA'
+	            				}, 
+	            				{
+	            					header : '기본급',
+	            					name : 'PRDETAIL_BS'
+	            				}, 
+	            				{
+	            					header : '식대',
+	            					name : 'PRDETAIL_MT'
+	            				}, 
+	            				{
+	            					header : '연장수당',
+	            					name : 'PRDETAIL_OT'
+	            				}, 
+	            				{
+	            					header : '야근수당',
+	            					name : 'PRDETAIL_NA'
+	            				}, 
+	            				{
+	            					header : '주말근무수당',
+	            					name : 'PRDETAIL_WA'
+	            				}, 
+	            				{
+	            					header : '휴일수당',
+	            					name : 'PRDETAIL_HA'
+	            				}, 
+	            				{
+	            					header : '연차수당',
+	            					name : 'PRDETAIL_AA'
+	            				}, 
+	            				{
+	            					header : '상여',
+	            					name : 'PRDETAIL_BN'
+	            				}, 
+	            				{
+	            					header : '총공제액',
+	            					name : 'PRDETAIL_TD'
+	            				}, 
+	            				{
+	            					header : '국민연금',
+	            					name : 'PRDETAIL_GM'
+	            				}, 
+	            				{
+	            					header : '고용보험',
+	            					name : 'PRDETAIL_GY'
+	            				}, 
+	            				{
+	            					header : '건강보험',
+	            					name : 'PRDETAIL_GG'
+	            				}, 
+	            				{
+	            					header : '장기요양',
+	            					name : 'PRDETAIL_LG'
+	            				}, 
 	                        ],
-	                        data: [
-	                            { num: 'test' } 
-	                        ]
 	                    });
 
-	                    console.log(gridOnespe.getData());
+	                    // console.log(gridOnespe.getData());
 	                });
 					
 					// 모달이 닫힐 때 DOM에서 제거
@@ -148,6 +247,5 @@
 				/* 이메일 전송 라이브러리 가져올 예정 */
 			}
 		});
-	});
 </script>
 </html>
