@@ -461,6 +461,13 @@
 	                const rowKey = ev.rowKey;
 	                const rowData = grid.getRow(rowKey);
 
+					// 헤더 클릭인지 확인
+					if (rowKey === null || rowKey === undefined) {
+					    console.warn("헤더 클릭은 무시됩니다.");
+					    return;
+					}
+					
+					
 	                if (columnName === 'employee_cd' || columnName === 'employee_nm') {
 	                    openEditModal(rowData); // 수정 모드로 모달 열기
 	                }
@@ -578,8 +585,18 @@
 		    $('#modalTitle').text('인사카드 수정');
 		    $('#modal_submit_button').text('수정');
 
-		    // 데이터 매핑
-		    Object.keys(data).forEach(key => {
+			// 그리드에서 정의된 name 속성 값만 매핑
+			const validKeys = [
+			    'employee_cd', 'employee_nm', 'employee_dp', 'employee_bd',
+			    'employee_ad', 'employee_gd', 'employee_ph', 'employee_em',
+			    'employee_hd', 'employee_id', 'employee_sb', 'employee_cg',
+			    'employee_pw', 'employee_rd', 'employee_rr', 'employee_nt',
+			    'employee_pi', 'employee_bs', 'employee_bk', 'employee_an',
+			    'employee_dt', 'employee_wr', 'employee_wd', 'employee_mf', 'employee_md'
+			];
+
+			// 데이터 매핑
+			validKeys.forEach(key => {
 		        const $field = $(`#${key}`);
 		        if ($field.length) {
 		            $field.val(data[key] || '');
