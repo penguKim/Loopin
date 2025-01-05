@@ -76,7 +76,7 @@ public class EmployeeService {
 	        employeeDTO.setEmployee_pi(employee.getEmployee_pi()); // 기존 파일 이름 유지
 	    }
 
-	    employee.setEmployeeEntity(employeeDTO);
+	    employee.setEmployeeEntity(employee, employeeDTO);
 	    EmployeeRepository.save(employee);
 	}
 

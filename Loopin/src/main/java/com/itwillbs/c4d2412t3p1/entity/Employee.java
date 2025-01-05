@@ -166,8 +166,7 @@ public class Employee {
      
     }
 
-    public static Employee setEmployeeEntity(EmployeeDTO employeeDto) {
-        Employee employee = new Employee();
+    public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto) {
         employee.setEmployee_cd(employeeDto.getEmployee_cd());
         employee.setEmployee_id(employeeDto.getEmployee_id());
         employee.setEmployee_pw(employeeDto.getEmployee_pw());
