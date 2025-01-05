@@ -293,7 +293,7 @@
 							<div class="row mb-3">
 								<div class="col-sm-12">
 									<div id="grid"></div>
-									<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">등록</button>
+									<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
 									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
 								</div>
 							</div>
@@ -471,10 +471,6 @@
 	        }
 	    });
 
-	    // 등록 모달 열기
-	    $('#createEmployeeBtn').on('click', function () {
-	        openCreateModal();
-	    });
 
 	    // 삭제 버튼 클릭 이벤트
 	    $('#btn_employee_delete').on('click', function () {
@@ -508,9 +504,11 @@
 
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
-	        $('#appointment_form')[0].reset(); // 폼 초기화
-	        resetPhoto(); // 사진 초기화
-	        console.log("모달 닫힘: 상태 초기화 완료");
+			$('#appointment_form')[0].reset(); // 폼 초기화
+			resetPhoto(); // 사진 초기화
+			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#modalTitle').text(''); // 모달 제목 초기화
+			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
 	    });
 
 		// 사진 미리보기 초기화 함수
@@ -548,20 +546,35 @@
 		    $('#employee_pi').click(); // 파일 선택창 열기
 		});
 		
-		
-		
-	    // 등록 모달 열기 함수
+		// 등록 모달 열기
+		$('#openCreateModal').on('click', function () {
+		    openCreateModal();
+		});
+
+		// 등록 모달 함수
 		function openCreateModal() {
+		    // 모달 초기화
+		    resetModal();
+
+		    // 모달 설정
 		    $('#modalTitle').text('인사카드 등록');
 		    $('#modal_submit_button').text('등록');
-		    $('#appointment_form')[0].reset(); // 폼 초기화
-		    resetPhoto(); // 사진 초기화
-		    $('#modal_appointment_save').modal('show');
-		    console.log("등록 모달 열림");
+
+		    // 모달 열기
+		    const modalInstance = new bootstrap.Modal($('#modal_appointment_save')[0]);
+		    modalInstance.show();
 		}
 
+		// 모달 초기화 함수
+		function resetModal() {
+		    $('#appointment_form')[0].reset(); // 폼 초기화
+		    resetPhoto(); // 사진 초기화
+		    $('#employee_cd').val(''); // 수정용 필드 초기화
+		}
+		
 		// 수정 모달 열기 함수
-		function openEditModal(data, address) {
+		function openEditModal(data) {
+		    // 모달 제목 및 버튼 텍스트 설정
 		    $('#modalTitle').text('인사카드 수정');
 		    $('#modal_submit_button').text('수정');
 
@@ -574,25 +587,37 @@
 		            console.warn(`필드 ID가 존재하지 않습니다: #${key}`);
 		        }
 		    });
-			
-			// 주소 처리
-			const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
-			const match = data.employee_ad.match(regex);
-			if (match) {
-			    $("#employee_zc").val(match[1]); // 우편번호
-			    $("#employee_sa").val(match[2]); // 기본주소
-			    $("#employee_da").val(match[3].trim()); // 상세주소
-			}
 
-			// 이메일 처리
-			if (data.employee_em && data.employee_em.includes('@')) {
-			    const [email_id, domain] = data.employee_em.split('@');
-			    $('#email_id').val(email_id);
-			    $('#employee_domain').val(domain === 'custom' ? '' : domain);
-			    $('#custom_domain').val(domain === 'custom' ? domain : '').prop('disabled', domain !== 'custom');
-			}
-			
-			
+		    // 주소 처리
+		    if (data.employee_ad) {
+		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
+		        const match = data.employee_ad.match(regex);
+		        if (match) {
+		            $("#employee_zc").val(match[1]); // 우편번호
+		            $("#employee_sa").val(match[2]); // 기본주소
+		            $("#employee_da").val(match[3].trim()); // 상세주소
+		        } else {
+		            console.warn('주소 형식이 잘못되었습니다:', data.employee_ad);
+		        }
+		    }
+
+		    // 이메일 처리
+		    if (data.employee_em) {
+		        const [email_id, domain] = data.employee_em.split('@');
+		        if (email_id && domain) {
+		            $('#email_id').val(email_id);
+		            if (domain === 'custom') {
+		                $('#employee_domain').val('');
+		                $('#custom_domain').val(domain).prop('disabled', false);
+		            } else {
+		                $('#employee_domain').val(domain);
+		                $('#custom_domain').val('').prop('disabled', true);
+		            }
+		        } else {
+		            console.warn('이메일 형식이 잘못되었습니다:', data.employee_em);
+		        }
+		    }
+
 		    // 사진 미리보기 설정
 		    if (data.employee_pi) {
 		        const imagePath = `/uploads/${data.employee_pi}`;
@@ -603,9 +628,20 @@
 		        resetPhoto();
 		    }
 
+		    // 모달 열기
 		    $('#modal_appointment_save').modal('show');
+
 		    console.log("수정 모달 열림", data);
 		}
+
+		// 사진 초기화 함수
+		function resetPhoto() {
+		    $('#photoPreview').hide().attr('src', '');
+		    $('#uploadText').show();
+		    $('#removePhotoBtn').hide();
+		    $('#employee_pi').val('');
+		}
+
 
 		// 폼 제출 이벤트
 		$('#appointment_form').off('submit').on('submit', function (event) {
