@@ -9,14 +9,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Log;
+import com.itwillbs.c4d2412t3p1.logging.LogAspect;
 
 import lombok.RequiredArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RequiredArgsConstructor
 @Component
+@lombok.extern.java.Log
 public class LogConverter {
 
     private final ObjectMapper objectMapper;
+	private static final Logger logger = LoggerFactory.getLogger(LogAspect.class);
 
     // Log → LogDTO 변환
     public LogDTO setLogDTO(Log log) {
@@ -27,7 +33,7 @@ public class LogConverter {
         logDTO.setLog_od(log.getLog_od());
         logDTO.setLog_oi(log.getLog_oi());
         logDTO.setLog_bj(log.getLog_bj());
-        logDTO.setEmployee_id(log.getEmployee().getEmployee_cd().toString());
+        logDTO.setEmployee_id(log.getEmployee() != null ? log.getEmployee().getEmployee_id() : null);
 
         // JSON → Map 변환
         if (log.getLog_jd() != null) {
@@ -53,9 +59,17 @@ public class LogConverter {
         log.setLog_bj(logDTO.getLog_bj());
 
         // Employee 설정
-        Employee employee = new Employee();
-        employee.setEmployee_cd(Long.parseLong(logDTO.getEmployee_id()));
-        log.setEmployee(employee);
+//        Employee employee = new Employee();
+//        employee.setEmployee_cd(Long.parseLong(logDTO.getEmployee_id()));
+//        log.setEmployee(employee);
+        
+        if (logDTO.getEmployee_id() != null) {
+            Employee employee = new Employee();
+            employee.setEmployee_cd(Long.parseLong(logDTO.getEmployee_id())); // NumberFormatException 가능
+            log.setEmployee(employee);
+        } else {
+            logger.info("임시로 employee_cd NULL 사용");
+        }
 
         // Map → JSON 변환
         if (logDTO.getLog_jdMap() != null) {

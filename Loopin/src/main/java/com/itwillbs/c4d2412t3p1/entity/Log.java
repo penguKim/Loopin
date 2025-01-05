@@ -26,7 +26,7 @@ public class Log {
 	private String log_cd;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "employee_cd", referencedColumnName = "employee_cd", nullable = false)
+	@JoinColumn(name = "employee_cd", referencedColumnName = "employee_cd", nullable = true)
 	private Employee employee;
 
 	@Column(name = "log_sj", nullable = false)

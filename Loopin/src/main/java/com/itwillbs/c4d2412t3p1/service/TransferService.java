@@ -28,6 +28,10 @@ public class TransferService {
 		Transfer transfer = Transfer.setTransferEntity(transferDTO);
 
 		transfer.setTransfer_aw("대기");
+		transfer.setTransfer_wd("1");
+		transfer.setTransfer_wr("1");
+		transfer.setTransfer_md("1");
+		transfer.setTransfer_mf("1");
 
 		transferRepository.save(transfer);
 
