@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Log;
+import com.itwillbs.c4d2412t3p1.logging.LogConverter;
 import com.itwillbs.c4d2412t3p1.repository.LogRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -53,14 +54,4 @@ public class LogService {
                    .collect(Collectors.toList());
 	}
 
-////    모든 로그와 직원 정보를 포함하여 조회
-//    public List<LogDTO> getLogs() {
-//        // DB에서 로그와 직원 정보를 함께 조회
-//        List<Log> logEntities = logRepository.findAllLogsWithEmployee();
-//
-//        // 엔티티 → DTO 변환
-//        return logEntities.stream()
-//                          .map(logConverter::setLogDTO)
-//                          .collect(Collectors.toList());
-//    }
 }

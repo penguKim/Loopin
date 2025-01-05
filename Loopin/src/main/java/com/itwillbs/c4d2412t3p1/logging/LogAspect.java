@@ -107,7 +107,7 @@ public class LogAspect {
 //		ThreadLocal에서 logDTO 가져오기
 		LogDTO logDTO = logThreadLocal.get();
 		if (logDTO != null) {
-			logDTO.setLog_ju("작업 실패: " + exception.getMessage()); // 작업 상태를 '작업 실패'로 업데이트하고 예외 메시지 추가
+			logDTO.setLog_ju("작업 실패: " + exception.getMessage()); // 임시(추가 컬럼으로 상태 체크할 것인지 고민중)
 
 			// 예외 정보를 logDetails에 추가
 			Map<String, Object> logDetails = logDTO.getLog_jdMap();

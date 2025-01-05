@@ -1,4 +1,4 @@
-package com.itwillbs.c4d2412t3p1.service;
+package com.itwillbs.c4d2412t3p1.logging;
 
 import java.util.Map;
 
@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Log;
-import com.itwillbs.c4d2412t3p1.logging.LogAspect;
 
 import lombok.RequiredArgsConstructor;
 

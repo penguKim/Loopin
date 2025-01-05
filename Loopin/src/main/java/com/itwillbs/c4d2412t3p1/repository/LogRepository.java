@@ -36,7 +36,7 @@ public interface LogRepository extends JpaRepository<Log, String> {
 	               "VALUES (source.year, source.sequence_number)", nativeQuery = true)
 	void updateSequenceForYear(@Param("year") int year, @Param("sequence") int sequence);
 	
-	 @Query("SELECT l FROM Log l LEFT JOIN FETCH l.employee e")
+	 @Query("SELECT LO FROM Log LO LEFT JOIN FETCH LO.employee EM")
 	 List<Log> findAllLogsWithEmployee();
 	
 //	// 모든 로그와 직원 ID를 조회
