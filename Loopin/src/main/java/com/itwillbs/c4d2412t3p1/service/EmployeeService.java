@@ -39,16 +39,22 @@ public class EmployeeService {
 
 
     public void insert_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
-        String fileName = employee_pi.getOriginalFilename();
-        Path uploadPath = Paths.get("uploads/" + fileName);
+        String fileName = null;
 
         // 파일 저장 처리
-        if (!Files.exists(uploadPath.getParent())) {
-            Files.createDirectories(uploadPath.getParent());
-        }
-
+        if (employee_pi != null && !employee_pi.isEmpty()) {
+            fileName = employee_pi.getOriginalFilename();
+            Path uploadPath = Paths.get("uploads/" + fileName);
+        
+             // 디렉토리 생성 (존재하지 않을 경우)
+	        if (!Files.exists(uploadPath.getParent())) {
+	            Files.createDirectories(uploadPath.getParent());
+	        }
+        
+        // 파일 저장
         Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
         
+        }
         // Employee 엔티티 생성
         Employee employee = Employee.createEmployee(employeeDTO, fileName);
 

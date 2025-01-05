@@ -160,8 +160,8 @@ public class EmployeeController {
 	        
 	        // 데이터 저장 처리
 			employeeService.insert_EMPLOYEE(employeeDTO, employee_pi);
-			response.put("message", "데이터가 성공적으로 저장되었습니다.");
 			
+			response.put("message", "데이터가 성공적으로 저장되었습니다.");
 			return ResponseEntity.ok(response); // JSON 형식으로 반환
 		} catch (Exception e) {
 			response.put("message", "데이터 저장 실패: " + e.getMessage());
@@ -207,7 +207,7 @@ public class EmployeeController {
 	@PostMapping("/delete_EMPLOYEE")
 	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<Long>> request) {
 		
-		List<Long> cds = request.get("cds");
+		List<Long> cds = request.get("employee_cds");
 		
 		log.info("삭제 요청 데이터: " + request.toString());
 		
