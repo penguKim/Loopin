@@ -8,6 +8,7 @@
 		FROM PR
 		JOIN PRDETAIL ON PR.pr_id = PRDETAIL.pr_id
 		WHERE PRDETAIL.employee_cd = #{employee_cd}
+		ORDER BY PR.pr_gm desc
 	</select>
 
 	<select id="checkprmodal" resultType="map">
