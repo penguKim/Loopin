@@ -575,32 +575,22 @@
 		        }
 		    });
 			
-			// 주소 분리 및 입력
-			const regex = /\((\d{5})\)\s*(.*?)\s*(.*)/;
+			// 주소 처리
+			const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
 			const match = data.employee_ad.match(regex);
-
 			if (match) {
 			    $("#employee_zc").val(match[1]); // 우편번호
 			    $("#employee_sa").val(match[2]); // 기본주소
-			    $("#employee_da").val(match[3]); // 상세주소
+			    $("#employee_da").val(match[3].trim()); // 상세주소
 			}
-			
-			// 이메일 분리 처리
-			if (data.employee_em) {
-			    const [email_id, domain] = data.employee_em.split('@');
-			    $('#email_id').val(email_id); // 아이디 부분
 
-			    if ($('#employee_domain option[value="' + domain + '"]').length) {
-			        // 도메인이 select box 내에 있는 경우
-			        $('#employee_domain').val(domain); // select box에 해당 도메인 반영
-			        $('#custom_domain').val(domain).prop('disabled', true); // 직접 입력 필드는 비활성화 및 초기화
-			    } else {
-			        // 도메인이 select box 내에 없는 경우
-			        $('#employee_domain').val('custom'); // select box에서 "직접 입력" 선택
-			        $('#custom_domain').val(domain).prop('disabled', false); // custom_domain에 도메인 값 설정 및 활성화
-			    }
+			// 이메일 처리
+			if (data.employee_em && data.employee_em.includes('@')) {
+			    const [email_id, domain] = data.employee_em.split('@');
+			    $('#email_id').val(email_id);
+			    $('#employee_domain').val(domain === 'custom' ? '' : domain);
+			    $('#custom_domain').val(domain === 'custom' ? domain : '').prop('disabled', domain !== 'custom');
 			}
-			
 			
 			
 		    // 사진 미리보기 설정
