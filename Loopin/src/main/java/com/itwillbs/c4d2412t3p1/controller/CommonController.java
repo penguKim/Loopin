@@ -36,7 +36,7 @@ public class CommonController {
 	@ResponseBody
 	@GetMapping("/select_common_code")
 	public Map<String, Object> SELECT_COMMON_CODE(@RequestParam(name = "code", defaultValue = "") String code) {
-	    List<Common_codeDTO> list = commonService.SELECT_COMMON_CODE(code);
+	    List<Common_codeDTO> list = commonService.select_common_code(code);
 
 	    Map<String, Object> response = new HashMap<>();
 	    response.put("result", true);
@@ -49,12 +49,7 @@ public class CommonController {
 	    return response;
 	}
 	
-	@PostMapping("/test5")
-	public String modifyData(@RequestBody Map<String, List<Map<String, Object>>> changes) {
-	    System.out.println("복합 작업 데이터:" + changes);
-	    return "";
-	}
-	
+
 	@ResponseBody
 	@PostMapping("/insert_common_code")
 	public Map<String, Object> update_group_code(@RequestBody Common_code_listDTO list) {
@@ -62,32 +57,18 @@ public class CommonController {
 		List<Common_codeDTO> createdRows = list.getCreatedRows();
 		List<Common_codeDTO> updatedRows = list.getUpdatedRows();
 		String code = list.getCode();
-		int insertCount = 0;
-		int updateCount = 0;
 		
-		// 신규 행
-		if(createdRows.size() > 0) {
-			insertCount = commonService.save(createdRows, code);
-		}
-		
-		// 수정 행
-		if(updatedRows.size() > 0) {
-			
-		}
-		
-		log.info(String.valueOf(insertCount));
-		log.info(String.valueOf(updateCount));
-		
-		Map<String, Object> response = new HashMap<>();
-		if(insertCount <= 0 && updateCount <= 0) {
-			response.put("result", false);			
-		} else {
-			List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
-			response.put("result", true);			
-			Map<String, Object> data = new HashMap<>();
-			data.put("contents", codeList);
-			response.put("data", data);
-		}
+	    Map<String, Object> result = commonService.insert_common_code(createdRows, updatedRows, code);
+
+	    Map<String, Object> response = new HashMap<>();
+	    System.out.println("-------------- 인서트 갯수 : " + result.get("insertCount"));
+	    System.out.println("-------------- 업데이트 갯수 : " + result.get("updateCount"));
+	    
+	    response.put("result", (int) result.get("insertCount") +  (int) result.get("updateCount")> 0);
+		List<Common_codeDTO> codeList = commonService.select_common_code(code);
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", codeList);
+		response.put("data", data);
 		
 		return response;
 	}
@@ -101,34 +82,29 @@ public class CommonController {
 		int deleteCount = 0;
 		
 		if(deletedRows.size() > 0) {
-			deleteCount = commonService.delete_group_code(deletedRows);
+	        deleteCount = commonService.delete_common_code(deletedRows, code);
 		}
 		
 		Map<String, Object> response = new HashMap<>();
 		if(deleteCount <= 0) {
 			response.put("result", false);			
 		} else {
-			List<Common_codeDTO> codeList = commonService.SELECT_COMMON_CODE(code);
+			List<Common_codeDTO> codeList = commonService.select_common_code(code);
 			response.put("result", true);			
 			Map<String, Object> data = new HashMap<>();
 			data.put("contents", codeList);
 			response.put("data", data);
 		}
 		
+	    response.put("result", deleteCount <= 0);
+		List<Common_codeDTO> codeList = commonService.select_common_code(code);
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", codeList);
+		response.put("data", data);
+		
 		return response;
 	}
-	
 
-	
-	@ResponseBody
-	@PostMapping("/INSERT_COMMON_CODE")
-	public String INSERT_COMMON_CODE(@RequestBody List<Map<String, Object>> COMMON_CODE_LIST) {
-		log.info(COMMON_CODE_LIST.toString());
-		
-		
-		
-		return "";
-	}
 	
 
 	

@@ -2,8 +2,6 @@ package com.itwillbs.c4d2412t3p1.domain;
 
 import java.sql.Timestamp;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -13,7 +11,6 @@ import lombok.ToString;
 @ToString
 public class Common_codeDTO {
 	
-	private String common_cd;
 //	@JsonProperty("COMMON_GC")
 	private String common_gc;
 //	@JsonProperty("COMMON_CC")
@@ -35,6 +32,7 @@ public class Common_codeDTO {
 //	@JsonProperty("COMMON_UD")
 	private Timestamp common_ud;
 	
+	private String beforeCommon_cc;
 	
 	
 }

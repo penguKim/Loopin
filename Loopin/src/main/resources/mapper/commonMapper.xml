@@ -3,7 +3,7 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommonMapper">
-    <select id="SELECT_COMMON_CODE" resultType="CommonCode">
+    <select id="select_common_code" resultType="CommonCode">
         SELECT * 
         FROM COMMON_CODE
         <choose>
@@ -20,7 +20,6 @@
     
 	<insert id="insertCommonCode">
 	    INSERT INTO COMMON_CODE (
-	    	COMMON_CD
 	        , COMMON_GC
 	        , COMMON_CC
 	        , COMMON_NM
@@ -30,7 +29,6 @@
 	        , COMMON_RU
 	        , COMMON_RD
 	    ) VALUES (
-	    	#{code.common_gc} || '-' || LPAD((COMMON_SEQ.NEXTVAL), 3, '0')
 	        , #{code.common_gc}
 	        , #{code.common_cc}
 	        , #{code.common_nm}
@@ -45,7 +43,6 @@
 	    INSERT ALL
 	    <foreach collection="list" item="code">
 	        INTO COMMON_CODE (
-	        	COMMON_CD
 	            , COMMON_GC
 	            , COMMON_CC
 	            , COMMON_NM
@@ -55,7 +52,6 @@
 	            , COMMON_RU
 	            , COMMON_RD
 	        ) VALUES (
-	        	#{code.common_gc} || '-' || LPAD((COMMON_SEQ.NEXTVAL), 3, '0')
 	            , #{code.common_gc}
 	            , #{code.common_cc}
 	            , #{code.common_nm}
@@ -78,4 +74,17 @@
        		</if>
     	</foreach>
 	</delete>
+	
+	<update id="update_common_code">
+		UPDATE FROM COMMON_CODE SET
+	          COMMON_CC = #{code.common_cc}
+	        , COMMON_NM = #{code.common_nm}
+	        , COMMON_CT = #{code.common_ct}
+	        , COMMON_US = #{code.common_us}
+	        , COMMON_IN = #{code.common_in}
+	        , COMMON_UU = #{code.common_uu}
+	        , COMMON_UD = #{code.common_ud}
+		WHERE COMMON_GC = #{code.common_gc}
+		  AND COMMON_CC = #{code.beforeCommon_cc}
+	</update>
 </mapper>
