@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	<body>
+		<main id="main" class="main">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">연차 발생 등록</h5>
+					<p class="card-text">예상 연차</p>
+					<div id="grid_container">
+					</div>
+					<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#verticalycentered">등록</button>
+					<!-- 모달창 -->
+					<div class="modal fade" id="verticalycentered" tabindex="-1">
+						<div class="modal-dialog modal-dialog-centered">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title">Vertically Centered</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body">2025년 연차 등록 완료하시겠습니까?</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+									<button type="button" class="btn btn-primary" id="btn_insert_ANNUAL">등록</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	</body>
+<script th:inline="javascript">
+	const grid_container = document.getElementById('grid_container');
+	const btn_insert_ANNUAL = document.getElementById('btn_insert_ANNUAL');
+	const token = $("meta[name='_csrf']").attr("content");
+	const header = $("meta[name='_csrf_header']").attr("content");
+
+		// 첫 로딩
+	window.onload = function(){
+		grid_function();
+	}
+	
+	btn_insert_ANNUAL.addEventListener("click", function(){
+		const today = new Date();
+		const year = today.getFullYear();
+		const formattedDate = `${year}`;
+		
+		$.ajax({
+			type: "POST",
+			url: "/insert_ANNUAL",
+			dataType: 'json',
+			contentType : 'application/json',
+			beforeSend : function(xhr){
+				xhr.setRequestHeader(header, token);
+			},
+			data: 
+				JSON.stringify({annual_yr : formattedDate}),
+			success: function(result) {
+				console.log('조회 성공');
+				grid.resetData(result);
+			},
+			error : function(result) {
+				console.log('조회 실패');
+			}
+		});
+		
+		
+	});
+	
+	
+	
+	function grid_function(){ 
+		
+		// 처음 불러오는 데이터
+		$.ajax({
+			type: "get",
+			url: "/select_base_ATTENDANCE",
+			dataType: 'json',
+			success: function(result) {
+				grid.resetData(result);
+				console.log('조회 성공');
+			},
+			error : function(result) {
+				console.log('조회 실패');
+			}
+		});
+		
+		// 필터 클릭할때마다 데이터 바뀌도록
+		let grid_data= { 
+			api: {
+				readData: {url: 'select_base_ATTENDANCE', method:'GET'},
+			}
+		}
+		
+		// 그리드 객체 생성 + 초기 세팅
+		const grid = new tui.Grid({
+			el: grid_container,
+			data: grid_data,
+			scrollX: false,
+			scrollY: false,
+			columns: [
+				{
+					header: '이름', // 출력명
+					name: 'annual_id', // 칼럼명
+					align: 'center',
+					sortable: true,
+				},
+				{
+					header: '부서명', 
+					name: 'employee_cd',
+					align: 'center',
+					sortable: true,
+				},
+				{
+					header: '입사일',
+					name: 'annual_cc',
+					align: 'center',
+					sortable: true,
+					
+				},
+				{
+					header: '근속연수', 
+					name: 'annual_yr',
+					align: 'center',
+					sortable: true,
+				},
+				{
+					header: '사용연차',
+					name: 'annual_ua',
+					align: 'center',
+					sortable: true,
+				},
+				{
+					header: '남은연차',
+					name: 'annual_ra',
+					align: 'center',
+					sortable: true,
+				},
+				{
+					header: '총연차',
+					name: 'annual_aa',
+					align: 'center',
+					sortable: true,
+				},
+				
+			],
+		});
+	} 
+</script>
+</html>

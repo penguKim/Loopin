@@ -33,8 +33,60 @@
 						
 						<!-- 그리드 -->
 						<div id='btn_grid'>
-							<button type='button' class='btn btn-outline-secondary' id='btn_grid_filter' style="display: none;">필터</button>
+							<button type="button" class="btn btn-primary" id='btn_grid_filter' style="display: none;" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">
+								필터
+							</button>
+							<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true">
+								<div class="modal-dialog">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modal_appointment_save_label">상세필터</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="modal_appointment_save"  method="post">
+												<div class="row mb-3">
+													<div class="col">
+														<label for="employee_nm" class="form-label">이름</label>
+														<div class="input-group">
+															<input type="text" id="employee_nm" class="form-control" >
+														</div>
+													</div>
+													<div class="col">
+														<label for="employee_cd" class="form-label">부서명</label>
+														<div class="input-group">
+															<input type="text" id="employee_cd" class="form-control">
+														</div>
+													</div>
+												</div>
+<!--												<div class="row mb-3">-->
+<!--													<div class="col">-->
+<!--														<label for="transfer_ad" class="form-label">입사일</label> -->
+<!--														<input type="text" id="transfer_ad" class="form-control" placeholder="YYYY-MM-DD">-->
+<!--													</div>-->
+<!--													<div class="col-sm-2">-->
+<!--														<div id="wrapper"></div>-->
+<!--													</div>-->
+<!--												</div>-->
+<!--												<div class="row mb-3">-->
+<!--													<div class="col">-->
+<!--														<label for="transfer_ag" class="form-label">발령직위</label> -->
+<!--														<select id="transfer_ag" class="form-select">-->
+<!--															<option value="사원">사원</option>-->
+<!--															<option value="대리">대리</option>-->
+<!--															<option value="과장">과장</option>-->
+<!--														</select>-->
+<!--													</div>-->
+<!--												</div>-->
+												<button type="submit" class="btn btn-primary" id="btn_filter_annual">검색</button>
+												<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
 						</div>
+						<!-- 그리드 컨테이너 -->
 						<div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="profile-tab">
 						</div>
 					</div>
@@ -46,28 +98,54 @@
 	
 	<script th:inline="javascript">
 		const calendar_container = document.getElementById('pills-home');
-		const grid_container = document.getElementById('pills-profile');
 		const btn_calendar = document.getElementById('btn_calendar');
-		const btn_grid_filter = document.getElementById('btn_grid_filter');
 		const btn_calendar_prev = document.getElementById('btn_calendar_prev');
 		const btn_calendar_next = document.getElementById('btn_calendar_next');
-		const tab = document.getElementById('pills-home-tab');
+		const btn_calendar_container = document.getElementById('pills-home-tab');
+		const btn_filter_annual = document.getElementById('btn_filter_annual');
+		const grid_container = document.getElementById('pills-profile');
+		const btn_grid_filter = document.getElementById('btn_grid_filter');
+		// 그리드 객체 생성 + 초기 세팅
+		const grid = new tui.Grid({
+			el: grid_container,
+			scrollX: false,
+			scrollY: false,
+			columns: [
+				{ header: '이름', name: 'annual_id', align: 'center', sortable: true, },
+				{ header: '부서명', name: 'employee_cd', align: 'center', sortable: true, },
+				{ header: '입사일', name: 'annual_cc', align: 'center', sortable: true, },
+				{ header: '근속연수', name: 'annual_yr', align: 'center', sortable: true, },
+				{ header: '사용연차', name: 'annual_ua', align: 'center', sortable: true, },
+				{ header: '남은연차', name: 'annual_ra', align: 'center', sortable: true, },
+				{ header: '총연차', name: 'annual_aa', align: 'center', sortable: true, },
+			],
+		});
 		
 		// 첫 로딩
 		window.onload = function(){
 			calendar_function();
+			
 		}
 		
 		// 캘린더 버튼 이벤트
-		tab.addEventListener('click', function(){
+		btn_calendar_container.addEventListener('click', function(){
 			btn_grid_filter.style.display = "none";
+			if(btn_calendar.style.display == "none"){
+				btn_calendar.style.display = "block"
+			}
 		});
+		
+		
+		// 그리드 필터 버튼 이벤트
+		//btn_filter_annual.addEventListener('click', function(event){
+		//});
 
 		// 그리드 버튼 누르면 호출 함수
 		function grid_function(){ 
-			btn_calendar.innerHTML = '';
 			grid_container.innerHTML = '';
+			btn_calendar.style.display = "none";
 			btn_grid_filter.style.display = "block";
+			
 			
 			// 처음 불러오는 데이터
 			$.ajax({
@@ -81,51 +159,7 @@
 				}
 			});
 			
-			// 필터 클릭할때마다 데이터 바뀌도록
-			let grid_data= { 
-				api: {
-					readData: {url: 'select_base_ATTENDANCE', method:'GET'},
-				}
-			}
 			
-			// 그리드 객체 생성 + 초기 세팅
-			const grid = new tui.Grid({
-				el: grid_container,
-				data: grid_data,
-				scrollX: false,
-				scrollY: true,
-				columns: [
-					{
-						header: '이름', // 출력명
-						name: 'NAME' // 칼럼명
-					},
-					{
-						header: '부서명', 
-						name: 'DEPT' 
-					},
-					{
-						header: '입사일',
-						name: 'HIRE'
-					},
-					{
-						header: '근속연수', 
-						name: 'PERIOD'
-					},
-					{
-						header: '사용연차',
-						name: 'USE'
-					},
-					{
-						header: '남은연차',
-						name: 'AVAILABLE'
-					},
-					{
-						header: '총연차',
-						name: 'TOTAL'
-					},
-					
-				],
-			});
 		} 
 		
 		// 캘린더 호출 함수
@@ -137,24 +171,10 @@
 				useDetailPopup: true,
 				isReadOnly: true,
 				calendars: [
-					{
-						id: 'cal1',
-						name: '총결원',
-						backgroundColor: '#03bd9e',
-					},
-					{
-						id: 'cal2',
-						name: '휴가자',
-						backgroundColor: '#ffffff',
-						borderLeft: '#ffffff',
-					},
-					{
-						id: 'cal3',
-						name: '출장',
-						backgroundColor: '#ffffff',
-					},
+					{ id: 'cal1', name: '총결원', backgroundColor: '#03bd9e', },
+					{ id: 'cal2', name: '휴가자', backgroundColor: '#ffffff', },
+					{ id: 'cal3', name: '출장', backgroundColor: '#ffffff', },
 				],
-		
 			};
 		
 			let calendar = new tui.Calendar(calendar_container, options);
@@ -191,60 +211,44 @@
 				},
 			]);
 			
-			
 			calendar.setOptions({
-				
 				// 해당 달만 보여주기
-				month: {
-					isAlways6Weeks: false, 
-				},
+				month: { isAlways6Weeks: false, },
 				
 			});
 			
 			calendar.setTheme({
-				
 				// 주말 css
-				month: {
-						weekend: {
-							backgroundColor: 'rgba(255, 64, 64, 0.1)',
-						},
+				common: { holiday: { color: 'rgba(255, 64, 64)', },
+						  saturday: { color: 'rgba(64, 64, 255)', },
 				},
 			});
 			
 			
-			// Date 객체 문자열 형식으로 변환
-			const originalDate = calendar.getDate(); 
-			const year = originalDate.getFullYear();
-			const month = originalDate.getMonth() + 1;
-			const formattedDate = `${year}년 ${month}월`;
-			$("#btn_calendar span").text(formattedDate);
 			
+			// 달력 날짜 출력
+			function updateCalendarText(calendar, selector) {
+			    const originalDate = calendar.getDate();
+			    const year = originalDate.getFullYear();
+			    const month = originalDate.getMonth() + 1;
+			    const formattedDate = `${year}년 ${month}월`;
+			    $(selector).text(formattedDate);
+			}
+			
+			updateCalendarText(calendar, "#btn_calendar span");
 			
 			// 이전 달 보기 이벤트
 			btn_calendar_prev.addEventListener('click', function(){ 
-				
 				calendar.prev();
-				
-				const originalDate = calendar.getDate(); 
-				const year = originalDate.getFullYear();
-				const month = originalDate.getMonth() + 1;
-				const formattedDate = `${year}년 ${month}월`;
-				$("#btn_calendar span").text(formattedDate);
+				updateCalendarText(calendar, "#btn_calendar span");
 			
 			});
 			
 			
 			// 다음 달 보기 이벤트
 			btn_calendar_next.addEventListener('click', function(){ 
-				
 				calendar.next();
-
-				const originalDate = calendar.getDate(); 
-				const year = originalDate.getFullYear();
-				const month = originalDate.getMonth() + 1;
-				const formattedDate = `${year}년 ${month}월`;
-				$("#btn_calendar span").text(formattedDate);
-				
+				updateCalendarText(calendar, "#btn_calendar span");				
 				
 			});
 	
