@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommonMapper">
+    <select id="select_common_code" resultType="CommonCode">
+        SELECT * 
+        FROM COMMON_CODE
+        <choose>
+        	<when test="code == null or code == ''">
+		        WHERE COMMON_GC = '00'
+		        ORDER BY COMMON_NM
+        	</when>
+        	<otherwise>
+        		WHERE COMMON_GC = #{code}
+		        ORDER BY COMMON_IN
+        	</otherwise>
+        </choose>
+    </select>
+    
+	<insert id="insertCommonCode">
+	    INSERT INTO COMMON_CODE (
+	        , COMMON_GC
+	        , COMMON_CC
+	        , COMMON_NM
+	        , COMMON_CT
+	        , COMMON_US
+	        <if test="code.common_in != null">, COMMON_IN</if>
+	        , COMMON_RU
+	        , COMMON_RD
+	    ) VALUES (
+	        , #{code.common_gc}
+	        , #{code.common_cc}
+	        , #{code.common_nm}
+	        , #{code.common_ct}
+	        , #{code.common_us}
+	        <if test="code.common_in != null">, #{code.common_in}</if>
+	        , #{code.common_ru}
+	        , #{code.common_rd}
+	    )
+	</insert>
+	<insert id="insertCommonCodeList">
+	    INSERT ALL
+	    <foreach collection="list" item="code">
+	        INTO COMMON_CODE (
+	            , COMMON_GC
+	            , COMMON_CC
+	            , COMMON_NM
+	            , COMMON_CT
+	            , COMMON_US
+	            <if test="code.common_in != null">, COMMON_IN</if>
+	            , COMMON_RU
+	            , COMMON_RD
+	        ) VALUES (
+	            , #{code.common_gc}
+	            , #{code.common_cc}
+	            , #{code.common_nm}
+	            , #{code.common_ct}
+	            , #{code.common_us}
+	            <if test="code.common_in != null">, #{code.common_in}</if>
+	            , #{code.common_ru}
+	            , #{code.common_rd}
+	        )
+	    </foreach>
+	    SELECT * FROM dual
+	</insert>
+	
+	<delete id="delete_group_code">
+		DELETE FROM COMMON_CODE
+		WHERE
+	    <foreach collection="list" item="item" separator="OR">
+	    	<if test="item.common_gc != null and item.common_cc != null">
+        		(COMMON_GC = #{item.common_gc} AND COMMON_CC = #{item.common_cc})
+       		</if>
+    	</foreach>
+	</delete>
+	
+	<update id="update_common_code">
+		UPDATE FROM COMMON_CODE SET
+	          COMMON_CC = #{code.common_cc}
+	        , COMMON_NM = #{code.common_nm}
+	        , COMMON_CT = #{code.common_ct}
+	        , COMMON_US = #{code.common_us}
+	        , COMMON_IN = #{code.common_in}
+	        , COMMON_UU = #{code.common_uu}
+	        , COMMON_UD = #{code.common_ud}
+		WHERE COMMON_GC = #{code.common_gc}
+		  AND COMMON_CC = #{code.beforeCommon_cc}
+	</update>
+</mapper>
