@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
 
 <body>
@@ -33,12 +34,14 @@
 	<div id="grid"></div>
 
 	<!-- Modal -->
-	<div class="modal fade" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+	<div class="modal fade" id="logDetailModal" tabindex="-1"
+		aria-labelledby="logDetailModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="logDetailModalLabel">Log Details</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<!-- JSON Data Display -->
@@ -46,7 +49,8 @@
 						style="white-space: pre-wrap; word-wrap: break-word;"></pre>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Close</button>
 				</div>
 			</div>
 		</div>
@@ -86,26 +90,14 @@
 						log_bj: row.log_bj,
 					})),
 					columns: [
-						{header: '로그 코드', name: 'log_cd', align: 'center', sortable: true},
-						{header: '직원 ID', name: 'employee_id', align: 'center', sortable: true},
-						{header: '로그 제목', name: 'log_sj', align: 'center', sortable: true},
-						{header: '작업 내용', name: 'log_ju', align: 'center', sortable: true},
-						{
-							header: '세부 정보',
-							name: 'log_jd',
-							align: 'center',
-							sortable: true,
-							onCellClicked: function (event) {
-								// log_jd 클릭 시 모달 표시
-								const logDetails = event.value || 'No details available';
-								document.getElementById('modalLogDetails').innerText = logDetails; // 모달 내용 업데이트
-								const modal = new bootstrap.Modal(document.getElementById('logDetailModal')); // 모달 표시
-								modal.show();
-							}
-						},
-						{header: '로그 시간', name: 'log_od', align: 'center', sortable: true},
-						{header: 'IP 주소', name: 'log_oi', align: 'center', sortable: true},
-						{header: '브라우저 정보', name: 'log_bj', align: 'center', sortable: true}
+						{ header: '로그 코드', name: 'log_cd', align: 'center', sortable: true },
+						{ header: '직원 ID', name: 'employee_id', align: 'center', sortable: true },
+						{ header: '로그 제목', name: 'log_sj', align: 'center', sortable: true },
+						{ header: '작업 내용', name: 'log_ju', align: 'center', sortable: true },
+						{ header: '세부 정보', name: 'log_jd', align: 'center', sortable: true },
+						{ header: '로그 시간', name: 'log_od', align: 'center', sortable: true },
+						{ header: 'IP 주소', name: 'log_oi', align: 'center', sortable: true },
+						{ header: '브라우저 정보', name: 'log_bj', align: 'center', sortable: true }
 					],
 					rowHeaders: ['checkbox'],
 					autoWidth: true,
@@ -114,12 +106,37 @@
 					scrollX: true,
 					scrollY: true
 				});
+
+				// Cell 클릭 이벤트 등록
+				grid.on('click', (event) => {
+				    if (event.columnName === 'log_jd') {
+				        // rowKey를 사용해 해당 행의 데이터를 가져옴
+				        const rowData = grid.getRow(event.rowKey);
+				        console.log('Row data from rowKey:', rowData); // 디버깅용
+
+				        const logDetails = rowData.log_jd || 'No details available'; // log_jd 값 확인
+				        document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+				        const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+				        modal.show();
+				    }
+				    
+				    if (event.columnName === 'log_bj') {
+				        // rowKey를 사용해 해당 행의 데이터를 가져옴
+				        const rowData = grid.getRow(event.rowKey);
+				        console.log('Row data from rowKey:', rowData); // 디버깅용
+
+				        const logDetails = rowData.log_bj || 'No details available'; // log_bj 값 확인
+				        document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+				        const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+				        modal.show();
+				    }
+				});
 			})
 			.catch(error => {
 				console.error('오류 발생:', error);
 			});
 	});
-
 </script>
+
 
 </html>
