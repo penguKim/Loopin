@@ -1,0 +1,76 @@
+package com.itwillbs.c4d2412t3p1.entity;
+
+import java.sql.Timestamp;
+
+import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+
+
+@Entity
+@Table(name = "COMMUTE")
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@IdClass(CommutePK.class)
+public class Commute {
+	
+//	@Id
+//	@Column(name = "commute_id")
+//	private String commute_id;
+	@Id
+	@Column(name = "employee_cd")
+	private String employee_cd;
+	@Id
+	@Column(name = "workinghour_id")
+	private String workinghour_id;
+	@Id
+	@Column(name = "commute_dt")
+	private String commute_dt;
+	@Column(name = "commute_wt")
+	private String commute_wt;
+	@Column(name = "commute_lt")
+	private String commute_lt;
+	@Column(name = "commute_ru")
+	private String commute_ru;
+	@Column(name = "commute_rd")
+	private Timestamp commute_rd;
+	@Column(name = "commute_uu")
+	private String commute_uu;
+	@Column(name = "commute_ud")
+	private Timestamp commute_ud;
+
+
+	
+	public static Commute setCommute(CommuteDTO commute) {
+	    return Commute.builder()
+	    		.employee_cd(commute.getEmployee_cd())
+	    		.workinghour_id(commute.getWorkinghour_id())
+	    		.commute_dt(commute.getCommute_dt())
+	    		.commute_wt(commute.getCommute_wt())
+	    		.commute_lt(commute.getCommute_lt())
+	    		.commute_ru(commute.getCommute_ru())
+	    		.commute_rd(commute.getCommute_rd())
+	    		.commute_uu(commute.getCommute_uu())
+	    		.commute_ud(commute.getCommute_ud())
+	            .build();
+	}
+
+	
+	
+	
+}
