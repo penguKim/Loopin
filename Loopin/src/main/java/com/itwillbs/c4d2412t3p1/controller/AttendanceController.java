@@ -93,5 +93,24 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+//	@GetMapping("/select_EMPLOYEE")
+//	public ResponseEntity<Map<String, String>> select_EMPLOYEE(@RequestParam("employee_id") String employee_id) {
+//		 try {
+//	            Employee employee = employeeService.findByName(name);
+//	            if (employee == null) {
+//	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사원을 찾을 수 없습니다.");
+//	            }
+//	            Map<String, Object> response = new HashMap<>();
+//	            response.put("department", employee.getDepartment());
+//	            response.put("hireDate", employee.getHireDate());
+//	            response.put("remainingAnnual", employee.getRemainingAnnual());
+//	            return ResponseEntity.ok(response);
+//	        } catch (Exception e) {
+//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생");
+//	        }
+//	    }
+//	}
 
+	
 }

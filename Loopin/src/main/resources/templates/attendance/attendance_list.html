@@ -36,6 +36,7 @@
 							<button type="button" class="btn btn-primary" id='btn_grid_filter' style="display: none;" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">
 								필터
 							</button>
+							<!-- 상세필터 모달 -->
 							<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true">
 								<div class="modal-dialog">
 									<div class="modal-content">
@@ -44,40 +45,40 @@
 											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 										</div>
 										<div class="modal-body">
-											<form id="modal_appointment_save"  method="post">
+											<form id="modal_appointment_save" method="post" th:action="@{/select_ANNUAL}">
 												<div class="row mb-3">
 													<div class="col">
-														<label for="employee_nm" class="form-label">이름</label>
+														<label for="employee_id" class="form-label">이름</label>
 														<div class="input-group">
-															<input type="text" id="employee_nm" class="form-control" >
+<!--															<form class="search-form d-flex align-items-center" method="POST" th:action="@{/select_EMPLOYEE}">-->
+																<input type="text" id="employee_id" class="form-control" required>
+																<button type="button" title="Search" id="btn_employee_id"><i class="ri-search-2-line"></i></button>
+<!--															</form>-->
 														</div>
 													</div>
 													<div class="col">
-														<label for="employee_cd" class="form-label">부서명</label>
-														<div class="input-group">
-															<input type="text" id="employee_cd" class="form-control">
-														</div>
+														<label for="employee_cd" class="form-label">부서</label> <select
+															id="employee_cd" class="form-select">
+															<option value="영업부">영업부</option>
+															<option value="개발부">개발부</option>
+															<option value="기획부">기획부</option>
+															<option value="인사부">인사부</option>
+														</select>
 													</div>
 												</div>
-<!--												<div class="row mb-3">-->
-<!--													<div class="col">-->
-<!--														<label for="transfer_ad" class="form-label">입사일</label> -->
-<!--														<input type="text" id="transfer_ad" class="form-control" placeholder="YYYY-MM-DD">-->
-<!--													</div>-->
-<!--													<div class="col-sm-2">-->
-<!--														<div id="wrapper"></div>-->
-<!--													</div>-->
-<!--												</div>-->
-<!--												<div class="row mb-3">-->
-<!--													<div class="col">-->
-<!--														<label for="transfer_ag" class="form-label">발령직위</label> -->
-<!--														<select id="transfer_ag" class="form-select">-->
-<!--															<option value="사원">사원</option>-->
-<!--															<option value="대리">대리</option>-->
-<!--															<option value="과장">과장</option>-->
-<!--														</select>-->
-<!--													</div>-->
-<!--												</div>-->
+												<div class="row mb-3">
+													<div class="col">
+														<label for="employee_hd" class="form-label">입사일</label> 
+														<input type="text" id="employee_hd" class="form-control" placeholder="YYYY-MM-DD">
+													</div>
+													<div id="wrapper"></div>
+												</div>
+												<div class="row mb-3">
+													<div class="col">
+														<label for="inputNumber" class="form-label">잔여연차</label>
+														<input type="number" class="form-control" id="annual_ra" min="0" step="0.5" placeholder="0.5씩 증가">
+													</div>
+												</div>
 												<button type="submit" class="btn btn-primary" id="btn_filter_annual">검색</button>
 												<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
 											</form>
@@ -85,6 +86,50 @@
 									</div>
 								</div>
 							</div>
+							<!-- 이름 input 클릭 시 모달 -->
+							<div class="modal fade" id="modal_employee_list" tabindex="-1"
+									aria-labelledby="modal_employee_list_label" aria-hidden="true">
+									<div class="modal-dialog modal-lg">
+										<div class="modal-content">
+											<div class="modal-header">
+												<h5 class="modal-title" id="modal_employee_list_label">사원 선택</h5>
+												<button type="button" class="btn-close" data-bs-dismiss="modal"
+													aria-label="Close"></button>
+											</div>
+											<div class="modal-body">
+												<table id="empTable" class="table table-striped">
+													<thead>
+														<tr>
+															<th>사원코드</th>
+															<th>이름</th>
+															<th>부서</th>
+															<th>직위</th>
+															<th>선택</th>
+														</tr>
+													</thead>
+													<tbody>
+														<!-- 여기에 사원 정보를 동적으로 추가 -->
+														<tr>
+															<td>EMP001</td>
+															<td>홍길동</td>
+															<td>영업부</td>
+															<td>대리</td>
+															<td><button class="btn btn-primary select-emp-btn">선택</button></td>
+														</tr>
+														<tr>
+															<td>EMP002</td>
+															<td>김철수</td>
+															<td>개발부</td>
+															<td>과장</td>
+															<td><button class="btn btn-primary select-emp-btn">선택</button></td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+
 						</div>
 						<!-- 그리드 컨테이너 -->
 						<div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="profile-tab">
@@ -97,6 +142,8 @@
 	</body>
 	
 	<script th:inline="javascript">
+		const token = $("meta[name='_csrf']").attr("content");
+		const header = $("meta[name='_csrf_header']").attr("content");
 		const calendar_container = document.getElementById('pills-home');
 		const btn_calendar = document.getElementById('btn_calendar');
 		const btn_calendar_prev = document.getElementById('btn_calendar_prev');
@@ -105,21 +152,7 @@
 		const btn_filter_annual = document.getElementById('btn_filter_annual');
 		const grid_container = document.getElementById('pills-profile');
 		const btn_grid_filter = document.getElementById('btn_grid_filter');
-		// 그리드 객체 생성 + 초기 세팅
-		const grid = new tui.Grid({
-			el: grid_container,
-			scrollX: false,
-			scrollY: false,
-			columns: [
-				{ header: '이름', name: 'annual_id', align: 'center', sortable: true, },
-				{ header: '부서명', name: 'employee_cd', align: 'center', sortable: true, },
-				{ header: '입사일', name: 'annual_cc', align: 'center', sortable: true, },
-				{ header: '근속연수', name: 'annual_yr', align: 'center', sortable: true, },
-				{ header: '사용연차', name: 'annual_ua', align: 'center', sortable: true, },
-				{ header: '남은연차', name: 'annual_ra', align: 'center', sortable: true, },
-				{ header: '총연차', name: 'annual_aa', align: 'center', sortable: true, },
-			],
-		});
+		
 		
 		// 첫 로딩
 		window.onload = function(){
@@ -135,9 +168,58 @@
 			}
 		});
 		
+		// 상세필터 입사일 설정
+		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
+			// Date Picker 초기화
+			new tui.DatePicker('#wrapper', {
+				input: {
+					element: '#employee_hd',
+					format: 'yyyy-MM-dd'
+				},
+				// 오늘 날짜
+				date: new Date()
+			});
+		});
+		
+		document.getElementById('btn_employee_id').addEventListener('click', function () {
+			if(document.getElementById('employee_id').val != null){
+				const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+				modal_employee_list.show();
+			}
+		});
+		
+		document.getElementById('btn_employee_id').addEventListener('click', function () {
+		    const employee_id = document.getElementById('employee_id').value; // 입력된 이름 값
+
+		    if (employee_id) {
+			    // Ajax 요청으로 사원 정보 가져오기
+			    fetch(`/select_EMPLOYEE?name=${encodeURIComponent(employee_id)}`)				
+			        .then(response => {
+			            if (!response.ok) throw new Error('사원 정보를 불러오는데 실패했습니다.');
+			            return response.json();
+			        })
+			        .then(data => {
+			            if (!data || data.length === 0) {
+			                alert('해당 사원을 찾을 수 없습니다.');
+			                return;
+			            }
+	
+			            // 검색된 사원 정보를 폼에 채우기
+			            document.getElementById('employee_cd').value = data.employee_cd || ''; // 부서
+			            document.getElementById('employee_hd').value = data.employee_hd || '';   // 입사일
+			        })
+			        .catch(error => {
+			            console.error(error);
+			            alert('오류가 발생했습니다. 다시 시도해주세요.');
+		        });
+		    }
+
+		});
+
+		
 		
 		// 그리드 필터 버튼 이벤트
-		//btn_filter_annual.addEventListener('click', function(event){
+		//btn_filter_annual.addEventListener('click', function(){
 		//});
 
 		// 그리드 버튼 누르면 호출 함수
@@ -159,6 +241,21 @@
 				}
 			});
 			
+			// 그리드 객체 생성 + 초기 세팅
+			const grid = new tui.Grid({
+				el: grid_container,
+				scrollX: true,
+				scrollY: true,
+				columns: [
+					{ header: '이름', name: 'annual_id', align: 'center', sortable: true, },
+					{ header: '부서명', name: 'employee_cd', align: 'center', sortable: true, },
+					{ header: '입사일', name: 'annual_cc', align: 'center', sortable: true, },
+					{ header: '근속연수', name: 'annual_yr', align: 'center', sortable: true, },
+					{ header: '사용연차', name: 'annual_ua', align: 'center', sortable: true, },
+					{ header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true, },
+					{ header: '총연차', name: 'annual_aa', align: 'center', sortable: true, },
+				],
+			});
 			
 		} 
 		

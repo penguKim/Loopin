@@ -36,6 +36,10 @@ public class AttendanceService {
 		attendanceMapper.insert_ANNUAL();
 
 	}
+
+	public List<Attendance> select_EMPLOYEE(String employee_id) {
+		return attendanceMapper.select_EMPLOYEE(employee_id);
+	}
 //
 //	public void delete_TRANSFER(List<Long> ids) {
 //		
