@@ -72,29 +72,6 @@ public class AttendanceController {
 	}
 	
 	@ResponseBody
-	@PostMapping("/insert_ANNUAL")
-	public ResponseEntity<Map<String, String>> insert_ANNUAL(@RequestBody Map<String, Object> request) {
-		log.info(request.get("annual_yr") + "오늘날짜");
-		
-		String annual_yr =  request.get("annual_yr").toString();
-		
-		List<Attendance> select_ANNUAL = attendanceService.select_ANNUAL(annual_yr); //사원코드, 사용연도, 잔여연차, 총연차
-		
-		log.info(select_ANNUAL + "유효값"); 
-		
-		Map<String, String> response = new HashMap<>();
-		try {
-			attendanceService.insert_ANNUAL();
-			response.put("message", "데이터가 성공적으로 저장되었습니다.");
-			return ResponseEntity.ok(response); // JSON 형식으로 반환
-		} catch (Exception e) {
-			response.put("message", "데이터 저장 실패: " + e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
-	}
-	
-	
-	@ResponseBody
 	@GetMapping("/select_EMPLOYEE")
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE(@RequestParam("employee_nm") String employee_nm) {
 		log.info(employee_nm+"select_EMPLOYEE 조회 시도");
@@ -103,12 +80,11 @@ public class AttendanceController {
 		
 		List<Map<String, Object>> response = employees.stream().map(employee -> {
 			Map<String, Object> row = new HashMap<>();
-
-			log.info(employee.get("employee_nm")+"get 조회 시도");
 			
-			row.put("employee_nm", employee.get("employee_nm"));
-			row.put("employee_dp", employee.get("employee_dp"));
-			row.put("employee_gd", employee.get("employee_gd"));
+			row.put("employee_nm", employee.get("EMPLOYEE_NM"));
+			row.put("employee_dp", employee.get("EMPLOYEE_DP"));
+			row.put("employee_gd", employee.get("EMPLOYEE_GD"));
+			row.put("employee_cd", employee.get("EMPLOYEE_CD"));
 			
 			log.info(row.toString()+"row 조회 시도");
 			return row;
@@ -118,5 +94,56 @@ public class AttendanceController {
 		return ResponseEntity.ok(response);
 	}
 
+	@ResponseBody
+	@GetMapping("/select_ANNUAL")
+	public ResponseEntity<List<Map<String, Object>>> select_ANNUAL( @RequestParam(value = "employee_cd", required = false) String employee_cd,
+																    @RequestParam(value = "employee_dp", required = false) String employee_dp,
+																    @RequestParam(value = "employee_hd", required = false) String employee_hd,
+																    @RequestParam(value = "annual_ra", required = false) String annual_ra) {
+	    System.out.println("받은 데이터: " + employee_cd+ employee_dp+ employee_hd+ annual_ra); // 디버깅용
+	    
+	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(employee_cd, employee_dp, employee_hd, annual_ra);
+	    // 로직 처리 후 성공 응답
+	    List<Map<String, Object>> response = attendances.stream().map(attendance -> {
+	    	Map<String, Object> row = new HashMap<>();
+//	    	
+	    	row.put("annual_id", attendance.get("ANNUAL_ID"));
+	    	row.put("employee_cd", attendance.get("EMPLOYEE_CD"));
+	    	row.put("annual_cc", attendance.get("ANNUAL_CC"));
+	    	row.put("annual_yr", attendance.get("ANNUAL_YR"));
+	    	row.put("annual_ua", attendance.get("ANNUAL_UA"));
+	    	row.put("annual_ra", attendance.get("ANNUAL_RA"));
+	    	row.put("annual_aa", attendance.get("ANNUAL_AA"));
+	    	row.put("employee_dp", attendance.get("EMPLOYEE_DP"));
+	    	row.put("employee_hd", attendance.get("EMPLOYEE_HD"));
+//	    	
+	    	log.info(row.toString()+"row 조회 시도");
+	    	return row;
+//	    	
+	    }).collect(Collectors.toList());
+	    
+	    return ResponseEntity.ok(response);
+	}
 	
+//	@ResponseBody
+//	@PostMapping("/insert_ANNUAL")
+//	public ResponseEntity<Map<String, String>> insert_ANNUAL(@RequestBody Map<String, Object> request) {
+//		log.info(request.get("annual_yr") + "오늘날짜");
+//		
+//		String annual_yr =  request.get("annual_yr").toString();
+//		
+//		List<Attendance> select_ANNUAL = attendanceService.select_ANNUAL(annual_yr); //사원코드, 사용연도, 잔여연차, 총연차
+//		
+//		log.info(select_ANNUAL + "유효값"); 
+//		
+//		Map<String, String> response = new HashMap<>();
+//		try {
+//			attendanceService.insert_ANNUAL();
+//			response.put("message", "데이터가 성공적으로 저장되었습니다.");
+//			return ResponseEntity.ok(response); // JSON 형식으로 반환
+//		} catch (Exception e) {
+//			response.put("message", "데이터 저장 실패: " + e.getMessage());
+//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//		}
+//	}
 }

@@ -3,13 +3,6 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper">
-    <select id="select_ANNUAL" resultType="list">
-        SELECT * 
-        FROM ANNUAL
-        <where> 1=1
-        	AND annual_yr LIKE #{annual_yr} || '%'
-        </where>
-    </select>
     
     <select id="select_EMPLOYEE" resultType="map">
         SELECT * 
@@ -17,6 +10,26 @@
         <where> 1=1
 	        	AND employee_nm LIKE #{employee_nm} || '%'
         </where>
+    </select>
+    
+    <select id="select_ANNUAL" resultType="map">
+        SELECT a.*
+	    FROM ANNUAL a
+	    INNER JOIN EMPLOYEE e ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
+	    <where>
+	        <if test="employee_cd != null and employee_cd != ''">
+	            a.EMPLOYEE_CD = #{employee_cd}
+	        </if>
+	        <if test="employee_dp != null and employee_dp != ''">
+	            AND e.EMPLOYEE_DP = #{employee_dp}
+	        </if>
+	        <if test="employee_hd != null and employee_hd != ''">
+	            AND e.EMPLOYEE_HD > #{employee_hd}
+	        </if>
+	        <if test="annual_ra != null and annual_ra != ''">
+	            AND a.ANNUAL_RA = #{annual_ra}
+	        </if>
+	    </where>
     </select>
 <!--    <insert id="insert_ANNUAL">-->
 

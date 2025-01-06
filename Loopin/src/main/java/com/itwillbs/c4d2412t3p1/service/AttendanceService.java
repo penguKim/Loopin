@@ -27,20 +27,17 @@ public class AttendanceService {
 
 		return attendanceRepository.findAll();
 	}
-	
-	public List<Attendance> select_ANNUAL(String annual_yr) {
-		
-		return attendanceMapper.select_ANNUAL(annual_yr);
-	}
 
 	public void insert_ANNUAL() {
-
 		attendanceMapper.insert_ANNUAL();
-
 	}
 
 	public List<Map<String, Object>> select_EMPLOYEE(String employee_nm) {
 		return attendanceMapper.select_EMPLOYEE(employee_nm);
+	}
+
+	public List<Map<String, Object>> select_ANNUAL(String employee_cd, String employee_dp, String employee_hd, String annual_ra) {
+		return attendanceMapper.select_ANNUAL(employee_cd, employee_dp, employee_hd, annual_ra);
 	}
 
 //
