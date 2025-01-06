@@ -135,6 +135,12 @@ public class EmployeeService {
 	    EmployeeRepository.save(employee); // 변경 사항 저장
 	}
 
+    // ID로 Employee 조회
+    public Employee findEmployeeById(Long employee_cd) {
+        // Repository를 사용하여 데이터 조회
+        return EmployeeRepository.findById(employee_cd)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
+    }
 	
 	
 	

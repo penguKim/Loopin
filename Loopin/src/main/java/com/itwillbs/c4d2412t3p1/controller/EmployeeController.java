@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,7 +179,7 @@ public class EmployeeController {
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
 			
-			
+	        employeeDTO.setEmployee_wd(new Timestamp(System.currentTimeMillis()));
 	        // 데이터 저장 처리
 			employeeService.insert_EMPLOYEE(employeeDTO, employee_pi);
 			
@@ -202,6 +203,18 @@ public class EmployeeController {
 	            return ResponseEntity.badRequest().body(response);
 	        }
 
+	        
+	        // 기존 데이터 조회
+	        Employee employee = employeeService.findEmployeeById(employeeDTO.getEmployee_cd());
+	        if (employee == null) {
+	            response.put("message", "데이터 수정 실패: 해당 ID의 데이터를 찾을 수 없습니다.");
+	            return ResponseEntity.badRequest().body(response);
+	        }
+
+	        // 기존 employee_wd 값을 유지
+	        employeeDTO.setEmployee_wd(employee.getEmployee_wd());
+	        
+	        
 	        // 기존 사진 삭제 처리
 	        if ("true".equals(employeeDTO.getPhotoDeleted())) { // photoDeleted가 true인 경우
 	            employeeService.deleteEmployeePhoto(employeeDTO.getEmployee_cd());
@@ -222,9 +235,12 @@ public class EmployeeController {
 	            // 파일 저장
 	            Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
 
+	            
 	            // DTO에 파일명 설정
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
+
+	        employeeDTO.setEmployee_md(new Timestamp(System.currentTimeMillis()));
 
 	        // Service 호출
 	        employeeService.update_EMPLOYEE(employeeDTO, employee_pi);
