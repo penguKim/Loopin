@@ -169,9 +169,6 @@
 		}
 		
 		let checkedRows = grid.getCheckedRows();
-		let newRows = checkedRows.filter(row => row['common_gc'] == null);
-		checkedRows = checkedRows.filter(row => row['common_gc'] != null);
-		
 		if (checkedRows.length == 0) {
 			Swal.fire({
 			    icon: "warning",
@@ -180,6 +177,9 @@
 			});
 		    return;
 		}
+		let newRows = checkedRows.filter(row => row['common_gc'] == null);
+		checkedRows = checkedRows.filter(row => row['common_gc'] != null);
+		
 		
 		if(checkedRows.length > 0) {
 			delete_code(grid, checkedRows);				
@@ -218,7 +218,6 @@
 	
 	function insert_code(grid) {
 		let validationResult = grid.validate();
-		console.log(validationResult);
 		const valChecked = validationResult.some(row => {
 		    const rowKey = row['rowKey'];
 
@@ -279,6 +278,10 @@
 			code: grid == group_grid ? '' : group_code
 		}
 		
+		let icon = 'success';
+		let title = '등록 성공';
+		let text = '등록하였습니다.';
+		
 		const jsonData = JSON.stringify(json);			
 		$.ajax({
 			type: 'post',
@@ -290,17 +293,21 @@
 			},
 			success: function(data) {
 				if(!data['result']) {
-					Swal.fire({
-					    icon: "error",
-					    title: "등록 실패",
-					    text: "등록에 실패하였습니다.",
-					});
+					let icon = 'error';
+					let title = '등록 실패';
+					let text = '등록에 실패하였습니다.';
 				} else {
 					const row = data.data.contents;
 					grid.uncheckAll();
 					// group_grid.focus(-1);
 					grid.resetData(row);
 				}
+				
+				Swal.fire({
+				    icon: icon,
+				    title: title,
+				    text: text,
+				});
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
