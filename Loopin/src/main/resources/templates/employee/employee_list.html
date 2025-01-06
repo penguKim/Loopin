@@ -17,6 +17,8 @@
 					</div>
 					<div class="modal-body">
 						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post" enctype="multipart/form-data">
+							<input type="hidden" id="photoDeleted" name="photoDeleted" value="false">
+						
 							<input type="hidden" class="form-control" id="employee_cd" name="employee_cd"> <!-- 수정 시 사용-->
 							<!-- 아이디 및 비밀번호 -->
 							<div class="row mb-3">
@@ -529,21 +531,31 @@
 		    if (file) {
 		        const reader = new FileReader();
 		        reader.onload = function (e) {
-		            $('#photoPreview').attr('src', e.target.result).show();
+		            $('#photoPreview').attr('src', e.target.result).show(); // 미리보기 업데이트
 		            $('#uploadText').hide();
 		            $('#removePhotoBtn').show();
+		            $('#photoDeleted').val('false'); // 사진 삭제 상태 해제
 		        };
 		        reader.readAsDataURL(file);
 		    } else {
-		        resetPhoto();
+		        $('#photoPreview').hide();
+		        $('#uploadText').show();
+		        $('#removePhotoBtn').hide();
+		        $('#photoDeleted').val('true'); // 파일 선택 취소 시 삭제 상태로 설정
 		    }
 		});
 
 		// 사진 삭제 버튼 이벤트
 		$('#removePhotoBtn').on('click', function (event) {
-		    event.preventDefault(); // 기본 동작 막기 (폼 제출 방지)
-		    resetPhoto(); // 사진 초기화
+		    event.preventDefault(); // 기본 폼 제출 동작 방지
+		    $('#photoDeleted').val('true'); // 사진 삭제 상태 설정
+		    $('#photoPreview').hide().attr('src', ''); // 미리보기 숨기기
+		    $('#uploadText').show(); // 업로드 텍스트 표시
+		    $('#removePhotoBtn').hide(); // 삭제 버튼 숨기기
+		    $('#employee_pi').val(''); // 파일 입력 초기화
 		});
+
+
 		
 		// 사진 컨테이너 클릭 이벤트
 		$('#photoContainer').on('click', function () {
@@ -654,49 +666,45 @@
 		$('#appointment_form').off('submit').on('submit', function (event) {
 		    event.preventDefault();
 
+		    const formData = new FormData(); // FormData 객체 생성
 		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
 		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
 
 		    // DTO 데이터를 JSON으로 생성
 		    const employeeDTO = {
-				employee_cd: $('#employee_cd').val(),
-				employee_id: $('#employee_id').val(),
-				employee_pw: $('#employee_pw').val(),
-				employee_dp: $('#employee_dp').val(),
-				employee_gd: $('#employee_gd').val(),
-				employee_hd: $('#employee_hd').val(),
-				employee_rd: $('#employee_rd').val(),
-				employee_rr: $('#employee_rr').val(),
-				employee_cg: $('#employee_cg').val(),
-				employee_nt: $('#employee_nt').val(),
-				employee_nm: $('#employee_nm').val(),
-				employee_bd: $('#employee_bd').val(),
-				employee_ad: $('#employee_ad').val(),
-				employee_sb: $('#employee_sb').val(),
-				employee_ph: $('#employee_ph').val(),
-				employee_em: $('#employee_em').val(),
-				employee_bs: $('#employee_bs').val(),
-				employee_bk: $('#employee_bk').val(),
-				employee_an: $('#employee_an').val(),
-				employee_dt: $('#employee_dt').val(),
-				employee_wr: $('#employee_wr').val(),
-				employee_wd: $('#employee_wd').val(),
-				employee_mf: $('#employee_mf').val(),
-				employee_md: $('#employee_md').val()
+		        employee_cd: $('#employee_cd').val(),
+		        employee_id: $('#employee_id').val(),
+		        employee_pw: $('#employee_pw').val(),
+		        employee_dp: $('#employee_dp').val(),
+		        employee_gd: $('#employee_gd').val(),
+		        employee_hd: $('#employee_hd').val(),
+		        employee_rd: $('#employee_rd').val(),
+		        employee_rr: $('#employee_rr').val(),
+		        employee_cg: $('#employee_cg').val(),
+		        employee_nt: $('#employee_nt').val(),
+		        employee_nm: $('#employee_nm').val(),
+		        employee_bd: $('#employee_bd').val(),
+		        employee_ad: $('#employee_ad').val(),
+		        employee_sb: $('#employee_sb').val(),
+		        employee_ph: $('#employee_ph').val(),
+		        employee_em: $('#employee_em').val(),
+		        employee_bs: $('#employee_bs').val(),
+		        employee_bk: $('#employee_bk').val(),
+		        employee_an: $('#employee_an').val(),
+		        employee_dt: $('#employee_dt').val(),
+		        employee_wr: $('#employee_wr').val(),
+		        employee_wd: $('#employee_wd').val(),
+		        employee_mf: $('#employee_mf').val(),
+		        employee_md: $('#employee_md').val(),
+		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 
 		    const fileInput = $('#employee_pi')[0].files[0]; // 파일 선택
-		    const formData = new FormData(); // FormData 객체 생성
 
 		    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
-			
+
 		    if (fileInput) {
 		        formData.append('employee_pi', fileInput); // 파일 추가
-		    }
-
-		    // 디버깅: 전송 데이터 확인
-		    for (let [key, value] of formData.entries()) {
-		        console.log(`${key}:`, value);
 		    }
 
 		    $.ajax({
@@ -717,6 +725,7 @@
 		        }
 		    });
 		});
+
 	});
 
 

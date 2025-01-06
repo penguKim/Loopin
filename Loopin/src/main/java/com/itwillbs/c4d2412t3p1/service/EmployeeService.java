@@ -71,20 +71,68 @@ public class EmployeeService {
 
 	// 직원 업데이트
 	public void update_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
+	    // 직원 조회
 	    Employee employee = EmployeeRepository.findById(employeeDTO.getEmployee_cd())
 	            .orElseThrow(() -> new IllegalArgumentException("해당 직원이 존재하지 않습니다."));
 
-	    if (employee_pi != null && !employee_pi.isEmpty()) {
-	        String fileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
-	        Path path = Paths.get("uploads/" + fileName);
-	        Files.copy(employee_pi.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-	        employeeDTO.setEmployee_pi(fileName); // DTO에 새 파일 이름 반영
-	    } else {
-	        employeeDTO.setEmployee_pi(employee.getEmployee_pi()); // 기존 파일 이름 유지
+	    // 기존 사진 삭제 처리
+	    if ("true".equals(employeeDTO.getPhotoDeleted())) {
+	        if (employee.getEmployee_pi() != null) {
+	            String photoFileName = employee.getEmployee_pi();
+	            Path photoPath = Paths.get(uploadDir, photoFileName);
+	            Files.deleteIfExists(photoPath); // 기존 사진 파일 삭제
+	            employee.setEmployee_pi(null); // 엔티티의 사진 경로 초기화
+	        }
 	    }
 
+	    // 새 사진 업로드 처리
+	    if (employee_pi != null && !employee_pi.isEmpty()) {
+	        String fileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
+	        Path path = Paths.get(uploadDir, fileName);
+
+	        // 업로드 디렉터리 생성
+	        if (!Files.exists(path.getParent())) {
+	            Files.createDirectories(path.getParent());
+	        }
+
+	        // 파일 저장
+	        Files.copy(employee_pi.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
+
+	        // 엔티티에 새 파일 이름 설정
+	        employee.setEmployee_pi(fileName);
+	    } else if (!"true".equals(employeeDTO.getPhotoDeleted())) {
+	        // 사진 삭제 요청이 없을 경우, 기존 사진 유지
+	        employeeDTO.setEmployee_pi(employee.getEmployee_pi());
+	    }
+
+	    // 엔티티 업데이트
 	    employee.setEmployeeEntity(employee, employeeDTO);
+
+	    // 데이터베이스 저장
 	    EmployeeRepository.save(employee);
+	}
+
+	public void deleteEmployeePhoto(Long employee_cd) {
+	    // 직원 조회
+	    Employee employee = EmployeeRepository.findById(employee_cd)
+	            .orElseThrow(() -> new IllegalArgumentException("해당 직원이 존재하지 않습니다. ID: " + employee_cd));
+
+	    // 사진 파일명 확인
+	    String photoFileName = employee.getEmployee_pi();
+	    if (photoFileName != null && !photoFileName.isEmpty()) {
+	        Path photoPath = Paths.get(uploadDir, photoFileName);
+	        try {
+	            Files.deleteIfExists(photoPath); // 파일 삭제
+	            log.info("사진 삭제 완료: " + photoPath);
+	        } catch (IOException e) {
+	            log.warning("사진 삭제 실패: " + photoPath + " (" + e.getMessage() + ")");
+	            throw new RuntimeException("사진 삭제 중 오류 발생: " + photoPath, e);
+	        }
+	    }
+
+	    // 엔티티의 사진 정보 초기화
+	    employee.setEmployee_pi(null);
+	    EmployeeRepository.save(employee); // 변경 사항 저장
 	}
 
 	

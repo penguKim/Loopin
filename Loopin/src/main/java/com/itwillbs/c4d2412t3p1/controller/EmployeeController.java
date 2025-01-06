@@ -201,7 +201,12 @@ public class EmployeeController {
 	            response.put("message", "데이터 수정 실패: ID(employee_cd)가 전달되지 않았습니다.");
 	            return ResponseEntity.badRequest().body(response);
 	        }
-	        
+
+	        // 기존 사진 삭제 처리
+	        if ("true".equals(employeeDTO.getPhotoDeleted())) { // photoDeleted가 true인 경우
+	            employeeService.deleteEmployeePhoto(employeeDTO.getEmployee_cd());
+	            employeeDTO.setEmployee_pi(null); // 삭제 후 DTO의 사진 경로 초기화
+	        }
 
 	        // 파일 업로드 처리
 	        if (employee_pi != null && !employee_pi.isEmpty()) {
@@ -220,9 +225,8 @@ public class EmployeeController {
 	            // DTO에 파일명 설정
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
-	        
-	        
-	        //  Service 호출
+
+	        // Service 호출
 	        employeeService.update_EMPLOYEE(employeeDTO, employee_pi);
 
 	        // 성공 응답
@@ -240,6 +244,7 @@ public class EmployeeController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+
 
 	
 	
