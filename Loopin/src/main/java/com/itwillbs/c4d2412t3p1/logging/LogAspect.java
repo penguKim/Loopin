@@ -55,16 +55,20 @@ public class LogAspect {
 		Map<String, Object> logDetails = new HashMap<>();
 		for (Object arg : args) {
 			try {
-				String jsonString = objectMapper.writeValueAsString(arg);
-				logDetails.put(arg.getClass().getSimpleName(), jsonString);
+				if (arg == null) {
+					logDetails.put("null", "null"); // null 값 처리
+				} else {
+					String jsonString = objectMapper.writeValueAsString(arg);
+					logDetails.put(arg.getClass().getSimpleName(), jsonString);
+				}
 			} catch (JsonProcessingException e) {
 				logger.error("인자 처리 중 오류: {}", e.getMessage());
-				logDetails.put(arg.getClass().getSimpleName(), "인자 처리 중 오류: " + e.getMessage());
+				logDetails.put(arg == null ? "null" : arg.getClass().getSimpleName(), "인자 처리 중 오류: " + e.getMessage());
 			}
 		}
-		 //  logDTO에 상세 정보 설정
+		// logDTO에 상세 정보 설정
 		logDTO.setLog_jdMap(logDetails);
-		 // ThreadLocal에 logDTO 저장
+		// ThreadLocal에 logDTO 저장
 		logThreadLocal.set(logDTO);
 	}
 
@@ -72,7 +76,7 @@ public class LogAspect {
 	@AfterReturning(value = "@annotation(logActivity)", returning = "result")
 	public void logAfterReturning(JoinPoint joinPoint, LogActivity logActivity, Object result) {
 		// ThreadLocal에서 logDTO 가져오기
-		LogDTO logDTO = logThreadLocal.get(); 
+		LogDTO logDTO = logThreadLocal.get();
 		if (logDTO != null) {
 
 			// 메서드의 반환값을 JSON 형식으로 변환하여 logDetails에 추가
@@ -96,7 +100,7 @@ public class LogAspect {
 			}
 //			logService에서 insert 작업 수행
 			logService.saveLog(logDTO);
-			 // ThreadLocal에서 logDTO 제거하여 메모리 누수 방지
+			// ThreadLocal에서 logDTO 제거하여 메모리 누수 방지
 			logThreadLocal.remove();
 		}
 	}
@@ -114,11 +118,11 @@ public class LogAspect {
 			logDetails.put("예외 메시지", exception.getMessage());
 			logDetails.put("예외 클래스", exception.getClass().getName());
 			logDTO.setLog_jdMap(logDetails); // 업데이트된 상세 정보를 logDTO에 설정
-			
+
 			// logSearvice에서 insert 작업 수행(예외 저장)
 			logService.saveLog(logDTO);
 			// ThreadLocal에서 로그 DTO 제거하여 메모리 누수 방지
-			logThreadLocal.remove(); 
+			logThreadLocal.remove();
 		}
 		logger.error("메서드 실행 중 예외 발생: {}", exception.getMessage()); // 예외 메시지를 로깅
 	}
