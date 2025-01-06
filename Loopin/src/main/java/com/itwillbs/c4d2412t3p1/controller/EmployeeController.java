@@ -1,21 +1,21 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,16 +25,13 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
-import com.itwillbs.c4d2412t3p1.entity.Member;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 
-import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
-
-import org.springframework.web.bind.annotation.*;
 
 
 
@@ -63,6 +60,8 @@ public class EmployeeController {
             // 파일 저장
             file.transferTo(uploadPath.toFile());
 
+            System.out.println("File saved at: " + uploadPath.toString());
+            
             return ResponseEntity.ok("File uploaded successfully: " + fileName);
         } catch (IOException e) {
             e.printStackTrace();
@@ -74,38 +73,39 @@ public class EmployeeController {
      * 업로드된 파일 반환
      */
     @GetMapping("/uploads/{filename}")
-    public ResponseEntity<byte[]> serveFile(@PathVariable String filename) {
+    public ResponseEntity<Resource> getImage(@PathVariable String filename) {
         try {
             Path filePath = Paths.get(uploadDir).resolve(filename).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
 
-            if (!Files.exists(filePath) || !Files.isReadable(filePath)) {
+            if (!resource.exists()) {
                 return ResponseEntity.notFound().build();
             }
 
-            // 파일 내용 읽기
-            byte[] fileContent = Files.readAllBytes(filePath);
-
-            // MIME 타입 결정
-            String contentType = Files.probeContentType(filePath);
-            if (contentType == null) {
-                contentType = "application/octet-stream";
-            }
-
-            // 응답 생성
             return ResponseEntity.ok()
-                    .header("Content-Type", contentType)
-                    .header("Content-Disposition", "inline; filename=\"" + filePath.getFileName().toString() + "\"")
-                    .body(fileContent);
+                    .header("Content-Type", Files.probeContentType(filePath))
+                    .body(resource);
         } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 	
-	
-	
-	
-	
+    
+    public String savePhoto(MultipartFile photo) throws IOException {
+        if (photo.isEmpty()) {
+            return null;
+        }
+
+        String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
+        Path filePath = Paths.get(uploadDir).resolve(fileName);
+        Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
+        return fileName;
+    }
+
+    
+    
+    
 	@GetMapping("/employee_list")
 	public String employee_list() {
 		return "/employee/employee_list";
@@ -156,8 +156,29 @@ public class EmployeeController {
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
 		    @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 		Map<String, String> response = new HashMap<>();
+		
 		try {
-	        
+	       
+			// 파일 업로드 처리
+	        if (employee_pi != null && !employee_pi.isEmpty()) {
+	        	
+	        	// 고유 파일명 생성
+	            String uniqueFileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
+	            Path uploadPath = Paths.get(uploadDir).resolve(uniqueFileName); // 업로드 경로
+	           
+	            // 업로드 디렉토리 생성
+	            if (!Files.exists(uploadPath.getParent())) {
+	                Files.createDirectories(uploadPath.getParent());
+	            }
+
+	            // 파일 저장
+	            Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+
+	            // DTO에 파일명 설정
+	            employeeDTO.setEmployee_pi(uniqueFileName);
+	        }
+			
+			
 	        // 데이터 저장 처리
 			employeeService.insert_EMPLOYEE(employeeDTO, employee_pi);
 			
@@ -176,16 +197,35 @@ public class EmployeeController {
 
 	    Map<String, String> response = new HashMap<>();
 	    try {
-	        // 1. employee_cd 유효성 검사
 	        if (employeeDTO.getEmployee_cd() == null) {
 	            response.put("message", "데이터 수정 실패: ID(employee_cd)가 전달되지 않았습니다.");
 	            return ResponseEntity.badRequest().body(response);
 	        }
+	        
 
-	        // 2. Service 호출
+	        // 파일 업로드 처리
+	        if (employee_pi != null && !employee_pi.isEmpty()) {
+	            // 고유 파일명 생성
+	            String uniqueFileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
+	            Path uploadPath = Paths.get(uploadDir).resolve(uniqueFileName); // 업로드 경로
+
+	            // 업로드 디렉터리 생성
+	            if (!Files.exists(uploadPath.getParent())) {
+	                Files.createDirectories(uploadPath.getParent());
+	            }
+
+	            // 파일 저장
+	            Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+
+	            // DTO에 파일명 설정
+	            employeeDTO.setEmployee_pi(uniqueFileName);
+	        }
+	        
+	        
+	        //  Service 호출
 	        employeeService.update_EMPLOYEE(employeeDTO, employee_pi);
 
-	        // 3. 성공 응답
+	        // 성공 응답
 	        response.put("message", "데이터가 성공적으로 수정되었습니다.");
 	        return ResponseEntity.ok(response);
 

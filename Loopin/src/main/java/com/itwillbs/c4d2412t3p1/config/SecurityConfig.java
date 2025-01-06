@@ -38,7 +38,7 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
 					authorizeHttpRequestsCustomizer
-					.requestMatchers("/", "/login", "insert", "/mapper", "uploads").permitAll() // 이 주소는 모든 권한
+					.requestMatchers("/", "/login", "insert", "/mapper", "/upload").permitAll() // 이 주소는 모든 권한
 					.anyRequest() // 어느 요청이든
 					.authenticated() // 권한이 적용된다.
 						)

@@ -37,4 +37,9 @@ public class EmployeeDTO {
 	private Timestamp employee_wd;
 	private String employee_mf;
 	private Timestamp employee_md;
+	
+	
+	
+	// 사진 삭제 여부
+	private String photoDeleted; // true or false (클라이언트에서 전달)
 }

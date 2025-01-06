@@ -32,12 +32,13 @@ public class EmployeeService {
 	@Value("${file.upload-dir}")
 	private String uploadDir;
 
+	// 직원 조회
 	public List<Employee> findAll() {
 		
 		return EmployeeRepository.findAll();
 	}
 
-
+	// 직원 등록
     public void insert_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
         String fileName = null;
 
@@ -62,13 +63,13 @@ public class EmployeeService {
         EmployeeRepository.save(employee);
     }
 
-
+    // 직원 삭제
 	public void delete_EMPLOYEE(List<Long> cds) {
 		EmployeeRepository.deleteAllById(cds);
 		
 	}
 
-
+	// 직원 업데이트
 	public void update_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
 	    Employee employee = EmployeeRepository.findById(employeeDTO.getEmployee_cd())
 	            .orElseThrow(() -> new IllegalArgumentException("해당 직원이 존재하지 않습니다."));

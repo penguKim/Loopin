@@ -171,7 +171,7 @@
 							        <div id="photoContainer" 
 							            style="position: relative; width: 150px; height: 150px; border-radius: 8px; cursor: pointer; 
 							                   background-color: #f8f9fa; border: 2px dashed #ccc;">
-							            <img id="photoPreview" src="#" alt="사진 미리보기" 
+							            <img id="photoPreview" src=""  alt="사진 미리보기" 
 							                style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover; display: none;">
 							            <div id="uploadText" 
 							                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -189,9 +189,6 @@
 							</div>
 
 
-							<div class="row mb-3">
-							        <img id="photoPreview" src="#" alt="미리보기" style="max-width: 100%; max-height: 150px; display: none; border: 1px solid #ddd; padding: 5px; border-radius: 5px;">
-							        </div>
 							<div class="row mb-3">
 							
 								<label for="inputText" class="col-sm-1 col-form-label">기본급</label>
@@ -586,22 +583,12 @@
 		    $('#modal_submit_button').text('수정');
 
 			// 그리드에서 정의된 name 속성 값만 매핑
-			const validKeys = [
-			    'employee_cd', 'employee_nm', 'employee_dp', 'employee_bd',
-			    'employee_ad', 'employee_gd', 'employee_ph', 'employee_em',
-			    'employee_hd', 'employee_id', 'employee_sb', 'employee_cg',
-			    'employee_pw', 'employee_rd', 'employee_rr', 'employee_nt',
-			    'employee_pi', 'employee_bs', 'employee_bk', 'employee_an',
-			    'employee_dt', 'employee_wr', 'employee_wd', 'employee_mf', 'employee_md'
-			];
 
 			// 데이터 매핑
-			validKeys.forEach(key => {
-		        const $field = $(`#${key}`);
-		        if ($field.length) {
+				Object.keys(data).forEach(key => {
+				const $field = $(`#${key}`);
+		        if ($field.length && $field.attr('type') !== 'file') {
 		            $field.val(data[key] || '');
-		        } else {
-		            console.warn(`필드 ID가 존재하지 않습니다: #${key}`);
 		        }
 		    });
 
@@ -635,15 +622,18 @@
 		        }
 		    }
 
-		    // 사진 미리보기 설정
+		    // 사진 미리보기 처리
 		    if (data.employee_pi) {
-		        const imagePath = `/uploads/${data.employee_pi}`;
+		        const imagePath = `/upload/${data.employee_pi}`;
 		        $('#photoPreview').attr('src', imagePath).show();
 		        $('#uploadText').hide();
 		        $('#removePhotoBtn').show();
 		    } else {
 		        resetPhoto();
 		    }
+
+		    // 파일 입력 초기화
+		    $('#employee_pi').val('');
 
 		    // 모달 열기
 		    $('#modal_appointment_save').modal('show');
