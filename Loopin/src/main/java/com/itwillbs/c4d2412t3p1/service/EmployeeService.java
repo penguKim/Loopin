@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,6 +141,12 @@ public class EmployeeService {
         // Repository를 사용하여 데이터 조회
         return EmployeeRepository.findById(employee_cd)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
+    }
+
+    
+    // 성별 차트 조회
+    public List<Map<String, Object>> getEmployeeGenderStats() {
+        return EmployeeRepository.findGenderStats();
     }
 	
 	

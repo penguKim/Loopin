@@ -92,17 +92,17 @@ public class EmployeeController {
     }
 	
     
-    public String savePhoto(MultipartFile photo) throws IOException {
-        if (photo.isEmpty()) {
-            return null;
-        }
-
-        String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir).resolve(fileName);
-        Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return fileName;
-    }
+//    public String savePhoto(MultipartFile photo) throws IOException {
+//        if (photo.isEmpty()) {
+//            return null;
+//        }
+//
+//        String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
+//        Path filePath = Paths.get(uploadDir).resolve(fileName);
+//        Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+//
+//        return fileName;
+//    }
 
     
     
@@ -284,6 +284,33 @@ public class EmployeeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	
+	 
+	// 인사현황 차트
+	@GetMapping("/employee_CHART")
+	public String employee_CHART() {
+		return "/employee/employee_chart";
+	}
+	
+
+    // 성별 데이터 조회
+    @GetMapping("/employee_GENDER")
+    public ResponseEntity<Map<String, Object>> employee_GENDER() {
+        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStats();
+       
+        // Toast UI Chart 형식으로 변환
+        List<Map<String, Object>> series = genderStats.stream()
+            .map(stat -> Map.of(
+                "name", stat.get("name"), // "남성" 또는 "여성"
+                "data", stat.get("data")  // 인원수
+            ))
+            .toList();
+
+        Map<String, Object> response = Map.of("series", series);
+        
+        return ResponseEntity.ok(response);
+    }
 	
 	
 	
