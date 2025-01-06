@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+
+<body>
+	<main id="main" class="main">
+		<!-- 인사카드 등록 모달 -->
+		<div class="modal fade" id="modal_appointment_save" tabindex="-1">
+			<div class="modal-dialog modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post" enctype="multipart/form-data">
+							<input type="hidden" id="photoDeleted" name="photoDeleted" value="false">
+						
+							<input type="hidden" class="form-control" id="employee_cd" name="employee_cd"> <!-- 수정 시 사용-->
+							<!-- 아이디 및 비밀번호 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">아이디</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_id" name="employee_id">
+								</div>
+								<label for="inputEmail" class="col-sm-1 col-form-label">비밀번호</label>
+								<div class="col-sm-4">
+									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
+								</div>
+							</div>
+							<!-- 부서코드 및 직급코드 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">부서코드</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
+								</div>
+								<label for="inputText" class="col-sm-1 col-form-label">직위코드</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
+								</div>
+							</div>
+							<!-- 입사일 및 퇴사일 -->
+							<div class="row mb-3">
+								<label for="inputDate" class="col-sm-1 col-form-label">입사일</label>
+								<div class="col-sm-2">
+									<input type="text" class="form-control" id="employee_hd" name="employee_hd"
+										aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+									<div id="hd_wrapper"></div>
+								</div>
+								<label for="inputDate" class="col-sm-1 col-form-label">퇴사일</label>
+								<div class="col-sm-2">
+									<input type="text" class="form-control" id="employee_rd" name="employee_rd"
+										aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+									<div id="rd_wrapper"></div>
+								</div>
+							</div>
+							<!-- 퇴사사유 -->
+							<div class="row mb-3">
+								<label for="inputPassword" class="col-sm-1 col-form-label">퇴사사유</label>
+								<div class="col-sm-5">
+									<textarea class="form-control" style="height: 100px"
+										id="employee_rr" name="employee_rr"></textarea>
+								</div>
+							</div>
+							<!-- 채용구분 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">채용구분</label>
+								<div class="col-sm-4">
+									<select class="form-select" aria-label="Default select example"
+										id="employee_cg" name="employee_cg">
+										<option value="신입" selected>신입</option>
+										<option value="경력">경력</option>
+									</select>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputPassword" class="col-sm-1 col-form-label">비고</label>
+								<div class="col-sm-5">
+									<textarea class="form-control" id="employee_nt" name="employee_nt"
+										style="height: 100px"></textarea>
+								</div>
+							</div>
+							<!-- 사원명 및 생년월일 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">사원명</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm">
+								</div>
+								<label for="inputText" class="col-sm-1 col-form-label">연락처</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_ph" name="employee_ph">
+								</div>
+
+							</div>
+							<!-- 우편 번호 및 주소 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">우편번호</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_zc"  name="zipCode" placeholder="우편번호" readonly
+										onclick="findAddr()">
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">기본주소</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_sa" name="employee_sa" placeholder="도로명 주소"
+										readonly>
+								</div>
+								<label for="inputEmail" class="col-sm-1 col-form-label">상세주소</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_da" name="employee_da" placeholder="상세 주소">
+								</div>
+							</div>
+							<!-- 주소 값 히든 -->
+							<input type="hidden" id="employee_ad" name="employee_ad">
+							<!-- 성별 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">성별</label>
+								<div class="col-sm-4">
+									<select class="form-select" aria-label="Default select example"
+										id="employee_sb" name="employee_sb">
+										<option value="남자" selected>남자</option>
+										<option value="여자">여자</option>
+									</select>
+								</div>
+								<label for="inputDate" class="col-sm-1 col-form-label">생년월일</label>
+								<div class="col-sm-2">
+									<input type="text" class="form-control" id="employee_bd" name="employee_bd"
+										aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+									<div id="bd_wrapper"></div>
+								</div>
+							</div>
+							<!-- 비고 -->
+
+							<!-- 이메일 -->
+							<div class="row mb-3">
+							    <label for="inputText" class="col-sm-1 col-form-label">이메일</label>
+							    <div class="col-sm-3">
+							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
+							    </div>
+							    <div class="col-auto">@</div>
+								<div class="col-sm-3">
+								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
+								</div>
+							    <div class="col-sm-3">
+									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
+									    <option value="custom" selected>직접 입력</option>
+									    <option value="naver.com">naver.com</option>
+									    <option value="google.com">google.com</option>
+									    <option value="hanmail.net">hanmail.net</option>
+									    <option value="nate.com">nate.com</option>
+									    <option value="kakao.com">kakao.com</option>
+									</select>
+							    </div>
+							</div>
+							<input type="hidden" id="employee_em" name="employee_em">
+							<!-- 사진등록 -->
+							<div class="row mb-3">
+							    <label for="employee_pi" class="col-sm-1 col-form-label">사진등록</label>
+							    <div class="col-sm-5">
+							        <div id="photoContainer" 
+							            style="position: relative; width: 150px; height: 150px; border-radius: 8px; cursor: pointer; 
+							                   background-color: #f8f9fa; border: 2px dashed #ccc;">
+							            <img id="photoPreview" src=""  alt="사진 미리보기" 
+							                style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover; display: none;">
+							            <div id="uploadText" 
+							                style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+							                       font-size: 14px; font-weight: bold; color: #aaa; text-align: center;">
+							                사진 등록
+							            </div>
+							        </div>
+							        <button id="removePhotoBtn" 
+							            style="display: none; background-color: #f44336; color: white; border: none; 
+							                   border-radius: 5px; padding: 5px 10px; margin-top: 10px; cursor: pointer;">
+							            삭제
+							        </button>
+							        <input type="file" id="employee_pi" name="employee_pi" accept="image/*" style="display: none;">
+							    </div>
+							</div>
+
+
+							<div class="row mb-3">
+							
+								<label for="inputText" class="col-sm-1 col-form-label">기본급</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_bs" name="employee_bs">
+								</div>
+								<label for="inputText" class="col-sm-1 col-form-label">은행</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_bk" name="employee_bk">
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-1 col-form-label">계좌번호</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_an" name="employee_an">
+								</div>
+								<label for="inputText" class="col-sm-1 col-form-label">예금주</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_dt" name="employee_dt">
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="submit" id="modal_submit_button" class="btn btn-primary">등록</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal fade" id="modal_department_list" tabindex="-1" aria-labelledby="modal_department_list_label" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modal_department_list_label">부서 선택</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<table id="dpTable" class="table table-striped">
+							<thead>
+								<tr>
+									<th>부서코드</th>
+									<th>부서명</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>DEPT001</td>
+									<td>영업부</td>
+									<td><button class="btn btn-primary select-dp-btn">선택</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="modal_grade_list" tabindex="-1" aria-labelledby="modal_grade_list_label" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="modal_grade_list_label">직위 선택</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<table id="gdTable" class="table table-striped">
+							<thead>
+								<tr>
+									<th>직위코드</th>
+									<th>과장</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>GD001</td>
+									<td>차장</td>
+									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		
+		<!-- 그리드 및 등록 버튼 -->
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">인사카드 등록</h5>
+							<div class="row mb-3">
+								<div class="col-sm-12">
+									<div id="grid"></div>
+									<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
+									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+	<!-- End main -->
+</body>
+
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+	function findAddr() {
+	    new daum.Postcode({
+	        oncomplete: function(data) {
+	            // 우편번호 필드 설정
+	            $("#employee_zc").val(data.zonecode);
+	            // 기본주소 (도로명 주소) 필드 설정
+	            $("#employee_sa").val(data.roadAddress);
+	            // 상세주소 초기화 및 포커스 이동
+	            $("#employee_da").val("").focus();
+
+	            // 주소 통합 초기화 (상세주소 제외)
+	            const employee_ad = `(${data.zonecode}) ${data.roadAddress}`;
+	            $("#employee_ad").val(employee_ad);
+	        }
+	    }).open();
+	}
+
+	// 상세주소 입력 시 통합주소 업데이트
+	$("#employee_da").on("input", function() {
+	    const zipCode = $("#employee_zc").val(); // 우편번호
+	    const roadAddress = $("#employee_sa").val(); // 도로명 주소
+	    const detailAddress = $(this).val(); // 상세주소
+
+	    // 통합주소 갱신
+	    const employee_ad = `(${zipCode}) ${roadAddress} ${detailAddress}`;
+	    $("#employee_ad").val(employee_ad);
+	});
+	
+	// 입사일 datepicker
+	$(document).ready(function() {
+		const datepicker = new tui.DatePicker('#hd_wrapper', {
+	        date: new Date(),
+	        input: {
+	            element: '#employee_hd',
+	            format: 'yyyy-MM-dd'
+	        }
+	    });
+	});
+
+	// 퇴사일 datepicker
+	$(document).ready(function() {
+		const datepicker = new tui.DatePicker('#rd_wrapper', {
+	        date: new Date(),
+	        input: {
+	            element: '#employee_rd',
+	            format: 'yyyy-MM-dd'
+	        }
+	    });
+	});
+
+	// 생년월일 datepicker
+	$(document).ready(function() {
+		const datepicker = new tui.DatePicker('#bd_wrapper', {
+	        date: new Date(),
+	        input: {
+	            element: '#employee_bd',
+	            format: 'yyyy-MM-dd'
+	        }
+	    });
+	});
+	
+	// 이메일 관련 처리
+	$('#employee_domain').on('change', function () {
+	    const customDomainInput = $('#custom_domain');
+	    if ($(this).val() !== "custom") {
+	        customDomainInput.val($(this).val()).prop('disabled', true);
+	    } else {
+	        customDomainInput.val('').prop('disabled', false).attr('placeholder', '직접 입력');
+	    }
+	});
+
+	// 이메일 합치기
+	function updateFullEmail() {
+	    const username = $('#email_id').val().trim();
+	    const domainSelect = $('#employee_domain');
+	    const customDomainInput = $('#custom_domain');
+	    const fullEmailInput = $('#employee_em');
+
+	    let domain = domainSelect.val();
+	    if (domain === "custom") {
+	        domain = customDomainInput.val().trim();
+	    }
+
+	    fullEmailInput.val(username + '@' + domain);
+	}
+
+	// 이벤트 핸들러 등록
+	$('#email_id').on('input', updateFullEmail);
+	$('#employee_domain').on('change', updateFullEmail);
+	$('#custom_domain').on('input', updateFullEmail);
+	
+	
+	
+</script>
+
+	
+<script th:inline="javascript">
+	$(document).ready(function () {
+	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+
+	    let grid;
+
+	    // 데이터 가져오기 및 그리드 초기화
+	    $.ajax({
+	        url: '/select_EMPLOYEE',
+	        method: 'GET',
+	        success: function (employeeList) {
+	            grid = new tui.Grid({
+	                el: document.getElementById('grid'),
+	                data: employeeList,
+	                scrollX: true,
+	                scrollY: true,
+	                rowHeaders: ['checkbox'],
+					columns: [
+						{ header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
+						{ header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
+						{ header: '부서', name: 'employee_dp', align: 'center', sortable: true },
+						{ header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
+						{ header: '주소', name: 'employee_ad', align: 'center', sortable: true },
+						{ header: '직급', name: 'employee_gd', align: 'center', sortable: true },
+						{ header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
+						{ header: '이메일', name: 'employee_em', align: 'center', sortable: true },
+						{ header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
+					    
+					    // 숨김 컬럼
+						{ header: '사원아이디', name: 'employee_id', hidden: true },
+						{ header: '성별', name: 'employee_sb', hidden: true },
+						{ header: '채용구분', name: 'employee_cg', hidden: true },
+						{ header: '패스워드', name: 'employee_pw', hidden: true  },
+						{ header: '퇴사일', name: 'employee_rd', hidden: true  },
+						{ header: '퇴사사유', name: 'employee_rr', hidden: true  },
+						{ header: '비고', name: 'employee_nt', hidden: true  },
+						{ header: '사진', name: 'employee_pi', hidden: true  },
+						{ header: '기본급', name: 'employee_bs', hidden: true  },
+						{ header: '은행', name: 'employee_bk', hidden: true  },
+						{ header: '계좌번호', name: 'employee_an', hidden: true  },
+						{ header: '예금주', name: 'employee_dt', hidden: true  },
+						{ header: '작성자', name: 'employee_wr', hidden: true  },
+						{ header: '작성일', name: 'employee_wd', hidden: true  },
+						{ header: '수정자', name: 'employee_mf', hidden: true  },
+						{ header: '수정일', name: 'employee_md', hidden: true  },
+					]
+	            });
+
+	            // 그리드 클릭 이벤트 등록
+	            grid.on('click', (ev) => {
+	                const columnName = ev.columnName;
+	                const rowKey = ev.rowKey;
+	                const rowData = grid.getRow(rowKey);
+
+					// 헤더 클릭인지 확인
+					if (rowKey === null || rowKey === undefined) {
+					    console.warn("헤더 클릭은 무시됩니다.");
+					    return;
+					}
+					
+					
+	                if (columnName === 'employee_cd' || columnName === 'employee_nm') {
+	                    openEditModal(rowData); // 수정 모드로 모달 열기
+	                }
+	            });
+	        },
+	        error: function (error) {
+	            console.error('오류 발생:', error);
+	        }
+	    });
+
+
+	    // 삭제 버튼 클릭 이벤트
+	    $('#btn_employee_delete').on('click', function () {
+	        const checkedRows = grid.getCheckedRows();
+	        if (checkedRows.length === 0) {
+	            alert('삭제할 사원을 선택하세요.');
+	            return;
+	        }
+
+	        const employee_cds = checkedRows.map(row => row.employee_cd);
+	        if (!confirm(`선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`)) {
+	            return;
+	        }
+
+	        $.ajax({
+	            url: '/delete_EMPLOYEE',
+	            method: 'POST',
+	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	            data: JSON.stringify({ employee_cds }),
+	            contentType: 'application/json',
+	            success: function () {
+	                alert('삭제가 완료되었습니다.');
+	                location.reload();
+	            },
+	            error: function (xhr) {
+	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	                alert('삭제 중 오류가 발생했습니다.');
+	            }
+	        });
+	    });
+
+	    // 모달 닫힐 때 상태 초기화
+	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
+			$('#appointment_form')[0].reset(); // 폼 초기화
+			resetPhoto(); // 사진 초기화
+			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#modalTitle').text(''); // 모달 제목 초기화
+			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
+	    });
+
+		// 사진 미리보기 초기화 함수
+		function resetPhoto() {
+		    $('#photoPreview').hide().attr('src', ''); // 사진 숨기기
+		    $('#uploadText').show(); // "사진 등록" 텍스트 표시
+		    $('#removePhotoBtn').hide(); // 삭제 버튼 숨기기
+		    $('#employee_pi').val(''); // 파일 입력 초기화
+		}
+
+		// 사진 미리보기 업데이트 함수
+		$('#employee_pi').on('change', function () {
+		    const file = this.files[0];
+		    if (file) {
+		        const reader = new FileReader();
+		        reader.onload = function (e) {
+		            $('#photoPreview').attr('src', e.target.result).show(); // 미리보기 업데이트
+		            $('#uploadText').hide();
+		            $('#removePhotoBtn').show();
+		            $('#photoDeleted').val('false'); // 사진 삭제 상태 해제
+		        };
+		        reader.readAsDataURL(file);
+		    } else {
+		        $('#photoPreview').hide();
+		        $('#uploadText').show();
+		        $('#removePhotoBtn').hide();
+		        $('#photoDeleted').val('true'); // 파일 선택 취소 시 삭제 상태로 설정
+		    }
+		});
+
+		// 사진 삭제 버튼 이벤트
+		$('#removePhotoBtn').on('click', function (event) {
+		    event.preventDefault(); // 기본 폼 제출 동작 방지
+		    $('#photoDeleted').val('true'); // 사진 삭제 상태 설정
+		    $('#photoPreview').hide().attr('src', ''); // 미리보기 숨기기
+		    $('#uploadText').show(); // 업로드 텍스트 표시
+		    $('#removePhotoBtn').hide(); // 삭제 버튼 숨기기
+		    $('#employee_pi').val(''); // 파일 입력 초기화
+		});
+
+
+		
+		// 사진 컨테이너 클릭 이벤트
+		$('#photoContainer').on('click', function () {
+		    $('#employee_pi').click(); // 파일 선택창 열기
+		});
+		
+		// 등록 모달 열기
+		$('#openCreateModal').on('click', function () {
+		    openCreateModal();
+		});
+
+		// 등록 모달 함수
+		function openCreateModal() {
+		    // 모달 초기화
+		    resetModal();
+
+		    // 모달 설정
+		    $('#modalTitle').text('인사카드 등록');
+		    $('#modal_submit_button').text('등록');
+
+		    // 모달 열기
+		    const modalInstance = new bootstrap.Modal($('#modal_appointment_save')[0]);
+		    modalInstance.show();
+		}
+
+		// 모달 초기화 함수
+		function resetModal() {
+		    $('#appointment_form')[0].reset(); // 폼 초기화
+		    resetPhoto(); // 사진 초기화
+		    $('#employee_cd').val(''); // 수정용 필드 초기화
+		}
+		
+		// 수정 모달 열기 함수
+		function openEditModal(data) {
+		    // 모달 제목 및 버튼 텍스트 설정
+		    $('#modalTitle').text('인사카드 수정');
+		    $('#modal_submit_button').text('수정');
+
+			// 그리드에서 정의된 name 속성 값만 매핑
+
+			// 데이터 매핑
+				Object.keys(data).forEach(key => {
+				const $field = $(`#${key}`);
+		        if ($field.length && $field.attr('type') !== 'file') {
+		            $field.val(data[key] || '');
+		        }
+		    });
+
+		    // 주소 처리
+		    if (data.employee_ad) {
+		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
+		        const match = data.employee_ad.match(regex);
+		        if (match) {
+		            $("#employee_zc").val(match[1]); // 우편번호
+		            $("#employee_sa").val(match[2]); // 기본주소
+		            $("#employee_da").val(match[3].trim()); // 상세주소
+		        } else {
+		            console.warn('주소 형식이 잘못되었습니다:', data.employee_ad);
+		        }
+		    }
+
+		    // 이메일 처리
+		    if (data.employee_em) {
+		        const [email_id, domain] = data.employee_em.split('@');
+		        if (email_id && domain) {
+		            $('#email_id').val(email_id);
+		            if (domain === 'custom') {
+		                $('#employee_domain').val('');
+		                $('#custom_domain').val(domain).prop('disabled', false);
+		            } else {
+		                $('#employee_domain').val(domain);
+		                $('#custom_domain').val('').prop('disabled', true);
+		            }
+		        } else {
+		            console.warn('이메일 형식이 잘못되었습니다:', data.employee_em);
+		        }
+		    }
+
+		    // 사진 미리보기 처리
+		    if (data.employee_pi) {
+		        const imagePath = `/upload/${data.employee_pi}`;
+		        $('#photoPreview').attr('src', imagePath).show();
+		        $('#uploadText').hide();
+		        $('#removePhotoBtn').show();
+		    } else {
+		        resetPhoto();
+		    }
+
+		    // 파일 입력 초기화
+		    $('#employee_pi').val('');
+
+		    // 모달 열기
+		    $('#modal_appointment_save').modal('show');
+
+		    console.log("수정 모달 열림", data);
+		}
+
+		// 사진 초기화 함수
+		function resetPhoto() {
+		    $('#photoPreview').hide().attr('src', '');
+		    $('#uploadText').show();
+		    $('#removePhotoBtn').hide();
+		    $('#employee_pi').val('');
+		}
+
+
+		// 폼 제출 이벤트
+		$('#appointment_form').off('submit').on('submit', function (event) {
+		    event.preventDefault();
+
+		    const formData = new FormData(); // FormData 객체 생성
+		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
+		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
+
+		    // DTO 데이터를 JSON으로 생성
+		    const employeeDTO = {
+		        employee_cd: $('#employee_cd').val(),
+		        employee_id: $('#employee_id').val(),
+		        employee_pw: $('#employee_pw').val(),
+		        employee_dp: $('#employee_dp').val(),
+		        employee_gd: $('#employee_gd').val(),
+		        employee_hd: $('#employee_hd').val(),
+		        employee_rd: $('#employee_rd').val(),
+		        employee_rr: $('#employee_rr').val(),
+		        employee_cg: $('#employee_cg').val(),
+		        employee_nt: $('#employee_nt').val(),
+		        employee_nm: $('#employee_nm').val(),
+		        employee_bd: $('#employee_bd').val(),
+		        employee_ad: $('#employee_ad').val(),
+		        employee_sb: $('#employee_sb').val(),
+		        employee_ph: $('#employee_ph').val(),
+		        employee_em: $('#employee_em').val(),
+		        employee_bs: $('#employee_bs').val(),
+		        employee_bk: $('#employee_bk').val(),
+		        employee_an: $('#employee_an').val(),
+		        employee_dt: $('#employee_dt').val(),
+		        employee_wr: $('#employee_wr').val(),
+		        employee_wd: $('#employee_wd').val(),
+		        employee_mf: $('#employee_mf').val(),
+		        employee_md: $('#employee_md').val(),
+		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
+		    };
+
+		    const fileInput = $('#employee_pi')[0].files[0]; // 파일 선택
+
+		    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
+
+		    if (fileInput) {
+		        formData.append('employee_pi', fileInput); // 파일 추가
+		    }
+
+		    $.ajax({
+		        url: url,
+		        method: 'POST',
+		        processData: false,
+		        contentType: false, // 멀티파트 전송 처리
+		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
+		        data: formData,
+		        success: function () {
+		            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
+		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
+		            location.reload(); // 페이지 새로고침
+		        },
+		        error: function (xhr) {
+		            console.error('AJAX Error:', xhr.responseText);
+		            alert('작업 중 오류가 발생했습니다.');
+		        }
+		    });
+		});
+
+	});
+
+
+
+    
+    $('#employee_dp').on('click', function () {
+        const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
+        modalDepartmentList.show();
+    });
+
+    $('#employee_gd').on('click', function () {
+        const modalDepartmentList = new bootstrap.Modal($('#modal_grade_list')[0]);
+        modalDepartmentList.show();
+    });
+
+ 	// 부서 선택 버튼 클릭 이벤트 처리
+	$(document).on('click', '.select-dp-btn', function () {
+		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
+		const selectedRow = $(this).closest('tr');
+
+		// 행의 각 열(`td`)에서 데이터를 가져옴
+		const departmentName  = selectedRow.find('td').eq(1).text(); // 부서명
+
+		// 기존 모달의 필드에 값 설정
+		$('#employee_dp').val(departmentName);
+
+		// 부서 선택 모달 닫기
+		const modalDepartmentList = bootstrap.Modal.getInstance($('#modal_department_list')[0]);
+		modalDepartmentList.hide();
+	});
+ 	
+ 	// 직위 선택 버튼 클릭 이벤트 처리
+	$(document).on('click', '.select-gd-btn', function () {
+		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
+		const selectedRow = $(this).closest('tr');
+
+		// 행의 각 열(`td`)에서 데이터를 가져옴
+		const gradeName = selectedRow.find('td').eq(1).text(); // 직위명
+
+		// 기존 모달의 필드에 값 설정
+		$('#employee_gd').val(gradeName);
+
+		// 부서 선택 모달 닫기
+		const modalGradeList = bootstrap.Modal.getInstance($('#modal_grade_list')[0]);
+		modalGradeList.hide();
+	});
+    
+</script>
+</html>
