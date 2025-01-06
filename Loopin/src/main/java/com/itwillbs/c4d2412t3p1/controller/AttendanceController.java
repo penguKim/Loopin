@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.AttendanceService;
 
 import lombok.RequiredArgsConstructor;
@@ -81,8 +82,6 @@ public class AttendanceController {
 		
 		log.info(select_ANNUAL + "유효값"); 
 		
-		
-		
 		Map<String, String> response = new HashMap<>();
 		try {
 			attendanceService.insert_ANNUAL();
@@ -94,23 +93,30 @@ public class AttendanceController {
 		}
 	}
 	
-//	@GetMapping("/select_EMPLOYEE")
-//	public ResponseEntity<Map<String, String>> select_EMPLOYEE(@RequestParam("employee_id") String employee_id) {
-//		 try {
-//	            Employee employee = employeeService.findByName(name);
-//	            if (employee == null) {
-//	                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사원을 찾을 수 없습니다.");
-//	            }
-//	            Map<String, Object> response = new HashMap<>();
-//	            response.put("department", employee.getDepartment());
-//	            response.put("hireDate", employee.getHireDate());
-//	            response.put("remainingAnnual", employee.getRemainingAnnual());
-//	            return ResponseEntity.ok(response);
-//	        } catch (Exception e) {
-//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생");
-//	        }
-//	    }
-//	}
+	
+	@ResponseBody
+	@GetMapping("/select_EMPLOYEE")
+	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE(@RequestParam("employee_nm") String employee_nm) {
+		log.info(employee_nm+"select_EMPLOYEE 조회 시도");
+		List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE(employee_nm);
+		log.info(employees.toString()+"employees 조회 시도");
+		
+		List<Map<String, Object>> response = employees.stream().map(employee -> {
+			Map<String, Object> row = new HashMap<>();
+
+			log.info(employee.get("employee_nm")+"get 조회 시도");
+			
+			row.put("employee_nm", employee.get("employee_nm"));
+			row.put("employee_dp", employee.get("employee_dp"));
+			row.put("employee_gd", employee.get("employee_gd"));
+			
+			log.info(row.toString()+"row 조회 시도");
+			return row;
+			
+		}).collect(Collectors.toList());
+
+		return ResponseEntity.ok(response);
+	}
 
 	
 }

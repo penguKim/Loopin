@@ -11,11 +11,11 @@
         </where>
     </select>
     
-    <select id="select_EMPLOYEE" resultType="list">
+    <select id="select_EMPLOYEE" resultType="map">
         SELECT * 
         FROM employee
         <where> 1=1
-        	AND employee_id LIKE #{employee_id} || '%'
+	        	AND employee_nm LIKE #{employee_nm} || '%'
         </where>
     </select>
 <!--    <insert id="insert_ANNUAL">-->

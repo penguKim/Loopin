@@ -3,7 +3,8 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
-
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 	<body>
 		<main id="main" class="main">
 			<div class="card">
@@ -48,11 +49,11 @@
 											<form id="modal_appointment_save" method="post" th:action="@{/select_ANNUAL}">
 												<div class="row mb-3">
 													<div class="col">
-														<label for="employee_id" class="form-label">이름</label>
+														<label for="employee_nm" class="form-label">이름</label>
 														<div class="input-group">
 <!--															<form class="search-form d-flex align-items-center" method="POST" th:action="@{/select_EMPLOYEE}">-->
-																<input type="text" id="employee_id" class="form-control" required>
-																<button type="button" title="Search" id="btn_employee_id"><i class="ri-search-2-line"></i></button>
+																<input type="text" id="employee_nm" class="form-control" required>
+																<button type="button" title="Search" id="btn_employee_nm"><i class="ri-search-2-line"></i></button>
 <!--															</form>-->
 														</div>
 													</div>
@@ -100,30 +101,12 @@
 												<table id="empTable" class="table table-striped">
 													<thead>
 														<tr>
-															<th>사원코드</th>
 															<th>이름</th>
 															<th>부서</th>
-															<th>직위</th>
 															<th>선택</th>
 														</tr>
 													</thead>
-													<tbody>
-														<!-- 여기에 사원 정보를 동적으로 추가 -->
-														<tr>
-															<td>EMP001</td>
-															<td>홍길동</td>
-															<td>영업부</td>
-															<td>대리</td>
-															<td><button class="btn btn-primary select-emp-btn">선택</button></td>
-														</tr>
-														<tr>
-															<td>EMP002</td>
-															<td>김철수</td>
-															<td>개발부</td>
-															<td>과장</td>
-															<td><button class="btn btn-primary select-emp-btn">선택</button></td>
-														</tr>
-													</tbody>
+													<tbody id="td_select_employee"></tbody>
 												</table>
 											</div>
 										</div>
@@ -181,38 +164,41 @@
 			});
 		});
 		
-		document.getElementById('btn_employee_id').addEventListener('click', function () {
-			if(document.getElementById('employee_id').val != null){
-				const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-				modal_employee_list.show();
-			}
-		});
+		//document.getElementById('btn_employee_nm').addEventListener('click', function () {
+		//	if(document.getElementById('employee_nm').val != null){
+		//		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+		//		modal_employee_list.show();
+		//	}
+			
+		//});
 		
-		document.getElementById('btn_employee_id').addEventListener('click', function () {
-		    const employee_id = document.getElementById('employee_id').value; // 입력된 이름 값
+		document.getElementById('btn_employee_nm').addEventListener('click', function () {
+		    const employee_nm = document.getElementById('employee_nm').value; // 입력된 이름 값
 
-		    if (employee_id) {
+		    if (employee_nm) {
 			    // Ajax 요청으로 사원 정보 가져오기
-			    fetch(`/select_EMPLOYEE?name=${encodeURIComponent(employee_id)}`)				
-			        .then(response => {
-			            if (!response.ok) throw new Error('사원 정보를 불러오는데 실패했습니다.');
-			            return response.json();
-			        })
-			        .then(data => {
-			            if (!data || data.length === 0) {
-			                alert('해당 사원을 찾을 수 없습니다.');
-			                return;
-			            }
-	
-			            // 검색된 사원 정보를 폼에 채우기
-			            document.getElementById('employee_cd').value = data.employee_cd || ''; // 부서
-			            document.getElementById('employee_hd').value = data.employee_hd || '';   // 입사일
-			        })
-			        .catch(error => {
-			            console.error(error);
-			            alert('오류가 발생했습니다. 다시 시도해주세요.');
-		        });
+				$.ajax({
+					type: "get",
+					url: "/select_EMPLOYEE",
+					data: {"employee_nm" : employee_nm},
+					success: function(result) {
+						const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+						console.log(result);
+						result.forEach( employee =>{
+							$("#td_select_employee").append( 
+								"<td>" +employee.employee_nm+"</td>"+
+								"<td>" +employee.employee_dp+"</td>"+
+								"<td>" +employee.employee_gd+"</td>"
+							);
+						});
+						modal_employee_list.show();
+					},
+					error : function(result) {
+						console.log('조회 실패');
+					}
+				});
 		    }
+			document.getElementById('employee_nm').focus();
 
 		});
 
