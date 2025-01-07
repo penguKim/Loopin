@@ -101,6 +101,12 @@ public class Employee {
 
     @Column(name = "employee_md")
     private Timestamp employee_md;
+    
+    @Column(name = "employee_mg")
+    private Boolean employee_mg;
+    
+    @Column(name = "employee_rl")
+    private String employee_rl;
 	
 	
 	// 생성자
@@ -133,6 +139,8 @@ public class Employee {
 		    		, Timestamp employee_wd
 		    		, String employee_mf	
 		    		, Timestamp employee_md
+		    		, Boolean employee_mg
+		    		, String employee_rl
 		    		
     			) {
     	
@@ -161,6 +169,8 @@ public class Employee {
     	this.employee_wd = employee_wd;
     	this.employee_mf = employee_mf;	
     	this.employee_md = employee_md;
+    	this.employee_mg = employee_mg;
+    	this.employee_rl = employee_rl;
 
     	
      
@@ -192,6 +202,8 @@ public class Employee {
         employee.setEmployee_wd(employeeDto.getEmployee_wd());
         employee.setEmployee_mf(employeeDto.getEmployee_mf());
         employee.setEmployee_md(employeeDto.getEmployee_md());
+        employee.setEmployee_mg(employeeDto.getEmployee_mg());
+        employee.setEmployee_rl(employeeDto.getEmployee_rl());
 
 
         return employee;
@@ -224,7 +236,10 @@ public class Employee {
 				, employeeDto.getEmployee_wr()
 				, employeeDto.getEmployee_wd()
 				, employeeDto.getEmployee_mf()
-				, employeeDto.getEmployee_md());
+				, employeeDto.getEmployee_md()
+				, employeeDto.getEmployee_mg()
+				, employeeDto.getEmployee_rl()
+				);
 	}
     
     
