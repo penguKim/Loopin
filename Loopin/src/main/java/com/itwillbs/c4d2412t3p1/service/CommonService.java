@@ -119,17 +119,9 @@ public class CommonService {
 	                time
 	            );
 	            
-	            System.out.println("------------------- updCount : " + updCount);
-	            System.out.println("------------------- common_cc : " + common_cc);
-	            System.out.println("------------------- data.getCommon_cc() : " + data.getCommon_cc());
-	            
 				int size = commonMapper.selectSubCode(common_cc);
-				System.out.println("------------------- size(common_cc) : " + size);
 				if (size > 0) {
-					System.out.println("들어왓따!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 					int count =  commonMapper.updateSubCodeList(common_cc, data.getCommon_cc());
-					System.out.println("------------------- count : " + count);
-					
 				}
 
 				updateCount++;
