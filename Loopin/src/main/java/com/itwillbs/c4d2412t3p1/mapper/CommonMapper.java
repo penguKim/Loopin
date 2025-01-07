@@ -21,5 +21,9 @@ public interface CommonMapper {
 	int delete_group_code(@Param("list")  List<Common_codeDTO> commonCodes);
 	// 공통코드 수정
 	int update_common_code(@Param("code")Common_codeDTO data);
+	// 상세코드 조회
+	int selectSubCode(@Param("code") String code);
+	// 상세코드 업데이트
+	int updateSubCodeList(@Param("before") String before, @Param("after") String after);
     
 }

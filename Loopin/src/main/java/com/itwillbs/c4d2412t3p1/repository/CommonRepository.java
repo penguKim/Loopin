@@ -36,7 +36,7 @@ public interface CommonRepository extends JpaRepository<Common_code, common_code
             + "common_cc = :common_cc, common_nm = :common_nm, common_ct = :common_ct, common_in = :common_in, "
             + "common_us = :common_us, common_uu = :common_uu, common_ud = :common_ud "
             + "WHERE common_gc = :common_gc AND common_cc = :before_cc", nativeQuery = true)
-    void updateCommonCode(
+    int updateCommonCode(
         @Param("common_gc") String common_gc,
         @Param("before_cc") String before_cc,
         @Param("common_cc") String common_cc,
@@ -48,7 +48,13 @@ public interface CommonRepository extends JpaRepository<Common_code, common_code
         @Param("common_ud") Timestamp common_ud
     );
 
+
     @Query(value = "SELECT common_cc, common_nm FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
 	List<Common_codeDTO> select_COMMON_list(@Param("common_gc") String data);
 
+    
+    
+    // 사원 직급 리스트 가져오기 
+    @Query(value = "SELECT common_gc, common_cc, common_nm, common_ct, common_in, common_us, common_ru, common_rd, common_uu, common_ud FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
+	List<Common_code> selectGradeList(@Param("common_cc") String common_cc, @Param("common_gc") String common_gc);
 }
