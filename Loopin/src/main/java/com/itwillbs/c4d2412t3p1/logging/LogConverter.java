@@ -70,7 +70,7 @@ public class LogConverter {
         } else {
             logger.info("임시로 employee_cd NULL 사용");
         }
-
+ 
         // Map → JSON 변환
         if (logDTO.getLog_jdMap() != null) {
             try {
