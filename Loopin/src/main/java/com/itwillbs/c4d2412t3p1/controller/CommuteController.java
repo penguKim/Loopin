@@ -4,15 +4,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +29,7 @@ import lombok.extern.java.Log;
 public class CommuteController {
 	
 	private final CommuteService commuteService;
+	private final CommonService commonService;
 
 	@GetMapping("/commute")
 	public String commute() {
@@ -32,7 +38,7 @@ public class CommuteController {
 	
 	@ResponseBody
 	@GetMapping("/select_COMMUTE")
-	public ResponseEntity<Map<String, Object>> select_COMMUTE(@RequestParam(name = "commute_dt") String commute_dt) {
+	public ResponseEntity<Map<String, Object>> select_COMMUTE(@RequestParam(name = "commute_dt", defaultValue = "") String commute_dt) {
 		
 		System.out.println("---------------------------------------- 파라미터 : " + commute_dt);
 		
@@ -52,7 +58,7 @@ public class CommuteController {
 	
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_list")
-	public ResponseEntity<Map<String, Object>> getMethodName() {
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_list() {
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_list();
 		log.info(list.toString());
@@ -64,5 +70,25 @@ public class CommuteController {
 		return ResponseEntity.ok(response);
 	}
 	
+	
+	@ResponseBody
+	@PostMapping("/select_COMMON_list")
+	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody List<String> list) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(list);
+		log.info(commonList.toString());
+
+		if(commonList.size() > 0) {
+			response.put("result", true);
+			response.put("list", commonList);
+			
+			return ResponseEntity.ok(response);
+		} else {
+			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
 	
 }

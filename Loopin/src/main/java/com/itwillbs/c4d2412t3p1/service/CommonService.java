@@ -156,6 +156,16 @@ public class CommonService {
 
         return deletedCount;
     }
+
+
+	public Map<String, List<Common_codeDTO>> select_COMMON_list(List<String> list) {
+		Map<String, List<Common_codeDTO>> commonList = new HashMap<>();
+		
+		list.forEach(data -> {commonList.put(data, commonRepository.select_COMMON_list(data));});
+		
+		return commonList;
+		
+	}
 	
 
 }

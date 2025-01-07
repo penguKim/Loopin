@@ -140,10 +140,15 @@ public class CommuteService {
     }
 
 
-	public List<Commute> select_COMMUTE(String commute_dt) {
-		
-		return commuteRepository.select_COMMUTE(commute_dt);
-	}
+    public List<Commute> select_COMMUTE(String commute_dt) {
+    	
+        if (commute_dt == null || commute_dt.isEmpty()) {
+            return commuteRepository.findAll();
+        } else {
+            return commuteRepository.select_COMMUTE(commute_dt);
+        }
+    }
+
 
 
 	public List<CommuteDTO> select_COMMUTE_list() {
