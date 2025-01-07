@@ -33,8 +33,8 @@ public class AttendanceService {
 		attendanceMapper.insert_ANNUAL();
 	}
 
-	public List<Map<String, Object>> select_EMPLOYEE(String employee_nm) {
-		return attendanceMapper.select_EMPLOYEE(employee_nm);
+	public List<Map<String, Object>> select_EMPLOYEE_ANNUAL(String employee_nm) {
+		return attendanceMapper.select_EMPLOYEE_ANNUAL(employee_nm);
 	}
 
 	public List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO) {

@@ -14,7 +14,7 @@ import com.itwillbs.c4d2412t3p1.entity.Employee;
 @Mapper
 public interface AttendanceMapper {
 
-	List<Map<String, Object>> select_EMPLOYEE(String employee_nm);
+	List<Map<String, Object>> select_EMPLOYEE_ANNUAL(String employee_nm);
 	
 	List<Map<String, Object>> insert_ANNUAL();
 

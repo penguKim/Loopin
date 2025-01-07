@@ -1,10 +1,12 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -47,6 +49,7 @@ public class AttendanceController {
 		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
 			Map<String, Object> row = new HashMap<>();
 			
+			
 			row.put("annual_id", attendance.getAnnual_id());
 			row.put("employee_cd", attendance.getEmployee_cd());
 			row.put("annual_cc", attendance.getAnnual_cc());
@@ -73,19 +76,23 @@ public class AttendanceController {
 	}
 	
 	@ResponseBody
-	@GetMapping("/select_EMPLOYEE")
-	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE(@RequestParam("employee_nm") String employee_nm) {
+	@GetMapping("/select_EMPLOYEE_ANNUAL")
+	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE_ANNUAL(@RequestParam("employee_nm") String employee_nm) {
 		log.info(employee_nm+"select_EMPLOYEE 조회 시도");
-		List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE(employee_nm);
+		List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE_ANNUAL(employee_nm);
 		log.info(employees.toString()+"employees 조회 시도");
-		
+
 		List<Map<String, Object>> response = employees.stream().map(employee -> {
 			Map<String, Object> row = new HashMap<>();
 			
-			row.put("employee_nm", employee.get("EMPLOYEE_NM"));
-			row.put("employee_dp", employee.get("EMPLOYEE_DP"));
-			row.put("employee_gd", employee.get("EMPLOYEE_GD"));
-			row.put("employee_cd", employee.get("EMPLOYEE_CD"));
+			for (Entry<String, Object> entry : employee.entrySet()) {
+				row.put(entry.getKey().toLowerCase(), entry.getValue()); 
+			}
+			
+//			row.put("employee_nm", employee.get("EMPLOYEE_NM"));
+//			row.put("employee_dp", employee.get("EMPLOYEE_DP"));
+//			row.put("employee_gd", employee.get("EMPLOYEE_GD"));
+//			row.put("employee_cd", employee.get("EMPLOYEE_CD"));
 			
 			log.info(row.toString()+"row 조회 시도");
 			return row;
@@ -103,19 +110,23 @@ public class AttendanceController {
 	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(attendanceDTO);
 	    // 로직 처리 후 성공 응답
 	    List<Map<String, Object>> response = attendances.stream().map(attendance -> {
+	    	
 	    	Map<String, Object> row = new HashMap<>();
-//	    	
-	    	row.put("annual_id", attendance.get("ANNUAL_ID"));
-	    	row.put("employee_cd", attendance.get("EMPLOYEE_CD"));
-	    	row.put("annual_cc", attendance.get("ANNUAL_CC"));
-	    	row.put("annual_yr", attendance.get("ANNUAL_YR"));
-	    	row.put("annual_ua", attendance.get("ANNUAL_UA"));
-	    	row.put("annual_ra", attendance.get("ANNUAL_RA"));
-	    	row.put("annual_aa", attendance.get("ANNUAL_AA"));
-	    	row.put("employee_dp", attendance.get("EMPLOYEE_DP"));
-	    	row.put("employee_hd", attendance.get("EMPLOYEE_HD"));
-//	    	
-	    	log.info(row.toString()+"row 조회 시도");
+	    	
+	    	for (Entry<String, Object> entry : attendance.entrySet()) {
+	    		row.put(entry.getKey().toLowerCase(), entry.getValue()); 
+	    	}
+
+//	    	row.put("annual_id", attendance.get("ANNUAL_ID"));
+//	    	row.put("employee_cd", attendance.get("EMPLOYEE_CD"));
+//	    	row.put("annual_cc", attendance.get("ANNUAL_CC"));
+//	    	row.put("annual_yr", attendance.get("ANNUAL_YR"));
+//	    	row.put("annual_ua", attendance.get("ANNUAL_UA"));
+//	    	row.put("annual_ra", attendance.get("ANNUAL_RA"));
+//	    	row.put("annual_aa", attendance.get("ANNUAL_AA"));
+//	    	row.put("employee_dp", attendance.get("EMPLOYEE_DP"));
+//	    	row.put("employee_hd", attendance.get("EMPLOYEE_HD"));
+	    	
 	    	return row;
 //	    	
 	    }).collect(Collectors.toList());
