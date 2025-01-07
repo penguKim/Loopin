@@ -264,13 +264,13 @@
 							<thead>
 								<tr>
 									<th>직위코드</th>
-									<th>과장</th>
+									<th>직위</th>
 								</tr>
 							</thead>
 							<tbody>
-								<tr>
-									<td>GD001</td>
-									<td>차장</td>
+								<tr th:each="grade, grade_list : ${grade_list}">
+									<td><span th:text="${grade.common_cc}"></span>
+									<td><span th:text="${grade.common_nm}"></span>
 									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
 								</tr>
 							</tbody>
