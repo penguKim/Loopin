@@ -35,7 +35,7 @@ public interface CommonRepository extends JpaRepository<Common_code, common_code
             + "common_cc = :common_cc, common_nm = :common_nm, common_ct = :common_ct, common_in = :common_in, "
             + "common_us = :common_us, common_uu = :common_uu, common_ud = :common_ud "
             + "WHERE common_gc = :common_gc AND common_cc = :before_cc", nativeQuery = true)
-    void updateCommonCode(
+    int updateCommonCode(
         @Param("common_gc") String common_gc,
         @Param("before_cc") String before_cc,
         @Param("common_cc") String common_cc,
