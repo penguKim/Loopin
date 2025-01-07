@@ -13,7 +13,7 @@
     </select>
     
     <select id="select_ANNUAL" resultType="map">
-        SELECT a.*
+	    SELECT a.*
 	    FROM ANNUAL a
 	    INNER JOIN EMPLOYEE e ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
 	    <where>
@@ -23,14 +23,14 @@
 	        <if test="employee_dp != null and employee_dp != ''">
 	            AND e.EMPLOYEE_DP = #{employee_dp}
 	        </if>
-	        <if test="employee_hd != null and employee_hd != ''">
-	            AND e.EMPLOYEE_HD > #{employee_hd}
+	        <if test="employee_hd1 != null and employee_hd1 != '' and employee_hd2 != null and employee_hd2 != ''">
+	            AND #{employee_hd1} &lt;= e.EMPLOYEE_HD AND e.EMPLOYEE_HD &lt;= #{employee_hd2}
 	        </if>
 	        <if test="annual_ra != null and annual_ra != ''">
 	            AND a.ANNUAL_RA = #{annual_ra}
 	        </if>
 	    </where>
-    </select>
+	</select>
 <!--    <insert id="insert_ANNUAL">-->
 
 <!--	</insert>-->

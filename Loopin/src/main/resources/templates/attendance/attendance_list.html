@@ -66,11 +66,15 @@
 													</div>
 												</div>
 												<div class="row mb-3">
+													<label for="employee_hd" class="form-label">입사일</label> 
 													<div class="col">
-														<label for="employee_hd" class="form-label">입사일</label> 
-														<input type="text" id="employee_hd" class="form-control" placeholder="YYYY-MM-DD">
+														<i class="ri-calendar-event-fill"></i><input type="text" id="employee_hd1" class="form-control" placeholder="YYYY-MM-DD">
 													</div>
-													<div id="wrapper"></div>
+													<div class="col">
+														<i class="ri-calendar-event-fill"></i><input type="text" id="employee_hd2" class="form-control" placeholder="YYYY-MM-DD">
+													</div>
+													<div id="wrapper1"></div>
+													<div id="wrapper2"></div>
 												</div>
 												<div class="row mb-3">
 													<div class="col">
@@ -127,6 +131,7 @@
 	<script th:inline="javascript">
 		const token = $("meta[name='_csrf']").attr("content");
 		const header = $("meta[name='_csrf_header']").attr("content");
+		let grid = null;
 		const calendar_container = document.getElementById('pills-home');
 		const btn_calendar = document.getElementById('btn_calendar');
 		const btn_calendar_prev = document.getElementById('btn_calendar_prev');
@@ -147,9 +152,15 @@
 		// 상세필터 입사일 설정
 		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
 			// Date Picker 초기화
-			new tui.DatePicker('#wrapper', {
+			new tui.DatePicker('#wrapper1', {
 				input: {
-					element: '#employee_hd',
+					element: '#employee_hd1',
+					format: 'yyyy-MM-dd'
+				},
+			});
+			new tui.DatePicker('#wrapper2', {
+				input: {
+					element: '#employee_hd2',
 					format: 'yyyy-MM-dd'
 				},
 			});
@@ -197,7 +208,6 @@
 		    const employeeGd = row.find('td:nth-child(4)').text();
 			
 			$("#employee_cd").val(employeeCd);
-			console.log($("#employee_nm").val());
 			
 
 		    // 부모창의 필드에 값 설정
@@ -209,8 +219,7 @@
 		    
 		});
 		
-		// 전역 변수로 grid 선언
-		let grid = null;
+		
 
 		// btn_filter_annual 버튼 이벤트
 		document.getElementById('btn_filter_annual').addEventListener('click', function (event) {
@@ -218,10 +227,11 @@
 
 		    const employee_cd = $("#employee_cd").val();
 		    const employee_dp = $("#employee_dp").val();
-		    const employee_hd = $("#employee_hd").val();
-		    const annual_ra = $("#annual_ra").val();
+		    const employee_hd1 = $("#employee_hd1").val();
+		    const employee_hd2 = $("#employee_hd2").val();
+		    const annual_ra = document.querySelector('input[type="number"]').value;
 
-		    if (!employee_cd && !employee_dp && !employee_hd && !annual_ra) {
+		    if (!employee_cd && !employee_dp && !employee_hd1 && !employee_hd2 && !annual_ra) {
 		        alert("하나 이상 선택해주세요."); // 사용자에게 알림
 		        return; // 요청 중단
 		    }
@@ -233,14 +243,15 @@
 		        data: {
 		            "employee_cd": employee_cd,
 		            "employee_dp": employee_dp,
-		            "employee_hd": employee_hd,
+		            "employee_hd1": employee_hd1,
+		            "employee_hd2": employee_hd2,
 		            "annual_ra": annual_ra,
 		        },
 		        success: function (result) {
 		            if (grid) {
 		                grid.resetData(result); // 기존 grid가 존재하면 데이터 리셋
-						//const modal_appointment_save = bootstrap.Modal.getInstance(document.getElementById('modal_appointment_save'));
-						//modal_appointment_save.hide();
+						const modal_appointment_save = bootstrap.Modal.getInstance(document.getElementById('modal_appointment_save'));
+						modal_appointment_save.hide();
 		            } else {
 		                console.error("그리드 객체가 정의되지 않았습니다.");
 		            }
@@ -295,6 +306,15 @@
 				btn_calendar.style.display = "block"
 			}
 		});
+		
+		// 달력 날짜 출력
+		function updateCalendarText(calendar, selector) {
+		    const originalDate = calendar.getDate();
+		    const year = originalDate.getFullYear();
+		    const month = originalDate.getMonth() + 1;
+		    const formattedDate = `${year}년 ${month}월`;
+		    $(selector).text(formattedDate);
+		}
 		
 		// 캘린더 호출 함수
 		function calendar_function(){ 
@@ -359,16 +379,6 @@
 			});
 			
 			
-			
-			// 달력 날짜 출력
-			function updateCalendarText(calendar, selector) {
-			    const originalDate = calendar.getDate();
-			    const year = originalDate.getFullYear();
-			    const month = originalDate.getMonth() + 1;
-			    const formattedDate = `${year}년 ${month}월`;
-			    $(selector).text(formattedDate);
-			}
-			
 			updateCalendarText(calendar, "#btn_calendar span");
 			
 			// 이전 달 보기 이벤트
@@ -385,6 +395,7 @@
 				updateCalendarText(calendar, "#btn_calendar span");				
 				
 			});
+			
 	
 		};
 		

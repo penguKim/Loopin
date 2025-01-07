@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper;
@@ -36,8 +37,8 @@ public class AttendanceService {
 		return attendanceMapper.select_EMPLOYEE(employee_nm);
 	}
 
-	public List<Map<String, Object>> select_ANNUAL(String employee_cd, String employee_dp, String employee_hd, String annual_ra) {
-		return attendanceMapper.select_ANNUAL(employee_cd, employee_dp, employee_hd, annual_ra);
+	public List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO) {
+		return attendanceMapper.select_ANNUAL(attendanceDTO);
 	}
 
 //

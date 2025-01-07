@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.AttendanceService;
@@ -96,13 +97,10 @@ public class AttendanceController {
 
 	@ResponseBody
 	@GetMapping("/select_ANNUAL")
-	public ResponseEntity<List<Map<String, Object>>> select_ANNUAL( @RequestParam(value = "employee_cd", required = false) String employee_cd,
-																    @RequestParam(value = "employee_dp", required = false) String employee_dp,
-																    @RequestParam(value = "employee_hd", required = false) String employee_hd,
-																    @RequestParam(value = "annual_ra", required = false) String annual_ra) {
-	    System.out.println("받은 데이터: " + employee_cd+ employee_dp+ employee_hd+ annual_ra); // 디버깅용
+	public ResponseEntity<List<Map<String, Object>>> select_ANNUAL(AttendanceDTO attendanceDTO) {
+	    System.out.println("받은 데이터: " + attendanceDTO); // 디버깅용
 	    
-	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(employee_cd, employee_dp, employee_hd, annual_ra);
+	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(attendanceDTO);
 	    // 로직 처리 후 성공 응답
 	    List<Map<String, Object>> response = attendances.stream().map(attendance -> {
 	    	Map<String, Object> row = new HashMap<>();

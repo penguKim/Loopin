@@ -37,7 +37,7 @@ public class Attendance {
 	@Column(name = "annual_id", nullable = false)
 	private String annual_id;
 	@Column(name = "employee_cd")
-	private String employee_cd;
+	private long employee_cd;
 	@Column(name = "annual_cc")
 	private String annual_cc;
 	@Column(name = "annual_yr")
@@ -61,7 +61,7 @@ public class Attendance {
 	public Attendance() {
 	}
 	
-	public Attendance(String annual_id, String employee_cd, String annual_cc, 
+	public Attendance(String annual_id, long employee_cd, String annual_cc, 
 					  String annual_yr, String annual_ua, String annual_ra, String annual_aa,
 					  String annual_ru, String annual_rd, String annual_uu, String annual_ud) {
 		super();
