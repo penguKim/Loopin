@@ -111,6 +111,9 @@ public class EmployeeController {
 	@GetMapping("/employee_list")
 	public String employee_list(Model model) {
 
+		// 부서코드 가져오기 
+		model.addAttribute("dept_list", employeeService.selectDeptList("002"));
+
 		// 직위코드 가져오기 
 		model.addAttribute("grade_list", employeeService.selectGradeList("001"));
 		
@@ -151,6 +154,8 @@ public class EmployeeController {
 		        row.put("employee_wd", employee.getEmployee_wd());
 		        row.put("employee_mf", employee.getEmployee_mf());
 		        row.put("employee_md", employee.getEmployee_md());
+		        row.put("employee_mg", employee.getEmployee_mg());
+		        row.put("employee_rl", employee.getEmployee_rl());
 	        return row;
 	    }).collect(Collectors.toList());
 

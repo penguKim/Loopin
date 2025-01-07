@@ -147,6 +147,11 @@ public class EmployeeService {
     }
 	
     
+    // 모달 부서코드 가져오기
+    public List<Common_code> selectDeptList(String string) {
+    	return commonRepository.selectDeptList("00", string);
+    }
+
     // 모달 직급코드 가져오기
 	public List<Common_code> selectGradeList(String string) {
 		return commonRepository.selectGradeList("00", string);

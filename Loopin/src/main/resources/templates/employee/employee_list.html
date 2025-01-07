@@ -7,169 +7,25 @@
 <body>
 	<main id="main" class="main">
 		<!-- 인사카드 등록 모달 -->
-		<div class="modal fade" id="modal_appointment_save" tabindex="-1">
+		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-xl">
-				<div class="modal-content">
-					<div class="modal-header">
+				<div class="modal-content"style="height: 90vh; display: flex; flex-direction: column;">
+					<div class="modal-header" style="position: sticky; top: 0; background-color: #fff; z-index: 1020;">
 						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
-					<div class="modal-body">
+					<div class="modal-body" style="flex: 1; overflow-y: auto; padding: 15px;">
 						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post" enctype="multipart/form-data">
-							<input type="hidden" id="photoDeleted" name="photoDeleted" value="false">
-						
+							<input type="hidden" id="photoDeleted" name="photoDeleted" value="false">  <!-- 사진 삭제 히든 -->
+							<input type="hidden" id="employee_ad" name="employee_ad"> <!-- 주소 값 히든-->
 							<input type="hidden" class="form-control" id="employee_cd" name="employee_cd"> <!-- 수정 시 사용-->
-							<!-- 아이디 및 비밀번호 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">아이디</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_id" name="employee_id">
-								</div>
-								<label for="inputEmail" class="col-sm-1 col-form-label">비밀번호</label>
-								<div class="col-sm-4">
-									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
-								</div>
-							</div>
-							<!-- 부서코드 및 직급코드 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">부서코드</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
-								</div>
-								<label for="inputText" class="col-sm-1 col-form-label">직위코드</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
-								</div>
-							</div>
-							<!-- 입사일 및 퇴사일 -->
-							<div class="row mb-3">
-								<label for="inputDate" class="col-sm-1 col-form-label">입사일</label>
-								<div class="col-sm-2">
-									<input type="text" class="form-control" id="employee_hd" name="employee_hd"
-										aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-									<div id="hd_wrapper"></div>
-								</div>
-								<label for="inputDate" class="col-sm-1 col-form-label">퇴사일</label>
-								<div class="col-sm-2">
-									<input type="text" class="form-control" id="employee_rd" name="employee_rd"
-										aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-									<div id="rd_wrapper"></div>
-								</div>
-							</div>
-							<!-- 퇴사사유 -->
-							<div class="row mb-3">
-								<label for="inputPassword" class="col-sm-1 col-form-label">퇴사사유</label>
-								<div class="col-sm-5">
-									<textarea class="form-control" style="height: 100px"
-										id="employee_rr" name="employee_rr"></textarea>
-								</div>
-							</div>
-							<!-- 채용구분 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">채용구분</label>
-								<div class="col-sm-4">
-									<select class="form-select" aria-label="Default select example"
-										id="employee_cg" name="employee_cg">
-										<option value="신입" selected>신입</option>
-										<option value="경력">경력</option>
-									</select>
-								</div>
-							</div>
-							<div class="row mb-3">
-								<label for="inputPassword" class="col-sm-1 col-form-label">비고</label>
-								<div class="col-sm-5">
-									<textarea class="form-control" id="employee_nt" name="employee_nt"
-										style="height: 100px"></textarea>
-								</div>
-							</div>
-							<!-- 사원명 및 생년월일 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">사원명</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_nm" name="employee_nm">
-								</div>
-								<label for="inputText" class="col-sm-1 col-form-label">연락처</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_ph" name="employee_ph">
-								</div>
-
-							</div>
-							<!-- 우편 번호 및 주소 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">우편번호</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control form-control-user"
-										id="employee_zc"  name="zipCode" placeholder="우편번호" readonly
-										onclick="findAddr()">
-								</div>
-							</div>
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">기본주소</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control form-control-user"
-										id="employee_sa" name="employee_sa" placeholder="도로명 주소"
-										readonly>
-								</div>
-								<label for="inputEmail" class="col-sm-1 col-form-label">상세주소</label>
-								<div class="col-sm-4">
-									<input type="text" class="form-control form-control-user"
-										id="employee_da" name="employee_da" placeholder="상세 주소">
-								</div>
-							</div>
-							<!-- 주소 값 히든 -->
-							<input type="hidden" id="employee_ad" name="employee_ad">
-							<!-- 성별 -->
-							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">성별</label>
-								<div class="col-sm-4">
-									<select class="form-select" aria-label="Default select example"
-										id="employee_sb" name="employee_sb">
-										<option value="남자" selected>남자</option>
-										<option value="여자">여자</option>
-									</select>
-								</div>
-								<label for="inputDate" class="col-sm-1 col-form-label">생년월일</label>
-								<div class="col-sm-2">
-									<input type="text" class="form-control" id="employee_bd" name="employee_bd"
-										aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-									<div id="bd_wrapper"></div>
-								</div>
-							</div>
-							<!-- 비고 -->
-
-							<!-- 이메일 -->
-							<div class="row mb-3">
-							    <label for="inputText" class="col-sm-1 col-form-label">이메일</label>
-							    <div class="col-sm-3">
-							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
-							    </div>
-							    <div class="col-auto">@</div>
-								<div class="col-sm-3">
-								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
-								</div>
-							    <div class="col-sm-3">
-									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
-									    <option value="custom" selected>직접 입력</option>
-									    <option value="naver.com">naver.com</option>
-									    <option value="google.com">google.com</option>
-									    <option value="hanmail.net">hanmail.net</option>
-									    <option value="nate.com">nate.com</option>
-									    <option value="kakao.com">kakao.com</option>
-									</select>
-							    </div>
-							</div>
-							<input type="hidden" id="employee_em" name="employee_em">
+							<input type="hidden" id="employee_em" name="employee_em"> <!-- 이메일 히든 -->
+							
 							<!-- 사진등록 -->
 							<div class="row mb-3">
-							    <label for="employee_pi" class="col-sm-1 col-form-label">사진등록</label>
-							    <div class="col-sm-5">
+							    <label for="employee_pi" class="col-sm-2 col-form-label">사진등록</label>
+							    <div class="col-sm-3">
 							        <div id="photoContainer" 
 							            style="position: relative; width: 150px; height: 150px; border-radius: 8px; cursor: pointer; 
 							                   background-color: #f8f9fa; border: 2px dashed #ccc;">
@@ -189,30 +45,193 @@
 							        <input type="file" id="employee_pi" name="employee_pi" accept="image/*" style="display: none;">
 							    </div>
 							</div>
+							
+							<!-- 아이디 및 비밀번호 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_id" name="employee_id">
+								</div>
+								<label for="inputEmail" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
+								<div class="col-sm-4">
+									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-2 col-form-label">사원명<span class="text-danger"> *</span></label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm">
+								</div>
+								<label for="inputText" class="col-sm-2 col-form-label">채용구분</label>
+								<div class="col-sm-4">
+									<select class="form-select" aria-label="Default select example"
+										id="employee_cg" name="employee_cg">
+										<option value="신입" selected>신입</option>
+										<option value="경력">경력</option>
+									</select>
+								</div>
+							</div>	
+							<div class="row mb-3">
+							    <label for="inputText" class="col-sm-2 col-form-label">부서장 유무</label>
+								<div class="col-sm-4">
+									<select class="form-select" id="employee_mg" name="employee_domain" aria-label="도메인 선택">
+									    <option value="false" selected>부서직원</option>
+									    <option value="ture">부서장</option>
+									</select>
+								</div>
+							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
+								<div class="col-sm-4">
+									<select class="form-select" id="employee_rl" name="employee_domain" aria-label="도메인 선택">
+									    <option value="employee" selected>사원</option>
+									    <option value="admin">관리자</option>
+									    <option value="developer">개발자</option>
+									</select>
+								</div>
+							</div>						
+							<div class="row mb-3">
+							    <label for="inputText" class="col-sm-2 col-form-label">이메일</label>
+							    <div class="col-sm-3">
+							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
+							    </div>
+							    <div class="col-sm-1 text-center">@</div>
+								<div class="col-sm-3">
+								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
+								</div>
+							    <div class="col-sm-3">
+									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
+									    <option value="custom" selected>직접 입력</option>
+									    <option value="naver.com">naver.com</option>
+									    <option value="google.com">google.com</option>
+									    <option value="hanmail.net">hanmail.net</option>
+									    <option value="nate.com">nate.com</option>
+									    <option value="kakao.com">kakao.com</option>
+									</select>
+							    </div>
+							</div>
+							
+							<!-- 부서코드 및 직급코드 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-2 col-form-label">부서코드</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
+								</div>
+								<label for="inputText" class="col-sm-2 col-form-label">직위코드</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
+								</div>
+							</div>
+							<!-- 입사일 및 퇴사일 -->
+							<div class="row mb-3">
+								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
+								<div class="col-sm-4">
+								    <input type="text" class="form-control" id="employee_bd" name="employee_bd" aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+								    <div id="bd_wrapper"></div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputDate" class="col-sm-2 col-form-label">입사일<span class="text-danger"> *</span></label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_hd" name="employee_hd"
+										aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+									<div id="hd_wrapper" style="width: 100%;"></div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_rd" name="employee_rd"
+										aria-label="Date-Time">
+								</div>
+								<div class="col-sm-2">
+									<div id="rd_wrapper" style="width: 100%;"></div>
+								</div>
+							</div>
+							<!-- 퇴사사유 -->
+							<div class="row mb-3">
+								<label for="inputPassword" class="col-sm-2 col-form-label">퇴사사유</label>
+								<div class="col-sm-10">
+									<textarea class="form-control" style="height: 100px"
+										id="employee_rr" name="employee_rr"></textarea>
+								</div>
+							</div>
+							<!-- 채용구분 -->
+
+							<div class="row mb-3">
+								<label for="inputPassword" class="col-sm-2 col-form-label">비고</label>
+								<div class="col-sm-10">
+									<textarea class="form-control" id="employee_nt" name="employee_nt"
+										style="height: 100px"></textarea>
+								</div>
+							</div>
+							<!-- 우편 번호 및 주소 -->
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-2 col-form-label">우편번호</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_zc"  name="zipCode" placeholder="우편번호" readonly
+										onclick="findAddr()">
+								</div>
+								<label for="inputText" class="col-sm-2 col-form-label">기본주소</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_sa" name="employee_sa" placeholder="도로명 주소"
+										readonly>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<label for="inputEmail" class="col-sm-2 col-form-label">상세주소</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control form-control-user"
+										id="employee_da" name="employee_da" placeholder="상세 주소">
+								</div>
+								<label for="inputText" class="col-sm-2 col-form-label">연락처</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_ph" name="employee_ph">
+								</div>
+							</div>
+
+							<div class="row mb-3">
+								<label for="inputText" class="col-sm-2 col-form-label">성별</label>
+								<div class="col-sm-4">
+									<select class="form-select" aria-label="Default select example"
+										id="employee_sb" name="employee_sb">
+										<option value="남자" selected>남자</option>
+										<option value="여자">여자</option>
+									</select>
+								</div>
+							</div>    
+
+
+
 
 
 							<div class="row mb-3">
 							
-								<label for="inputText" class="col-sm-1 col-form-label">기본급</label>
+								<label for="inputText" class="col-sm-2 col-form-label">기본급</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bs" name="employee_bs">
 								</div>
-								<label for="inputText" class="col-sm-1 col-form-label">은행</label>
+								<label for="inputText" class="col-sm-2 col-form-label">은행</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bk" name="employee_bk">
 								</div>
 							</div>
 							<div class="row mb-3">
-								<label for="inputText" class="col-sm-1 col-form-label">계좌번호</label>
+								<label for="inputText" class="col-sm-2 col-form-label">계좌번호</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_an" name="employee_an">
 								</div>
-								<label for="inputText" class="col-sm-1 col-form-label">예금주</label>
+								<label for="inputText" class="col-sm-2 col-form-label">예금주</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_dt" name="employee_dt">
 								</div>
 							</div>
-							<div class="modal-footer">
+							<div class="modal-footer" style="position: sticky; bottom: 0; background-color: #fff; z-index: 1020;">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
 								<button type="submit" id="modal_submit_button" class="btn btn-primary">등록</button>
 							</div>
@@ -222,7 +241,7 @@
 			</div>
 		</div>
 		
-		<div class="modal fade" id="modal_department_list" tabindex="-1" aria-labelledby="modal_department_list_label" aria-hidden="true">
+		<div class="modal" id="modal_department_list" tabindex="-1" aria-labelledby="modal_department_list_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -239,10 +258,10 @@
 								</tr>
 							</thead>
 							<tbody>
-								<tr>
-									<td>DEPT001</td>
-									<td>영업부</td>
-									<td><button class="btn btn-primary select-dp-btn">선택</button></td>
+								<tr th:each="dept, dept_list : ${dept_list}">
+									<td><span th:text="${dept.common_cc}"></span>
+									<td><span th:text="${dept.common_nm}"></span>
+									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
 								</tr>
 							</tbody>
 						</table>
@@ -251,7 +270,7 @@
 			</div>
 		</div>
 
-		<div class="modal fade" id="modal_grade_list" tabindex="-1" aria-labelledby="modal_grade_list_label" aria-hidden="true">
+		<div class="modal" id="modal_grade_list" tabindex="-1" aria-labelledby="modal_grade_list_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
@@ -336,16 +355,16 @@
 	    $("#employee_ad").val(employee_ad);
 	});
 	
-	// 입사일 datepicker
-	$(document).ready(function() {
-		const datepicker = new tui.DatePicker('#hd_wrapper', {
+	$(document).ready(function () {
+	    // 입사일 DatePicker
+	    const hdDatepicker = new tui.DatePicker('#hd_wrapper', {
 	        date: new Date(),
 	        input: {
 	            element: '#employee_hd',
 	            format: 'yyyy-MM-dd'
-	        }
+	        },
 	    });
-	});
+    });
 
 	// 퇴사일 datepicker
 	$(document).ready(function() {
@@ -365,8 +384,8 @@
 	        input: {
 	            element: '#employee_bd',
 	            format: 'yyyy-MM-dd'
-	        }
-	    });
+	        },
+		});
 	});
 	
 	// 이메일 관련 처리
@@ -731,15 +750,15 @@
 
 
     
-    $('#employee_dp').on('click', function () {
-        const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
-        modalDepartmentList.show();
-    });
+	$('#employee_dp').on('click', function () {
+	    const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
+	    modalDepartmentList.show();
+	});
 
-    $('#employee_gd').on('click', function () {
-        const modalDepartmentList = new bootstrap.Modal($('#modal_grade_list')[0]);
-        modalDepartmentList.show();
-    });
+	$('#employee_gd').on('click', function () {
+	    const modalDepartmentList = new bootstrap.Modal($('#modal_grade_list')[0]);
+	    modalDepartmentList.show();
+	});
 
  	// 부서 선택 버튼 클릭 이벤트 처리
 	$(document).on('click', '.select-dp-btn', function () {
