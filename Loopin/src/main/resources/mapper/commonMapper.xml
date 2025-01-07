@@ -76,7 +76,7 @@
 	</delete>
 	
 	<update id="update_common_code">
-		UPDATE FROM COMMON_CODE SET
+		UPDATE COMMON_CODE SET
 	          COMMON_CC = #{code.common_cc}
 	        , COMMON_NM = #{code.common_nm}
 	        , COMMON_CT = #{code.common_ct}
@@ -86,5 +86,17 @@
 	        , COMMON_UD = #{code.common_ud}
 		WHERE COMMON_GC = #{code.common_gc}
 		  AND COMMON_CC = #{code.beforeCommon_cc}
+	</update>
+	
+	<select id="selectSubCode" resultType="int">
+		SELECT COUNT(*)
+		FROM COMMON_CODE
+		WHERE COMMON_GC = #{code}
+	</select>
+	
+	<update id="updateSubCodeList">
+		UPDATE COMMON_CODE SET
+			COMMON_GC = #{after}
+		WHERE COMMON_GC = #{before}
 	</update>
 </mapper>
