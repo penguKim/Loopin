@@ -56,6 +56,7 @@ public class LogConverter {
         log.setLog_od(logDTO.getLog_od());
         log.setLog_oi(logDTO.getLog_oi());
         log.setLog_bj(logDTO.getLog_bj());
+        log.setSequenceValue(logDTO.getSequenceValue()); // 시퀀스 값 설정
 
         // Employee 설정
 //        Employee employee = new Employee();

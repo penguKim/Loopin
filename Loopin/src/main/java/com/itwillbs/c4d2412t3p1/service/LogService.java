@@ -22,22 +22,11 @@ public class LogService {
 	private final LogRepository logRepository;
 	private final LogConverter logConverter;
 
-//    연도별 고유 로그 코드 생성
-	@Transactional
-	public synchronized String generateLogCode() {
-		int year = LocalDateTime.now().getYear() % 100; // 두 자리 연도
-		Integer currentSequence = logRepository.getCurrentSequenceForYear(year);
-
-		int nextSequence = (currentSequence == null) ? 1 : currentSequence + 1;
-
-		// 시퀀스 업데이트
-		logRepository.updateSequenceForYear(year, nextSequence);
-
-		return String.format("%02d-%04d", year, nextSequence);
-	}
-
 //    로그 저장
 	public void saveLog(LogDTO logDTO) {
+		// SEQUENCE에서 시퀀스 값 가져오기
+		Long sequenceValue = logRepository.getNextSequenceValue();
+		logDTO.setSequenceValue(sequenceValue);
 		// DTO → 엔티티 변환 후 저장
 		Log logEntity = logConverter.toEntity(logDTO);
 		log.info("저장 중인 LogDTO: {}" + logDTO.toString());
@@ -45,13 +34,11 @@ public class LogService {
 	}
 
 	public List<LogDTO> select_LOG() {
-		
+
 		// 조인된 로그 데이터 조회
 		List<Log> logs = logRepository.findAllLogsWithEmployee();
-		 // 엔티티를 DTO로 변환
-        return logs.stream()
-                   .map(logConverter::setLogDTO)
-                   .collect(Collectors.toList());
+		// 엔티티를 DTO로 변환
+		return logs.stream().map(logConverter::setLogDTO).collect(Collectors.toList());
 	}
 
 }

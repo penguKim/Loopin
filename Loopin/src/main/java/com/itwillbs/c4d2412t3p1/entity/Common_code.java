@@ -62,7 +62,6 @@ public class Common_code {
 	@Column(name = "common_ud")
 	private Timestamp common_ud;
 
-
 //	public static Common_code Common_code(Common_codeDTO common) {
 //		Common_code code = new Common_code();
 //		common_codePK pk = new common_codePK();

@@ -1,6 +1,8 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,7 +12,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import lombok.Getter; 
+import jakarta.persistence.Transient;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
@@ -24,7 +27,10 @@ public class Log {
 	@Id
 	@Column(name = "log_cd", nullable = false)
 	private String log_cd;
-	
+
+	@Transient
+	private Long sequenceValue; // 시퀀스 값을 저장하기 위한 임시 필드
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "employee_cd", referencedColumnName = "employee_cd", nullable = true)
 	private Employee employee;
@@ -32,7 +38,7 @@ public class Log {
 	@Column(name = "log_sj", nullable = false)
 	private String log_sj;
 
-	@Column(name = "log_ju", length = 255, nullable = false)
+	@Column(name = "log_ju", length = 255, nullable = true)
 	private String log_ju;
 
 	@Column(name = "log_jd", columnDefinition = "CLOB", nullable = true)
@@ -46,16 +52,15 @@ public class Log {
 
 	@Column(name = "log_bj", length = 255, nullable = true)
 	private String log_bj;
-
-//	DB에 데이터 삽입 되기 전의 메소드 지정
-//	로그코드 파싱 (25-0001, 0002....)
-//	@PrePersist
-//    private void generateLogCd() {
-//        if (this.log_cd == null || this.log_cd.isEmpty()) {
-//            int year = LocalDateTime.now().getYear() % 100;
-//            int sequenceNumber = 1; 
-//            this.log_cd = String.format("%02d-%04d", year, sequenceNumber);
-//        }
-//    }
+	
+	@PrePersist
+	public void prePersist() {
+		// 현재 년도 (두 자리 형식)
+		String currentYear = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+		// 시퀀스 값을 네 자리 형식으로 변환
+		String formattedSequence = String.format("%04d", sequenceValue);
+		// log_cd 생성: YY-0001 형식
+		this.log_cd = currentYear + "-" + formattedSequence;
+	}
 
 }

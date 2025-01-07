@@ -21,6 +21,7 @@ public class LogDTO {
 	private String log_oi;
 	private String log_bj;
 	private String employee_id; // Employee 테이블에서 조인한 값
+    private Long sequenceValue;
 
 	// 날짜를 LocalDateTime으로 변환하는 유틸리티 메서드
 	public LocalDateTime getLogOdAsLocalDateTime() {

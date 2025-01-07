@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
+import com.itwillbs.c4d2412t3p1.entity.Log;
 import com.itwillbs.c4d2412t3p1.service.LogService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,9 +42,9 @@ public class LogAspect {
 //	 @LogActivity 어노테이션이 부착된 메서드 실행 전에 동작 메서드의 인자 정보를 JSON으로 변환하여 ThreadLocal에 저장
 	@Before("@annotation(logActivity)")
 	public void logBefore(JoinPoint joinPoint, LogActivity logActivity) {
-
+		
+		
 		LogDTO logDTO = new LogDTO();
-		logDTO.setLog_cd(logService.generateLogCode());
 		logDTO.setLog_sj(logActivity.value());
 		logDTO.setLog_ju(logActivity.action());
 		logDTO.setLog_od(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))); // 현재 시간 설정

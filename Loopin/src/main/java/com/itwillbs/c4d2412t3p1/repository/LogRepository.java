@@ -2,7 +2,6 @@ package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
 
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,25 +19,13 @@ public interface LogRepository extends JpaRepository<Log, String> {
 //	@Query("SELECT LO FROM Log LO JOIN FETCH LO.employee WHERE LO.log_cd = :log_cd")
 //	Log findByLogCdWithEmployee(@Param("log_cd") String log_cd);
 
-	// 연도별 시퀀스 관리
-	@Query(value = "SELECT MAX(sequence_number) FROM LOG_CODE_SEQUENCE WHERE year = :year", nativeQuery = true)
-	Integer getCurrentSequenceForYear(@Param("year") int year);
+	// Oracle 시퀀스를 통해 다음 시퀀스 값을 가져옴
+	@Query(value = "SELECT LOG_SEQ.NEXTVAL FROM DUAL", nativeQuery = true)
+	Long getNextSequenceValue();
 
-	@Modifying
-	@Transactional
-	@Query(value = "MERGE INTO LOG_CODE_SEQUENCE target " +
-	               "USING (SELECT :year AS year, :sequence AS sequence_number FROM dual) source " +
-	               "ON (target.year = source.year) " +
-	               "WHEN MATCHED THEN " +
-	               "UPDATE SET target.sequence_number = source.sequence_number " +
-	               "WHEN NOT MATCHED THEN " +
-	               "INSERT (year, sequence_number) " +
-	               "VALUES (source.year, source.sequence_number)", nativeQuery = true)
-	void updateSequenceForYear(@Param("year") int year, @Param("sequence") int sequence);
-	
-	 @Query("SELECT LO FROM Log LO LEFT JOIN FETCH LO.employee EM")
-	 List<Log> findAllLogsWithEmployee();
-	
+	@Query("SELECT LO FROM Log LO LEFT JOIN FETCH LO.employee EM")
+	List<Log> findAllLogsWithEmployee();
+
 //	// 모든 로그와 직원 ID를 조회
 //	@Query("SELECT LO FROM Log LO JOIN FETCH LO.employee")
 //	List<Log> findAllLogsWithEmployee();
