@@ -107,7 +107,7 @@ public class CommonService {
 	            String common_cc = (beforeCommon_cc != null && !beforeCommon_cc.isEmpty())
 	                    ? beforeCommon_cc : data.getCommon_cc();
 	            
-	            commonRepository.updateCommonCode(
+	            int updCount = commonRepository.updateCommonCode(
 	                data.getCommon_gc(),
 	                common_cc,
 	                data.getCommon_cc(),
@@ -118,9 +118,24 @@ public class CommonService {
 	                regUser, 
 	                time
 	            );
+	            
+	            System.out.println("------------------- updCount : " + updCount);
+	            System.out.println("------------------- common_cc : " + common_cc);
+	            System.out.println("------------------- data.getCommon_cc() : " + data.getCommon_cc());
+	            
+				int size = commonMapper.selectSubCode(common_cc);
+				System.out.println("------------------- size(common_cc) : " + size);
+				if (size > 0) {
+					System.out.println("들어왓따!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+					int count =  commonMapper.updateSubCodeList(common_cc, data.getCommon_cc());
+					System.out.println("------------------- count : " + count);
+					
+				}
 
-	            updateCount++;
+				updateCount++;
 	        } catch (Exception e) {
+	            System.err.println("updateSubCodeList 실행 중 오류 발생: " + e.getMessage());
+	            e.printStackTrace();
 	            failedRows.add(data);
 	        }
 	    }
