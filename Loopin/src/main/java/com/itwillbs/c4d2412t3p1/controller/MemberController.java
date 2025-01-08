@@ -33,6 +33,11 @@ public class MemberController {
 	public String login() {
 		return "/login";
 	}
+
+	@GetMapping("/logout")
+	public String logout() {
+		return "redirect:/login";
+	}
 	
 	@GetMapping("/insert")
 	public String insert() {
