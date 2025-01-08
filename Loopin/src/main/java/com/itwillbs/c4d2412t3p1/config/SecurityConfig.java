@@ -36,27 +36,27 @@ public class SecurityConfig {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		
 		return http
-//				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
-//					authorizeHttpRequestsCustomizer
-//					.requestMatchers("/", "/login", "insert", "/mapper", "/upload", "/assets/**").permitAll() // 이 주소는 모든 권한
-//					.anyRequest() // 어느 요청이든
-//					.authenticated() // 권한이 적용된다.
-//						)
-//				.formLogin(formLoginCustomizer ->
-//					formLoginCustomizer
-//					.loginPage("/login")
-//					.loginProcessingUrl("/loginPro")
-//					.usernameParameter("id")
-//					.passwordParameter("pass") 
-//					.defaultSuccessUrl("/main", true) // css 파일로 이동
-//					.failureUrl("/login")
-//						)
-//				.logout(logoutCustomizer ->
-//					logoutCustomizer
-//					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")) 
-//					.logoutSuccessUrl("/")
-//						)
-//				.userDetailsService(myUserDetailsService)
+				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
+					authorizeHttpRequestsCustomizer
+					.requestMatchers("/", "/login", "insert", "/mapper", "/upload", "/assets/**").permitAll() // 이 주소는 모든 권한
+					.anyRequest() // 어느 요청이든
+					.authenticated() // 권한이 적용된다.
+						)
+				.formLogin(formLoginCustomizer ->
+					formLoginCustomizer
+					.loginPage("/login")
+					.loginProcessingUrl("/loginPro")
+					.usernameParameter("id")
+					.passwordParameter("pass") 
+					.defaultSuccessUrl("/main", true) // css 파일로 이동
+					.failureUrl("/login")
+						)
+				.logout(logoutCustomizer ->
+					logoutCustomizer
+					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")) 
+					.logoutSuccessUrl("/")
+						)
+				.userDetailsService(myUserDetailsService)
 				.build();
 	}
 	
