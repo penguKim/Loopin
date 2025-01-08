@@ -1,0 +1,129 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet"	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<body>
+	<main id="main" class="main">
+	<div class="pagetitle">
+	
+		</div>
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-8">
+					<div class="card">
+						<div class="card-body ">
+							<div class="d-prcode_flex align-items-center justify-content-between">
+								<h5 class="card-title">수당 코드</h5>
+								<!-- <div>
+									<input type="button" id="btn_group_remove" class="btn btn-primary" value="삭제">
+									<input type="button" id="btn_group_add" class="btn btn-primary" value="행추가">
+									<input type="button" id="btn_group_insert" class="btn btn-primary" value="등록">
+								</div> -->
+							</div>
+							<div id="allowance_grid"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-4">
+
+					<div class="card">
+						<div class="card-body">
+							<div class="d-prcode_flex align-items-center justify-content-between">
+								<h5 class="card-title">공제 코드</h5>
+								<!-- <div>
+									<input type="button" id="btn_code_remove" class="btn btn-primary" value="삭제">
+									<input type="button" id="btn_code_add" class="btn btn-primary" value="행추가">
+									<input type="button" id="btn_code_insert" class="btn btn-primary" value="등록">
+								</div> -->
+							</div>
+							<div id="deduction_grid"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+
+  ///////////////
+ // 그리드 AJAX //
+///////////////
+
+$.ajax({
+	url: "/getprcode",
+	method: "GET",
+	dataType: "JSON",
+	success: function(data){
+		console.log('가져온 데이터',data);
+		const mdata = data.map(item=>{
+			if (item.prcode_fl) {
+				let prcode_fl = item.prcode_fl;
+
+				prcode_fl = prcode_fl.replace(/\(BS\/workingtime\)/g, '통상시급');
+				prcode_fl = prcode_fl.replace(/(통상시급\*8)/g, '통상일급');
+				prcode_fl = prcode_fl.replace(/nightworkingtime/g, '야간근무시간');
+				prcode_fl = prcode_fl.replace(/weekendworkingtime/g, '주말근무시간');
+				prcode_fl = prcode_fl.replace(/leastannual/g, '남은연차');
+				prcode_fl = prcode_fl.replace(/totalsalary-B_OT-B_NA-B_HA-B_AA/g, '소득금액');
+				prcode_fl = prcode_fl.replace(/D_GG/g, '건강보험');
+				prcode_fl = prcode_fl.replace(/\(holydayworkingtime<=8\)\?\통상시급\*holydayworkingtime\*1\.5\:통상시급\*holydayworkingtime\*2/g,
+					'8시간 이내 : 통상시급 * 휴일근무시간 * 1.5,                                         8시간 초과 : 통상시급 * 휴일근무시간 * 2');
+	
+				item.prcode_fl = prcode_fl;
+			}
+			return item;  
+		});
+		const Ddata = mdata.filter(item=>item.prcode_id.startsWith("D"));
+		const Bdata = mdata.filter(item=>item.prcode_id.startsWith("B"));
+		console.log('공제데이터',Ddata);
+		console.log('수당데이터',Bdata);
+		allowance_grid.resetData(Bdata);
+		deduction_grid.resetData(Ddata);
+	},
+	error : function(xhr,status,error){
+		console.log('급여공통코드 조회 데이터를 불러오는데 실패했습니다.',error);
+	}
+});
+
+  //////////////
+ // 그리드 생성 //
+//////////////
+
+/* 수당그리드 */
+const allowance_grid = new tui.Grid({
+	el: document.getElementById('allowance_grid'),
+	responsive: true,
+	scrollX: true,
+	scrollY: true,
+	bodyHeight : 590,
+	columns: [
+		{header: '수당코드', name: 'prcode_id'},
+		{header: '수당항목명', name: 'prcode_nm'},
+		{header: '비과세유형', name: 'prcode_nt'},
+		{header: '지급유형', name: 'prcode_gy'},
+		{header: '계산식', name: 'prcode_fl', whiteSpace: 'pre-wrap'},
+	],
+});
+
+/* 공제그리드 */
+const deduction_grid = new tui.Grid({
+	el: document.getElementById('deduction_grid'),
+	responsive: true,
+	scrollX: true,
+	scrollY: true,
+	bodyHeight : 590,
+	columns: [
+		{header: '수당코드', name: 'prcode_id'},
+		{header: '수당항목명', name: 'prcode_nm'},
+		{header: '계산식', name: 'prcode_fl'},
+	],
+});
+</script>
