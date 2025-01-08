@@ -1,28 +1,20 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.lang.reflect.Method;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
-import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
-import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.AttendanceService;
 
 import lombok.RequiredArgsConstructor;
@@ -148,25 +140,80 @@ public class AttendanceController {
 	    return ResponseEntity.ok(response);
 	}
 	
+	@GetMapping("/holiday_regist")
+	public String holiday_regist() {
+		return "/attendance/holiday_regist";
+	}
+	
 //	@ResponseBody
-//	@PostMapping("/insert_ANNUAL")
-//	public ResponseEntity<Map<String, String>> insert_ANNUAL(@RequestBody Map<String, Object> request) {
-//		log.info(request.get("annual_yr") + "오늘날짜");
+//	@GetMapping("/select_HOLIDAY")
+//	public Map<String, Object> select_HOLIDAY(@RequestParam(name = "code", defaultValue = "") String code) {
+//	    List<HolidayDTO> list = attendanceService.select_HOLIDAY(code);
+//
+//	    Map<String, Object> response = new HashMap<>();
+//	    response.put("result", true);
+//
+//	    Map<String, Object> data = new HashMap<>();
+//	    data.put("contents", list);
+//
+//	    response.put("data", data);
+//	    
+//	    return response;
+//	}
+//	
+//
+//	@ResponseBody
+//	@PostMapping("/insert_company_HOLIDAY")
+//	public Map<String, Object> update_group_code(@RequestBody HolidayDTO holidayDTO) {
+//		log.info(holidayDTO.toString());
+//		List<HolidayDTO> createdRows = holidayDTO.getCreatedRows();
+//		List<HolidayDTO> updatedRows = holidayDTO.getUpdatedRows();
+//		String code = holidayDTO.getCode();
 //		
-//		String annual_yr =  request.get("annual_yr").toString();
+//	    Map<String, Object> result = attendanceService.insert_company_HOLIDAY(createdRows, updatedRows, code);
+//
+//	    Map<String, Object> response = new HashMap<>();
+//	    System.out.println("-------------- 인서트 갯수 : " + result.get("insertCount"));
+//	    System.out.println("-------------- 업데이트 갯수 : " + result.get("updateCount"));
+//	    
+//	    response.put("result", (int) result.get("insertCount") +  (int) result.get("updateCount")> 0);
+//		List<HolidayDTO> codeList = attendanceService.select_HOLIDAY(code);
+//		Map<String, Object> data = new HashMap<>();
+//		data.put("contents", codeList);
+//		response.put("data", data);
 //		
-//		List<Attendance> select_ANNUAL = attendanceService.select_ANNUAL(annual_yr); //사원코드, 사용연도, 잔여연차, 총연차
+//		return response;
+//	}
+//
+//	@ResponseBody
+//	@PostMapping("/delete_company_HOLIDAY")
+//	public Map<String, Object> delete_group_code(@RequestBody HolidayDTO holidayDTO) {
+//		log.info(holidayDTO.toString());
+//		List<HolidayDTO> deletedRows = holidayDTO.getDeletedRows();
+//		String code = holidayDTO.getCode();
+//		int deleteCount = 0;
 //		
-//		log.info(select_ANNUAL + "유효값"); 
-//		
-//		Map<String, String> response = new HashMap<>();
-//		try {
-//			attendanceService.insert_ANNUAL();
-//			response.put("message", "데이터가 성공적으로 저장되었습니다.");
-//			return ResponseEntity.ok(response); // JSON 형식으로 반환
-//		} catch (Exception e) {
-//			response.put("message", "데이터 저장 실패: " + e.getMessage());
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+//		if(deletedRows.size() > 0) {
+//	        deleteCount = attendanceService.delete_company_HOLIDAY(deletedRows, code);
 //		}
+//		
+//		Map<String, Object> response = new HashMap<>();
+//		if(deleteCount <= 0) {
+//			response.put("result", false);			
+//		} else {
+//			List<HolidayDTO> codeList = attendanceService.select_HOLIDAY(code);
+//			response.put("result", true);			
+//			Map<String, Object> data = new HashMap<>();
+//			data.put("contents", codeList);
+//			response.put("data", data);
+//		}
+//		
+//	    response.put("result", deleteCount <= 0);
+//		List<HolidayDTO> codeList = attendanceService.select_HOLIDAY(code);
+//		Map<String, Object> data = new HashMap<>();
+//		data.put("contents", codeList);
+//		response.put("data", data);
+//		
+//		return response;
 //	}
 }
