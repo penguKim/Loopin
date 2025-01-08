@@ -10,7 +10,7 @@
 				<div class="col-lg-12">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">차트1</h5>
+							<h5 class="card-title">남녀성비현황</h5>
 							<div id="chart-area"></div>
 						</div>
 					</div>
@@ -28,7 +28,7 @@ $(document).ready(function () {
 
     // AJAX를 사용하여 데이터 가져오기
     $.ajax({
-        url: '/employee_GENDER',
+        url: '/select_GENDER',
         method: 'GET',
         headers: {
             [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
@@ -45,7 +45,7 @@ $(document).ready(function () {
                     title: '남녀 성비 현황', 
                     width: 600, 
                     height: 400 
-                }
+                },
             };
 
             // 차트 렌더링

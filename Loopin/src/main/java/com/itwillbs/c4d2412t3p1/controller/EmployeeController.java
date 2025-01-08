@@ -302,15 +302,15 @@ public class EmployeeController {
 	
 	 
 	// 인사현황 차트
-	@GetMapping("/employee_CHART")
-	public String employee_CHART() {
+	@GetMapping("/employee_chart")
+	public String employee_chart() {
 		return "/employee/employee_chart";
 	}
 	
 
     // 성별 데이터 조회
-    @GetMapping("/employee_GENDER")
-    public ResponseEntity<Map<String, Object>> employee_GENDER() {
+    @GetMapping("/select_GENDER")
+    public ResponseEntity<Map<String, Object>> select_GENDER() {
         List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStats();
        
         // Toast UI Chart 형식으로 변환
@@ -325,6 +325,11 @@ public class EmployeeController {
         
         return ResponseEntity.ok(response);
     }
+
+    
+    // 부서별 인원 현황 데이터 조회
+    // 입/퇴사자 조회 현황 데이터 조회
+    // 직위별 조회 현황 데이터 조회
 	
 	
 	
