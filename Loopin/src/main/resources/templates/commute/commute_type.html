@@ -23,43 +23,13 @@
 		</section>
 	</main>
 </body>
-<style>
-	.tui-timepicker {
-		padding: 0;
-		border: 0;
-	
-	}
-	.tui-timepicker-select {
-    display: block;
-    width: 100%;
-    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-    color: var(--bs-body-color);
-    background-color: var(--bs-body-bg);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px 12px;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.375rem;
-    appearance: none;
-}
-
-.tui-timepicker-select:focus {
-    border-color: #86b7fe;
-    outline: 0;
-    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-	
-</style>
 <script th:inline="javascript">
 	// 변수 지정
 	let grid, calendar;
 	changeFlag = false;
+	let modal;
 	let workinghour_id, workinghour_nm,  workinghour_tt, workinghour_wt, workinghour_lt, workinghour_rm, workinghour_us;
-	
+	let btn_workinghour_save;
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	
@@ -79,14 +49,32 @@
 			
 		});
 		
+
+		
 	});
 	
 	// 라디오 버튼 체크
-	function setRadioValue(el, value) {
-		   el.each(function() {
-		        $(this).prop('checked', $(this).val() === value);
-		    });
-		}
+	function setRadioValue(radioName, value) {
+	    $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
+	}
+	
+	function inputWork(data) {
+		workinghour_id.val(data['workinghour_id']);
+		workinghour_nm.val(data['workinghour_nm']);
+		workinghour_wt.val(data['workinghour_wt']);
+		workinghour_lt.val(data['workinghour_lt']);
+		workinghour_rm.val(data['workinghour_rm']);
+		setRadioValue('workinghour_us', data['workinghour_us']);
+		setRadioValue('workinghour_tt', data['workinghour_tt']);
+		const week = data['workinghour_dw'].split(',');
+		$('input[name="workinghour_dw"]').prop('checked', false);  // 모든 체크박스 초기화
+		week.forEach(day => {
+		    $(`input[name="workinghour_dw"][value="${day}"]`).prop('checked', true);
+		});
+		$('#check_all').prop('checked', $('input[name="workinghour_dw"]:not(#check_all)').length ==
+				                $('input[name="workinghour_dw"]:not(#check_all):checked').length);
+	}
+
 	
 	// 시간 입력
 	function inputTimeFormat(input) {
@@ -198,10 +186,10 @@
 							<div class="row mb-3">
 									<legend class="col-form-label col-sm-2">기준시간</legend>
 									<div class="col-sm-1 me-4">
-										<input type="text" id="workinghour_wt" class="form-control text-center" value="00:00" oninput="inputTimeFormat(this);" maxlength="5" style="width: 70px;"/>
+										<input type="text" id="workinghour_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="5" placeholder="00:00" style="width: 70px;"/>
 									</div>
 									<div class="col-sm-1">
-										<input type="text" id="workinghour_lt" class="form-control text-center" value="00:00" oninput="inputTimeFormat(this);" maxlength="5" style="width: 70px;"/>
+										<input type="text" id="workinghour_lt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="5" placeholder="00:00" style="width: 70px;"/>
 									</div>
 							</div>
 					        <div class="row mb-3">
@@ -236,7 +224,7 @@
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" class="btn btn-primary">확인</button>
+							<button type="button" id="btn_workinghour_save" class="btn btn-primary">등록</button>
 						</div>
 					</div>
 				</div>
@@ -247,7 +235,7 @@
 			
 			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
 		}
-		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
 		
 
 		
@@ -259,6 +247,7 @@
         	workinghour_lt = $('#workinghour_lt');
         	workinghour_rm = $('#workinghour_rm');
         	workinghour_us = $('input:radio[name=workinghour_us]');
+			btn_workinghour_save = $('#btn_workinghour_save');
         	
             $('#check_all').change(function() {
                 $('input[name="workinghour_dw"]:not(#check_all)').prop('checked', $(this).prop('checked'));
@@ -269,18 +258,6 @@
                 $('#check_all').prop('checked', allChecked);
             });
             
-/*             startTime = new tui.TimePicker('#timepicker-start', {
-                initialHour: 15,
-                initialMinute: 13,
-                inputType: 'selectbox',
-                showMeridiem: false
-            });
-            endTime = new tui.TimePicker('#timepicker-end', {
-                initialHour: 15,
-                initialMinute: 13,
-                inputType: 'selectbox',
-                showMeridiem: false
-            }); */
             workinghour_detail(data['workinghour_id']);
         });
 		
@@ -293,13 +270,60 @@
 		
 		modal.show();
 		
-
 		
-		
-		
-		workinghour_id.val(data['workinghour_id']);
-		workinghour_nm.val(data['workinghour_nm']);
-		setRadioValue(workinghour_us, data['workinghour_us']);
+		btn_workinghour_save.on('click', function() {
+			let week = [];
+			$('input[name="workinghour_dw"]:not(#check_all):checked').each(function() {
+			    week.push($(this).val());
+			});
+			console.log(week);
+			let data = {
+				workinghour_id: workinghour_id.val(),
+				workinghour_nm: workinghour_nm.val(),
+				workinghour_tt: workinghour_tt.val(),
+				workinghour_wt: workinghour_wt.val(),
+				workinghour_lt: workinghour_lt.val(),
+				workinghour_rm: workinghour_rm.val(),
+				workinghour_us: workinghour_us.val(),
+				week: week
+			}
+			let jsonData = JSON.stringify(data);
+			console.log(jsonData);
+			
+			$.ajax({
+				type: 'post',
+				url: '/insert_WORKINGHOUR',
+				contentType: 'application/json',
+				data: jsonData,
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+					let icon = 'success';
+					let title = '등록 성공';
+					let msg = '등록에 성공했습니다.';
+					if(data['result']) {
+						grid.resetData(data['list']);
+						inputWork(data['workinghour']);
+					} else {
+						icon = 'error';
+						title = '등록 실패';
+						msg = '등록에 실패했습니다.';
+					}
+						Swal.fire({
+						    icon: icon,
+						    title: title,
+						    html: msg
+						}).then(() => {
+						    modal.hide();
+						});
+					
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
 	}
 	
 	function workinghour_detail(id) {
@@ -311,7 +335,17 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function(data) {
-				
+				if(data['result']) {
+					inputWork(data['workinghour']);
+				} else {
+					Swal.fire({
+					    icon: 'error',
+					    title: '조회실패',
+					    html: '조회에 실패했습니다.'
+					}).then(() => {
+					    modal.hide();
+					});
+				}
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');

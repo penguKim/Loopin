@@ -16,10 +16,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
-import com.itwillbs.c4d2412t3p1.repository.WokinghourRepository;
+import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 
@@ -121,11 +122,41 @@ public class CommuteController {
 	
 	@ResponseBody
 	@PostMapping("/select_WORKINGHOUR_detail")
-	public String select_WORKINGHOUR_detail(@RequestParam("workinghour_id") String workinghour_id) {
-		System.out.println("---------------------------------------아이디 : " + workinghour_id);
+	public ResponseEntity<Map<String, Object>> select_WORKINGHOUR_detail(@RequestParam("workinghour_id") String workinghour_id) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			Workinghour workinghour = commuteService.select_WORKINGHOUR_detail(workinghour_id);
+			response.put("result", true);
+			response.put("workinghour", workinghour);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 		
-		return "";
 	}
+	
+	@ResponseBody
+	@PostMapping("/insert_WORKINGHOUR")
+	public ResponseEntity<Map<String, Object>> insert_WORKINGHOUR(@RequestBody WorkinghourDTO workinghourDTO) {
+		
+		Map<String, Object> response = new HashMap<>();
+		try {
+			Workinghour workinghour = commuteService.insert_WORKINGHOUR(workinghourDTO);
+			
+			List<Workinghour> list = commuteService.select_WORKINGHOUR();
+			response.put("result", true);
+			response.put("list", list);
+			response.put("workinghour", workinghour);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
+	
 	
 	
 }

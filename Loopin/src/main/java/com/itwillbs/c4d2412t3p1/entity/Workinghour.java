@@ -63,6 +63,7 @@ public class Workinghour {
 
 	
 	public static Workinghour setCommute(WorkinghourDTO work) {
+		String week = work.getWeek() != null ? String.join(",", work.getWeek()) : "";
 	    return Workinghour.builder()
 	    		.workinghour_id(work.getWorkinghour_id())
 	    		.workinghour_nm(work.getWorkinghour_nm())
@@ -70,7 +71,7 @@ public class Workinghour {
 	    		.workinghour_lt(work.getWorkinghour_lt())
 	    		.workinghour_wp(work.getWorkinghour_wp())
 //	    		.workinghour_hs(work.getWorkinghour_hs())
-	    		.workinghour_dw(work.getWorkinghour_dw())
+	    		.workinghour_dw(week)
 	    		.workinghour_tt(work.getWorkinghour_tt())
 	    		.workinghour_hu(work.getWorkinghour_hu())
 	    		.workinghour_us(work.getWorkinghour_us())

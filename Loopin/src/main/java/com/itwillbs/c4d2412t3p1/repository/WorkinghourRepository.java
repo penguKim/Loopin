@@ -7,7 +7,7 @@ import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 
 
 @Repository
-public interface WokinghourRepository extends JpaRepository<Workinghour, String> {
+public interface WorkinghourRepository extends JpaRepository<Workinghour, String> {
 
 
 }

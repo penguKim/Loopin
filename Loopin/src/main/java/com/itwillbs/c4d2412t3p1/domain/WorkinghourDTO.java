@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.domain;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,5 +28,5 @@ public class WorkinghourDTO {
 	private String workinghour_uu;
 	private Timestamp workinghour_ud;
 	
-	
+	private List<String> week;
 }
