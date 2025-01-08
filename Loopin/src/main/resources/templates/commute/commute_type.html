@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card"  style="height:800px;">
+						<div class="card-body">
+							<h1 class="card-title">근무시간설정</h1>
+							<div id="grid"></div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</section>
+	</main>
+</body>
+<style>
+	.tui-timepicker {
+		padding: 0;
+		border: 0;
+	
+	}
+	.tui-timepicker-select {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--bs-body-color);
+    background-color: var(--bs-body-bg);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 0.375rem;
+    appearance: none;
+}
+
+.tui-timepicker-select:focus {
+    border-color: #86b7fe;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+	
+</style>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, calendar;
+	changeFlag = false;
+	let workinghour_id, workinghour_nm,  workinghour_tt, workinghour_wt, workinghour_lt, workinghour_rm, workinghour_us;
+	
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	
+	
+	
+	
+	// ------------------------------
+	
+	$(function() {
+		make_grid();
+
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			
+			modal_detail(row);
+			
+		});
+		
+	});
+	
+	// 라디오 버튼 체크
+	function setRadioValue(el, value) {
+		   el.each(function() {
+		        $(this).prop('checked', $(this).val() === value);
+		    });
+		}
+	
+	// 시간 입력
+	function inputTimeFormat(input) {
+	    let value = input.value.replace(/[^0-9]/g, '');
+	    value = value.slice(0, 4);
+	    
+	    if (value.length >= 4) {
+	        const hours = parseInt(value.substring(0, 2));
+	        const minutes = parseInt(value.substring(2, 4));
+	        
+	        if (hours > 24) {
+	            input.value = "24:00";
+	            return;
+	        }
+	        if (minutes > 59) {
+	            input.value = `${hours.toString().padStart(2, '0')}:00`;
+	            return;
+	        }
+	        input.value = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+	    } else {
+	        input.value = value;
+	    }
+	};
+
+	
+	
+	function make_grid() {
+		
+		const dataSource = {
+				  api: {
+					    readData: {url: '/select_WORKINGHOUR', method: 'GET' },
+				  	}
+				}
+		
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : false,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', sortable : true},
+				{header : '항목명', name : 'workinghour_nm', sortable : true}, 
+				{header : '사용여부', name : 'workinghour_us', sortable : true,
+					formatter: function({value}) {
+						return value == 'true' ? '사용' : value == 'false' ? '미사용' : '';
+					}
+				}, 
+				{header : '비고', name : 'workinghour_rm', sortable : true}, 
+			]
+		});
+	}
+	
+	function modal_detail(data) {
+	
+		let weekHtml = '';
+		for (const day of /*[[${WEEK}]]*/ []) {
+		    weekHtml += `
+		        <div class="form-check-inline">
+		            <input class="form-check-input" type="checkbox" name="workinghour_dw" 
+		                   id="check_${day.common_cc}" value="${day.common_cc}">
+		            <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
+		        </div>
+		    `;
+		}
+
+		let title = '근무 설정';
+
+		const div_modal = 'div_common_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+								<label for="workinghour_id" class="col-sm-2 col-form-label">근무코드</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_id">
+								</div>
+								<label for="workinghour_nm" class="col-sm-2 col-form-label">항목명</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_nm" >
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col">
+									<legend class="col-form-label col-sm-2 pt-0">근무유형</legend>
+				                    <div class="form-check-inline">
+				                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt1" value="DAY" checked>
+				                      <label class="form-check-label" for="radio_tt1">일</label>
+				                    </div>
+				                    <div class="form-check-inline">
+				                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt2" value="HOUR">
+				                      <label class="form-check-label" for="radio_tt2">시간</label>
+				                    </div>
+								</div>
+							</div>
+							<div class="row mb-3">
+									<legend class="col-form-label col-sm-2">기준시간</legend>
+									<div class="col-sm-1 me-4">
+										<input type="text" id="workinghour_wt" class="form-control text-center" value="00:00" oninput="inputTimeFormat(this);" maxlength="5" style="width: 70px;"/>
+									</div>
+									<div class="col-sm-1">
+										<input type="text" id="workinghour_lt" class="form-control text-center" value="00:00" oninput="inputTimeFormat(this);" maxlength="5" style="width: 70px;"/>
+									</div>
+							</div>
+					        <div class="row mb-3">
+					            <div class="col">
+					                <legend class="col-form-label col-sm-2 pt-0">요일</legend>
+					                <div class="form-check-inline ms-1 me-0">
+					                    <input class="form-check-input" type="checkbox" name="workinghour_dw" 
+					                           id="check_all" value="ALL">
+					                    <label class="form-check-label" for="check_all">전체</label>
+					                </div>
+					                <span>| </span>
+					                ${weekHtml}
+					            </div>
+					        </div>
+					        <div class="row mb-3">
+								<label for="workinghour_rm" class="col-sm-2 col-form-label">비고</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_rm">
+								</div>
+								<div class="col">
+								<legend class="col-form-label col-sm-3">사용여부</legend>
+			                    <div class="form-check-inline">
+			                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us1" value="true">
+			                    	<label class="form-check-label" for="radio_tt1">사용</label>
+			                    </div>
+			                    <div class="form-check-inline">
+			                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us2" value="false">
+			                    	<label class="form-check-label" for="radio_tt2">미사용</label>
+			                    </div>
+							</div>
+					        </div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" class="btn btn-primary">확인</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	workinghour_id = $('#workinghour_id');
+        	workinghour_nm = $('#workinghour_nm');
+        	workinghour_tt = $('input:radio[name=workinghour_tt]');
+        	workinghour_wt = $('#workinghour_wt');
+        	workinghour_lt = $('#workinghour_lt');
+        	workinghour_rm = $('#workinghour_rm');
+        	workinghour_us = $('input:radio[name=workinghour_us]');
+        	
+            $('#check_all').change(function() {
+                $('input[name="workinghour_dw"]:not(#check_all)').prop('checked', $(this).prop('checked'));
+            });
+            $('input[name="workinghour_dw"]:not(#check_all)').change(function() {
+                let allChecked = $('input[name="workinghour_dw"]:not(#check_all)').length === 
+                                $('input[name="workinghour_dw"]:not(#check_all):checked').length;
+                $('#check_all').prop('checked', allChecked);
+            });
+            
+/*             startTime = new tui.TimePicker('#timepicker-start', {
+                initialHour: 15,
+                initialMinute: 13,
+                inputType: 'selectbox',
+                showMeridiem: false
+            });
+            endTime = new tui.TimePicker('#timepicker-end', {
+                initialHour: 15,
+                initialMinute: 13,
+                inputType: 'selectbox',
+                showMeridiem: false
+            }); */
+            workinghour_detail(data['workinghour_id']);
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+
+		
+		
+		
+		workinghour_id.val(data['workinghour_id']);
+		workinghour_nm.val(data['workinghour_nm']);
+		setRadioValue(workinghour_us, data['workinghour_us']);
+	}
+	
+	function workinghour_detail(id) {
+		$.ajax({
+			type: 'post',
+			url: '/select_WORKINGHOUR_detail',
+			data: { workinghour_id: id },
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+
+	
+
+</script>
+</html>

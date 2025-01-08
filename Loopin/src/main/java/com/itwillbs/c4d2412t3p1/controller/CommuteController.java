@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,8 @@ import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.entity.Workinghour;
+import com.itwillbs.c4d2412t3p1.repository.WokinghourRepository;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 
@@ -90,5 +93,39 @@ public class CommuteController {
 		}
 		
 	}
+	
+	@GetMapping("/commute_type")
+	public String commute_type(Model model) {
+		
+		List<Common_codeDTO> weekList = commuteService.select_COMMON_list("WEEK");
+		model.addAttribute("WEEK", weekList);
+		
+		return "commute/commute_type";
+	}
+	
+	@ResponseBody
+	@GetMapping("/select_WORKINGHOUR")
+	public ResponseEntity<Map<String, Object>> getMethodName() {
+		
+		List<Workinghour> list = commuteService.select_WORKINGHOUR();
+		log.info(list.toString());
+		
+		Map<String, Object> response = new HashMap<>(); 
+	    response.put("result", true);
+	    Map<String, Object> data = new HashMap<>();
+	    data.put("contents", list);
+	    response.put("data", data);
+	    
+		return ResponseEntity.ok(response);
+	}
+	
+	@ResponseBody
+	@PostMapping("/select_WORKINGHOUR_detail")
+	public String select_WORKINGHOUR_detail(@RequestParam("workinghour_id") String workinghour_id) {
+		System.out.println("---------------------------------------아이디 : " + workinghour_id);
+		
+		return "";
+	}
+	
 	
 }

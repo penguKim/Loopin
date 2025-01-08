@@ -39,8 +39,8 @@ public class Workinghour {
 	private String workinghour_lt;
 	@Column(name = "workinghour_wp")
 	private String workinghour_wp;
-	@Column(name = "workinghour_hs")
-	private String workinghour_hs;
+//	@Column(name = "workinghour_hs")
+//	private String workinghour_hs;
 	@Column(name = "workinghour_dw")
 	private String workinghour_dw;
 	@Column(name = "workinghour_tt")
@@ -69,7 +69,7 @@ public class Workinghour {
 	    		.workinghour_wt(work.getWorkinghour_wt())
 	    		.workinghour_lt(work.getWorkinghour_lt())
 	    		.workinghour_wp(work.getWorkinghour_wp())
-	    		.workinghour_hs(work.getWorkinghour_hs())
+//	    		.workinghour_hs(work.getWorkinghour_hs())
 	    		.workinghour_dw(work.getWorkinghour_dw())
 	    		.workinghour_tt(work.getWorkinghour_tt())
 	    		.workinghour_hu(work.getWorkinghour_hu())
