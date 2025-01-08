@@ -5,6 +5,8 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 
 import jakarta.persistence.Column;
@@ -232,13 +234,13 @@ public class Employee {
         return employee;
     }
     
-    public static Employee createEmployee(EmployeeDTO employeeDto, String employee_pi, Long sequenceValue) {
+    public static Employee createEmployee(EmployeeDTO employeeDto, String employee_pi, Long sequenceValue, PasswordEncoder passwordEncoder) {
         System.out.println("createEmployee sequenceValue:" + sequenceValue);
 
         return new Employee(
             null,  // employee_cd는 @PrePersist에서 설정됨
             employeeDto.getEmployee_id(),
-            employeeDto.getEmployee_pw(),
+            passwordEncoder.encode(employeeDto.getEmployee_pw()),
             employeeDto.getEmployee_dp(),
             employeeDto.getEmployee_gd(),
             employeeDto.getEmployee_hd(),
