@@ -38,7 +38,7 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
 					authorizeHttpRequestsCustomizer
-					.requestMatchers("/", "/login", "insert", "/mapper", "/upload").permitAll() // 이 주소는 모든 권한
+					.requestMatchers("/", "/login", "insert", "/mapper", "/upload", "/assets/**").permitAll() // 이 주소는 모든 권한
 					.anyRequest() // 어느 요청이든
 					.authenticated() // 권한이 적용된다.
 						)
@@ -48,7 +48,7 @@ public class SecurityConfig {
 					.loginProcessingUrl("/loginPro")
 					.usernameParameter("id")
 					.passwordParameter("pass") 
-					.defaultSuccessUrl("/main")
+					.defaultSuccessUrl("/main", true) // css 파일로 이동
 					.failureUrl("/login")
 						)
 				.logout(logoutCustomizer ->

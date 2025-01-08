@@ -11,10 +11,13 @@ import org.springframework.stereotype.Repository;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 
 @Repository
-public interface EmployeeRepository  extends JpaRepository<Employee, Long> {
+public interface EmployeeRepository  extends JpaRepository<Employee, String> {
 
     @Query("SELECT e FROM Employee e WHERE e.employee_id = :employee_id")
     Optional<Employee> findByEmployee_id(@Param("employee_id") String employee_id);
 
 
+	@Query(value = "SELECT EM_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	Long getNextSequenceValue();
+	
 }
