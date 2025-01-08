@@ -131,8 +131,6 @@
 <!-- 								        <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date"> -->
 							        <div id="startpicker-container" style="margin-left: -1px;"></div>
 							    </div>
-							</div>
-							<div class="row mb-3">
 							    <label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
 								<div class="col-sm-4">
 							        <input type="text" class="form-control" id="employee_rd" name="employee_rd" aria-label="Date">
@@ -242,7 +240,7 @@
 								<tr th:each="dept, dept_list : ${dept_list}">
 									<td><span th:text="${dept.common_cc}"></span>
 									<td><span th:text="${dept.common_nm}"></span>
-									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
+									<td><button class="btn btn-primary select-dp-btn">선택</button></td>
 								</tr>
 							</tbody>
 						</table>
