@@ -10,7 +10,20 @@
 				<div class="col-lg-12">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">남녀성비현황</h5>
+							<h5 class="card-title">인사현황</h5>
+							<div class="row mb-3">
+							    <label for="inputDate" class="col-sm-1 col-form-label text-center">시작일<span class="text-danger"> *</span></label>
+								<div class="col-sm-1">
+								    <input type="text" class="form-control" id="start_dt" name="start_dt" aria-label="Date">
+							        <div id="startpicker-container" style="margin-left: -1px; position: absolute; z-index: 1050;"></div>
+							    </div>
+							    <label for="inputDate" class="col-sm-1 col-form-label text-center">종료일<span class="text-danger"> *</span></label>
+								<div class="col-sm-1">
+							        <input type="text" class="form-control" id="end_dt" name="end_dt" aria-label="Date">
+							        <div id="endpicker-container" style="margin-left: -1px; position: absolute; z-index: 1050;"></div>
+							    </div>
+								<button type="button" class="btn btn-primary col-sm-1" id="search-btn">조회</button>												
+							</div>
 							<div id="chart-area"></div>
 						</div>
 					</div>
@@ -21,42 +34,91 @@
 </body>
 
 <script th:inline="javascript">
-$(document).ready(function () {
-    // CSRF 토큰 및 헤더 설정
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	$(document).ready(function () {
+	    // CSRF 토큰 및 헤더 설정
+	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-    // AJAX를 사용하여 데이터 가져오기
-    $.ajax({
-        url: '/select_GENDER',
-        method: 'GET',
-        headers: {
-            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-        },
-        success: function (response) {
-            // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-            const data = {
-                series: response.series
-            };
+	    const today = new Date();
 
-            // 차트 옵션 설정
-            const options = {
-                chart: { 
-                    title: '남녀 성비 현황', 
-                    width: 600, 
-                    height: 400 
-                },
-            };
+	    // 데이트 피커 초기화
+	    const rangePicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: today, // 오늘 날짜로 초기화
+	            input: '#start_dt',
+	            container: '#startpicker-container',
+	        },
+	        endpicker: {
+	            date: null, // 종료일 초기값 없음
+	            input: '#end_dt',
+	            container: '#endpicker-container',
+	            disabled: true, // 종료일 기본 비활성화
+	        },
+	        format: 'yyyy-MM-dd',
+	        timePicker: false
+	    });
 
-            // 차트 렌더링
-            const el = document.getElementById('chart-area');
-            toastui.Chart.pieChart({ el, data, options });
-        },
-        error: function (xhr, status, error) {
-            console.error('Error fetching data:', error);
-        }
-    });
-});
+	    // 시작일 변경 시 종료일 활성화 및 최소 날짜 설정
+	    rangePicker.on('change:start', function (event) {
+	        if (event && event.date) {
+	            const minEndDate = new Date(event.date);
+	            minEndDate.setDate(minEndDate.getDate() + 1); // 종료일은 시작일 다음 날부터 설정
+
+	            rangePicker.setEndDate(minEndDate);
+	            rangePicker.enableEndPicker();
+	        }
+	    });
+
+	    // 조회 버튼 클릭 이벤트
+	    $('#search-btn').on('click', function () {
+	        const startDt = $('#start_dt').val();
+	        const endDt = $('#end_dt').val();
+
+	        if (!startDt || !endDt) {
+	            alert('시작일과 종료일을 입력해주세요.');
+	            return;
+	        }
+
+	        // AJAX를 사용하여 데이터 가져오기
+	        $.ajax({
+	            url: '/select_GENDER',
+	            method: 'GET',
+	            headers: {
+	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	            },
+	            data: {
+	                start_dt: startDt,
+	                end_dt: endDt
+	            },
+	            success: function (response) {
+	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
+	                const data = {
+	                    series: response.series
+	                };
+
+	                // 차트 옵션 설정
+	                const options = {
+	                    chart: {
+	                        title: '남녀 성비 현황',
+	                        width: 600,
+	                        height: 400
+	                    },
+	                };
+
+	                // 기존 차트 제거
+	                $('#chart-area').empty();
+
+	                // 차트 렌더링
+	                const el = document.getElementById('chart-area');
+	                toastui.Chart.pieChart({ el, data, options });
+	            },
+	            error: function (xhr, status, error) {
+	                console.error('Error fetching data:', error);
+	                alert('데이터 조회 중 오류가 발생했습니다.');
+	            }
+	        });
+	    });
+	});
 
 </script>
 

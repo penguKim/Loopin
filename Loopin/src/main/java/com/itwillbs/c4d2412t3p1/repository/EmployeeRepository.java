@@ -17,11 +17,19 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
     @Query("SELECT e FROM Employee e WHERE e.employee_id = :employee_id")
     Optional<Employee> findByEmployee_id(@Param("employee_id") String employee_id);
 
-    @Query(value = "SELECT employee_sb AS name, COUNT(*) AS data FROM EMPLOYEE GROUP BY employee_sb", nativeQuery = true)
-    List<Map<String, Object>> findGenderStats();
-
-
+    // 인사카드 시퀀스 조회
 	@Query(value = "SELECT EM_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
+	
+	// 기간별 남녀성비 조회
+    @Query(value = "SELECT employee_gd AS name, COUNT(*) AS data " +
+            "FROM employee " +
+            "WHERE employee_dt BETWEEN :startDt AND :endDt " +
+            "AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
+            "GROUP BY employee_gd", nativeQuery = true)
+	List<Map<String, Object>> findEmployeeGenderStatsByDate(
+	     @Param("startDt") String startDt, 
+	     @Param("endDt") String endDt);
+	
 	
 }

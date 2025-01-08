@@ -107,7 +107,7 @@ public class EmployeeController {
 
     
     
-    
+    // 인사카드 페이지로 이동
 	@GetMapping("/employee_list")
 	public String employee_list(Model model) {
 
@@ -310,9 +310,15 @@ public class EmployeeController {
 
     // 성별 데이터 조회
     @GetMapping("/select_GENDER")
-    public ResponseEntity<Map<String, Object>> select_GENDER() {
-        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStats();
-       
+    public ResponseEntity<Map<String, Object>> select_GENDER(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
+    	
+    	
+        // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStatsByDate(startDt, endDt);
+    	
+    	
         // Toast UI Chart 형식으로 변환
         List<Map<String, Object>> series = genderStats.stream()
             .map(stat -> Map.of(
@@ -326,9 +332,27 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
+    // 입/퇴사자 조회 현황 데이터 조회
+    
+
+    
+    
+    
+    
+    
+    
     
     // 부서별 인원 현황 데이터 조회
-    // 입/퇴사자 조회 현황 데이터 조회
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     // 직위별 조회 현황 데이터 조회
 	
 	

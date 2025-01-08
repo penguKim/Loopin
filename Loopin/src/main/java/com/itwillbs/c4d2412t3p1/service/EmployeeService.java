@@ -160,12 +160,6 @@ public class EmployeeService {
         return EmployeeRepository.findById(employee_cd)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
     }
-
-    
-    // 성별 차트 조회
-    public List<Map<String, Object>> getEmployeeGenderStats() {
-        return EmployeeRepository.findGenderStats();
-    }
 	
     
     // 모달 부서코드 가져오기
@@ -178,6 +172,15 @@ public class EmployeeService {
 		return commonRepository.selectGradeList("00", string);
 	}
     
+	// 성별 차트 조회
+	public List<Map<String, Object>> getEmployeeGenderStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+	    if (startDt == null || endDt == null) {
+	        throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+	    }
+		
+		return EmployeeRepository.findEmployeeGenderStatsByDate(startDt, endDt);
+	}
 	
 	
 }
