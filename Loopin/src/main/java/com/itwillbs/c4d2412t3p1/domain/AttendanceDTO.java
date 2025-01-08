@@ -12,7 +12,7 @@ import lombok.ToString;
 @ToString
 public class AttendanceDTO {
 	
-	private Long employee_cd;
+	private String employee_cd;
 	private String employee_id;
 	private String employee_pw;
 	private String employee_dp;
