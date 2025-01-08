@@ -53,4 +53,38 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
 
 	
 	
+    // 월별 입사자 수 조회
+	@Query(value = "SELECT COUNT(e1_0.employee_cd) " +
+            "FROM employee e1_0 " +
+            "WHERE TO_DATE(e1_0.employee_hd, 'YYYY-MM-DD') BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD') " +
+            "GROUP BY TO_CHAR(TO_DATE(e1_0.employee_hd, 'YYYY-MM-DD'), 'YYYY-MM') " +
+            "ORDER BY TO_CHAR(TO_DATE(e1_0.employee_hd, 'YYYY-MM-DD'), 'YYYY-MM')",
+    nativeQuery = true)
+    List<Integer> findHireCountsByMonth(@Param("startDate") String startDate, @Param("endDate") String endDate);
+
+    // 월별 퇴사자 수 조회
+	@Query(value = "SELECT COUNT(e1_0.employee_rd) " +
+            "FROM employee e1_0 " +
+            "WHERE TO_DATE(e1_0.employee_rd, 'YYYY-MM-DD') BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD') " +
+            "GROUP BY TO_CHAR(TO_DATE(e1_0.employee_rd, 'YYYY-MM-DD'), 'YYYY-MM') " +
+            "ORDER BY TO_CHAR(TO_DATE(e1_0.employee_rd, 'YYYY-MM-DD'), 'YYYY-MM')",
+    nativeQuery = true)
+    List<Integer> findRetireCountsByMonth(@Param("startDate") String startDate, @Param("endDate") String endDate);
+
+    @Query(value = 
+            "SELECT DISTINCT TO_CHAR(TO_DATE(e.employee_hd, 'YYYY-MM-DD'), 'YYYY-MM') " +
+            "FROM employee e " +
+            "WHERE TO_DATE(e.employee_hd, 'YYYY-MM-DD') BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD') " +
+            "UNION " +
+            "SELECT DISTINCT TO_CHAR(TO_DATE(e.employee_rd, 'YYYY-MM-DD'), 'YYYY-MM') " +
+            "FROM employee e " +
+            "WHERE TO_DATE(e.employee_rd, 'YYYY-MM-DD') BETWEEN TO_DATE(:startDate, 'YYYY-MM-DD') AND TO_DATE(:endDate, 'YYYY-MM-DD') " +
+            "ORDER BY 1",
+            nativeQuery = true)
+    List<String> findDistinctMonths(@Param("startDate") String startDate, @Param("endDate") String endDate);
+
+
+	
+	
+	
 }

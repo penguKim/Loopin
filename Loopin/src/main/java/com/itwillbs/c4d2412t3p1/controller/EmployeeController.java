@@ -334,14 +334,32 @@ public class EmployeeController {
     }
 
     // 입/퇴사자 조회 현황 데이터 조회
-    
+    @GetMapping("/select_HDRD")
+    public ResponseEntity<Map<String, Object>> select_HDRD(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
 
-    
-    
-    
-    
-    
-    
+        // 서비스 호출: 입사자와 퇴사자 데이터를 조회
+        Map<String, List<?>> hireAndRetireStats = employeeService.getHireAndRetireStatsByDate(startDt, endDt);
+
+        
+        System.out.println("@@@@@@@@@@@" + hireAndRetireStats);
+        
+        // 데이터 매핑
+        Map<String, Object> response = Map.of(
+                "categories", hireAndRetireStats.get("categories"),  // List<String>
+                "series", List.of(
+                        Map.of("name", "입사자", "data", hireAndRetireStats.get("hireData")),  // List<Integer>
+                        Map.of("name", "퇴사자", "data", hireAndRetireStats.get("retireData")) // List<Integer>
+                )
+        );
+
+        System.out.println("@@@@@@@@@@@" + response);
+        
+        return ResponseEntity.ok(response);
+    }
+
+
     
     // 부서별 인원 현황 데이터 조회
     @GetMapping("/select_DEPT")

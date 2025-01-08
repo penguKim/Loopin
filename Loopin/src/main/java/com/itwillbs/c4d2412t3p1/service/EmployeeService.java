@@ -7,9 +7,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -201,6 +203,28 @@ public class EmployeeService {
 		
 		return EmployeeRepository.getEmployeePosiStatsByDate(startDt, endDt);
 	}
+	
+
+	public Map<String, List<?>> getHireAndRetireStatsByDate(String startDate, String endDate) {
+	    // 입사자 및 퇴사자 데이터 조회
+	    List<String> categories = EmployeeRepository.findDistinctMonths(startDate, endDate); // 월별 카테고리 조회
+	    List<Integer> hireData = EmployeeRepository.findHireCountsByMonth(startDate, endDate);  // 입사자 수
+	    List<Integer> retireData = EmployeeRepository.findRetireCountsByMonth(startDate, endDate); // 퇴사자 수
+
+	    // 결과 반환 (Integer 타입 그대로 사용)
+	    Map<String, List<?>> result = new HashMap<>();
+	    result.put("categories", categories);  // List<String>
+	    result.put("hireData", hireData);  // List<Integer>
+	    result.put("retireData", retireData);  // List<Integer>
+
+	    return result;
+	}
+
+
+
+
+
+	
 	
 	
 }
