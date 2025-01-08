@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -42,31 +43,31 @@ public class AttendanceController {
 	
 	@ResponseBody
 	@GetMapping("/select_base_ATTENDANCE")
-	public ResponseEntity<List<Map<String, Object>>> select_base_ATTENDANCE() {
+	public ResponseEntity<List<Attendance>> select_base_ATTENDANCE() {
 		log.info("조회 시도");
 		List<Attendance> attendances = attendanceService.findAll();
 		
-		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
-			Map<String, Object> row = new HashMap<>();
-			
-			
-			row.put("annual_id", attendance.getAnnual_id());
-			row.put("employee_cd", attendance.getEmployee_cd());
-			row.put("annual_cc", attendance.getAnnual_cc());
-			row.put("annual_yr", attendance.getAnnual_yr());
-			row.put("annual_ua", attendance.getAnnual_ua());
-			row.put("annual_ra", attendance.getAnnual_ra());
-			row.put("annual_aa", attendance.getAnnual_aa());
-			row.put("annual_ru", attendance.getAnnual_ru());
-			row.put("annual_rd", attendance.getAnnual_rd());
-			row.put("annual_uu", attendance.getAnnual_uu());
-			row.put("annual_ud", attendance.getAnnual_ud());
-			
-			return row;
-			
-		}).collect(Collectors.toList());
+//		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
+//			Map<String, Object> row = new HashMap<>();
+//			
+//			
+//			row.put("annual_id", attendance.getAnnual_id());
+//			row.put("employee_cd", attendance.getEmployee_cd());
+//			row.put("annual_cc", attendance.getAnnual_cc());
+//			row.put("annual_yr", attendance.getAnnual_yr());
+//			row.put("annual_ua", attendance.getAnnual_ua());
+//			row.put("annual_ra", attendance.getAnnual_ra());
+//			row.put("annual_aa", attendance.getAnnual_aa());
+//			row.put("annual_ru", attendance.getAnnual_ru());
+//			row.put("annual_rd", attendance.getAnnual_rd());
+//			row.put("annual_uu", attendance.getAnnual_uu());
+//			row.put("annual_ud", attendance.getAnnual_ud());
+//			
+//			return row;
+//			
+//		}).collect(Collectors.toList());
 
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(attendances);
 	}
 	
 	@GetMapping("/annual_regist")
@@ -78,28 +79,41 @@ public class AttendanceController {
 	@ResponseBody
 	@GetMapping("/select_EMPLOYEE_ANNUAL")
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE_ANNUAL(@RequestParam("employee_nm") String employee_nm) {
-		log.info(employee_nm+"select_EMPLOYEE 조회 시도");
-		List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE_ANNUAL(employee_nm);
-		log.info(employees.toString()+"employees 조회 시도");
+	    log.info(employee_nm + " select_EMPLOYEE 조회 시도");
 
-		List<Map<String, Object>> response = employees.stream().map(employee -> {
-			Map<String, Object> row = new HashMap<>();
-			
-			for (Entry<String, Object> entry : employee.entrySet()) {
-				row.put(entry.getKey().toLowerCase(), entry.getValue()); 
-			}
-			
-//			row.put("employee_nm", employee.get("EMPLOYEE_NM"));
-//			row.put("employee_dp", employee.get("EMPLOYEE_DP"));
-//			row.put("employee_gd", employee.get("EMPLOYEE_GD"));
-//			row.put("employee_cd", employee.get("EMPLOYEE_CD"));
-			
-			log.info(row.toString()+"row 조회 시도");
-			return row;
-			
-		}).collect(Collectors.toList());
+	    // 서비스 호출로 데이터를 가져옴
+	    List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE_ANNUAL(employee_nm);
+	    log.info(employees.toString() + " employees 조회 시도");
 
-		return ResponseEntity.ok(response);
+	    // 데이터 가공
+	    List<Map<String, Object>> response = employees.stream().map(employee -> {
+	        Map<String, Object> row = new HashMap<>();
+
+	        // 키를 소문자로 변환하여 새로운 맵에 저장
+	        for (Entry<String, Object> entry : employee.entrySet()) {
+	            String key = entry.getKey().toLowerCase();
+	            Object value = entry.getValue();
+
+	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
+	            if (value instanceof oracle.sql.TIMESTAMP) {
+	                try {
+	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
+	                } catch (SQLException e) {
+//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
+	                    value = null; // 변환 실패 시 null 처리
+	                }
+	            }
+
+	            // row에 변환된 값 추가
+	            row.put(key, value);
+	        }
+
+	        log.info(row.toString() + " row 조회 시도");
+	        return row;
+	    }).collect(Collectors.toList());
+
+	    // 최종 응답 반환
+	    return ResponseEntity.ok(response);
 	}
 
 	@ResponseBody

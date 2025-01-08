@@ -35,7 +35,7 @@
 		</main>
 	</body>
 <script th:inline="javascript">
-	/*const grid_container = document.getElementById('grid_container');
+	const grid_container = document.getElementById('grid_container');
 	const btn_insert_ANNUAL = document.getElementById('btn_insert_ANNUAL');
 	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
@@ -157,55 +157,9 @@
 	$('.modal').on('hidden.bs.modal', function (e) {
 	    $(this).find('form')[0].reset();
 	}); 
-	*/
 	
-	// 일단 공휴일 정보 불러와짐
 	
-	var xhr = new XMLHttpRequest();
-	var url = 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo'; /*URL*/
-	var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + '%2BaS8Oo1w1bIwCjPOfx%2B2GP%2BLgO7P3KRXXhgj4TkMdyIC%2FyEtgb%2Fsv6vWOTbcRDg5veR%2FR2SE6fm3tWN9%2BwmFUQ%3D%3D'; /*Service Key*/
-	queryParams += '&' + encodeURIComponent('solYear') + '=' + encodeURIComponent('2025'); /*년도 설정*/
-	queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('30'); /*결과 행 수*/
-
-	xhr.open('GET', url + queryParams);
-	xhr.onreadystatechange = function () {
-	    if (this.readyState == 4) {
-	        if (this.status == 200) {
-	            console.log("응답 성공");
-
-	            // XML 데이터를 파싱
-	            var parser = new DOMParser();
-	            var xmlDoc = parser.parseFromString(this.responseText, "text/xml");
-
-	            // 데이터를 저장할 객체 초기화
-	            var data = {};
-
-	            // XML에서 <item> 태그 추출
-	            var items = xmlDoc.getElementsByTagName("item");
-	            for (var i = 0; i < items.length; i++) {
-	                // <locdate>와 <dateName> 데이터 추출
-	                var locdate = items[i].getElementsByTagName("locdate")[0].textContent; // 설명
-	                var dateName = items[i].getElementsByTagName("dateName")[0].textContent; // 날짜
-
-	                // 데이터를 객체에 저장
-	                data[locdate] = dateName;
-					
-	            }
-
-	            // 결과 출력
-	            console.log(data);
-				
-				// 해야하는게 data에서 각 날짜 추출하는 것
-				
-	        } else {
-	            console.error('오류 발생. HTTP 상태 코드:', this.status);
-	        }
-			
-			
-	    }
-	};
-
-	xhr.send('');
+	
 
 </script>
 </html>

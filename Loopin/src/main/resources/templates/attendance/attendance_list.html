@@ -293,6 +293,8 @@
 		            { header: '사용연차', name: 'annual_ua', align: 'center', sortable: true },
 		            { header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true },
 		            { header: '총연차', name: 'annual_aa', align: 'center', sortable: true },
+		            //{ header: '날짜', name: 'locdate', align: 'center', sortable: true },
+		            //{ header: '설명', name: 'dateName', align: 'center', sortable: true },
 		        ],
 		    });
 		}
@@ -404,6 +406,39 @@
 		    $(this).find('form')[0].reset();
 		});
 		
+		
+		// 일단 공휴일 정보 불러와짐
+		var xhr = new XMLHttpRequest();
+		var url = 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo'; //URL
+		var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + '%2BaS8Oo1w1bIwCjPOfx%2B2GP%2BLgO7P3KRXXhgj4TkMdyIC%2FyEtgb%2Fsv6vWOTbcRDg5veR%2FR2SE6fm3tWN9%2BwmFUQ%3D%3D'; //Service Key
+		queryParams += '&' + encodeURIComponent('solYear') + '=' + encodeURIComponent('2026'); //년도 설정
+		queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('30'); //결과 행 수
+
+		xhr.open('GET', url + queryParams);
+		xhr.onreadystatechange = function () {
+		    if (this.readyState == 4 && this.status == 200) {
+		        var parser = new DOMParser();
+		        var xmlDoc = parser.parseFromString(this.responseText, "text/xml");
+				console.log(xmlDoc);
+		        var items = xmlDoc.getElementsByTagName("item");
+				let list = [];
+		        for (var i = 0; i < items.length; i++) {
+		            var locdate = items[i].getElementsByTagName("locdate")[0].textContent;
+		            var dateName = items[i].getElementsByTagName("dateName")[0].textContent;
+					var formattedDate = `${locdate.substring(0, 4)}-${locdate.substring(4, 6)}-${locdate.substring(6, 8)}`;
+					
+					list.push({
+		               date: formattedDate,
+		               name: dateName
+		           });
+		       }
+
+		       console.log(list); // 모든 값이 저장된 배열
+
+		    }
+		};
+
+		xhr.send('');
 		
 	</script>
 </html>

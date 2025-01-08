@@ -4,7 +4,7 @@
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper">
     
-    <select id="select_EMPLOYEE" resultType="map">
+    <select id="select_EMPLOYEE_ANNUAL" resultType="map">
         SELECT * 
         FROM employee
         <where> 1=1
@@ -16,7 +16,7 @@
 	    SELECT a.*
 	    FROM ANNUAL a
 	    INNER JOIN EMPLOYEE e ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
-	    <where>
+	    <where> 1=1
 	        <if test="employee_cd != null and employee_cd != ''">
 	            a.EMPLOYEE_CD = #{employee_cd}
 	        </if>
