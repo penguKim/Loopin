@@ -19,7 +19,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "TRANSFER", schema = "SYSTEM")
+@Table(name = "TRANSFER")
 @Getter
 @Setter
 @ToString

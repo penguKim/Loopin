@@ -17,6 +17,7 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -109,7 +110,11 @@ public class EmployeeController {
     
     
 	@GetMapping("/employee_list")
-	public String employee_list() {
+	public String employee_list(Model model) {
+
+		// 직위코드 가져오기 
+		model.addAttribute("grade_list", employeeService.selectGradeList("001"));
+		
 		return "/employee/employee_list";
 	}
 

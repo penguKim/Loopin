@@ -62,10 +62,8 @@ public class Log {
 		// log_cd 생성: YY-0001 형식
 		this.log_cd = currentYear + "-" + formattedSequence;
 	}
-	
 //	CREATE SEQUENCE LOG_SEQ
 //	START WITH 1
 //	INCREMENT BY 1
 //	NOCACHE;
-
 }

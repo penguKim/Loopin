@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 
 import jakarta.transaction.Transactional;
@@ -27,6 +29,8 @@ import lombok.extern.java.Log;
 public class EmployeeService {
 
 	private final EmployeeRepository EmployeeRepository;
+
+	private final CommonRepository commonRepository;
 
 	@Autowired
 	@Value("${file.upload-dir}")
@@ -142,6 +146,12 @@ public class EmployeeService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
     }
 	
+    
+    // 모달 직급코드 가져오기
+	public List<Common_code> selectGradeList(String string) {
+		return commonRepository.selectGradeList("00", string);
+	}
+    
 	
 	
 }
