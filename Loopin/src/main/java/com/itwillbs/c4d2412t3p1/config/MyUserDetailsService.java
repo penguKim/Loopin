@@ -23,6 +23,8 @@ public class MyUserDetailsService implements UserDetailsService {
 		Employee employee = employeeRepository.findByEmployee_id(employee_id).orElseThrow(() -> 
 			new UsernameNotFoundException("없는 회원"));
 		
+		System.out.println(employee.toString());
+		
 		return new EmployeeDetails(employee);
 	}
 }

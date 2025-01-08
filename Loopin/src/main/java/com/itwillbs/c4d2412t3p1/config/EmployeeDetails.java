@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 public class EmployeeDetails extends User {
     
-    private final Long employee_cd;
+    private final String employee_cd;
     private final String employee_dp;
     private final String employee_gd;
     private final String employee_hd;

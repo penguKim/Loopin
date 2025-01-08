@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -33,6 +34,8 @@ public class EmployeeService {
 	private final EmployeeRepository EmployeeRepository;
 
 	private final CommonRepository commonRepository;
+	
+	private final PasswordEncoder passwordEncoder;
 
 	@Autowired
 	@Value("${file.upload-dir}")
@@ -70,7 +73,7 @@ public class EmployeeService {
         System.out.println("Next Sequence Value: " + sequenceValue);
 
         // Employee 엔티티 생성
-        Employee employee = Employee.createEmployee(employeeDTO, fileName, sequenceValue);
+        Employee employee = Employee.createEmployee(employeeDTO, fileName, sequenceValue, passwordEncoder);
         // EmployeeRepository.save() 호출 직전에 로그 추가
         System.out.println("Saving employee: " + employee);
         
