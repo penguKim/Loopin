@@ -398,7 +398,7 @@
 
 
     function validateDate() {
-        const dateInput = document.getElementById("employee_hd").value;
+        const dateInput = document.getElementById("employee_bd").value;
 
         // 8자리 숫자 확인
         if (!/^\d{8}$/.test(dateInput)) {
@@ -418,7 +418,6 @@
             return false;
         }
 
-        alert("입력된 날짜는 유효합니다!");
         return true;
     }
 
