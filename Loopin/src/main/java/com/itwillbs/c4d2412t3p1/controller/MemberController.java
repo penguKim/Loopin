@@ -1,8 +1,5 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.util.List;
-import java.util.Map;
-
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import com.itwillbs.c4d2412t3p1.domain.MemberDTO;
 import com.itwillbs.c4d2412t3p1.service.MemberRepService;
-import com.itwillbs.c4d2412t3p1.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -20,17 +16,7 @@ import lombok.extern.java.Log;
 @Log
 public class MemberController {
 
-	private final MemberService memberService;
 	private final MemberRepService memberRepService;
-	
-	@GetMapping("/mapper")
-	public String mapperTest() {
-		
-		List<Map<String, Object>> memberList = memberService.memberList();
-		log.info(memberList.toString());
-		
-		return "redirect:/main";
-	}
 	
 	@GetMapping("/main")
 	public String main() {
@@ -40,31 +26,18 @@ public class MemberController {
 		String id = SecurityContextHolder.getContext().getAuthentication().getName();
 		log.info(id);
 		
-		return "/member/main";
+		return "/main";
 	}
 	
 	@GetMapping("/login")
 	public String login() {
-		return "/member/login";
+		return "/login";
 	}
 	
 	@GetMapping("/insert")
 	public String insert() {
 		log.info("get insert");
-		return "/member/insert";
-	}
-	@GetMapping("/index2")
-	public String index2() {
-		return "/index2";
-	}
-	
-	@GetMapping("/log")
-	public String log() {
-		return "/log";
-	}
-	@GetMapping("/temp")
-	public String temp() {
-		return "/temp";
+		return "/insert";
 	}
 	
 	@PostMapping("/insert")
