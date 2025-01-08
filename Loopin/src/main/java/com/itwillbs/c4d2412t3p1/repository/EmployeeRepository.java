@@ -22,14 +22,35 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
 	Long getNextSequenceValue();
 	
 	// 기간별 남녀성비 조회
-    @Query(value = "SELECT employee_gd AS name, COUNT(*) AS data " +
+	@Query(value = "SELECT employee_sb AS name, COUNT(*) AS data " +
             "FROM employee " +
-            "WHERE employee_dt BETWEEN :startDt AND :endDt " +
+            "WHERE employee_hd BETWEEN :startDt AND :endDt " +
             "AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
-            "GROUP BY employee_gd", nativeQuery = true)
+            "GROUP BY employee_sb", nativeQuery = true)
 	List<Map<String, Object>> findEmployeeGenderStatsByDate(
-	     @Param("startDt") String startDt, 
-	     @Param("endDt") String endDt);
+	  @Param("startDt") String startDt, 
+	  @Param("endDt") String endDt);
+
+	// 부서별 인원 조회
+	@Query(value = "SELECT employee_dp AS name, COUNT(*) AS data " +
+			"FROM employee " +
+			"WHERE employee_hd BETWEEN :startDt AND :endDt " +
+			"AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
+			"GROUP BY employee_dp", nativeQuery = true)
+	List<Map<String, Object>> getEmployeeDeptStatsByDate(
+			@Param("startDt") String startDt, 
+			@Param("endDt") String endDt);
+
+	// 직위별 인원 조회
+	@Query(value = "SELECT employee_gd AS name, COUNT(*) AS data " +
+			"FROM employee " +
+			"WHERE employee_hd BETWEEN :startDt AND :endDt " +
+			"AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
+			"GROUP BY employee_gd", nativeQuery = true)
+	List<Map<String, Object>> getEmployeePosiStatsByDate(
+			@Param("startDt") String startDt, 
+			@Param("endDt") String endDt);
+
 	
 	
 }

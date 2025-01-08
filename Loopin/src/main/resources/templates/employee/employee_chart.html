@@ -24,7 +24,22 @@
 							    </div>
 								<button type="button" class="btn btn-primary col-sm-1" id="search-btn">조회</button>												
 							</div>
-							<div id="chart-area"></div>
+							<!-- 차트 -->
+							<div class="row mb-3">
+								<div class="col-sm-6">
+									<div id="chart-gender"></div>
+								</div>
+								<div class="col-sm-6">
+									<div id="chart-dept"></div>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-sm-6">
+									<div id="chart-posi"></div>
+								</div>
+								<div class="col-sm-6">
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -79,7 +94,7 @@
 	            return;
 	        }
 
-	        // AJAX를 사용하여 데이터 가져오기
+	        // 성별 관련 데이터 AJAX를 사용하여 데이터 가져오기
 	        $.ajax({
 	            url: '/select_GENDER',
 	            method: 'GET',
@@ -106,10 +121,10 @@
 	                };
 
 	                // 기존 차트 제거
-	                $('#chart-area').empty();
+	                $('#chart-gender').empty();
 
 	                // 차트 렌더링
-	                const el = document.getElementById('chart-area');
+	                const el = document.getElementById('chart-gender');
 	                toastui.Chart.pieChart({ el, data, options });
 	            },
 	            error: function (xhr, status, error) {
@@ -117,6 +132,88 @@
 	                alert('데이터 조회 중 오류가 발생했습니다.');
 	            }
 	        });
+			
+			
+			
+			// 부서 관련 데이터 AJAX를 사용하여 데이터 가져오기
+	        $.ajax({
+	            url: '/select_DEPT',
+	            method: 'GET',
+	            headers: {
+	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	            },
+	            data: {
+	                start_dt: startDt,
+	                end_dt: endDt
+	            },
+	            success: function (response) {
+	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
+	                const data = {
+	                    series: response.series
+	                };
+
+	                // 차트 옵션 설정
+	                const options = {
+	                    chart: {
+	                        title: '부서별 인원 현황',
+	                        width: 600,
+	                        height: 400
+	                    },
+	                };
+
+	                // 기존 차트 제거
+	                $('#chart-dept').empty();
+
+	                // 차트 렌더링
+	                const el = document.getElementById('chart-dept');
+	                toastui.Chart.pieChart({ el, data, options });
+	            },
+	            error: function (xhr, status, error) {
+	                console.error('Error fetching data:', error);
+	                alert('데이터 조회 중 오류가 발생했습니다.');
+	            }
+	        });
+			
+			// 직위 관련 데이터 AJAX를 사용하여 데이터 가져오기
+	        $.ajax({
+	            url: '/select_POSI',
+	            method: 'GET',
+	            headers: {
+	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	            },
+	            data: {
+	                start_dt: startDt,
+	                end_dt: endDt
+	            },
+	            success: function (response) {
+	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
+	                const data = {
+	                    series: response.series
+	                };
+
+	                // 차트 옵션 설정
+	                const options = {
+	                    chart: {
+	                        title: '직위별 인원 현황',
+	                        width: 600,
+	                        height: 400
+	                    },
+	                };
+
+	                // 기존 차트 제거
+	                $('#chart-posi').empty();
+
+	                // 차트 렌더링
+	                const el = document.getElementById('chart-posi');
+	                toastui.Chart.pieChart({ el, data, options });
+	            },
+	            error: function (xhr, status, error) {
+	                console.error('Error fetching data:', error);
+	                alert('데이터 조회 중 오류가 발생했습니다.');
+	            }
+	        });
+
+			
 	    });
 	});
 

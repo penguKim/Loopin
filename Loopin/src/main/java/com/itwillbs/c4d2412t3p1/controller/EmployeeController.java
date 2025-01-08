@@ -343,18 +343,54 @@ public class EmployeeController {
     
     
     // 부서별 인원 현황 데이터 조회
-    
-    
-    
-    
-    
-    
-    
-    
+    @GetMapping("/select_DEPT")
+    public ResponseEntity<Map<String, Object>> select_DEPT(
+    		@RequestParam("start_dt") String startDt,
+    		@RequestParam("end_dt") String endDt) {
+    	
+    	
+    	// 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+    	List<Map<String, Object>> deptStats = employeeService.getEmployeeDeptStatsByDate(startDt, endDt);
+    	
+    	
+    	// Toast UI Chart 형식으로 변환
+    	List<Map<String, Object>> series = deptStats.stream()
+    			.map(stat -> Map.of(
+    					"name", stat.get("name"), // 각 부서
+    					"data", stat.get("data")  // 인원수
+    					))
+    			.toList();
+    	
+    	Map<String, Object> response = Map.of("series", series);
+    	
+    	return ResponseEntity.ok(response);
+    }
     
     
     // 직위별 조회 현황 데이터 조회
-	
+    @GetMapping("/select_POSI")
+    public ResponseEntity<Map<String, Object>> select_POSI(
+    		@RequestParam("start_dt") String startDt,
+    		@RequestParam("end_dt") String endDt) {
+    	
+    	
+    	// 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+    	List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate(startDt, endDt);
+    	
+    	
+    	// Toast UI Chart 형식으로 변환
+    	List<Map<String, Object>> series = posiStats.stream()
+    			.map(stat -> Map.of(
+    					"name", stat.get("name"), // 각 부서
+    					"data", stat.get("data")  // 인원수
+    					))
+    			.toList();
+    	
+    	Map<String, Object> response = Map.of("series", series);
+    	
+    	return ResponseEntity.ok(response);
+    }
+    
 	
 	
 }

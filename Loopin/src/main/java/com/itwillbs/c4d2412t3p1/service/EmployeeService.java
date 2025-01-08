@@ -181,6 +181,26 @@ public class EmployeeService {
 		
 		return EmployeeRepository.findEmployeeGenderStatsByDate(startDt, endDt);
 	}
+
+	// 부서별 인원 차트 조회
+	public List<Map<String, Object>> getEmployeeDeptStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+		if (startDt == null || endDt == null) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		return EmployeeRepository.getEmployeeDeptStatsByDate(startDt, endDt);
+	}
+
+	// 직위별 인원 차트 조회
+	public List<Map<String, Object>> getEmployeePosiStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+		if (startDt == null || endDt == null) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		return EmployeeRepository.getEmployeePosiStatsByDate(startDt, endDt);
+	}
 	
 	
 }
