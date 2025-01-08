@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -370,27 +371,31 @@ public class EmployeeController {
     // 직위별 조회 현황 데이터 조회
     @GetMapping("/select_POSI")
     public ResponseEntity<Map<String, Object>> select_POSI(
-    		@RequestParam("start_dt") String startDt,
-    		@RequestParam("end_dt") String endDt) {
-    	
-    	
-    	// 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
-    	List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate(startDt, endDt);
-    	
-    	
-    	// Toast UI Chart 형식으로 변환
-    	List<Map<String, Object>> series = posiStats.stream()
-    			.map(stat -> Map.of(
-    					"name", stat.get("name"), // 각 부서
-    					"data", stat.get("data")  // 인원수
-    					))
-    			.toList();
-    	
-    	Map<String, Object> response = Map.of("series", series);
-    	
-    	return ResponseEntity.ok(response);
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
+
+        // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+        List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate(startDt, endDt);
+
+        // 직위명과 인원 수를 각각 카테고리와 데이터로 분리
+        List<String> categories = posiStats.stream()
+                .map(stat -> (String) stat.get("name"))  // 직위명 추출
+                .collect(Collectors.toList());
+
+        List<Integer> data = posiStats.stream()
+                .map(stat -> ((BigDecimal) stat.get("data")).intValue())  // 인원 수(BigDecimal을 Integer로 변환)
+                .collect(Collectors.toList());
+
+        // Toast UI Chart 형식으로 변환
+        Map<String, Object> response = Map.of(
+                "categories", categories,
+                "data", data
+        );
+
+        return ResponseEntity.ok(response);
     }
-    
+
+
 	
 	
 }

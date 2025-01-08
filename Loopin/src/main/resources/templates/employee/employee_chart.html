@@ -175,43 +175,61 @@
 	        });
 			
 			// 직위 관련 데이터 AJAX를 사용하여 데이터 가져오기
-	        $.ajax({
-	            url: '/select_POSI',
-	            method: 'GET',
-	            headers: {
-	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-	            },
-	            data: {
-	                start_dt: startDt,
-	                end_dt: endDt
-	            },
-	            success: function (response) {
-	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-	                const data = {
-	                    series: response.series
-	                };
+			$.ajax({
+			    url: '/select_POSI', // 실제 요청할 URL
+			    method: 'GET',
+			    headers: {
+			        [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+			    },
+			    data: {
+			        start_dt: startDt,
+			        end_dt: endDt
+			    },
+			    success: function (response) {
+			        // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
+			        const data = {
+			            categories: response.categories,  // 카테고리 (예: 직위)
+			            series: [{
+			                name: '인원 수',
+			                data: response.data  // 직위별 인원 수
+			            }]
+			        };
 
-	                // 차트 옵션 설정
-	                const options = {
-	                    chart: {
-	                        title: '직위별 인원 현황',
-	                        width: 600,
-	                        height: 400
-	                    },
-	                };
+			        // 색상 배열을 각 카테고리의 데이터 개수에 맞게 설정
+			        const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#F1C40F'];
 
-	                // 기존 차트 제거
-	                $('#chart-posi').empty();
+			        // 차트 옵션 설정
+			        const options = {
+			            chart: {
+			                title: '직위별 인원 현황',
+			                width: 600,
+			                height: 400
+			            },
+			            xAxis: {
+			                title: '직위'
+			            },
+			            yAxis: {
+			                title: '인원 수'
+			            },
+			            series: {
+			                showLabel: true, // 값 레이블 표시 여부
+			                colors: colors.slice(0, response.data.length)  // 색상 배열을 데이터 수에 맞게 자르기
+			            }
+			        };
 
-	                // 차트 렌더링
-	                const el = document.getElementById('chart-posi');
-	                toastui.Chart.pieChart({ el, data, options });
-	            },
-	            error: function (xhr, status, error) {
-	                console.error('Error fetching data:', error);
-	                alert('데이터 조회 중 오류가 발생했습니다.');
-	            }
-	        });
+			        // 기존 차트 제거
+			        $('#chart-posi').empty();
+
+			        // 차트 렌더링 (컬럼 차트 사용)
+			        const el = document.getElementById('chart-posi');
+			        toastui.Chart.columnChart({ el, data, options });
+			    },
+			    error: function (xhr, status, error) {
+			        console.error('Error fetching data:', error);
+			        alert('데이터 조회 중 오류가 발생했습니다.');
+			    }
+			});
+
 
 			
 	    });
