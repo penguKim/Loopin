@@ -5,9 +5,11 @@ import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.entity.PRCode;
 import com.itwillbs.c4d2412t3p1.service.PRService;
 
@@ -19,6 +21,18 @@ import lombok.RequiredArgsConstructor;
 public class PRController {
 
 	private final PRService prS;
+	
+	@GetMapping("/prcal")
+	public String prcal() {
+		return "payroll/prcalcul";
+	}
+	
+	@PostMapping("")
+	@ResponseBody
+	public List<PRDTO> calsal(String bs,String pt,String nt,String wt,String ht,String aa){
+		
+		return prS.calculatingMachine(bs, pt, nt, wt, ht, aa);
+	}
 	
 	@GetMapping("/prcode")
 	public String prcode() {
@@ -33,8 +47,6 @@ public class PRController {
 		
 		return list;
 	}
-	
-	
 	
 	@GetMapping("/PRadmin")
 	public String pradmin() {
