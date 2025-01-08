@@ -400,15 +400,6 @@
 	});
 
 
-
-
-
-
-
-
-
-
-
 		
 	// 생년월일 datepicker
 	$(document).ready(function() {
@@ -778,6 +769,7 @@
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
+		            console.error('AJAX Error:', employeeDTO);
 		            alert('작업 중 오류가 발생했습니다.');
 		        }
 		    });

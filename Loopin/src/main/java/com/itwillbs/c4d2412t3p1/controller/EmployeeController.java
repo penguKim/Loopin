@@ -203,12 +203,16 @@ public class EmployeeController {
 
 	@PostMapping("/update_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> update_EMPLOYEE(
-	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
+	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
 	        @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 
+		
 	    Map<String, String> response = new HashMap<>();
 	    try {
-	        if (employeeDTO.getEmployee_cd() == null) {
+	    	
+	    	String employee_cd = employeeDTO.getEmployee_cd();
+	    	
+	        if (employee_cd == null) {
 	            response.put("message", "데이터 수정 실패: ID(employee_cd)가 전달되지 않았습니다.");
 	            return ResponseEntity.badRequest().body(response);
 	        }
@@ -276,9 +280,9 @@ public class EmployeeController {
 	
 //	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
-	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<Long>> request) {
+	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
 		
-		List<Long> cds = request.get("employee_cds");
+		List<String> cds = request.get("employee_cds");
 		
 		log.info("삭제 요청 데이터: " + request.toString());
 		
