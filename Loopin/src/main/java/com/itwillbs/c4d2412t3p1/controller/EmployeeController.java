@@ -112,10 +112,10 @@ public class EmployeeController {
 	public String employee_list(Model model) {
 
 		// 부서코드 가져오기 
-		model.addAttribute("dept_list", employeeService.selectDeptList("002"));
+		model.addAttribute("dept_list", employeeService.selectDeptList("DEPARTMENT"));
 
 		// 직위코드 가져오기 
-		model.addAttribute("grade_list", employeeService.selectGradeList("001"));
+		model.addAttribute("grade_list", employeeService.selectGradeList("POSITION"));
 		
 		return "/employee/employee_list";
 	}
