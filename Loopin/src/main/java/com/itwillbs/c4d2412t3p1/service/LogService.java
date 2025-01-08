@@ -30,6 +30,7 @@ public class LogService {
 		// DTO → 엔티티 변환 후 저장
 		Log logEntity = logConverter.toEntity(logDTO);
 		log.info("저장 중인 LogDTO: {}" + logDTO.toString());
+		log.info("저장 중인 LogEntity: {}" + logEntity.toString());
 		logRepository.save(logEntity);
 	}
 
