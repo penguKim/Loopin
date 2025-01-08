@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper">
+    
+    <select id="select_EMPLOYEE" resultType="map">
+        SELECT * 
+        FROM employee
+        <where> 1=1
+	        	AND employee_nm LIKE #{employee_nm} || '%'
+        </where>
+    </select>
+    
+    <select id="select_ANNUAL" resultType="map">
+	    SELECT a.*
+	    FROM ANNUAL a
+	    INNER JOIN EMPLOYEE e ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
+	    <where>
+	        <if test="employee_cd != null and employee_cd != ''">
+	            a.EMPLOYEE_CD = #{employee_cd}
+	        </if>
+	        <if test="employee_dp != null and employee_dp != ''">
+	            AND e.EMPLOYEE_DP = #{employee_dp}
+	        </if>
+	        <if test="employee_hd1 != null and employee_hd1 != '' and employee_hd2 != null and employee_hd2 != ''">
+	            AND #{employee_hd1} &lt;= e.EMPLOYEE_HD AND e.EMPLOYEE_HD &lt;= #{employee_hd2}
+	        </if>
+	        <if test="annual_ra != null and annual_ra != ''">
+	            AND a.ANNUAL_RA = #{annual_ra}
+	        </if>
+	    </where>
+	</select>
+<!--    <insert id="insert_ANNUAL">-->
+
+<!--	</insert>-->
+</mapper>

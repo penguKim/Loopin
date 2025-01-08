@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	<body>
+		<main id="main" class="main">
+			<div class="card">
+				<div class="card-body">
+					<h5 class="card-title">근태현황</h5>
+					<ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+						<li class="nav-item" role="presentation">
+							<button class="nav-link active" id="pills-home-tab" data-bs-toggle="pill" data-bs-target="#pills-home"
+								type="button" role="tab" aria-controls="pills-home" aria-selected="true">달력</button>
+						</li>
+						<li class="nav-item" role="presentation">
+							<button class="nav-link" id="pills-profile-tab" data-bs-toggle="pill" data-bs-target="#pills-profile"
+								type="button" role="tab" aria-controls="pills-profile" aria-selected="false" onclick="grid_function()">그리드</button>
+						</li>
+					</ul>
+					
+					<!-- 본문 -->
+					<div class="tab-content pt-2" id="myTabContent"> 
+						<!-- 달력 -->
+						<div class="text-center" id='btn_calendar'>
+							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_prev'>이전</button>
+							<span></span>
+							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_next'>다음</button>
+						</div>
+						<div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="home-tab" style="height: 600px;">
+						</div>
+						
+						<!-- 그리드 -->
+						<div id='btn_grid'>
+							<button type="button" class="btn btn-primary" id='btn_grid_filter' style="display: none;" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">필터</button>
+							<!-- 상세필터 모달 -->
+							<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false" >
+								<div class="modal-dialog">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modal_appointment_save_label">상세 필터</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="modal_appointment_save" method="post" th:action="@{/select_ANNUAL}">
+												<input type='hidden' id='employee_cd' name='employee_cd'>
+												<div class="row mb-3">
+													<div class="col">
+														<label for="employee_nm" class="form-label">이름</label>
+														<div class="input-group">
+															<input type="text" id="employee_nm" class="form-control">
+															<button type="button" title="Search" id="btn_employee_nm"><i class="ri-search-2-line"></i></button>
+														</div>
+													</div>
+													<div class="col">
+														<label for="employee_dp" class="form-label">부서</label> 
+														<select id="employee_dp" class="form-select">
+															<option value="">부서를 선택해주세요.</option>
+															<option value="개발부">개발부</option>
+															<option value="인사부">인사부</option>
+															<option value="기획부">기획부</option>
+															<option value="영업부">영업부</option>
+														</select>
+													</div>
+												</div>
+												<div class="row mb-3">
+													<label for="employee_hd" class="form-label">입사일</label> 
+													<div class="col">
+														<i class="ri-calendar-event-fill"></i><input type="text" id="employee_hd1" class="form-control" placeholder="YYYY-MM-DD">
+													</div>
+													<div class="col">
+														<i class="ri-calendar-event-fill"></i><input type="text" id="employee_hd2" class="form-control" placeholder="YYYY-MM-DD">
+													</div>
+													<div id="wrapper1"></div>
+													<div id="wrapper2"></div>
+												</div>
+												<div class="row mb-3">
+													<div class="col">
+														<label for="inputNumber" class="form-label">잔여연차</label>
+														<input type="number" class="form-control" id="annual_ra" min="0" step="0.5" placeholder="0.5씩 증가">
+													</div>
+												</div>
+												<div class="modal-footer">
+													<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+													<button type="submit" class="btn btn-primary" id="btn_filter_annual">검색</button>
+												</div>
+											</form>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- 이름 input 클릭 시 모달 -->
+							<div class="modal fade" id="modal_employee_list" tabindex="-1"
+								aria-labelledby="modal_employee_list_label" aria-hidden="true">
+								<div class="modal-dialog modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modal_employee_list_label">사원 선택</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal"
+												aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<table id="empTable" class="table table-striped">
+												<thead>
+													<tr>
+														<th>사원코드</th>
+														<th>이름</th>
+														<th>부서</th>
+														<th>직급</th>
+														<th>선택</th>
+													</tr>
+												</thead>
+												<tbody id="td_select_employee"></tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- 그리드 컨테이너 -->
+						<div class="tab-pane fade" id="pills-profile" role="tabpanel" aria-labelledby="profile-tab"></div>
+					</div>
+				</div>
+			</div>
+			
+		</main>
+	</body>
+	
+	<script th:inline="javascript">
+		const token = $("meta[name='_csrf']").attr("content");
+		const header = $("meta[name='_csrf_header']").attr("content");
+		let grid = null;
+		const calendar_container = document.getElementById('pills-home');
+		const btn_calendar = document.getElementById('btn_calendar');
+		const btn_calendar_prev = document.getElementById('btn_calendar_prev');
+		const btn_calendar_next = document.getElementById('btn_calendar_next');
+		const btn_calendar_container = document.getElementById('pills-home-tab');
+		const grid_container = document.getElementById('pills-profile');
+		const btn_grid_filter = document.getElementById('btn_grid_filter');
+		
+		
+		// 첫 로딩
+		window.onload = function(){
+			calendar_function();
+			
+		}
+		
+		// 그리드
+		
+		// 상세필터 입사일 설정
+		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
+			// Date Picker 초기화
+			new tui.DatePicker('#wrapper1', {
+				input: {
+					element: '#employee_hd1',
+					format: 'yyyy-MM-dd'
+				},
+			});
+			new tui.DatePicker('#wrapper2', {
+				input: {
+					element: '#employee_hd2',
+					format: 'yyyy-MM-dd'
+				},
+			});
+		});
+		
+		
+		// 이름 입력 검색
+		document.getElementById('btn_employee_nm').addEventListener('click', function () {
+		    const employee_nm = document.getElementById('employee_nm').value; // 입력된 이름 값
+
+		    if (employee_nm) {
+			    // Ajax 요청으로 사원 정보 가져오기
+				$.ajax({
+					type: "get",
+					url: "/select_EMPLOYEE_ANNUAL",
+					data: {"employee_nm" : employee_nm},
+					success: function(result) {
+						const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+						$("#td_select_employee").empty();
+						result.forEach( employee =>{
+							$("#td_select_employee").append( 
+								"<tr><td>" +employee.employee_cd+"</td>"+
+								"<td>" +employee.employee_nm+"</td>"+
+								"<td>" +employee.employee_dp+"</td>"+
+								"<td>" +employee.employee_gd+"</td>"+
+								"<td><button class='btn btn-primary' id='select_emp_btn'>선택</button></td></tr>"
+							)
+						});
+						modal_employee_list.show();
+					},
+					error : function(result) {
+						console.log('조회 실패');
+					}
+				});
+		    }
+			document.getElementById('employee_nm').focus();
+		});
+		
+		$(document).on('click', '#select_emp_btn', function() {
+		    // 클릭된 버튼의 부모 <tr>에서 데이터 가져오기
+		    const row = $(this).closest('tr');
+		    const employeeCd = row.find('td:nth-child(1)').text();
+		    const employeeNm = row.find('td:nth-child(2)').text();
+		    const employeeDp = row.find('td:nth-child(3)').text();
+		    const employeeGd = row.find('td:nth-child(4)').text();
+			
+			$("#employee_cd").val(employeeCd);
+			
+
+		    // 부모창의 필드에 값 설정
+		    $('#employee_nm').val(row.find('td:nth-child(2)').text());
+			
+		    // 모달 닫기
+		    const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
+		    modal_employee_list.hide();
+		    
+		});
+		
+		
+
+		// btn_filter_annual 버튼 이벤트
+		document.getElementById('btn_filter_annual').addEventListener('click', function (event) {
+		    event.preventDefault(); // 기본 폼 제출 방지
+
+		    const employee_cd = $("#employee_cd").val();
+		    const employee_dp = $("#employee_dp").val();
+		    const employee_hd1 = $("#employee_hd1").val();
+		    const employee_hd2 = $("#employee_hd2").val();
+		    const annual_ra = document.querySelector('input[type="number"]').value;
+
+		    if (!employee_cd && !employee_dp && !employee_hd1 && !employee_hd2 && !annual_ra) {
+		        alert("하나 이상 선택해주세요."); // 사용자에게 알림
+		        return; // 요청 중단
+		    }
+
+		    // Ajax 요청
+		    $.ajax({
+		        type: "get",
+		        url: "/select_ANNUAL",
+		        data: {
+		            "employee_cd": employee_cd,
+		            "employee_dp": employee_dp,
+		            "employee_hd1": employee_hd1,
+		            "employee_hd2": employee_hd2,
+		            "annual_ra": annual_ra,
+		        },
+		        success: function (result) {
+		            if (grid) {
+		                grid.resetData(result); // 기존 grid가 존재하면 데이터 리셋
+						const modal_appointment_save = bootstrap.Modal.getInstance(document.getElementById('modal_appointment_save'));
+						modal_appointment_save.hide();
+		            } else {
+		                console.error("그리드 객체가 정의되지 않았습니다.");
+		            }
+		        },
+		        error: function (result) {
+		            console.log('조회 실패');
+		        }
+		    });
+		});
+
+		// grid_function에서 grid 초기화 및 설정
+		function grid_function() {
+		    grid_container.innerHTML = '';
+		    btn_calendar.style.display = "none";
+		    btn_grid_filter.style.display = "block";
+
+		    // 처음 불러오는 데이터
+		    $.ajax({
+		        type: "get",
+		        url: "/select_base_ATTENDANCE",
+		        success: function (result) {
+		            grid.resetData(result);
+		        },
+		        error: function (result) {
+		            console.log('조회 실패');
+		        }
+		    });
+
+		    // 그리드 객체 생성 + 초기 세팅
+		    grid = new tui.Grid({
+		        el: grid_container,
+		        scrollX: true,
+		        scrollY: true,
+		        columns: [
+		            { header: '이름', name: 'annual_id', align: 'center', sortable: true },
+		            { header: '부서명', name: 'employee_cd', align: 'center', sortable: true },
+		            { header: '입사일', name: 'annual_cc', align: 'center', sortable: true },
+		            { header: '근속연수', name: 'annual_yr', align: 'center', sortable: true },
+		            { header: '사용연차', name: 'annual_ua', align: 'center', sortable: true },
+		            { header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true },
+		            { header: '총연차', name: 'annual_aa', align: 'center', sortable: true },
+		        ],
+		    });
+		}
+		
+		// 캘린더
+		
+		// 캘린더 버튼 이벤트
+		btn_calendar_container.addEventListener('click', function(){
+			btn_grid_filter.style.display = "none";
+			if(btn_calendar.style.display == "none"){
+				btn_calendar.style.display = "block"
+			}
+		});
+		
+		// 달력 날짜 출력
+		function updateCalendarText(calendar, selector) {
+		    const originalDate = calendar.getDate();
+		    const year = originalDate.getFullYear();
+		    const month = originalDate.getMonth() + 1;
+		    const formattedDate = `${year}년 ${month}월`;
+		    $(selector).text(formattedDate);
+		}
+		
+		// 캘린더 호출 함수
+		function calendar_function(){ 
+			
+			// 캘린더 초기세팅
+			let options = {  
+				defaultView: 'month',
+				useDetailPopup: true,
+				isReadOnly: true,
+				calendars: [
+					{ id: 'cal1', name: '총결원', backgroundColor: '#03bd9e', },
+					{ id: 'cal2', name: '휴가자', backgroundColor: '#ffffff', },
+					{ id: 'cal3', name: '출장', backgroundColor: '#ffffff', },
+				],
+			};
+		
+			let calendar = new tui.Calendar(calendar_container, options);
+			
+			
+			// 각 이벤트 만들어주는 메서드
+			calendar.createEvents([
+				{
+					id: 'event1',
+					calendarId: 'cal1',
+					title: '10/1',
+					start: '2025-01-01',
+					end: '2025-01-01',
+					isAllday: true,  // allday 타임스탬프 노상관
+					category: 'allday',
+				}, 
+				{
+					id: 'event2',
+					calendarId: 'cal2',
+					title: '김길동',
+					start: '2025-01-01T09:36:50',
+					end: '2025-01-01T09:36:37',
+					isAllday: true,
+					category: 'allday',
+				},
+				{
+					id: 'event3',
+					calendarId: 'cal3',
+					title: '홍길동',
+					start: '2025-01-01T09:36:50',
+					end: '2025-01-01T09:36:37',
+					isAllday: true,
+					category: 'allday',
+				},
+			]);
+			
+			calendar.setOptions({
+				// 해당 달만 보여주기
+				month: { isAlways6Weeks: false, },
+				
+			});
+			
+			calendar.setTheme({
+				// 주말 css
+				common: { holiday: { color: 'rgba(255, 64, 64)', },
+						  saturday: { color: 'rgba(64, 64, 255)', },
+				},
+			});
+			
+			
+			updateCalendarText(calendar, "#btn_calendar span");
+			
+			// 이전 달 보기 이벤트
+			btn_calendar_prev.addEventListener('click', function(){ 
+				calendar.prev();
+				updateCalendarText(calendar, "#btn_calendar span");
+			
+			});
+			
+			
+			// 다음 달 보기 이벤트
+			btn_calendar_next.addEventListener('click', function(){ 
+				calendar.next();
+				updateCalendarText(calendar, "#btn_calendar span");				
+				
+			});
+			
+	
+		};
+		
+		// 모달 초기화
+		$('.modal').on('hidden.bs.modal', function (e) {
+		    $(this).find('form')[0].reset();
+		});
+		
+		
+	</script>
+</html>
