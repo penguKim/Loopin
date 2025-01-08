@@ -20,7 +20,8 @@ public class MyUserDetailsService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
-
+		
+		
 		Member member = memberRepository.findById(id).orElseThrow(() -> 
 			new UsernameNotFoundException("없는 회원")
 		);
