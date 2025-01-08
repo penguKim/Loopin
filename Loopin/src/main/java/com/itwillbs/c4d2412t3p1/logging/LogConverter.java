@@ -65,7 +65,7 @@ public class LogConverter {
         
         if (logDTO.getEmployee_id() != null) {
             Employee employee = new Employee();
-            employee.setEmployee_cd(Long.parseLong(logDTO.getEmployee_id())); // NumberFormatException 가능
+            employee.setEmployee_cd(logDTO.getEmployee_id()); // NumberFormatException 가능
             log.setEmployee(employee);
         } else {
             logger.info("임시로 employee_cd NULL 사용");

@@ -5,17 +5,9 @@ import java.sql.Timestamp;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Query;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

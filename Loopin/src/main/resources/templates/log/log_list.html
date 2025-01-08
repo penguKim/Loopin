@@ -2,6 +2,24 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
 
 <body>
 	<main id="main" class="main">
@@ -63,7 +81,8 @@
 
 </body>
 
-
+<!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>
 <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function () {
             const filterConfig = [
@@ -72,9 +91,9 @@
                 { key: 'log_sj', label: '수행한 작업', type: 'text', placeholder: '작업명 입력' },
                 { key: 'log_ju', label: '정보 유형', type: 'text', placeholder: '유형 입력' },
                 { key: 'log_oi', label: 'IP 주소', type: 'text', placeholder: 'IP 입력' },
-                { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력' }
+                { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력'},
+                { key: 'log_bj', label: '클라이언트 정보', type: 'asd', placeholder: '클라이언트 정보 입력'}
             ];
-
             // 필터 모듈 초기화
             initializeFilterModule('filterModule', filterConfig, (filterValues) => {
                 console.log('적용된 필터:', filterValues);
@@ -139,7 +158,8 @@
                         rowHeight: 'auto',
                         bodyHeight: 'fitToParent',
                         scrollX: true,
-                        scrollY: true
+                        scrollY: true,
+                        zIndex: 100
                     });
 
                     // Cell 클릭 이벤트 등록
