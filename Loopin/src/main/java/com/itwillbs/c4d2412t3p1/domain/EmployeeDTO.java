@@ -12,7 +12,7 @@ import lombok.ToString;
 @ToString
 public class EmployeeDTO {
 	
-	private Long employee_cd;
+	private String employee_cd;
 	private String employee_id;
 	private String employee_pw;
 	private String employee_dp;
@@ -37,7 +37,10 @@ public class EmployeeDTO {
 	private Timestamp employee_wd;
 	private String employee_mf;
 	private Timestamp employee_md;
+	private Boolean employee_mg; // 부서장 유무
+	private String employee_rl; // 룰
 	
+	private Long sequenceValue;
 	
 	
 	// 사진 삭제 여부

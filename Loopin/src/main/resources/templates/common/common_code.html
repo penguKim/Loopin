@@ -53,10 +53,10 @@
 <script th:inline="javascript">
 	// 변수 지정
 	let group_grid;
-	let grid;
+	let sub_grid;
 	let group_code = '';
 	let changeFlag = false; // 그리드 변경 전 이벤트 판별 플래그
-	
+	let group_row = {};
 	const btn_group_remove = $('#btn_group_remove');
 	const btn_group_add = $('#btn_group_add');
 	const btn_group_insert = $('#btn_group_insert');
@@ -70,19 +70,17 @@
 	// ------------------------------
 	
 	$(function() {
-		
 		make_group_grid();
-		make_grid();
+		make_sub_grid();
 		
 		// 그룹코드 그리드 ----------------------
 		
 		group_grid.on('click', function(ev) {
-		    let rowdata = group_grid.getRow(ev.rowKey);
-			
-			if(!rowdata || rowdata['common_cc'] == '') {
-				grid.resetData([]);
+			group_row = group_grid.getRow(ev.rowKey);
+			if(group_row['common_cc'] == null || group_row['common_cc'] == '') {
+				sub_grid.resetData([]);
 			} else {
-				select_code(rowdata);
+				select_code(group_row);
 			}
 			
 		});
@@ -132,7 +130,7 @@
 
 		// 상세코드 행 추가
 		btn_code_add.on('click', function() {
-			if(group_code == '') {
+			if(Object.keys(group_row) == 0) {
 				Swal.fire({
 				    icon: "warning",
 				    title: "공통 코드 선택",
@@ -140,7 +138,15 @@
 				});
 				return;
 			}
-            grid.appendRow({
+			if(group_row['common_gc'] == null) {
+				Swal.fire({
+				    icon: "warning",
+				    title: "공통 코드 선택",
+				    text: "공통 코드 등록 후 선택해주세요.",
+				});
+				return
+			}
+			sub_grid.appendRow({
                     "common_cc": '',
                     "common_nm": '',
                     "common_ct": '',
@@ -153,13 +159,13 @@
 		
 		// 상세코드 등록
 		btn_code_insert.on('click', function(ev) {
-			insert_code(grid);
+			insert_code(sub_grid);
 		});
 	});
 	
 	// 상세코드 삭제
 	btn_code_remove.on('click', function() {
-		if(group_code == '') {
+		if(Object.keys(group_row) == 0) {
 			Swal.fire({
 			    icon: "warning",
 			    title: "공통 코드 선택",
@@ -167,11 +173,16 @@
 			});
 			return;
 		}
+		if(group_row['common_gc'] == null) {
+			Swal.fire({
+			    icon: "warning",
+			    title: "공통 코드 선택",
+			    text: "공통 코드 등록 후 선택해주세요.",
+			});
+			return
+		}
 		
-		let checkedRows = grid.getCheckedRows();
-		let newRows = checkedRows.filter(row => row['common_gc'] == null);
-		checkedRows = checkedRows.filter(row => row['common_gc'] != null);
-		
+		let checkedRows = sub_grid.getCheckedRows();
 		if (checkedRows.length == 0) {
 			Swal.fire({
 			    icon: "warning",
@@ -180,13 +191,16 @@
 			});
 		    return;
 		}
+		let newRows = checkedRows.filter(row => row['common_gc'] == null);
+		checkedRows = checkedRows.filter(row => row['common_gc'] != null);
+		
 		
 		if(checkedRows.length > 0) {
-			delete_code(grid, checkedRows);				
+			delete_code(sub_grid, checkedRows);				
 		}
 	    if (newRows.length > 0) {
 	    	newRows.forEach(row => {
-	    		grid.removeRow(row.rowKey);
+	    		sub_grid.removeRow(row.rowKey);
 	    	});
 	    }
 		
@@ -207,7 +221,7 @@
 			},
 			success: function(data) {
 				let row = data.data.contents;
-				grid.resetData(row);
+				sub_grid.resetData(row);
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
@@ -218,7 +232,6 @@
 	
 	function insert_code(grid) {
 		let validationResult = grid.validate();
-		console.log(validationResult);
 		const valChecked = validationResult.some(row => {
 		    const rowKey = row['rowKey'];
 
@@ -279,6 +292,10 @@
 			code: grid == group_grid ? '' : group_code
 		}
 		
+		let icon = 'success';
+		let title = '등록 성공';
+		let text = '등록하였습니다.';
+		
 		const jsonData = JSON.stringify(json);			
 		$.ajax({
 			type: 'post',
@@ -290,17 +307,21 @@
 			},
 			success: function(data) {
 				if(!data['result']) {
-					Swal.fire({
-					    icon: "error",
-					    title: "등록 실패",
-					    text: "등록에 실패하였습니다.",
-					});
+					let icon = 'error';
+					let title = '등록 실패';
+					let text = '등록에 실패하였습니다.';
 				} else {
 					const row = data.data.contents;
 					grid.uncheckAll();
 					// group_grid.focus(-1);
 					grid.resetData(row);
 				}
+				
+				Swal.fire({
+				    icon: icon,
+				    title: title,
+				    text: text,
+				});
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
@@ -348,11 +369,13 @@
 					    xhr.setRequestHeader(header, token);
 					},
 					success: function(data) {
-						if(grid == group_grid) {
-							group_code = '';					
-						}
 						let row = data.data.contents;
 						grid.resetData(row);
+						if(grid == group_grid) {
+							group_code = '';	
+							group_row = {};
+							sub_grid.resetData([]);
+						}
 					},
 					error : function(xhr, textStatus, errorThrown) {
 						console.log('조회 실패');
@@ -382,6 +405,7 @@
 			bodyHeight : 590,
 			columns : [ 
 				{header : '그룹코드명', name : 'common_gc', hidden: true},
+				{header : '기존 코드명', name : 'beforeCommon_cc', hidden: true},
 				{header : '코드명', name : 'common_cc', sortable : true, editor: 'text',
 					validation: {
 						required: true,
@@ -414,10 +438,23 @@
 			]
 		});
 		
+		group_grid.on('beforeChange', ev => {
+			if (changeFlag) {
+			    return;
+			}
+			const row = ev['changes'][0];
+			
+			if(row['columnName'] == 'common_cc') {
+				changeFlag = true;
+				sub_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
+				changeFlag = false;
+			}
+		  
+		});
 	}
 
-	function make_grid() {
-		grid = new tui.Grid({
+	function make_sub_grid() {
+		sub_grid = new tui.Grid({
 			el : document.getElementById('grid'),
 			data : [],
 			scrollX : false,
@@ -441,7 +478,6 @@
 						required: true
 					}
 				}, 
-				{header : '설명', name : 'common_ct', sortable : true, editor: 'text'}, 
 				{header : '정렬순서', name : 'common_in', sortable : true, align: 'center',
 					editor: 'text',
 					validation: {
@@ -468,19 +504,22 @@
 						return value == 'true' ? '사용' : value == 'false' ? '미사용' : '';
 					}
 				}, 
+				{header : '설명', name : 'common_ct', sortable : true, editor: 'text'}, 
 			]
 		});
 	
 		
-		grid.on('beforeChange', ev => {
+		sub_grid.on('beforeChange', ev => {
 			if (changeFlag) {
-			    return;
+				return;
 			}
-		  const row = ev['changes'][0];
+			const row = ev['changes'][0];
 		  
-		  changeFlag = true;
-		  grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
-		  changeFlag = false;
+			if(row['columnName'] == 'common_cc') {
+				changeFlag = true;
+				sub_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
+				changeFlag = false;
+			}
 		  
 		});
 	}
