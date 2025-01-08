@@ -8,14 +8,14 @@
 	<main id="main" class="main">
 		<!-- 인사카드 등록 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-			<div class="modal-dialog modal-xl">
-				<div class="modal-content"style="height: 90vh; display: flex; flex-direction: column;">
-					<div class="modal-header" style="position: sticky; top: 0; background-color: #fff; z-index: 1020;">
+			<div class="modal-dialog modal-dialog-scrollable modal-xl">
+				<div class="modal-content">
+					<div class="modal-header">
 						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
-					<div class="modal-body" style="flex: 1; overflow-y: auto; padding: 15px;">
+					<div class="modal-body">
 						<form id="appointment_form" th:action="@{/insert_EMPLOYEE}" method="post" enctype="multipart/form-data">
 							<input type="hidden" id="photoDeleted" name="photoDeleted" value="false">  <!-- 사진 삭제 히든 -->
 							<input type="hidden" id="employee_ad" name="employee_ad"> <!-- 주소 값 히든-->
@@ -219,11 +219,11 @@
 									<input type="text" class="form-control" id="employee_dt" name="employee_dt">
 								</div>
 							</div>
-							<div class="modal-footer" style="position: sticky; bottom: 0; background-color: #fff; z-index: 1020;">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-								<button type="submit" id="modal_submit_button" class="btn btn-primary">등록</button>
-							</div>
 						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+						<button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
 					</div>
 				</div>
 			</div>
@@ -360,13 +360,13 @@
 
 	    // 퇴사일 DatePicker 설정
 	    const retireDatePicker = new tui.DatePicker('#rd_wrapper', {
-	        date: today, // 기본 날짜 설정
+	        date: today, // 기본 날짜 설정 (퇴사일 초기화가 필요)
 	        input: {
 	            element: '#employee_rd',
 	            format: 'yyyy-MM-dd'
 	        },
 	        selectableRanges: [
-	            [today, new Date(today.getFullYear() + 100, 11, 31)] // 초기 퇴사일 범위
+	            [today, new Date(today.getFullYear() + 100, 11, 31)] // 퇴사일 범위 초기화
 	        ]
 	    });
 
@@ -387,16 +387,21 @@
 
 	        // 퇴사일 범위 업데이트: 입사일 다음날부터 100년 후까지
 	        retireDatePicker.setSelectableRanges([
-	            [nextDay, new Date(today.getFullYear() + 100, 11, 31)]
+	            [nextDay, new Date(hireDate.getFullYear() + 100, 11, 31)]
 	        ]);
 
-	        // 현재 퇴사일이 범위를 벗어나면 초기화
+	        // 퇴사일 필드 초기화 (입사일의 다음 날보다 이전일 경우)
 	        const retireDate = new Date($('#employee_rd').val());
 	        if (isNaN(retireDate.getTime()) || retireDate < nextDay) {
-	            $('#employee_rd').val(''); // 퇴사일 초기화
+	            retireDatePicker.setDate(nextDay); // 퇴사일을 입사일 다음날로 강제 설정
+	            $('#employee_rd').val(nextDay.toISOString().split('T')[0]); // 퇴사일 값 업데이트
 	        }
 	    });
 	});
+
+
+
+
 
 
 
