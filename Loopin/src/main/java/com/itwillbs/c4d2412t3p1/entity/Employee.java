@@ -27,10 +27,10 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@SequenceGenerator(name = "em_sequence_generator", sequenceName = "em_sequence", allocationSize = 1)
 public class Employee {
 	
     @Id
-    @SequenceGenerator(name = "em_sequence_generator", sequenceName = "em_sequence", allocationSize = 1)
     @Column(name = "employee_cd", length = 15)  // String 타입으로 저장, 길이 조정 가능
     private String employee_cd;  // String으로 변경
     
