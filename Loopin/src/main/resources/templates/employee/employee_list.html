@@ -50,7 +50,7 @@
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_id" name="employee_id">
 								</div>
-								<label for="inputEmail" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
+								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
 								</div>
@@ -121,34 +121,27 @@
 							<div class="row mb-3">
 								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
 								<div class="col-sm-4">
-								    <input type="text" class="form-control" id="employee_bd" name="employee_bd" aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-								    <div id="bd_wrapper"></div>
+									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" required onblur="onBlurValidate()">
 								</div>
 							</div>
 							<div class="row mb-3">
-								<label for="inputDate" class="col-sm-2 col-form-label">입사일<span class="text-danger"> *</span></label>
+							    <label for="inputDate" class="col-sm-2 col-form-label">입사일<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_hd" name="employee_hd"
-										aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-									<div id="hd_wrapper" style="width: 100%;"></div>
-								</div>
+								    <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date">
+<!-- 								        <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date"> -->
+							        <div id="startpicker-container" style="margin-left: -1px;"></div>
+							    </div>
 							</div>
 							<div class="row mb-3">
-								<label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
+							    <label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_rd" name="employee_rd"
-										aria-label="Date-Time">
-								</div>
-								<div class="col-sm-2">
-									<div id="rd_wrapper" style="width: 100%;"></div>
-								</div>
+							        <input type="text" class="form-control" id="employee_rd" name="employee_rd" aria-label="Date">
+							        <div id="endpicker-container" style="margin-left: -1px;"></div>
+							    </div>
 							</div>
+
 							<div class="row mb-3">
-								<label for="inputPassword" class="col-sm-2 col-form-label" >퇴사사유</label>
+								<label for="inputText" class="col-sm-2 col-form-label" >퇴사사유</label>
 								<div class="col-sm-10">
 									<textarea class="form-control" style="height: 100px"
 										id="employee_rr" name="employee_rr"></textarea>
@@ -156,7 +149,7 @@
 							</div>
 
 							<div class="row mb-3">
-								<label for="inputPassword" class="col-sm-2 col-form-label">비고</label>
+								<label for="inputText" class="col-sm-2 col-form-label">비고</label>
 								<div class="col-sm-10">
 									<textarea class="form-control" id="employee_nt" name="employee_nt"
 										style="height: 100px"></textarea>
@@ -343,79 +336,115 @@
 	    $("#employee_ad").val(employee_ad);
 	});
 	
-	$(document).ready(function() {
-	    const today = new Date(); // 오늘 날짜
+
+	$(function() {
+	    var today = new Date();
 
 	    // 입사일 DatePicker 설정
-	    const hireDatePicker = new tui.DatePicker('#hd_wrapper', {
-	        date: today, // 기본 날짜 설정
-	        input: {
-	            element: '#employee_hd',
-	            format: 'yyyy-MM-dd'
+	    var startPicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: today, // 오늘 날짜로 초기화
+	            input: '#employee_hd',
+	            container: '#startpicker-container',
 	        },
-	        selectableRanges: [
-	            [new Date(1900, 0, 1), new Date(today.getFullYear() + 100, 11, 31)] // 입사일 선택 가능 범위
-	        ]
+	        endpicker: {
+	            date: today, // 오늘 날짜로 초기화
+	            input: '#employee_rd',
+	            container: '#endpicker-container',
+	            disabled: true // 퇴사일 기본 비활성화
+	        },
+	        format: 'YYYY-MM-dd',
+	        timePicker: false
 	    });
 
-	    // 퇴사일 DatePicker 설정
-	    const retireDatePicker = new tui.DatePicker('#rd_wrapper', {
-	        date: today, // 기본 날짜 설정 (퇴사일 초기화가 필요)
-	        input: {
-	            element: '#employee_rd',
-	            format: 'yyyy-MM-dd'
-	        },
-	        selectableRanges: [
-	            [today, new Date(today.getFullYear() + 100, 11, 31)] // 퇴사일 범위 초기화
-	        ]
-	    });
+	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
+	    startPicker.on('change:start', function(event) {
+	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
+	        if (event && event.date) {
+	            console.log("Start Date selected: ", event.date);
 
-	    // 입사일 변경 시 퇴사일의 selectableRanges 업데이트
-	    $('#employee_hd').on('change', function() {
-	        const hireDateValue = $('#employee_hd').val(); // 입사일 값 가져오기
-	        const hireDate = new Date(hireDateValue); // Date 객체로 변환
+	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
+	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
+	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
 
-	        // 유효한 날짜인지 확인
-	        if (isNaN(hireDate.getTime())) {
-	            alert("유효한 입사일을 선택해주세요.");
-	            return;
-	        }
+	            // 퇴사일 DatePicker 설정
+	            var endPicker = tui.DatePicker.createRangePicker({
+	                startpicker: {
+	                    date: event.date, // 입사일 이후 날짜부터 설정
+	                    input: '#employee_hd',
+	                    container: '#startpicker-container',
+	                },
+	                endpicker: {
+	                    date: minEndDate, // 입사일 이후 날짜로 설정
+	                    input: '#employee_rd',
+	                    container: '#endpicker-container',
+	                    disabled: false // 퇴사일 활성화
+	                },
+	                format: 'YYYY-MM-dd',
+	                timePicker: false
+	            });
 
-	        // 입사일 다음날 계산
-	        const nextDay = new Date(hireDate);
-	        nextDay.setDate(nextDay.getDate() + 1);
+	            // 퇴사일 선택 후 캘린더 닫기
+	            endPicker.on('change:end', function(event) {
+	                console.log("End Date selected: ", event.date);
+	                endPicker.close();
+	            });
 
-	        // 퇴사일 범위 업데이트: 입사일 다음날부터 100년 후까지
-	        retireDatePicker.setSelectableRanges([
-	            [nextDay, new Date(hireDate.getFullYear() + 100, 11, 31)]
-	        ]);
-
-	        // 퇴사일 필드 초기화 (입사일의 다음 날보다 이전일 경우)
-	        const retireDate = new Date($('#employee_rd').val());
-	        if (isNaN(retireDate.getTime()) || retireDate < nextDay) {
-	            retireDatePicker.setDate(nextDay); // 퇴사일을 입사일 다음날로 강제 설정
-	            $('#employee_rd').val(nextDay.toISOString().split('T')[0]); // 퇴사일 값 업데이트
+	            // 입사일 선택 후 캘린더 닫기
+	            startPicker.close();
+	        } else {
+	            console.error("Start date is not available in the event");
 	        }
 	    });
 	});
 
+
+    function validateDate() {
+        const dateInput = document.getElementById("employee_hd").value;
+
+        // 8자리 숫자 확인
+        if (!/^\d{8}$/.test(dateInput)) {
+            alert("8자리 숫자로만 입력해주세요. 예시: 19900101");
+            return false;
+        }
+
+        // 날짜 분리 (YYYY, MM, DD)
+        const year = parseInt(dateInput.substring(0, 4), 10);
+        const month = parseInt(dateInput.substring(4, 6), 10);
+        const day = parseInt(dateInput.substring(6, 8), 10);
+
+        // 날짜 유효성 검사 (2월 30일 등 잘못된 날짜 체크)
+        const date = new Date(year, month - 1, day);
+        if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+            alert("잘못된 날짜입니다.");
+            return false;
+        }
+
+        alert("입력된 날짜는 유효합니다!");
+        return true;
+    }
+
+    // 포커스를 벗어날 때마다 날짜 유효성 검사 실행
+    function onBlurValidate() {
+        validateDate();
+    }
 
 		
 	// 생년월일 datepicker
-	$(document).ready(function() {
-	    const today = new Date(); // 오늘 날짜 가져오기
+// 	$(document).ready(function() {
+// 	    const today = new Date(); // 오늘 날짜 가져오기
 
-	    const datepicker = new tui.DatePicker('#bd_wrapper', {
-	        date: today, // 초기 날짜 설정
-	        input: {
-	            element: '#employee_bd',
-	            format: 'yyyy-MM-dd'
-	        },
-			selectableRanges: [
-			    [new Date(1900, 0, 1), new Date(today.getFullYear(), today.getMonth(), today.getDate())]
-			] // 선택 가능 날짜 범위 설정
-	    });
-	});
+// 	    const datepicker = new tui.DatePicker('#bd_wrapper', {
+// 	        date: today, // 초기 날짜 설정
+// 	        input: {
+// 	            element: '#employee_bd',
+// 	            format: 'yyyy-MM-dd'
+// 	        },
+// 			selectableRanges: [
+// 			    [new Date(1900, 0, 1), new Date(today.getFullYear(), today.getMonth(), today.getDate())]
+// 			] // 선택 가능 날짜 범위 설정
+// 	    });
+// 	});
 	
 	// 이메일 관련 처리
 	$('#employee_domain').on('change', function () {
