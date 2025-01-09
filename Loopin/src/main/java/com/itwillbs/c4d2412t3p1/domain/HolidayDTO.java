@@ -17,7 +17,7 @@ public class HolidayDTO {
 	private String holiday_wa;
 	private String holiday_aa;
 	private String holiday_wr;
-	private String holiday_wd;
+	private Timestamp holiday_wd;
 	private String holiday_mf;
-	private String holiday_md;
+	private Timestamp holiday_md;
 }

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.HolidayMapper">
+    
+    <select id="select_period_HOLIDAY" resultType="map">
+	    SELECT *
+	    FROM HOLIDAY
+	    <where> 1=1
+	            AND #{holiday_dt1} &lt;= holiday_dt AND holiday_dt &lt;= #{holiday_dt2}
+	    </where>
+	</select>
+	
+ 	<!-- 공휴일 삽입 -->
+    <insert id="insertHoliday">
+	 	INSERT INTO HOLIDAY (
+	        HOLIDAY_DT, 
+	        HOLIDAY_NM, 
+	        HOLIDAY_WA, 
+	        HOLIDAY_AA, 
+	        HOLIDAY_WR, 
+	        HOLIDAY_WD, 
+	        HOLIDAY_MF, 
+	        HOLIDAY_MD
+	    )
+	    SELECT 
+	        #{holiday_dt}, 
+	        #{holiday_nm}, 
+	        CASE 
+	            WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '주말'
+	            ELSE '평일'
+	        END, 
+	        'O', 
+	        #{holiday_wr}, 
+	        #{holiday_wd}, 
+	        NULL, 
+	        NULL
+	    FROM DUAL
+    </insert>
+
+    <!-- 중복 확인 -->
+    <select id="checkHolidayExists" resultType="int">
+        SELECT COUNT(*)
+        FROM HOLIDAY
+        WHERE HOLIDAY_DT = #{holiday_dt}
+    </select>
+</mapper>

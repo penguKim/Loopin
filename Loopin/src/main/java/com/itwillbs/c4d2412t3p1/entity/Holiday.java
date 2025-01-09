@@ -1,5 +1,7 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
+import java.sql.Timestamp;
+
 import com.itwillbs.c4d2412t3p1.domain.HolidayDTO;
 
 import groovy.transform.builder.Builder;
@@ -34,11 +36,11 @@ public class Holiday {
 	@Column(name = "holiday_wr")
 	private String holiday_wr;
 	@Column(name = "holiday_wd")
-	private String holiday_wd;
+	private Timestamp holiday_wd;
 	@Column(name = "holiday_mf")
 	private String holiday_mf;
 	@Column(name = "holiday_md")
-	private String holiday_md;
+	private Timestamp holiday_md;
 	
 	
 	// 생성자
@@ -46,7 +48,7 @@ public class Holiday {
 	}
 	
 	public Holiday(String holiday_dt, String holiday_nm, String holiday_wa, String holiday_aa, 
-					String holiday_wr, String holiday_wd, String holiday_mf, String holiday_md) {
+					String holiday_wr, Timestamp holiday_wd, String holiday_mf, Timestamp holiday_md) {
 		super();
 		this.holiday_dt = holiday_dt;
 		this.holiday_nm = holiday_nm;
