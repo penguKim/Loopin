@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteResponseDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
+import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
@@ -35,6 +37,8 @@ public class CommuteController {
 	private final CommuteService commuteService;
 	private final CommonService commonService;
 
+	// 출퇴근 기록부 --------------------------------------------
+	
 	@GetMapping("/commute")
 	public String commute() {
 		return "/commute/commute_list";
@@ -95,20 +99,20 @@ public class CommuteController {
 		
 	}
 	
+	// 근로 관리 --------------------------------------------
+	
 	@GetMapping("/commute_type")
-	public String commute_type(Model model) {
-		
-		List<Common_codeDTO> weekList = commuteService.select_COMMON_list("WEEK");
-		model.addAttribute("WEEK", weekList);
+	public String commute_type() {
 		
 		return "commute/commute_type";
 	}
 	
+	// 근로관리 그리드 조회
 	@ResponseBody
 	@GetMapping("/select_WORKINGHOUR")
 	public ResponseEntity<Map<String, Object>> getMethodName() {
 		
-		List<Workinghour> list = commuteService.select_WORKINGHOUR();
+		List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR();
 		log.info(list.toString());
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -120,12 +124,16 @@ public class CommuteController {
 		return ResponseEntity.ok(response);
 	}
 	
+	// 근로관리 상세 항목 조회
 	@ResponseBody
 	@PostMapping("/select_WORKINGHOUR_detail")
 	public ResponseEntity<Map<String, Object>> select_WORKINGHOUR_detail(@RequestParam("workinghour_id") String workinghour_id) {
 		Map<String, Object> response = new HashMap<>();
 		try {
 			Workinghour workinghour = commuteService.select_WORKINGHOUR_detail(workinghour_id);
+			List<Common_codeDTO> weekList = commuteService.select_COMMON_list("WEEK");
+			response.put("WEEK", weekList);
+			
 			response.put("result", true);
 			response.put("workinghour", workinghour);
 			return ResponseEntity.ok(response);
@@ -137,6 +145,7 @@ public class CommuteController {
 		
 	}
 	
+	// 근로관리 항목 등록
 	@ResponseBody
 	@PostMapping("/insert_WORKINGHOUR")
 	public ResponseEntity<Map<String, Object>> insert_WORKINGHOUR(@RequestBody WorkinghourDTO workinghourDTO) {
@@ -145,7 +154,7 @@ public class CommuteController {
 		try {
 			Workinghour workinghour = commuteService.insert_WORKINGHOUR(workinghourDTO);
 			
-			List<Workinghour> list = commuteService.select_WORKINGHOUR();
+			List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR();
 			response.put("result", true);
 			response.put("list", list);
 			response.put("workinghour", workinghour);
@@ -156,6 +165,96 @@ public class CommuteController {
 		}
 		
 	}
+	
+	// 사원추가 모달 조회
+	@ResponseBody
+	@PostMapping("/select_EMPLOYEE_WORKINGHOUR")
+	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_WORKINGHOUR(@RequestParam("workinghour_id") String workinghour_id) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			
+			List<WorkinghourDTO> EMPLOYEE_LIST = commuteService.select_EMPLOYEE_WORKINGHOUR(""); // 미등록 사원
+			List<WorkinghourDTO> CHK_LSIT = commuteService.select_EMPLOYEE_WORKINGHOUR(workinghour_id); // 등록 사원
+			
+			response.put("result", true);
+			response.put("EMPLOYEE_LIST", EMPLOYEE_LIST);
+			response.put("CHK_LSIT", CHK_LSIT);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 미등록 사원 근로 등록
+	@ResponseBody
+	@PostMapping("/update_EMPLOYEE_WK")
+	public ResponseEntity<Map<String, Object>> update_EMPLOYEE_WK(@RequestBody CommuteResponseDTO responseDTO) {
+		Map<String, Object> response = new HashMap<>();
+		try {
+			
+			List<WorkinghourDTO> WorkinghourList = responseDTO.getWorkinghourList();
+			log.info(WorkinghourList.toString());
+			String workinghour_id = responseDTO.getWorkinghour_id();
+            int updateCount = commuteService.update_EMPLOYEE_WK(WorkinghourList, workinghour_id);
+            System.out.println("업데이트 갯수 : " + updateCount);
+            if(updateCount < 0) {
+            	response.put("result", false);
+            	return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);            	
+            }
+		
+            List<WorkinghourDTO> EMPLOYEE_LIST = commuteService.select_EMPLOYEE_WORKINGHOUR(""); // 미등록 사원
+            List<WorkinghourDTO> CHK_LSIT = commuteService.select_EMPLOYEE_WORKINGHOUR(workinghour_id); // 등록 사원	            	
+            response.put("result", true);
+			response.put("EMPLOYEE_LIST", EMPLOYEE_LIST);
+			response.put("CHK_LSIT", CHK_LSIT);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// -------------------------- 미사용 ---------------------------
+	// 근로정보 관리 --------------------------------------------
+	
+	@GetMapping("/worktype")
+	public String worktype() {
+		
+		return "commute/work_type";
+	}
+	
+//	@GetMapping("/select_WORKTYPE")
+//	public ResponseEntity<Map<String, Object>> select_WORKTYPE() {
+//		
+//		List<WorktypeDTO> list = commuteService.select_WORKTYPE();
+//		
+//		Map<String, Object> response = new HashMap<>(); 
+//	    response.put("result", true);
+//	    Map<String, Object> data = new HashMap<>();
+//	    data.put("contents", list);
+//	    response.put("data", data);
+//		
+//		
+//		return ResponseEntity.ok(response);
+//	}
 	
 	
 	

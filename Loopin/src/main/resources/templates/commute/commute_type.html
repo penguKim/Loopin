@@ -13,7 +13,12 @@
 				<div class="col-lg-12">
 					<div class="card"  style="height:800px;">
 						<div class="card-body">
-							<h1 class="card-title">근무시간설정</h1>
+							<div class="d-flex align-items-center justify-content-between">
+								<h5 class="card-title">근로관리</h5>
+								<div>
+									<input type="button" id="btn_employee_modal" class="btn btn-primary" value="사원추가">
+								</div>
+							</div>
 							<div id="grid"></div>
 						</div>
 					</div>
@@ -25,11 +30,16 @@
 </body>
 <script th:inline="javascript">
 	// 변수 지정
-	let grid, calendar;
+	let grid, commute_grid_row; // 근로관리 그리드
+	let employee_grid, insert_grid; // 사원추가 그리드
 	changeFlag = false;
-	let modal;
+	// 모달 변수
+	let commute_modal, employee_modal;
+	let week = /*[[${WEEK}]]*/[];
 	let workinghour_id, workinghour_nm,  workinghour_tt, workinghour_wt, workinghour_lt, workinghour_rm, workinghour_us;
 	let btn_workinghour_save;
+	// 화면 변수
+	let btn_employee_modal = $('#btn_employee_modal');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	
@@ -40,13 +50,11 @@
 	
 	$(function() {
 		make_grid();
+		
 
 		
-		grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			
-			modal_detail(row);
-			
+		btn_employee_modal.on('click', function (){
+			make_employee_modal(commute_grid_row);
 		});
 		
 
@@ -58,6 +66,33 @@
 	    $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
 	}
 	
+	function createSelectBox(el, list, title) {
+	    const selectBox = $(el);
+
+	    selectBox.empty();
+		
+		if(title) {
+		    selectBox.append(`<option value="">${title}</option>`);		
+		}
+
+	    list.forEach(data => {
+	        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+	    });
+	}
+
+	function setCheckBox(week) {
+	    let weekHtml = '';
+	    for (const day of week) {
+	        weekHtml += `
+	            <div class="form-check-inline">
+	                <input class="form-check-input" type="checkbox" name="workinghour_dw" id="check_${day.common_cc}" value="${day.common_cc}">
+	                <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
+	            </div>
+	        `;
+	    }
+	    $('#div_week').html(weekHtml);
+	}
+	
 	function inputWork(data) {
 		workinghour_id.val(data['workinghour_id']);
 		workinghour_nm.val(data['workinghour_nm']);
@@ -66,13 +101,17 @@
 		workinghour_rm.val(data['workinghour_rm']);
 		setRadioValue('workinghour_us', data['workinghour_us']);
 		setRadioValue('workinghour_tt', data['workinghour_tt']);
-		const week = data['workinghour_dw'].split(',');
-		$('input[name="workinghour_dw"]').prop('checked', false);  // 모든 체크박스 초기화
-		week.forEach(day => {
-		    $(`input[name="workinghour_dw"][value="${day}"]`).prop('checked', true);
-		});
-		$('#check_all').prop('checked', $('input[name="workinghour_dw"]:not(#check_all)').length ==
-				                $('input[name="workinghour_dw"]:not(#check_all):checked').length);
+	    $('input[name="workinghour_dw"]').prop('checked', false);
+	    
+	    if (data['workinghour_dw']) {
+	        const week = data['workinghour_dw'].split(',');
+	        week.forEach(day => {
+	            $(`input[name="workinghour_dw"][value="${day}"]`).prop('checked', true);
+	        });
+	    }
+	    
+	    $('#check_all').prop('checked', $('input[name="workinghour_dw"]:not(#check_all)').length ==
+	                        $('input[name="workinghour_dw"]:not(#check_all):checked').length);
 	}
 
 	
@@ -127,24 +166,24 @@
 						return value == 'true' ? '사용' : value == 'false' ? '미사용' : '';
 					}
 				}, 
+				{header : '등록인원', name :'employee_cnt'}, 
 				{header : '비고', name : 'workinghour_rm', sortable : true}, 
 			]
+		});
+		
+		grid.on('click', function(ev) {
+			commute_grid_row = grid.getRow(ev.rowKey);
+		});
+		
+		grid.on('dblclick', function(ev) {
+			commute_grid_row = grid.getRow(ev.rowKey);
+			
+			modal_detail(commute_grid_row);
 		});
 	}
 	
 	function modal_detail(data) {
-	
-		let weekHtml = '';
-		for (const day of /*[[${WEEK}]]*/ []) {
-		    weekHtml += `
-		        <div class="form-check-inline">
-		            <input class="form-check-input" type="checkbox" name="workinghour_dw" 
-		                   id="check_${day.common_cc}" value="${day.common_cc}">
-		            <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
-		        </div>
-		    `;
-		}
-
+		let week = /*[[${WEEK}]]*/[];
 		let title = '근무 설정';
 
 		const div_modal = 'div_common_modal';
@@ -163,27 +202,25 @@
 							<div class="row mb-3">
 								<label for="workinghour_id" class="col-sm-2 col-form-label">근무코드</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="workinghour_id">
+									<input type="text" class="form-control" id="workinghour_id" disabled>
 								</div>
 								<label for="workinghour_nm" class="col-sm-2 col-form-label">항목명</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="workinghour_nm" >
+									<input type="text" class="form-control" id="workinghour_nm" disabled>
 								</div>
 							</div>
 							<div class="row mb-3">
-								<div class="col">
 									<legend class="col-form-label col-sm-2 pt-0">근무유형</legend>
-				                    <div class="form-check-inline">
-				                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt1" value="DAY" checked>
-				                      <label class="form-check-label" for="radio_tt1">일</label>
-				                    </div>
-				                    <div class="form-check-inline">
-				                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt2" value="HOUR">
-				                      <label class="form-check-label" for="radio_tt2">시간</label>
-				                    </div>
-								</div>
-							</div>
-							<div class="row mb-3">
+									<div class="col-sm-4">
+					                    <div class="form-check-inline">
+					                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt1" value="DAY" checked>
+					                      <label class="form-check-label" for="radio_tt1">일</label>
+					                    </div>
+					                    <div class="form-check-inline">
+					                      <input class="form-check-input" type="radio" name="workinghour_tt" id="radio_tt2" value="HOUR">
+					                      <label class="form-check-label" for="radio_tt2">시간</label>
+					                    </div>
+									</div>
 									<legend class="col-form-label col-sm-2">기준시간</legend>
 									<div class="col-sm-1 me-4">
 										<input type="text" id="workinghour_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="5" placeholder="00:00" style="width: 70px;"/>
@@ -194,15 +231,21 @@
 							</div>
 					        <div class="row mb-3">
 					            <div class="col">
-					                <legend class="col-form-label col-sm-2 pt-0">요일</legend>
+					                <legend class="col-form-label col-sm-2 pt-0">근로요일</legend>
 					                <div class="form-check-inline ms-1 me-0">
 					                    <input class="form-check-input" type="checkbox" name="workinghour_dw" 
 					                           id="check_all" value="ALL">
 					                    <label class="form-check-label" for="check_all">전체</label>
 					                </div>
 					                <span>| </span>
-					                ${weekHtml}
+					                <div id="div_week" class="d-inline ms-1"></div>
 					            </div>
+					        </div>
+					        <div class="row mb-3">
+					        <legend class="col-form-label col-sm-2 pt-0">주휴요일</legend>
+					        <div class="col-sm-2">
+					       		<select id="workinghour_hs" class="form-select"></select>
+					        </div>
 					        </div>
 					        <div class="row mb-3">
 								<label for="workinghour_rm" class="col-sm-2 col-form-label">비고</label>
@@ -210,16 +253,16 @@
 									<input type="text" class="form-control" id="workinghour_rm">
 								</div>
 								<div class="col">
-								<legend class="col-form-label col-sm-3">사용여부</legend>
-			                    <div class="form-check-inline">
-			                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us1" value="true">
-			                    	<label class="form-check-label" for="radio_tt1">사용</label>
-			                    </div>
-			                    <div class="form-check-inline">
-			                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us2" value="false">
-			                    	<label class="form-check-label" for="radio_tt2">미사용</label>
-			                    </div>
-							</div>
+									<legend class="col-form-label col-sm-3">사용여부</legend>
+				                    <div class="form-check-inline">
+				                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us1" value="true">
+				                    	<label class="form-check-label" for="radio_us1">사용</label>
+				                    </div>
+				                    <div class="form-check-inline">
+				                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us2" value="false">
+				                    	<label class="form-check-label" for="radio_us2">미사용</label>
+				                    </div>
+								</div>
 					        </div>
 						</div>
 						<div class="modal-footer">
@@ -235,16 +278,18 @@
 			
 			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
 		}
-		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		commute_modal = new bootstrap.Modal(modalElement);  // 모달 초기화
 		
 
 		
         modalElement.addEventListener('shown.bs.modal', function () {
+        	
         	workinghour_id = $('#workinghour_id');
         	workinghour_nm = $('#workinghour_nm');
         	workinghour_tt = $('input:radio[name=workinghour_tt]');
         	workinghour_wt = $('#workinghour_wt');
         	workinghour_lt = $('#workinghour_lt');
+        	workinghour_hs = $('#workinghour_hs');
         	workinghour_rm = $('#workinghour_rm');
         	workinghour_us = $('input:radio[name=workinghour_us]');
 			btn_workinghour_save = $('#btn_workinghour_save');
@@ -257,8 +302,9 @@
                                 $('input[name="workinghour_dw"]:not(#check_all):checked').length;
                 $('#check_all').prop('checked', allChecked);
             });
-            
             workinghour_detail(data['workinghour_id']);
+        	
+            
         });
 		
 		modalElement.addEventListener('hidden.bs.modal', function () {
@@ -268,27 +314,35 @@
 			modalElement.remove();
 		});
 		
-		modal.show();
+		commute_modal.show();
 		
 		
 		btn_workinghour_save.on('click', function() {
+			
 			let week = [];
 			$('input[name="workinghour_dw"]:not(#check_all):checked').each(function() {
 			    week.push($(this).val());
 			});
-			console.log(week);
+			if(week.includes(workinghour_hs.val())) {
+		        Swal.fire({
+		            icon: 'warning',
+		            title: '입력 오류',
+		            html: '주휴요일은 근로요일과 중복될 수 없습니다.'
+		        });
+		        return;
+			}
 			let data = {
 				workinghour_id: workinghour_id.val(),
 				workinghour_nm: workinghour_nm.val(),
 				workinghour_tt: workinghour_tt.val(),
 				workinghour_wt: workinghour_wt.val(),
 				workinghour_lt: workinghour_lt.val(),
+				workinghour_hs: workinghour_hs.val(),
 				workinghour_rm: workinghour_rm.val(),
 				workinghour_us: workinghour_us.val(),
 				week: week
 			}
 			let jsonData = JSON.stringify(data);
-			console.log(jsonData);
 			
 			$.ajax({
 				type: 'post',
@@ -310,13 +364,13 @@
 						title = '등록 실패';
 						msg = '등록에 실패했습니다.';
 					}
-						Swal.fire({
-						    icon: icon,
-						    title: title,
-						    html: msg
-						}).then(() => {
-						    modal.hide();
-						});
+					Swal.fire({
+					    icon: icon,
+					    title: title,
+					    html: msg
+					}).then(() => {
+					    commute_modal.hide();
+					});
 					
 				},
 				error : function(xhr, textStatus, errorThrown) {
@@ -336,6 +390,9 @@
 			},
 			success: function(data) {
 				if(data['result']) {
+					week = data['WEEK'];
+					setCheckBox(week);
+					createSelectBox(workinghour_hs, week);
 					inputWork(data['workinghour']);
 				} else {
 					Swal.fire({
@@ -343,7 +400,7 @@
 					    title: '조회실패',
 					    html: '조회에 실패했습니다.'
 					}).then(() => {
-					    modal.hide();
+						commute_modal.hide();
 					});
 				}
 			},
@@ -354,6 +411,234 @@
 	}
 
 	
+	function make_employee_modal(row) {
+		if(!row) {
+			Swal.fire({
+			    icon: 'warning',
+			    title: '근로항목 선택',
+			    html: '근로항목을 선택해주세요.'
+			})
+			return;
+		}
+		let title = `${row['workinghour_nm']} 설정`;
+		let btn_employee_delete, btn_employee_insert;
+		const div_modal = 'div_common_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+						    <div class="row justify-content-center">
+						        <div class="col-5">
+						            <div class="card">
+						                <div class="card-body">
+						                	<h5 class="card-title">미지정 사원</h5>
+						                    <div id="employee_grid" class="mt-4"></div>
+						                </div>
+						            </div>
+						        </div>
+						        <div class="col-auto d-flex flex-column align-items-center justify-content-center">
+						            <button id="btn_employee_delete" class="btn btn-outline-danger mb-3">
+						            	<i class="bx bxs-left-arrow align-middle"></i> 삭제
+						            </button>
+						            <button id="btn_employee_insert" class="btn btn-outline-primary">
+						            	추가 <i class="bx bxs-right-arrow align-middle"></i>
+						            </button>
+						        </div>
+						        <div class="col-5">
+						            <div class="card">
+						                <div class="card-body">
+						                	<h5 class="card-title">등록 사원</h5>
+						                    <div id="insert_grid" class="mt-4"></div>
+						                </div>
+						            </div>
+						        </div>
+						    </div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" id="btn_workinghour_save" class="btn btn-primary">등록</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			
+			modalElement = document.getElementById(div_modal);
+		}
+		employee_modal = new bootstrap.Modal(modalElement);
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	make_employee_grid();
+        	make_insert_grid();
+        	select_EMPLOYEE_WORKINGHOUR(row['workinghour_id']);
+            
+        	btn_employee_delete = $('#btn_employee_delete');
+        	btn_employee_insert = $('#btn_employee_insert');
+        	
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		employee_modal.show();
+		
+		btn_employee_insert.on('click', function() {
+		    const checkedRow = employee_grid.getCheckedRows();
+		    update_EMPLOYEE_WK(employee_grid, checkedRow, row['workinghour_id'], '미지정 사원');
+		});
+
+		// 삭제 버튼 이벤트
+		btn_employee_delete.on('click', function() {
+		    const checkedRow = insert_grid.getCheckedRows();
+		    update_EMPLOYEE_WK(insert_grid, checkedRow, row['workinghour_id'], '등록 사원');
+		});
+		
+		
+	}
+	
+	function make_employee_grid() {
+		employee_grid = new tui.Grid({
+			el : document.getElementById('employee_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : false,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 500,
+			columns : [
+				{header : '근로번호', name : 'workinghour_id', hidden : true},
+				{header : '사원번호', name : 'employee_cd', sortable : true},
+				{header : '사원명', name : 'employee_nm', sortable : true}, 
+				{header : '부서명', name : 'employee_dp', sortable : true}, 
+				{header : '직위명', name : 'employee_gd', sortable : true}, 
+			]
+		});
+		
+		employee_grid.on('click', function(ev) {
+	        let row = employee_grid.getRow(ev.rowKey);
+		    if(ev.columnName != '_checked' && ev.rowKey !== null) {
+	            employee_grid[row._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
+		    }
+		});
+		
+	}
+	
+	function make_insert_grid() {
+		insert_grid = new tui.Grid({
+			el : document.getElementById('insert_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : false,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 500,
+			columns : [
+				{header : '근로번호', name : 'workinghour_id', hidden : true},
+				{header : '사원번호', name : 'employee_cd', sortable : true},
+				{header : '사원명', name : 'employee_nm', sortable : true}, 
+				{header : '부서명', name : 'employee_dp', sortable : true}, 
+				{header : '직위명', name : 'employee_gd', sortable : true}, 
+			]
+		});
+		
+		insert_grid.on('click', function(ev) {
+			let row = insert_grid.getRow(ev.rowKey);
+			if(ev.columnName != '_checked' && ev.rowKey !== null) {
+				insert_grid[insert_grid.getRow(ev.rowKey)._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
+			}
+		});
+		
+	}
+
+	function select_EMPLOYEE_WORKINGHOUR(id) {
+		console.log(id);
+		$.ajax({
+			type: 'post',
+			url: '/select_EMPLOYEE_WORKINGHOUR',
+			data: {workinghour_id: id},
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				employee_grid.resetData(data['EMPLOYEE_LIST']);
+				insert_grid.resetData(data['CHK_LSIT']);
+				
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+	
+	function update_EMPLOYEE_WK(grid, checkedRow, workinghour_id, warningTitle) {
+		console.log(workinghour_id);
+	    if(checkedRow.length == 0) {
+	        Swal.fire({
+	            icon: 'warning',
+	            title: warningTitle,
+	            html: warningTitle + '을 선택해주세요.'
+	        });
+	        return;
+	    }
+	    
+	    let data = {
+	        workinghourList: checkedRow,
+	        workinghour_id: workinghour_id
+	    };
+	    
+	    $.ajax({
+	        type: 'post',
+	        url: '/update_EMPLOYEE_WK',
+	        contentType: 'application/json',
+	        data: JSON.stringify(data),
+	        beforeSend: function(xhr) {
+	            xhr.setRequestHeader(header, token);
+	        },
+	        success: function(data) {
+	            let icon = 'success';
+	            let title = '등록 성공';
+	            let msg = '등록에 성공했습니다.';
+	            
+	            if(data['result']) {
+	                employee_grid.resetData(data['EMPLOYEE_LIST']);
+	                insert_grid.resetData(data['CHK_LSIT']);
+	            } else {
+	                icon = 'error';
+	                title = '등록 실패';
+	                msg = '등록에 실패했습니다.';
+	            }
+	            
+	            Swal.fire({
+	                icon: icon,
+	                title: title,
+	                html: msg
+	            });
+	        },
+	        error: function(xhr, textStatus, errorThrown) {
+	            console.log('조회 실패');
+	        }
+	    });
+	}
 
 </script>
 </html>

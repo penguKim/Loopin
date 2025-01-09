@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommuteMapper">
+	<select id="select_WORKINGHOUR" resultType="Workinghour">
+		SELECT WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM,
+		    '( ' ||COUNT(EM.EMPLOYEE_CD) || ' / ' || 
+		    (SELECT COUNT(*) FROM EMPLOYEE WHERE EMPLOYEE_RD IS NULL) || ' )' EMPLOYEE_CNT
+		FROM WORKINGHOUR WH
+		LEFT JOIN EMPLOYEE EM ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
+		GROUP BY WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM
+	</select>
+
+	<!-- // 사원추가 모달 - 선택안된 직원 조회 -->
+	<select id="select_EMPLOYEE_WORKINGHOUR" resultType="Workinghour">
+		SELECT EM.EMPLOYEE_CD, EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP, CC2.COMMON_NM EMPLOYEE_GD, EM.WORKINGHOUR_ID
+		FROM EMPLOYEE EM
+		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
+		LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'DEPARTMENT' AND CC.COMMON_CC = EM.EMPLOYEE_DP
+		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
+	    WHERE EM.EMPLOYEE_RD IS NULL
+	    AND
+	    <choose>
+	        <when test="workinghour_id == null or workinghour_id == ''">
+	            EM.WORKINGHOUR_ID IS NULL
+	        </when>
+	        <otherwise>
+	            EM.WORKINGHOUR_ID = #{workinghour_id}
+	        </otherwise>
+	    </choose>
+	    ORDER BY EM.EMPLOYEE_NM
+	</select>
+	
+	<update id="update_EMPLOYEE_WK">
+		UPDATE EMPLOYEE SET 
+			WORKINGHOUR_ID = #{workinghour.workinghour_id, jdbcType=VARCHAR}
+		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
+	</update>
+
+</mapper>

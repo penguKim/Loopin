@@ -29,4 +29,9 @@ public class WorkinghourDTO {
 	private Timestamp workinghour_ud;
 	
 	private List<String> week;
+	private String employee_cd;
+	private String employee_nm;
+	private String employee_dp;
+	private String employee_gd;
+	private String employee_cnt;
 }
