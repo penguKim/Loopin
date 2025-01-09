@@ -29,4 +29,5 @@ public class PRCode {
 	
 	@Column(name="prcode_fl")
 	private String prcode_fl;
+
 }

@@ -44,6 +44,10 @@ public class MemberController {
 		log.info("get insert");
 		return "/insert";
 	}
+	@GetMapping("/CheckPR")
+	public String CheckPR() {
+		return "payroll/adminCheckPR";
+	}
 	
 	@PostMapping("/insert")
 	public String insertPro(MemberDTO memberDTO) {

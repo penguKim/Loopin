@@ -15,7 +15,10 @@
 			<div class="card">
 				<h5 class="card-title">급여 계산기</h5>
 				<div class="card-body">
-					<div id="grid"></div>
+					<div class="d-flex justify-content-between align-items-end">
+					<div id="grid"  style="flex-grow: 1;"></div>
+					<input type="button" id="btn_cal" class="btn btn-primary ml-3" value="계산하기">
+					</div>
 					<div id="grid_cal"></div>
 				</div>
 			</div>
@@ -25,8 +28,43 @@
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
 
-//////////////
-// 그리드 생성 //
+$('#btn_cal').on('click', function(){
+	
+	const griddata = grid.getData();
+	
+	console.log('그리드 데이터',griddata);
+
+	// Get CSRF token and header from the meta tags
+    const csrfToken = $('meta[name="_csrf"]').attr('content');
+    const csrfHeader = $('meta[name="_csrf_header"]').attr('content');
+	
+    const datas = {
+    		B : "B",
+			D : "D",
+			gridData: griddata
+    }
+    console.log('보낼 데이터',datas);
+	$.ajax({
+		url: "/calculate",
+		method: "POST",
+		contentType: "application/json",
+		data: JSON.stringify(datas),
+		beforeSend: function(xhr){
+			xhr.setRequestHeader(csrfHeader,csrfToken);
+		},
+		success: function(data){
+			console.log("가져온 데이터",data);
+		
+		},
+		error:function(xhr,status,error){
+			console.log("급여 계산 데이터 전송에 실패했습니다.",error);	
+		}
+	});
+});
+
+
+  //////////////
+ // 그리드 생성 //
 //////////////
 
 /* 계산그리드 */
@@ -36,14 +74,14 @@ const grid = new tui.Grid({
 	scrollX: true,
 	scrollY: true,
 	columns: [
-		{header: '기본급', name: 'bs', editor: 'text'},
-		{header: '연장시간', name: 'ot', editor: 'text'},
-		{header: '야근시간', name: 'nt', editor: 'text'},
-		{header: '주말근무시간', name: 'wt', editor: 'text'},
-		{header: '휴일근무시간', name: 'ht', editor: 'text'},
-		{header: '남은연차', name: 'aa', editor: 'text'},
+		{header: '기본급', name: 'BS', editor: 'text'},
+		{header: '연장시간', name: 'overworkingtime', editor: 'text'},
+		{header: '야근시간', name: 'nightworkingtime', editor: 'text'},
+		{header: '주말근무시간', name: 'weekendworkingtime', editor: 'text'},
+		{header: '휴일근무시간', name: 'holydayworkingtime', editor: 'text'},
+		{header: '남은연차', name: 'leastannual', editor: 'text'},
 	],
-	data:[{bs:'0',ot:'0',nt:'0',wt:'0',ht:'0',aa:'0',bn:'0',}],
+	data:[{BS:'0',overworkingtime:'0',nightworkingtime:'0',weekendworkingtime:'0',holydayworkingtime:'0',leastannual:'0'}],
 });
 
 /* 계산그리드 */

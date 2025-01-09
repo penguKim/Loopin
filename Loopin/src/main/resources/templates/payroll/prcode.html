@@ -69,10 +69,11 @@ $.ajax({
 
 				prcode_fl = prcode_fl.replace(/\(BS\/workingtime\)/g, '통상시급');
 				prcode_fl = prcode_fl.replace(/(통상시급\*8)/g, '통상일급');
+				prcode_fl = prcode_fl.replace(/overworkingtime/g, '연장근무시간');
 				prcode_fl = prcode_fl.replace(/nightworkingtime/g, '야간근무시간');
 				prcode_fl = prcode_fl.replace(/weekendworkingtime/g, '주말근무시간');
 				prcode_fl = prcode_fl.replace(/leastannual/g, '남은연차');
-				prcode_fl = prcode_fl.replace(/totalsalary-B_OT-B_NA-B_HA-B_AA/g, '소득금액');
+				prcode_fl = prcode_fl.replace(/BS+B_MT+B_OT+B_NA+B_WA+B_HA+B_AA+B_BN-B_OT-B_NA-B_HA-B_AA/g, '소득금액');
 				prcode_fl = prcode_fl.replace(/D_GG/g, '건강보험');
 				prcode_fl = prcode_fl.replace(/\(holydayworkingtime<=8\)\?\통상시급\*holydayworkingtime\*1\.5\:통상시급\*holydayworkingtime\*2/g,
 					'8시간 이내 : 통상시급 * 휴일근무시간 * 1.5,                                         8시간 초과 : 통상시급 * 휴일근무시간 * 2');
