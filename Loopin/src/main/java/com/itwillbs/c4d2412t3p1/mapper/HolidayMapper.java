@@ -23,4 +23,10 @@ public interface HolidayMapper {
 
     // 중복 확인
     int checkHolidayExists(@Param("HOLIDAY_DT") String HOLIDAY_DT);
+
+    // 휴일 데이터 삽입
+    void insert_company_HOLIDAY(Map<String, String> holiday);
+
+    // 휴일 데이터 수정
+    void update_company_HOLIDAY(Map<String, String> holiday);
 }

@@ -135,7 +135,9 @@
 			if(checkedRows.length > 0) {
 				delete_company_HOLIDAY(grid, checkedRows);				
 			}
-		    if (newRows.length => 0) {
+			
+		    if (newRows.length >= 0) {
+				alert("dd");
 		    	newRows.forEach(row => {
 		    		grid.removeRow(row.rowKey);
 		    	});
@@ -256,11 +258,13 @@
 		let title = '등록 성공';
 		let text = '등록하였습니다.';
 		
-		const jsonData = JSON.stringify(json);			
+		
+		const jsonData = JSON.stringify(json);
+			
 		$.ajax({
 			type: 'post',
 			url: '/insert_company_HOLIDAY',
-			data: jsonData,
+			data: jsonData, 
 			contentType: 'application/json',
 			beforeSend : function(xhr) {
 			    xhr.setRequestHeader(header, token);
@@ -284,55 +288,47 @@
 				});
 			},
 			error : function(xhr, textStatus, errorThrown) {
-				console.log('조회 실패');
+				console.log('조회 실패', xhr.responseText);
 			}
 		});
 	}
 
-	// 코드 삭제
 	function delete_company_HOLIDAY(grid, rows) {
-		let msg = '선택한 항목을 삭제하시겠습니까?';
-		
-		const json = {
-				deletedRows: rows,
-				code: group_code
-			}
-			
-		const jsonData = JSON.stringify(json);	
-		
-		Swal.fire({
-		   icon: 'warning',
-		   title: '선택 항목 삭제',
-		   html: msg,
-		   
-		   showCancelButton: true,
-		   confirmButtonColor: '#0d6efd',
-		   cancelButtonColor: '#6c757d',
-		   confirmButtonText: '승인',
-		   cancelButtonText: '취소',
-		   
-		   reverseButtons: true, // 버튼 순서 거꾸로
-		   
-		}).then(result => {
-			if (result.isConfirmed) { 
-				$.ajax({
-					type: 'post',
-					url: '/delete_company_HOLIDAY',
-					data: jsonData,
-					contentType: 'application/json',
+	    console.log(rows); // 디버깅
+	    const json = rows.map(row => ({ holiday_dt: row.holiday_dt }));
+	    console.log(json); // 전송 데이터 확인
+
+	    const jsonData = JSON.stringify(json);
+
+	    Swal.fire({
+	        icon: 'warning',
+	        title: '선택 항목 삭제',
+	        html: '선택한 항목을 삭제하시겠습니까?',
+	        showCancelButton: true,
+	        confirmButtonColor: '#0d6efd',
+	        cancelButtonColor: '#6c757d',
+	        confirmButtonText: '승인',
+	        cancelButtonText: '취소',
+	        reverseButtons: true,
+	    }).then(result => {
+	        if (result.isConfirmed) {
+	            $.ajax({
+	                type: 'post',
+	                url: '/delete_company_HOLIDAY',
 					beforeSend : function(xhr) {
 					    xhr.setRequestHeader(header, token);
 					},
-					success: function(data) {
-						let row = data.data.contents;
-						grid.resetData(row);
-					},
-					error : function(xhr, textStatus, errorThrown) {
-						console.log('조회 실패');
-					}
-				});
-			}
-		});
+	                data: jsonData,
+	                contentType: 'application/json',
+	                success: function (data) {
+	                    grid.resetData(data.data.contents);
+	                },
+	                error: function (xhr, textStatus, errorThrown) {
+	                    console.error('삭제 실패:', xhr.responseText);
+	                }
+	            });
+	        }
+	    });
 	}
 	
 	function make_grid(gridData) {
@@ -375,20 +371,23 @@
 						showClearBrn: true 
 					}
 				}, 
-				{header : '유급휴가 여부', name : 'holiday_aa', sortable : true, editor: 'text',
+				{header : '유급휴가 여부', name : 'holiday_aa', sortable : true, editor: 'text', align: 'center',
+					validation: {
+						required: true,
+					},
 					filter: {
 						type: 'text',
 						showApplyBtn: true,
 						showClearBrn: true
 					}
 				}, 
-				{header : '작성자', name : 'holiday_wr', sortable : true, editor: 'text',
+				/*{header : '작성자', name : 'holiday_wr', sortable : true, editor: 'text',
 					filter: {
 						type: 'text',
 						showApplyBtn: true,
 						showClearBrn: true 
 					}
-				}, 
+				},*/ 
 			]
 		});
 		grid.on('beforeChange', ev => {

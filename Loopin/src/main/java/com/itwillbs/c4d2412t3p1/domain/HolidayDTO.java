@@ -1,6 +1,5 @@
 package com.itwillbs.c4d2412t3p1.domain;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import lombok.Getter;

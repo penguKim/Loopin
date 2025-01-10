@@ -7,7 +7,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -73,54 +75,56 @@ public class AttendanceService {
         }
     }
 	
-//	@Transactional
-//	public Map<String, Object> insertHolidays(List<HolidayDTO> holidays) {
-//
-//	    List<Holiday> insertList = new ArrayList<>();
-//	    List<HolidayDTO> failedRows = new ArrayList<>();
-//
-//	    Timestamp time = new Timestamp(System.currentTimeMillis());
-//	    
-//	    holidays.forEach(data -> {
-//	        try {
-//	        	Holiday holiday = Holiday.builder()
-//	                    .holiday_dt(data.getHoliday_dt())
-//	                    .holiday_nm(data.getHoliday_nm())
-//	                    .holiday_wa("")
-//	                    .holiday_aa("N")
-//	                    .holiday_wr(data.getHoliday_wr())
-//	                    .holiday_wd(time)
-//	                    .holiday_mf("")
-//	                    .holiday_md("")
-//	                    .build();
-//	            insertList.add(holiday);
-//	        } catch (Exception e) {
-//	            failedRows.add(data);
-//	        }
-//	    });
-//
-//	    int insertCount = 0;
-//
-//	    try {
-//	    	insertCount = holidayRepository.saveAll(insertList).size();
-//	    } catch (Exception e) {
-//	        throw new RuntimeException("무언가 오류가 났어요!!!!!!!!!" + e.getMessage(), e);
-//	        
-//	    }
-//
-//	    
-//	    Map<String, Object> result = new HashMap<>();
-//	    result.put("insertCount", insertCount);
-//	    result.put("failedRows", failedRows);
-//
-//	    return result;
-//	}
+	public int delete_company_HOLIDAY(List<String> deletedRows) {
+		holidayRepository.deleteAllById(deletedRows); // 반환값 없음
+	    return deletedRows.size(); // 삭제 요청된 항목 수 반환
+	}
 	
+	public int insertCompanyHoliday(List<Map<String, String>> holidays) throws Exception {
+        // 현재 날짜와 시간을 포맷팅
+        Date now = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String dateString = dateFormat.format(now);
+        
+        String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 
-//
-//	public void delete_TRANSFER(List<Long> ids) {
-//		
-//		attendanceRepository.deleteAllById(ids);
-//
-//	}
+        int createdCount = 0;
+
+        for (Map<String, String> holiday : holidays) {
+            // 현재 시간 및 기본 값 추가
+            holiday.put("holiday_wd", dateString); // 입력 일시
+            holiday.put("holiday_wr", regUser); // 입력 일시
+
+            // 데이터 삽입 호출
+            try {
+                holidayMapper.insert_company_HOLIDAY(holiday);
+                createdCount++;
+            } catch (Exception e) {
+                log.info("휴일 데이터 삽입 실패: {}"+ holiday+ e);
+            }
+        }
+        return createdCount;
+    }
+
+    /**
+     * 휴일 수정 처리
+     *
+     * @param holidays 수정할 데이터 리스트
+     * @return 수정된 항목 수
+     * @throws Exception
+     */
+    public int updateCompanyHoliday(List<Map<String, String>> holidays) throws Exception {
+        int updatedCount = 0;
+
+        for (Map<String, String> holiday : holidays) {
+            try {
+                holidayMapper.update_company_HOLIDAY(holiday);
+                updatedCount++;
+            } catch (Exception e) {
+            	log.info("휴일 데이터 수정 실패: {}"+ holiday+ e);
+            }
+        }
+        return updatedCount;
+    }
+
 }

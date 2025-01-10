@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
 import com.itwillbs.c4d2412t3p1.domain.HolidayDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
@@ -44,26 +46,6 @@ public class AttendanceController {
 		log.info("조회 시도");
 		List<Attendance> attendances = attendanceService.findAll();
 		
-//		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
-//			Map<String, Object> row = new HashMap<>();
-//			
-//			
-//			row.put("annual_id", attendance.getAnnual_id());
-//			row.put("employee_cd", attendance.getEmployee_cd());
-//			row.put("annual_cc", attendance.getAnnual_cc());
-//			row.put("annual_yr", attendance.getAnnual_yr());
-//			row.put("annual_ua", attendance.getAnnual_ua());
-//			row.put("annual_ra", attendance.getAnnual_ra());
-//			row.put("annual_aa", attendance.getAnnual_aa());
-//			row.put("annual_ru", attendance.getAnnual_ru());
-//			row.put("annual_rd", attendance.getAnnual_rd());
-//			row.put("annual_uu", attendance.getAnnual_uu());
-//			row.put("annual_ud", attendance.getAnnual_ud());
-//			
-//			return row;
-//			
-//		}).collect(Collectors.toList());
-
 		return ResponseEntity.ok(attendances);
 	}
 	
@@ -128,18 +110,8 @@ public class AttendanceController {
 	    		row.put(entry.getKey().toLowerCase(), entry.getValue()); 
 	    	}
 
-//	    	row.put("annual_id", attendance.get("ANNUAL_ID"));
-//	    	row.put("employee_cd", attendance.get("EMPLOYEE_CD"));
-//	    	row.put("annual_cc", attendance.get("ANNUAL_CC"));
-//	    	row.put("annual_yr", attendance.get("ANNUAL_YR"));
-//	    	row.put("annual_ua", attendance.get("ANNUAL_UA"));
-//	    	row.put("annual_ra", attendance.get("ANNUAL_RA"));
-//	    	row.put("annual_aa", attendance.get("ANNUAL_AA"));
-//	    	row.put("employee_dp", attendance.get("EMPLOYEE_DP"));
-//	    	row.put("employee_hd", attendance.get("EMPLOYEE_HD"));
-	    	
 	    	return row;
-//	    	
+	    	
 	    }).collect(Collectors.toList());
 	    
 	    return ResponseEntity.ok(response);
@@ -206,36 +178,80 @@ public class AttendanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("데이터 저장 중 오류가 발생했습니다.");
         }
     }
-//
-//	@ResponseBody
-//	@PostMapping("/delete_company_HOLIDAY")
-//	public Map<String, Object> delete_group_code(@RequestBody HolidayDTO holidayDTO) {
-//		log.info(holidayDTO.toString());
-//		List<HolidayDTO> deletedRows = holidayDTO.getDeletedRows();
-//		String code = holidayDTO.getCode();
-//		int deleteCount = 0;
-//		
-//		if(deletedRows.size() > 0) {
-//	        deleteCount = attendanceService.delete_company_HOLIDAY(deletedRows, code);
-//		}
-//		
-//		Map<String, Object> response = new HashMap<>();
-//		if(deleteCount <= 0) {
-//			response.put("result", false);			
-//		} else {
-//			List<HolidayDTO> codeList = attendanceService.select_HOLIDAY(code);
-//			response.put("result", true);			
-//			Map<String, Object> data = new HashMap<>();
-//			data.put("contents", codeList);
-//			response.put("data", data);
-//		}
-//		
-//	    response.put("result", deleteCount <= 0);
-//		List<HolidayDTO> codeList = attendanceService.select_HOLIDAY(code);
-//		Map<String, Object> data = new HashMap<>();
-//		data.put("contents", codeList);
-//		response.put("data", data);
-//		
-//		return response;
-//	}
+	
+	@ResponseBody
+	@PostMapping("/insert_company_HOLIDAY")
+	public Map<String, Object> insert_company_HOLIDAY(@RequestBody Map<String, Object> requestData) {
+	    // "createdRows"와 "updatedRows" 추출
+	    List<Map<String, String>> createdRows = (List<Map<String, String>>) requestData.get("createdRows");
+	    List<Map<String, String>> updatedRows = (List<Map<String, String>>) requestData.get("updatedRows");
+	    
+	    // 디버깅 로그
+	    log.info("생성 항목: {}"+ createdRows);
+	    log.info("수정 항목: {}"+ updatedRows);
+
+	    int createdCount = 0;
+	    int updatedCount = 0;
+
+	    // 생성 및 수정 처리
+	    try {
+	        if (createdRows != null && !createdRows.isEmpty()) {
+	            createdCount = attendanceService.insertCompanyHoliday(createdRows);
+	        }
+
+	        if (updatedRows != null && !updatedRows.isEmpty()) {
+	            updatedCount = attendanceService.updateCompanyHoliday(updatedRows);
+	        }
+	    } catch (Exception e) {
+	        log.info("휴일 데이터 처리 실패: {}"+ e.getMessage());
+	        Map<String, Object> response = new HashMap<>();
+	        response.put("result", false);
+	        response.put("error", "데이터 처리 중 오류 발생");
+	        return response;
+	    }
+
+	    // 결과 응답 생성
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("result", createdCount > 0 || updatedCount > 0);
+
+	    if (createdCount > 0 || updatedCount > 0) {
+	        List<Holiday> codeList = attendanceService.select_HOLIDAY();
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("contents", codeList);
+	        response.put("data", data);
+	    }
+
+	    return response;
+	}
+
+	@ResponseBody
+	@PostMapping("/delete_company_HOLIDAY")
+	public Map<String, Object> delete_company_HOLIDAY(@RequestBody List<Map<String, Object>> requestData) {
+	    log.info("요청 데이터: {}" + requestData);
+
+	    // requestData에서 "holiday_dt" 값 추출
+	    List<String> deletedRows = requestData.stream()
+	            .map(row -> (String) row.get("holiday_dt")) // 각 Map에서 "holiday_dt" 값 추출
+	            .collect(Collectors.toList());
+	    log.info("삭제 대상: {}"+ deletedRows);
+
+	    int deleteCount = 0;
+
+	    if (deletedRows != null && !deletedRows.isEmpty()) {
+	        deleteCount = attendanceService.delete_company_HOLIDAY(deletedRows);
+	        log.info("삭제 대상: {}"+ deleteCount);
+	    }
+
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("result", deleteCount);
+
+	    if (deleteCount > 0) {
+	        List<Holiday> codeList = attendanceService.select_HOLIDAY();
+	        Map<String, Object> data = new HashMap<>();
+	        data.put("contents", codeList);
+	        response.put("data", data);
+	    }
+
+	    return response;
+	}
 }
