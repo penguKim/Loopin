@@ -127,7 +127,7 @@ public class EmployeeService {
 	    }
 
 	    // 엔티티 업데이트
-	    employee.setEmployeeEntity(employee, employeeDTO);
+	    employee.setEmployeeEntity(employee, employeeDTO, passwordEncoder);
 
 	    // 데이터베이스 저장
 	    EmployeeRepository.save(employee);
@@ -220,6 +220,17 @@ public class EmployeeService {
 	    return result;
 	}
 
+	// 직원코드 데이터 찾기
+	public List<Employee> findByEmployeeCd(String currentCd) {
+		return EmployeeRepository.findByEmployeeCd(currentCd);
+	}
+
+//	// 아이디 중복체크
+//	public boolean isEmployeeIdExists(String employeeId) {
+//	    int count = EmployeeRepository.countByEmployeeId(employeeId);  // count 가져오기
+//	    System.out.println("아이디 존재 여부 확인 결과: " + count);  // count 값 로그 출력
+//	    return count > 0;  // 존재하면 true, 없으면 false
+//	}
 
 
 

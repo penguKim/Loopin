@@ -17,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
@@ -94,24 +95,15 @@ public class EmployeeController {
     }
 	
     
-//    public String savePhoto(MultipartFile photo) throws IOException {
-//        if (photo.isEmpty()) {
-//            return null;
-//        }
-//
-//        String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
-//        Path filePath = Paths.get(uploadDir).resolve(fileName);
-//        Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-//
-//        return fileName;
-//    }
-
-    
     
     // 인사카드 페이지로 이동
 	@GetMapping("/employee_list")
 	public String employee_list(Model model) {
 
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		String role = employeeDetails.getEmployee_rl();
+		
 		// 부서코드 가져오기 
 		model.addAttribute("dept_list", employeeService.selectDeptList("DEPARTMENT"));
 
@@ -126,42 +118,59 @@ public class EmployeeController {
 	@GetMapping("/select_EMPLOYEE")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
-	    List<Employee> employees = employeeService.findAll(); // 모든 직원 정보를 가져옵니다.
+		
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
+	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
+	    
+	    List<Employee> employees;
+
+	    // 관리자일 경우 모든 직원 정보 조회
+	    if (currentRole.contains("admin") || currentRole.contains("developer")) {
+	        employees = employeeService.findAll(); // 모든 직원 정보 조회
+	    } else {
+	        // 일반 사용자일 경우 본인 정보만 조회
+	        employees = employeeService.findByEmployeeCd(currentCd); // 본인 정보 조회
+	    }
+
+	    // 공통 응답 생성
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
-		        row.put("employee_cd", employee.getEmployee_cd());
-		        row.put("employee_id", employee.getEmployee_id());
-		        row.put("employee_pw", employee.getEmployee_pw());
-		        row.put("employee_dp", employee.getEmployee_dp());
-		        row.put("employee_gd", employee.getEmployee_gd());
-		        row.put("employee_hd", employee.getEmployee_hd());
-		        row.put("employee_rd", employee.getEmployee_rd());
-		        row.put("employee_rr", employee.getEmployee_rr());
-		        row.put("employee_cg", employee.getEmployee_cg());
-		        row.put("employee_nt", employee.getEmployee_nt());
-		        row.put("employee_nm", employee.getEmployee_nm());
-		        row.put("employee_bd", employee.getEmployee_bd());
-		        row.put("employee_ad", employee.getEmployee_ad());
-		        row.put("employee_sb", employee.getEmployee_sb());
-		        row.put("employee_ph", employee.getEmployee_ph());
-		        row.put("employee_em", employee.getEmployee_em());
-		        row.put("employee_pi", employee.getEmployee_pi());
-		        row.put("employee_bs", employee.getEmployee_bs());
-		        row.put("employee_bk", employee.getEmployee_bk());
-		        row.put("employee_an", employee.getEmployee_an());
-		        row.put("employee_dt", employee.getEmployee_dt());
-		        row.put("employee_wr", employee.getEmployee_wr());
-		        row.put("employee_wd", employee.getEmployee_wd());
-		        row.put("employee_mf", employee.getEmployee_mf());
-		        row.put("employee_md", employee.getEmployee_md());
-		        row.put("employee_mg", employee.getEmployee_mg());
-		        row.put("employee_rl", employee.getEmployee_rl());
+	        row.put("employee_cd", employee.getEmployee_cd());
+	        row.put("employee_id", employee.getEmployee_id());
+	        row.put("employee_pw", employee.getEmployee_pw());
+	        row.put("employee_dp", employee.getEmployee_dp());
+	        row.put("employee_gd", employee.getEmployee_gd());
+	        row.put("employee_hd", employee.getEmployee_hd());
+	        row.put("employee_rd", employee.getEmployee_rd());
+	        row.put("employee_rr", employee.getEmployee_rr());
+	        row.put("employee_cg", employee.getEmployee_cg());
+	        row.put("employee_nt", employee.getEmployee_nt());
+	        row.put("employee_nm", employee.getEmployee_nm());
+	        row.put("employee_bd", employee.getEmployee_bd());
+	        row.put("employee_ad", employee.getEmployee_ad());
+	        row.put("employee_sb", employee.getEmployee_sb());
+	        row.put("employee_ph", employee.getEmployee_ph());
+	        row.put("employee_em", employee.getEmployee_em());
+	        row.put("employee_pi", employee.getEmployee_pi());
+	        row.put("employee_bs", employee.getEmployee_bs());
+	        row.put("employee_bk", employee.getEmployee_bk());
+	        row.put("employee_an", employee.getEmployee_an());
+	        row.put("employee_dt", employee.getEmployee_dt());
+	        row.put("employee_wr", employee.getEmployee_wr());
+	        row.put("employee_wd", employee.getEmployee_wd());
+	        row.put("employee_mf", employee.getEmployee_mf());
+	        row.put("employee_md", employee.getEmployee_md());
+	        row.put("employee_mg", employee.getEmployee_mg());
+	        row.put("employee_rl", employee.getEmployee_rl());
 	        return row;
 	    }).collect(Collectors.toList());
 
 	    return ResponseEntity.ok(response);
 	}
+
 
 	@PostMapping("/insert_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> insert_EMPLOYEE(
@@ -413,7 +422,4 @@ public class EmployeeController {
         return ResponseEntity.ok(response);
     }
 
-
-	
-	
 }
