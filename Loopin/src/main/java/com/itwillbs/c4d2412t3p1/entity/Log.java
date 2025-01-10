@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-@Entity
+@Entity(name = "LOG")
 @Table(name = "LOG")
 @Getter
 @Setter

@@ -24,29 +24,28 @@ public class LogConverter {
 	private static final Logger logger = LoggerFactory.getLogger(LogAspect.class);
 
     // Log → LogDTO 변환
-    public LogDTO setLogDTO(Log log) {
-        LogDTO logDTO = new LogDTO();
-        logDTO.setLog_cd(log.getLog_cd());
-        logDTO.setLog_sj(log.getLog_sj());
-        logDTO.setLog_ju(log.getLog_ju());
-        logDTO.setLog_od(log.getLog_od());
-        logDTO.setLog_oi(log.getLog_oi());
-        logDTO.setLog_bj(log.getLog_bj());
-        logDTO.setEmployee_id(log.getEmployee() != null ? log.getEmployee().getEmployee_id() : null);
+	public LogDTO setLogDTO(Log log, boolean includeLogJd) {
+	    LogDTO logDTO = new LogDTO();
+	    logDTO.setLog_cd(log.getLog_cd());
+	    logDTO.setLog_sj(log.getLog_sj());
+	    logDTO.setLog_ju(log.getLog_ju());
+	    logDTO.setLog_od(log.getLog_od());
+	    logDTO.setLog_oi(log.getLog_oi());
+	    logDTO.setLog_bj(log.getLog_bj());
+	    logDTO.setEmployee_id(log.getEmployee() != null ? log.getEmployee().getEmployee_id() : null);
 
-        // JSON → Map 변환
-        if (log.getLog_jd() != null) {
-            try {
-                Map<String, Object> jsonMap = objectMapper.readValue(log.getLog_jd(), Map.class);
-                logDTO.setLog_jdMap(jsonMap);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("log_jd JSON parsing 중 오류: " + e.getMessage(), e);
-            }
-        }
+	    // log_jd 처리 (필터 로그 조회에서는 제외)
+	    if (includeLogJd && log.getLog_jd() != null) {
+	        try {
+	            Map<String, Object> jsonMap = objectMapper.readValue(log.getLog_jd(), Map.class);
+	            logDTO.setLog_jdMap(jsonMap);
+	        } catch (JsonProcessingException e) {
+	            throw new RuntimeException("log_jd JSON parsing 중 오류: " + e.getMessage(), e);
+	        }
+	    }
 
-        return logDTO;
-    }
-
+	    return logDTO;
+	}
     // LogDTO → Log 변환
     public Log toEntity(LogDTO logDTO) {
         Log log = new Log();
