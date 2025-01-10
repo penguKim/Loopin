@@ -50,284 +50,234 @@
 </body>
 
 <script th:inline="javascript">
-	$(document).ready(function () {
-	    // CSRF 토큰 및 헤더 설정
-	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+$(document).ready(function () {
+    // CSRF 토큰 및 헤더 설정
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-	    const today = new Date();
-	    const oneMonthAgo = new Date();
-	    oneMonthAgo.setMonth(today.getMonth() - 1); // 1달 전 날짜 계산
+    const today = new Date();
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setMonth(today.getMonth() - 1); // 1달 전 날짜 계산
 
-	    const rangePicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
-	            date: oneMonthAgo, // 1달 전 날짜로 초기화
-	            input: '#start_dt',
-	            container: '#startpicker-container',
-	        },
-	        endpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#end_dt',
-	            container: '#endpicker-container',
-	            disabled: false, // 종료일 활성화
-	        },
-	        format: 'yyyy-MM-dd',
-	        timePicker: false
-	    });
+    // 범위 선택기 초기화
+    const rangePicker = tui.DatePicker.createRangePicker({
+        startpicker: {
+            date: oneMonthAgo, // 1달 전 날짜로 초기화
+            input: '#start_dt',
+            container: '#startpicker-container',
+        },
+        endpicker: {
+            date: today, // 오늘 날짜로 초기화
+            input: '#end_dt',
+            container: '#endpicker-container',
+            disabled: false, // 종료일 활성화
+        },
+        format: 'yyyy-MM-dd',
+        timePicker: false
+    });
 
-	    // 시작일 변경 시 종료일 활성화 및 최소 날짜 설정
-	    rangePicker.on('change:start', function (event) {
-	        if (event && event.date) {
-	            const minEndDate = new Date(event.date);
-	            minEndDate.setDate(minEndDate.getDate() + 1); // 종료일은 시작일 다음 날부터 설정
+    // 시작일 변경 시 종료일 활성화 및 최소 날짜 설정
+    rangePicker.on('change:start', function (event) {
+        if (event && event.date) {
+            const minEndDate = new Date(event.date);
+            minEndDate.setDate(minEndDate.getDate() + 1); // 종료일은 시작일 다음 날부터 설정
 
-	            rangePicker.setEndDate(minEndDate);
-	            rangePicker.enableEndPicker();
-	        }
-	    });
+            rangePicker.setEndDate(minEndDate);
+            rangePicker.enableEndPicker();
+        }
+    });
 
-	    // 조회 버튼 클릭 이벤트
-	    $('#search-btn').on('click', function () {
-	        const startDt = $('#start_dt').val();
-	        const endDt = $('#end_dt').val();
+    // 페이지 로드 시 기본 차트 데이터 로드
+    const initialStartDt = $('#start_dt').val();
+    const initialEndDt = $('#end_dt').val();
+    fetchDataAndRenderCharts(initialStartDt, initialEndDt);
 
-	        if (!startDt || !endDt) {
-	            alert('시작일과 종료일을 입력해주세요.');
-	            return;
-	        }
+    // 조회 버튼 클릭 이벤트
+    $('#search-btn').on('click', function () {
+        const startDt = $('#start_dt').val();
+        const endDt = $('#end_dt').val();
 
-	        // 성별 관련 데이터 AJAX를 사용하여 데이터 가져오기
-	        $.ajax({
-	            url: '/select_GENDER',
-	            method: 'GET',
-	            headers: {
-	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-	            },
-	            data: {
-	                start_dt: startDt,
-	                end_dt: endDt
-	            },
-	            success: function (response) {
-	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-	                const data = {
-	                    series: response.series
-	                };
+        if (!startDt || !endDt) {
+            alert('시작일과 종료일을 입력해주세요.');
+            return;
+        }
 
-	                // 차트 옵션 설정
-	                const options = {
-	                    chart: {
-	                        title: '남녀 성비 현황',
-	                        width: 600,
-	                        height: 400
-	                    },
-	                };
+        // 성별 관련 데이터 AJAX를 사용하여 데이터 가져오기
+        fetchDataAndRenderCharts(startDt, endDt);
+    });
 
-	                // 기존 차트 제거
-	                $('#chart-gender').empty();
+    // 데이터 가져오고 차트 렌더링 함수
+    function fetchDataAndRenderCharts(startDt, endDt) {
+        // 성별 관련 데이터 AJAX
+        $.ajax({
+            url: '/select_GENDER',
+            method: 'GET',
+            headers: {
+                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+            },
+            data: {
+                start_dt: startDt,
+                end_dt: endDt
+            },
+            success: function (response) {
+                renderGenderChart(response);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+                alert('성별 데이터 조회 중 오류가 발생했습니다.');
+            }
+        });
 
-	                // 차트 렌더링
-	                const el = document.getElementById('chart-gender');
-	                toastui.Chart.pieChart({ el, data, options });
-	            },
-	            error: function (xhr, status, error) {
-	                console.error('Error fetching data:', error);
-	                alert('데이터 조회 중 오류가 발생했습니다.');
-	            }
-	        });
-			
-			
-			
-			// 부서 관련 데이터 AJAX를 사용하여 데이터 가져오기
-	        $.ajax({
-	            url: '/select_DEPT',
-	            method: 'GET',
-	            headers: {
-	                [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-	            },
-	            data: {
-	                start_dt: startDt,
-	                end_dt: endDt
-	            },
-	            success: function (response) {
-	                // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-	                const data = {
-	                    series: response.series
-	                };
+        // 부서 관련 데이터 AJAX
+        $.ajax({
+            url: '/select_DEPT',
+            method: 'GET',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            data: {
+                start_dt: startDt,
+                end_dt: endDt
+            },
+            success: function (response) {
+                renderDeptChart(response);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+                alert('부서 데이터 조회 중 오류가 발생했습니다.');
+            }
+        });
 
-	                // 차트 옵션 설정
-	                const options = {
-	                    chart: {
-	                        title: '부서별 인원 현황',
-	                        width: 600,
-	                        height: 400
-	                    },
-	                };
+        // 직위 관련 데이터 AJAX
+        $.ajax({
+            url: '/select_POSI',
+            method: 'GET',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            data: {
+                start_dt: startDt,
+                end_dt: endDt
+            },
+            success: function (response) {
+                renderPosiChart(response);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+                alert('직위 데이터 조회 중 오류가 발생했습니다.');
+            }
+        });
 
-	                // 기존 차트 제거
-	                $('#chart-dept').empty();
+        // 입퇴사자 관련 데이터 AJAX
+        $.ajax({
+            url: '/select_HDRD',
+            method: 'GET',
+            headers: {
+                [csrfHeader]: csrfToken
+            },
+            data: {
+                start_dt: startDt,
+                end_dt: endDt
+            },
+            success: function (response) {
+                renderHdrdChart(response);
+            },
+            error: function (xhr, status, error) {
+                console.error('Error fetching data:', error);
+                alert('입퇴사자 데이터 조회 중 오류가 발생했습니다.');
+            }
+        });
+    }
 
-	                // 차트 렌더링
-	                const el = document.getElementById('chart-dept');
-	                toastui.Chart.pieChart({ el, data, options });
-	            },
-	            error: function (xhr, status, error) {
-	                console.error('Error fetching data:', error);
-	                alert('데이터 조회 중 오류가 발생했습니다.');
-	            }
-	        });
-			
-			// 직위 관련 데이터 AJAX를 사용하여 데이터 가져오기
-			$.ajax({
-			    url: '/select_POSI', // 실제 요청할 URL
-			    method: 'GET',
-			    headers: {
-			        [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-			    },
-			    data: {
-			        start_dt: startDt,
-			        end_dt: endDt
-			    },
-			    success: function (response) {
-			        // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-			        const data = {
-			            categories: response.categories,  // 카테고리 (예: 직위)
-			            series: [{
-			                name: '인원 수',
-			                data: response.data  // 직위별 인원 수
-			            }]
-			        };
+    // 성별 차트 렌더링
+    function renderGenderChart(response) {
+        const data = { series: response.series };
+        const options = {
+            chart: {
+                title: '남녀 성비 현황',
+                width: 600,
+                height: 400
+            },
+        };
+        $('#chart-gender').empty();
+        const el = document.getElementById('chart-gender');
+        toastui.Chart.pieChart({ el, data, options });
+    }
 
-			        // 색상 배열을 각 카테고리의 데이터 개수에 맞게 설정
-			        const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#F1C40F'];
+    // 부서 차트 렌더링
+    function renderDeptChart(response) {
+        const data = { series: response.series };
+        const options = {
+            chart: {
+                title: '부서별 인원 현황',
+                width: 600,
+                height: 400
+            },
+        };
+        $('#chart-dept').empty();
+        const el = document.getElementById('chart-dept');
+        toastui.Chart.pieChart({ el, data, options });
+    }
 
-			        // 차트 옵션 설정
-			        const options = {
-			            chart: {
-			                title: '직위별 인원 현황',
-			                width: 600,
-			                height: 400
-			            },
-			            xAxis: {
-			                title: '직위'
-			            },
-			            yAxis: {
-			                title: '인원 수'
-			            },
-			            series: {
-			                showLabel: true, // 값 레이블 표시 여부
-			                colors: colors.slice(0, response.data.length)  // 색상 배열을 데이터 수에 맞게 자르기
-			            }
-			        };
+    // 직위 차트 렌더링
+    function renderPosiChart(response) {
+        const data = {
+            categories: response.categories,
+            series: [{ name: '인원 수', data: response.data }]
+        };
+        const options = {
+            chart: {
+                title: '직위별 인원 현황',
+                width: 600,
+                height: 400
+            },
+            xAxis: { title: '직위' },
+            yAxis: { title: '인원 수' },
+            series: { showLabel: true }
+        };
+        $('#chart-posi').empty();
+        const el = document.getElementById('chart-posi');
+        toastui.Chart.columnChart({ el, data, options });
+    }
 
-			        // 기존 차트 제거
-			        $('#chart-posi').empty();
+    // 입퇴사자 차트 렌더링
+    function renderHdrdChart(response) {
+        const categories = response.categories;
+        const hireData = response.series.find(s => s.name === '입사자')?.data || [];
+        const retireData = response.series.find(s => s.name === '퇴사자')?.data || [];
 
-			        // 차트 렌더링 (컬럼 차트 사용)
-			        const el = document.getElementById('chart-posi');
-			        toastui.Chart.columnChart({ el, data, options });
-			    },
-			    error: function (xhr, status, error) {
-			        console.error('Error fetching data:', error);
-			        alert('데이터 조회 중 오류가 발생했습니다.');
-			    }
-			});
+        const hireDataPadded = hireData.length < categories.length ?
+            [...hireData, ...new Array(categories.length - hireData.length).fill(0)] : hireData;
+        const retireDataPadded = retireData.length < categories.length ?
+            [...retireData, ...new Array(categories.length - retireData.length).fill(0)] : retireData;
 
-			// 입퇴사자 관련 데이터 AJAX를 사용하여 데이터 가져오기
-			$.ajax({
-			    url: '/select_HDRD',
-			    method: 'GET',
-			    headers: {
-			        [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
-			    },
-			    data: {
-			        start_dt: startDt,
-			        end_dt: endDt
-			    },
-			    success: function (response) {
-			        console.log(response); // 응답 데이터 확인
-			        if (response.categories && response.series) {
-			            const categories = response.categories;
-			            const hireData = response.series.find(s => s.name === '입사자')?.data || [];
-			            const retireData = response.series.find(s => s.name === '퇴사자')?.data || [];
+        const data = {
+            categories: categories,
+            series: [
+                { name: '입사자', data: hireDataPadded },
+                { name: '퇴사자', data: retireDataPadded }
+            ]
+        };
 
-			            // 입사자, 퇴사자 데이터 길이를 카테고리와 맞추기
-			            const hireDataPadded = hireData.length < categories.length ? 
-			                [...hireData, ...new Array(categories.length - hireData.length).fill(0)] : hireData;
-			            const retireDataPadded = retireData.length < categories.length ? 
-			                [...retireData, ...new Array(categories.length - retireData.length).fill(0)] : retireData;
+        const options = {
+            chart: {
+                title: '입퇴사자 인원 현황',
+                width: 600,
+                height: 400
+            },
+            xAxis: { title: '기간', categories: categories },
+            yAxis: { title: '인원 수', min: 0 },
+            series: { showLabel: true },
+            theme: { series: { colors: ['#33A1FF', '#FF5733'] } },
+            legend: { align: 'bottom' }
+        };
 
-			            // 서버에서 반환된 데이터를 Toast UI Chart 형식으로 변환
-			            const data = {
-			                categories: categories,
-			                series: [
-			                    {
-			                        name: '입사자',
-			                        data: hireDataPadded // 각 기간의 입사자 수
-			                    },
-			                    {
-			                        name: '퇴사자',
-			                        data: retireDataPadded // 각 기간의 퇴사자 수
-			                    }
-			                ]
-			            };
+        $('#chart-hdrd').empty();
+        const el = document.getElementById('chart-hdrd');
+        toastui.Chart.columnChart({ el, data, options });
+    }
+});
 
-			            // 차트 옵션 설정
-			            const options = {
-			                chart: {
-			                    title: '입퇴사자 인원 현황',
-			                    width: 600,
-			                    height: 400
-			                },
-			                xAxis: {
-			                    title: '기간',
-			                    categories: categories // X축 레이블
-			                },
-			                yAxis: {
-			                    title: '인원 수',
-			                    min: 0 // Y축 최소값
-			                },
-			                series: {
-			                    showLabel: true // 막대 위에 값 표시
-			                },
-			                theme: {
-			                    series: {
-			                        colors: ['#33A1FF', '#FF5733'] // 입사자: 파랑, 퇴사자: 빨강
-			                    }
-			                },
-			                legend: {
-			                    align: 'bottom' // 범례를 차트 아래쪽에 배치
-			                }
-			            };
-
-			            // 기존 차트 제거
-			            $('#chart-hdrd').empty();
-
-			            // 차트 렌더링 (컬럼 차트 사용)
-			            const el = document.getElementById('chart-hdrd');
-			            if (el) {
-			                toastui.Chart.columnChart({ el, data, options });
-			            } else {
-			                console.error('차트를 렌더링할 DOM 요소가 없습니다.');
-			                alert('차트를 렌더링할 DOM 요소를 찾을 수 없습니다.');
-			            }
-			        } else {
-			            console.error('입사자나 퇴사자 데이터가 없습니다.');
-			            alert('데이터가 부족하거나 형식이 잘못되었습니다.');
-			        }
-			    },
-			    error: function (xhr, status, error) {
-			        console.error('Error fetching data:', error);
-			        alert('데이터 조회 중 오류가 발생했습니다.');
-			    }
-			});
-
-
-
-
-
-			
-	    });
-	});
 
 </script>
 
