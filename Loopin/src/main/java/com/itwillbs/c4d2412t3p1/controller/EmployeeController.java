@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
@@ -304,7 +305,8 @@ public class EmployeeController {
 	 
 	// 인사현황 차트
 	@GetMapping("/employee_chart")
-	public String employee_chart() {
+	public String employee_chart(Model model) {
+		
 		return "/employee/employee_chart";
 	}
 	

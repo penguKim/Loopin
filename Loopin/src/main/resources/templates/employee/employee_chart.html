@@ -56,19 +56,20 @@
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
 	    const today = new Date();
+	    const oneMonthAgo = new Date();
+	    oneMonthAgo.setMonth(today.getMonth() - 1); // 1달 전 날짜 계산
 
-	    // 데이트 피커 초기화
 	    const rangePicker = tui.DatePicker.createRangePicker({
 	        startpicker: {
-	            date: today, // 오늘 날짜로 초기화
+	            date: oneMonthAgo, // 1달 전 날짜로 초기화
 	            input: '#start_dt',
 	            container: '#startpicker-container',
 	        },
 	        endpicker: {
-	            date: null, // 종료일 초기값 없음
+	            date: today, // 오늘 날짜로 초기화
 	            input: '#end_dt',
 	            container: '#endpicker-container',
-	            disabled: true, // 종료일 기본 비활성화
+	            disabled: false, // 종료일 활성화
 	        },
 	        format: 'yyyy-MM-dd',
 	        timePicker: false
@@ -273,7 +274,7 @@
 			            // 차트 옵션 설정
 			            const options = {
 			                chart: {
-			                    title: '직위별 인원 현황',
+			                    title: '입퇴사자 인원 현황',
 			                    width: 600,
 			                    height: 400
 			                },
