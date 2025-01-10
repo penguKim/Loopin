@@ -822,7 +822,7 @@
 		const selectedRow = $(this).closest('tr');
 
 		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const departmentName  = selectedRow.find('td').eq(0).text(); // 부서코드
+		const departmentName  = selectedRow.find('td').eq(0).text().trim(); // 부서코드
 
 		// 기존 모달의 필드에 값 설정
 		$('#employee_dp').val(departmentName);
@@ -838,7 +838,7 @@
 		const selectedRow = $(this).closest('tr');
 
 		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const gradeName = selectedRow.find('td').eq(0).text(); // 직위코드
+		const gradeName = selectedRow.find('td').eq(0).text().trim(); // 직위코드
 
 		// 기존 모달의 필드에 값 설정
 		$('#employee_gd').val(gradeName);

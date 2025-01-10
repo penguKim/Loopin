@@ -32,24 +32,34 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
 	  @Param("endDt") String endDt);
 
 	// 부서별 인원 조회
-	@Query(value = "SELECT employee_dp AS name, COUNT(*) AS data " +
-			"FROM employee " +
-			"WHERE employee_hd BETWEEN :startDt AND :endDt " +
-			"AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
-			"GROUP BY employee_dp", nativeQuery = true)
+	@Query(value = "SELECT COUNT(*) AS data, " +
+            "COALESCE(pos.COMMON_NM, '직급 없음') AS name " +
+            "FROM employee e1_0 " +
+            "LEFT JOIN (SELECT COMMON_CC, COMMON_NM " +
+                      "FROM COMMON_CODE " +
+                      "WHERE COMMON_GC = 'DEPARTMENT') pos " +
+            "ON e1_0.employee_dp = pos.COMMON_CC " +
+            "WHERE e1_0.employee_hd BETWEEN :startDt AND :endDt " +
+            "AND (e1_0.employee_rd IS NULL OR e1_0.employee_rd >= :startDt) " +
+            "GROUP BY e1_0.employee_dp, pos.COMMON_NM", nativeQuery = true)
 	List<Map<String, Object>> getEmployeeDeptStatsByDate(
 			@Param("startDt") String startDt, 
 			@Param("endDt") String endDt);
 
 	// 직위별 인원 조회
-	@Query(value = "SELECT employee_gd AS name, COUNT(*) AS data " +
-			"FROM employee " +
-			"WHERE employee_hd BETWEEN :startDt AND :endDt " +
-			"AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
-			"GROUP BY employee_gd", nativeQuery = true)
-	List<Map<String, Object>> getEmployeePosiStatsByDate(
-			@Param("startDt") String startDt, 
-			@Param("endDt") String endDt);
+	@Query(value = "SELECT COUNT(*) AS data, " +
+            "COALESCE(pos.COMMON_NM, '직급 없음') AS name " +
+            "FROM employee e1_0 " +
+            "LEFT JOIN (SELECT COMMON_CC, COMMON_NM " +
+                      "FROM COMMON_CODE " +
+                      "WHERE COMMON_GC = 'POSITION') pos " +
+            "ON e1_0.employee_gd = pos.COMMON_CC " +
+            "WHERE e1_0.employee_hd BETWEEN :startDt AND :endDt " +
+            "AND (e1_0.employee_rd IS NULL OR e1_0.employee_rd >= :startDt) " +
+            "GROUP BY e1_0.employee_gd, pos.COMMON_NM", nativeQuery = true)
+List<Map<String, Object>> getEmployeePosiStatsByDate(
+        @Param("startDt") String startDt, 
+        @Param("endDt") String endDt);
 
 	
 	
@@ -83,8 +93,5 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
             nativeQuery = true)
     List<String> findDistinctMonths(@Param("startDate") String startDate, @Param("endDate") String endDate);
 
-
-	
-	
 	
 }
