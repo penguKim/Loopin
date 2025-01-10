@@ -130,7 +130,11 @@ public class Employee {
     @Column(name = "employee_rl")
     private String employee_rl;
 	
+    @Column(name = "employee_us")
+    private Boolean employee_us;
     
+    @Column(name = "workinghour_id")
+    private String workinghour_id;
 
 
 
@@ -168,6 +172,8 @@ public class Employee {
 	    Timestamp employee_md,
 	    Boolean employee_mg,
 	    String employee_rl,
+	    Boolean employee_us,
+	    String workinghour_id,	    
 	    Long sequenceValue // 추가된 매개변수
 	) {
 	    this.employee_cd = employee_cd;
@@ -197,6 +203,8 @@ public class Employee {
 	    this.employee_md = employee_md;
 	    this.employee_mg = employee_mg;
 	    this.employee_rl = employee_rl;
+	    this.employee_us = employee_us;
+	    this.workinghour_id = workinghour_id;
 	    this.sequenceValue = sequenceValue; // 필드 설정
 	}
 
@@ -229,6 +237,8 @@ public class Employee {
         employee.setEmployee_md(employeeDto.getEmployee_md());
         employee.setEmployee_mg(employeeDto.getEmployee_mg());
         employee.setEmployee_rl(employeeDto.getEmployee_rl());
+        employee.setEmployee_us(employeeDto.getEmployee_us());
+        employee.setWorkinghour_id(employeeDto.getWorkinghour_id());
         
 
         return employee;
@@ -265,6 +275,8 @@ public class Employee {
             employeeDto.getEmployee_md(),
             employeeDto.getEmployee_mg(),
             employeeDto.getEmployee_rl(),
+            employeeDto.getEmployee_us(),
+            employeeDto.getWorkinghour_id(),
             sequenceValue
         );
     }
