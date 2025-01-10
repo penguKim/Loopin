@@ -124,7 +124,6 @@ public class EmployeeController {
 	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
 	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
-	    
 	    List<Employee> employees;
 
 	    // 관리자일 경우 모든 직원 정보 조회
