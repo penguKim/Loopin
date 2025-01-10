@@ -40,6 +40,8 @@ public class EmployeeDetails extends User {
     private final String employee_dt;
     private final Boolean employee_mg;
     private final String employee_rl;
+	private final Boolean employee_us;
+	private final String workinghour_id;
     
     public EmployeeDetails(Employee employee) {
         super(
@@ -68,6 +70,8 @@ public class EmployeeDetails extends User {
         this.employee_dt = employee.getEmployee_dt();
         this.employee_mg = employee.getEmployee_mg();
         this.employee_rl = employee.getEmployee_rl();
+        this.employee_us = employee.getEmployee_us();
+        this.workinghour_id = employee.getWorkinghour_id();
     }
 }
 
