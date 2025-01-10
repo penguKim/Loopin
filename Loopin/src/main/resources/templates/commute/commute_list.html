@@ -23,6 +23,7 @@
 					<div class="card"  style="height:800px;">
 						<div class="card-body">
 							<h1 class="card-title">출퇴근 기록부</h1>
+							<input type="button" id="btn_attendance" class="btn btn-primary" value="출근하기">
 							<!-- 탭 헤드 -->
 							<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
 								<li class="nav-item" role="presentation">
@@ -104,12 +105,13 @@
 </body>
 <script th:inline="javascript">
 	// 변수 지정
-	let grid, calendar;
+	let grid, calendar, modal_grid;
 	changeFlag = false;
 	
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	
+	const btn_attendance = $('#btn_attendance');
 	const btn_calendar_tab = $('#btn_calendar_tab');
 	const btn_grid_tab = $('#btn_grid_tab');
 	const btn_drop = $('#btn_drop');
@@ -125,6 +127,28 @@
 		
 		make_calendar();
 		getCommuteList();
+		
+		btn_attendance.on('click', function() {
+			let entity = 'test';
+			let jsonData = JSON.stringify(entity);
+			
+			$.ajax({
+				type: 'post',
+				url: '/insert_COMMUTE',
+				data: jsonData,
+				contentType: 'application/json',
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+
+					
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
 		
 		btn_grid_tab.on('click', function() {
 			console.log(grid);
@@ -440,9 +464,9 @@
 	}
 	
 	function make_modal_grid(date) {
-		grid = new tui.Grid({
+		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : {api: {readData: {url: '/select_COMMUTE', method: 'GET', initParams: {commute_dt: date} }}},
+			data : {api: {readData: {url: '/select_COMMUTE_detail', method: 'GET', initParams: {commute_wd: date} }}},
 			scrollX : false,
 			scrollY : false,
 			rowHeaders : [

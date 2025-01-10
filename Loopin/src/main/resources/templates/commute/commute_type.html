@@ -58,6 +58,7 @@
 		});
 		
 
+
 		
 	});
 	
@@ -191,7 +192,7 @@
 		
 		if(!modalElement) {
 			let modalHtml = `
-			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true">
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-lg">
 		            <div class="modal-content">
 						<div class="modal-header">
@@ -427,7 +428,7 @@
 		
 		if(!modalElement) {
 			let modalHtml = `
-			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-scroll="true">
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 				<div class="modal-dialog modal-dialog-centered modal-xl">
 		            <div class="modal-content">
 						<div class="modal-header">
@@ -464,7 +465,6 @@
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" id="btn_workinghour_save" class="btn btn-primary">등록</button>
 						</div>
 					</div>
 				</div>

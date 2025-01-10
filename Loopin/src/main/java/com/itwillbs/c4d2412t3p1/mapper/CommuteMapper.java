@@ -18,5 +18,9 @@ public interface CommuteMapper {
 	List<WorkinghourDTO> select_EMPLOYEE_WORKINGHOUR_CHK(String workinghour_id);
 	// 사원의 근로 등록
 	int update_EMPLOYEE_WK(@Param("workinghour") WorkinghourDTO workinghour);
+	// 출근 등록
+	int insert_COMMUTE();
+	// 공휴일 판별
+	boolean isHoliday(String formattedDate);
     
 }

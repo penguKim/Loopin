@@ -16,7 +16,6 @@ public class WorkinghourDTO {
 	private String workinghour_nm;
 	private String workinghour_wt;
 	private String workinghour_lt;
-	private String workinghour_wp;
 	private String workinghour_hs;
 	private String workinghour_dw;
 	private String workinghour_tt;

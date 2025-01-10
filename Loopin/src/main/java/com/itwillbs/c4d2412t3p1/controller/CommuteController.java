@@ -1,11 +1,14 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteResponseDTO;
@@ -21,10 +25,13 @@ import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
+import com.itwillbs.c4d2412t3p1.mapper.CommuteMapper;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
+import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -36,6 +43,8 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final CommonService commonService;
+	private final EmployeeService employeeService;
+	
 
 	// 출퇴근 기록부 --------------------------------------------
 	
@@ -45,12 +54,12 @@ public class CommuteController {
 	}
 	
 	@ResponseBody
-	@GetMapping("/select_COMMUTE")
-	public ResponseEntity<Map<String, Object>> select_COMMUTE(@RequestParam(name = "commute_dt", defaultValue = "") String commute_dt) {
+	@GetMapping("/select_COMMUTE_detail")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
 		
-		System.out.println("---------------------------------------- 파라미터 : " + commute_dt);
+		System.out.println("---------------------------------------- 파라미터 : " + commute_wd);
 		
-		List<Commute> list = commuteService.select_COMMUTE(commute_dt);
+		List<Commute> list = commuteService.select_COMMUTE_detail(commute_wd);
 		
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -58,7 +67,7 @@ public class CommuteController {
 	    Map<String, Object> data = new HashMap<>();
 	    data.put("contents", list);
 	    response.put("data", data);
-		
+	    
 		
 		return ResponseEntity.ok(response);
 	}
@@ -216,6 +225,40 @@ public class CommuteController {
 	}
 	
 	
+	// 출근 등록 -----------------------------------------------
+	@ResponseBody
+	@PostMapping("/insert_COMMUTE")
+	public String insert_COMMUTE(@RequestBody String entity) {
+		// 사원이 직접 출근한다면 시큐리티에서 사원코드를 뽑아오면 됨
+		// 관리자라면 프론트에서 사원의 사원코드를 받아와야함
+		String id = SecurityContextHolder.getContext().getAuthentication().getName();
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		String employee_cd = employeeDetails.getEmployee_cd();
+		String workinghour_id = employeeDetails.getWorkinghour_id();
+		
+		// 파라미터로 출근인지 퇴근인지 정하기
+		
+//		Commute commute = commuteService.findById(employeeDetails);
+		Commute commute = commuteService.findById(employee_cd, workinghour_id);
+		if(commute != null) { // 업데이트
+			System.out.println("업데이트입니다!!!!!!!!!!!!!!");
+//			int updateCount = commuteService.insert_COMMUTE(employeeDetails, commute);		
+			int updateCount = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);		
+			
+			if(updateCount > 0) {
+				// 사원근무기록 등록
+				commuteService.insert_COMHISTORY(employeeDetails.getEmployee_cd(), commute.getCommute_wt(), commute.getCommute_lt(), commute.getWorkinghour_id());
+			}
+			
+		} else { // 인서트
+			System.out.println("인서트입니다!!!!!!!!!!!!!!");
+			int insertCount = commuteService.insert_COMMUTE(employeeDetails, commute);			
+		}
+		
+		
+		
+		return "";
+	}
 	
 	
 	

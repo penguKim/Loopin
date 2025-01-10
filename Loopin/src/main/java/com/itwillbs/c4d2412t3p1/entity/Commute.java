@@ -2,6 +2,9 @@ package com.itwillbs.c4d2412t3p1.entity;
 
 import java.sql.Timestamp;
 
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 
 import jakarta.persistence.Column;
@@ -27,11 +30,10 @@ import lombok.ToString;
 @AllArgsConstructor
 @Builder
 @IdClass(CommutePK.class)
+@DynamicInsert
+@DynamicUpdate
 public class Commute {
 	
-//	@Id
-//	@Column(name = "commute_id")
-//	private String commute_id;
 	@Id
 	@Column(name = "employee_cd")
 	private String employee_cd;
@@ -39,8 +41,10 @@ public class Commute {
 	@Column(name = "workinghour_id")
 	private String workinghour_id;
 	@Id
-	@Column(name = "commute_dt")
-	private String commute_dt;
+	@Column(name = "commute_wd")
+	private String commute_wd;
+	@Column(name = "commute_ld")
+	private String commute_ld;
 	@Column(name = "commute_wt")
 	private String commute_wt;
 	@Column(name = "commute_lt")
@@ -60,7 +64,9 @@ public class Commute {
 	    return Commute.builder()
 	    		.employee_cd(commute.getEmployee_cd())
 	    		.workinghour_id(commute.getWorkinghour_id())
-	    		.commute_dt(commute.getCommute_dt())
+	    		.commute_wd(commute.getCommute_wd())
+	    		.commute_ld(commute.getCommute_ld())
+	    		.commute_lt(commute.getCommute_lt())
 	    		.commute_wt(commute.getCommute_wt())
 	    		.commute_lt(commute.getCommute_lt())
 	    		.commute_ru(commute.getCommute_ru())

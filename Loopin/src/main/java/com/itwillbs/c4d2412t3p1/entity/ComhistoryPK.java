@@ -16,10 +16,9 @@ import lombok.Setter;
 @EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommutePK implements Serializable {
+public class ComhistoryPK implements Serializable {
 	
 	private String employee_cd;
-	private String workinghour_id;
-	private String commute_wd;
+	private String comhistory_ym;
 	
 }
