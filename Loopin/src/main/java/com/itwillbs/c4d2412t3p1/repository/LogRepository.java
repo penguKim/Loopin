@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.itwillbs.c4d2412t3p1.config.FilterRequest;
-import com.itwillbs.c4d2412t3p1.config.FilterRequest.LogFilterRequest;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Log;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 
 import jakarta.transaction.Transactional;
 

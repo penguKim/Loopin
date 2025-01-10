@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import com.itwillbs.c4d2412t3p1.config.FilterRequest.LogFilterRequest;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Log;
 import com.itwillbs.c4d2412t3p1.logging.LogConverter;
 import com.itwillbs.c4d2412t3p1.repository.LogRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
+import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.service.TransferService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import lombok.extern.java.Log;
 public class TransferController {
 
 	private final TransferService transferService;
+	private final EmployeeService employeeService;
 
 	@GetMapping("/transfer_list")
 	public String transfer_list(Model model) {
@@ -47,24 +49,25 @@ public class TransferController {
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
-		List<Transfer> transfers = transferService.findAll();
-
-		List<Map<String, Object>> response = transfers.stream().map(transfer -> {
-			Map<String, Object> row = new HashMap<>();
-			
-			row.put("transfer_id", transfer.getTransfer_id());
-			row.put("employee_cd", transfer.getEmployee_cd());
-			row.put("transfer_ad", transfer.getTransfer_ad());
-			row.put("transfer_ac", transfer.getTransfer_ac());
-			row.put("transfer_og", transfer.getTransfer_og());
-			row.put("transfer_ag", transfer.getTransfer_ag());
-			row.put("transfer_od", transfer.getTransfer_od());
-			row.put("transfer_adp", transfer.getTransfer_adp());
-			return row;
-		}).collect(Collectors.toList());
-
-		return ResponseEntity.ok(response);
+		
+		try {
+            // 서비스 호출 후 결과 반환
+            List<Map<String, Object>> response = transferService.select_TRANSFER_DETAIL();
+            log.info("@@@@@@@@@@@@@@@@" + response.toString());
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(null);
+        }
+		
 	}
+	
+//	@GetMapping("/select_EMPLOYEE_COMMON")
+//    @ResponseBody
+//    public List<Map<String, Object>> getEmployeeList() {
+//        // Service를 호출하여 데이터 조회
+//        return transferService.select_EMPLOYEE_COMMON();
+//    }
 
 //	인사발령 등록
 	@LogActivity(value = "등록", action = "인사발령")

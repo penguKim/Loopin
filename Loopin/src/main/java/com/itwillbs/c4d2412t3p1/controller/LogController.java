@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.itwillbs.c4d2412t3p1.config.FilterRequest.LogFilterRequest;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.LogService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;

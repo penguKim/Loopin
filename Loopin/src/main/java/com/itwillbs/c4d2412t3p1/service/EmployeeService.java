@@ -24,6 +24,7 @@ import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
+import com.itwillbs.c4d2412t3p1.repository.TransferRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -225,7 +226,6 @@ public class EmployeeService {
 	public List<Employee> findByEmployeeCd(String currentCd) {
 		return EmployeeRepository.findByEmployeeCd(currentCd);
 	}
-
 
 
 

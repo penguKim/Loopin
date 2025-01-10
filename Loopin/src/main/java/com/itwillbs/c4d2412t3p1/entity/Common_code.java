@@ -18,7 +18,7 @@ import lombok.ToString;
 
 
 
-@Entity
+@Entity(name = "COMMON_CODE")
 @Table(name = "COMMON_CODE")
 @Getter
 @Setter

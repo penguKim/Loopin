@@ -1,4 +1,4 @@
-package com.itwillbs.c4d2412t3p1.config;
+package com.itwillbs.c4d2412t3p1.util;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

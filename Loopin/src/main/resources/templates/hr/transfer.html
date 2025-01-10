@@ -330,9 +330,43 @@
 	
 	// 이름 또는 사원코드 클릭 시 사원 선택 모달 열기
 	document.getElementById('employee_nm').addEventListener('click', function () {
-		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-		modal_employee_list.show();
-	});
+    const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+    modal_employee_list.show();
+
+    // 서버에서 사원 정보를 가져오는 요청
+    fetch('/select_EMPLOYEE_COMMON', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('서버 응답 오류');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            // 데이터 가져온 후 테이블 갱신
+            const tbody = document.querySelector('#empTable tbody');
+            tbody.innerHTML = ''; // 기존 내용 초기화
+
+            // 데이터를 테이블에 동적으로 추가
+            data.forEach((employee) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${employee.employee_cd}</td>
+                    <td>${employee.employee_nm}</td>
+                    <td>${employee.department_name}</td>
+                    <td>${employee.position_name}</td>
+                    <td><button type="button" class="btn btn-primary select-emp-btn">선택</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        })
+        .catch((error) => console.error('사원 목록 가져오기 실패:', error));
+});
+
 
 	document.getElementById('employee_cd').addEventListener('click', function () {
 		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));

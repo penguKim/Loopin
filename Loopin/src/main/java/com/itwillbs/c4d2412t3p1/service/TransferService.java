@@ -1,6 +1,9 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -21,9 +24,25 @@ public class TransferService {
 	private final TransferRepository transferRepository;
 	private final CommonRepository commonRepository;
 
-	public List<Transfer> findAll() {
+	public List<Map<String, Object>> select_TRANSFER_DETAIL() {
 
-		return transferRepository.findAll();
+		List<Object[]> result = transferRepository.findAllWithDetails();
+		
+		log.info("#########################" + result.toString());
+		
+	    // 반환된 데이터를 변환
+	    return result.stream().map(row -> {
+	        Map<String, Object> transfer = new HashMap<>();
+	        transfer.put("transfer_id", row[0]);
+	        transfer.put("employee_cd", row[1]);
+	        transfer.put("transfer_ad", row[2]);
+	        transfer.put("transfer_ac", row[3]);
+	        transfer.put("transfer_og", row[4]);
+	        transfer.put("transfer_ag", row[5]);
+	        transfer.put("transfer_od", row[6]);
+	        transfer.put("transfer_adp", row[7]);
+	        return transfer;
+	    }).collect(Collectors.toList());
 	}
 
 	public void insert_TRANSFER(TransferDTO transferDTO) {
@@ -55,4 +74,19 @@ public class TransferService {
 	public List<Common_code> selectGradeList(String string) {
 		return commonRepository.selectGradeList("00", string);
 	}
+
+//	public List<Map<String, Object>> select_EMPLOYEE_COMMON() {
+//		
+//		List<Object[]> result = transferRepository.findEmployeeList();
+//		
+//		return result.stream().map(row -> {
+//	        Map<String, Object> employee = new HashMap<>();
+//	        employee.put("employee_cd", row[0]);
+//	        employee.put("employee_nm", row[1]);
+//	        employee.put("department_name", row[2]);
+//	        employee.put("position_name", row[3]);
+//	        return employee;
+//	    }).collect(Collectors.toList());
+//		
+//	}
 }

@@ -1,15 +1,33 @@
 package com.itwillbs.c4d2412t3p1.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
 
-
 @Repository
 public interface TransferRepository extends JpaRepository<Transfer, Long> {
 
-	
-	
+	@Query("SELECT " + "t.transfer_id, " + "t.employee_cd, " + "t.transfer_ad, " + "t.transfer_ac, "
+			+ "from_position.common_nm AS transfer_og, " + "to_position.common_nm AS transfer_ag, "
+			+ "from_department.common_nm AS transfer_od, " + "to_department.common_nm AS transfer_adp "
+			+ "FROM TRANSFER t "
+			+ "LEFT JOIN COMMON_CODE from_position ON t.transfer_og = from_position.common_cc AND from_position.common_gc = 'POSITION' "
+			+ "LEFT JOIN COMMON_CODE to_position ON t.transfer_ag = to_position.common_cc AND to_position.common_gc = 'POSITION' "
+			+ "LEFT JOIN COMMON_CODE from_department ON t.transfer_od = from_department.common_cc AND from_department.common_gc = 'DEPARTMENT' "
+			+ "LEFT JOIN COMMON_CODE to_department ON t.transfer_adp = to_department.common_cc AND to_department.common_gc = 'DEPARTMENT'")
+	List<Object[]> findAllWithDetails();
+
+//	@Query("SELECT e.employee_cd, " + " e.employee_nm, " + 
+//		       "d.common_nm AS department_name, " + 
+//		       "p.common_nm AS position_name " + 
+//		       "FROM EMPLOYEE e " +
+//		       "LEFT JOIN COMMON_CODE d ON e.employee_dp = d.common_cc AND d.common_gc = 'DEPARTMENT' " +
+//		       "LEFT JOIN COMMON_CODE p ON e.employee_gd = p.common_cc AND p.common_gc = 'POSITION'")
+//	List<Object[]> findEmployeeList();
+
+
 }
