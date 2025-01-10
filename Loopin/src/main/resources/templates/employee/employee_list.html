@@ -53,12 +53,10 @@
 								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_id" name="employee_id">
-									<span id="id_check_result"></span>
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
-									<span id="pw_check_result"></span>
 								</div>
 							</div>
 							
@@ -435,7 +433,6 @@
     }
 
 		
-	
 	// 이메일 관련 처리
 	$('#employee_domain').on('change', function () {
 	    const customDomainInput = $('#custom_domain');
@@ -659,20 +656,30 @@
 		function openEditModal(data) {
 		    // 모달 제목 및 버튼 텍스트 설정
 		    
-		    $('#modalTitle').text('인사카드 수정');
-		    $('#modal_submit_button').text('수정');
-		    const fieldsToDisable = "#employee_id, #employee_hd, #employee_dp, #employee_nt,#employee_gd,"
-		    + "#employee_rd, #employee_cg, #employee_nm, #employee_bd, #employee_sb, #employee_bs, #employee_rr, #employee_mg, #employee_rl";
-		    $(fieldsToDisable).prop("disabled", true);
+			$('#modalTitle').text('인사카드 수정');
+			$('#modal_submit_button').text('수정');
 			
-			// 룰에 따라 필드 활성화/비활성화
+			// 여러 필드를 비활성화/활성화할 때 선택자 수정
+			const fieldsToDisable = [
+			  "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt", 
+			  "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm", 
+			  "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr", 
+			  "#employee_mg", "#employee_rl"
+			];
+			
+			// 필드 활성화/비활성화 처리
 			if (data.employee_rl === 'admin' || data.employee_rl === 'developer') {
-				// Admin과 Developer는 모든 필드 활성화
-			    $(fieldsToDisable).prop("disabled", false);
+			    // Admin과 Developer는 모든 필드 활성화
+			    fieldsToDisable.forEach(function(field) {
+			        $(field).prop("disabled", false);
+			    });
 			} else if (data.employee_rl === 'employee') {
-				// Employee는 모든 필드 비활성화
-				$(fieldsToDisable).prop("disabled", true);
+			    // Employee는 모든 필드 비활성화
+			    fieldsToDisable.forEach(function(field) {
+			        $(field).prop("disabled", true);
+			    });
 			}
+
 
 			// 데이터 매핑
 				Object.keys(data).forEach(key => {
@@ -741,108 +748,74 @@
 		    $('#employee_pi').val('');
 		}
 
-		
 
-	    // 폼 제출 이벤트
-	    $('#appointment_form').off('submit').on('submit', function (event) {
-	        event.preventDefault();
+		// 폼 제출 이벤트
+		$('#appointment_form').off('submit').on('submit', function (event) {
+		    event.preventDefault();
 
-	        // 아이디 중복 검사 (폼 제출 전에 중복 검사 필요)
-	        const errorSpan = $('#id_check_result');
-	        const employeeId = $('#employee_id').val();
+		    const formData = new FormData(); // FormData 객체 생성
+		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
+		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
 
-	        if (employeeId.trim() === '') {
-	            errorSpan.text("아이디를 입력해 주세요.");
-	            errorSpan.show(); // 오류 메시지 표시
-	            return;
-	        }
+		    // DTO 데이터를 JSON으로 생성
+		    const employeeDTO = {
+		        employee_cd: $('#employee_cd').val(),
+		        employee_id: $('#employee_id').val(),
+		        employee_pw: $('#employee_pw').val(),
+		        employee_dp: $('#employee_dp').val(),
+		        employee_gd: $('#employee_gd').val(),
+		        employee_hd: $('#employee_hd').val(),
+		        employee_rd: $('#employee_rd').val(),
+		        employee_rr: $('#employee_rr').val(),
+		        employee_cg: $('#employee_cg').val(),
+		        employee_nt: $('#employee_nt').val(),
+		        employee_nm: $('#employee_nm').val(),
+		        employee_bd: $('#employee_bd').val(),
+		        employee_ad: $('#employee_ad').val(),
+		        employee_sb: $('#employee_sb').val(),
+		        employee_ph: $('#employee_ph').val(),
+		        employee_em: $('#employee_em').val(),
+		        employee_bs: $('#employee_bs').val(),
+		        employee_bk: $('#employee_bk').val(),
+		        employee_an: $('#employee_an').val(),
+		        employee_dt: $('#employee_dt').val(),
+		        employee_wr: $('#employee_wr').val(),
+		        employee_wd: $('#employee_wd').val(),
+		        employee_mf: $('#employee_mf').val(),
+		        employee_md: $('#employee_md').val(),
+		        employee_rl: $('#employee_rl').val(),
+		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
+		    };
 
-	        // 중복 검사 AJAX 요청
-	        $.ajax({
-	            url: '/check_employee_id', // 중복 검사 URL
-	            method: 'POST',
-	            data: { employee_id: employeeId }, // 서버로 아이디 전송
-	            headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
-	            success: function (response) {
-	                if (response.exists) {
-	                    errorSpan.text("이미 사용 중인 아이디입니다.");
-	                    errorSpan.show(); // 중복된 아이디가 있으면 오류 메시지 표시
-	                } else {
-	                    errorSpan.hide(); // 중복이 없으면 오류 메시지 숨기기
+		    const fileInput = $('#employee_pi')[0].files[0]; // 파일 선택
 
-	                    // 폼 데이터 준비
-	                    const formData = new FormData(); // FormData 객체 생성
-	                    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
-	                    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
+		    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
 
-	                    // DTO 데이터를 JSON으로 생성
-	                    const employeeDTO = {
-	                        employee_cd: $('#employee_cd').val(),
-	                        employee_id: $('#employee_id').val(),
-	                        employee_pw: $('#employee_pw').val(),
-	                        employee_dp: $('#employee_dp').val(),
-	                        employee_gd: $('#employee_gd').val(),
-	                        employee_hd: $('#employee_hd').val(),
-	                        employee_rd: $('#employee_rd').val(),
-	                        employee_rr: $('#employee_rr').val(),
-	                        employee_cg: $('#employee_cg').val(),
-	                        employee_nt: $('#employee_nt').val(),
-	                        employee_nm: $('#employee_nm').val(),
-	                        employee_bd: $('#employee_bd').val(),
-	                        employee_ad: $('#employee_ad').val(),
-	                        employee_sb: $('#employee_sb').val(),
-	                        employee_ph: $('#employee_ph').val(),
-	                        employee_em: $('#employee_em').val(),
-	                        employee_bs: $('#employee_bs').val(),
-	                        employee_bk: $('#employee_bk').val(),
-	                        employee_an: $('#employee_an').val(),
-	                        employee_dt: $('#employee_dt').val(),
-	                        employee_wr: $('#employee_wr').val(),
-	                        employee_wd: $('#employee_wd').val(),
-	                        employee_mf: $('#employee_mf').val(),
-	                        employee_md: $('#employee_md').val(),
-	                        employee_rl: $('#employee_rl').val(),
-	                        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
-	                    };
+		    if (fileInput) {
+		        formData.append('employee_pi', fileInput); // 파일 추가
+		    }
 
-	                    const fileInput = $('#employee_pi')[0].files[0]; // 파일 선택
+		    $.ajax({
+		        url: url,
+		        method: 'POST',
+		        processData: false,
+		        contentType: false, // 멀티파트 전송 처리
+		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
+		        data: formData,
+		        success: function () {
+		            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
+		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
+		            location.reload(); // 페이지 새로고침
+		        },
+		        error: function (xhr) {
+		            console.error('AJAX Error:', xhr.responseText);
+		            console.error('AJAX Error:', employeeDTO);
+		            alert('작업 중 오류가 발생했습니다.');
+		        }
+		    });
+		});
 
-	                    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
-
-	                    if (fileInput) {
-	                        formData.append('employee_pi', fileInput); // 파일 추가
-	                    }
-
-	                    // 폼 제출 (AJAX로 전송)
-	                    $.ajax({
-	                        url: url,
-	                        method: 'POST',
-	                        processData: false,
-	                        contentType: false, // 멀티파트 전송 처리
-	                        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
-	                        data: formData,
-	                        success: function () {
-	                            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
-	                            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-	                            location.reload(); // 페이지 새로고침
-	                        },
-	                        error: function (xhr) {
-	                            console.error('AJAX Error:', xhr.responseText);
-	                            alert('작업 중 오류가 발생했습니다.');
-	                        }
-	                    });
-	                }
-	            },
-	            error: function (xhr) {
-	                errorSpan.text("아이디 중복 확인에 실패했습니다.");
-	                errorSpan.show(); // 오류 메시지 표시
-	            }
-	        });
-	    });
 	});
-
-
-
 
 
 
