@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,6 +17,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
-
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
@@ -94,24 +96,15 @@ public class EmployeeController {
     }
 	
     
-    public String savePhoto(MultipartFile photo) throws IOException {
-        if (photo.isEmpty()) {
-            return null;
-        }
-
-        String fileName = UUID.randomUUID().toString() + "_" + photo.getOriginalFilename();
-        Path filePath = Paths.get(uploadDir).resolve(fileName);
-        Files.copy(photo.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return fileName;
-    }
-
     
-    
-    
+    // 인사카드 페이지로 이동
 	@GetMapping("/employee_list")
 	public String employee_list(Model model) {
 
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		String role = employeeDetails.getEmployee_rl();
+		
 		// 부서코드 가져오기 
 		model.addAttribute("dept_list", employeeService.selectDeptList("DEPARTMENT"));
 
@@ -127,37 +120,53 @@ public class EmployeeController {
 	@GetMapping("/select_EMPLOYEE")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
-	    List<Employee> employees = employeeService.findAll(); // 모든 직원 정보를 가져옵니다.
+		
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
+	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
+	    
+	    List<Employee> employees;
+
+	    // 관리자일 경우 모든 직원 정보 조회
+	    if (currentRole.contains("admin") || currentRole.contains("developer")) {
+	        employees = employeeService.findAll(); // 모든 직원 정보 조회
+	    } else {
+	        // 일반 사용자일 경우 본인 정보만 조회
+	        employees = employeeService.findByEmployeeCd(currentCd); // 본인 정보 조회
+	    }
+
+	    // 공통 응답 생성
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
-		        row.put("employee_cd", employee.getEmployee_cd());
-		        row.put("employee_id", employee.getEmployee_id());
-		        row.put("employee_pw", employee.getEmployee_pw());
-		        row.put("employee_dp", employee.getEmployee_dp());
-		        row.put("employee_gd", employee.getEmployee_gd());
-		        row.put("employee_hd", employee.getEmployee_hd());
-		        row.put("employee_rd", employee.getEmployee_rd());
-		        row.put("employee_rr", employee.getEmployee_rr());
-		        row.put("employee_cg", employee.getEmployee_cg());
-		        row.put("employee_nt", employee.getEmployee_nt());
-		        row.put("employee_nm", employee.getEmployee_nm());
-		        row.put("employee_bd", employee.getEmployee_bd());
-		        row.put("employee_ad", employee.getEmployee_ad());
-		        row.put("employee_sb", employee.getEmployee_sb());
-		        row.put("employee_ph", employee.getEmployee_ph());
-		        row.put("employee_em", employee.getEmployee_em());
-		        row.put("employee_pi", employee.getEmployee_pi());
-		        row.put("employee_bs", employee.getEmployee_bs());
-		        row.put("employee_bk", employee.getEmployee_bk());
-		        row.put("employee_an", employee.getEmployee_an());
-		        row.put("employee_dt", employee.getEmployee_dt());
-		        row.put("employee_wr", employee.getEmployee_wr());
-		        row.put("employee_wd", employee.getEmployee_wd());
-		        row.put("employee_mf", employee.getEmployee_mf());
-		        row.put("employee_md", employee.getEmployee_md());
-		        row.put("employee_mg", employee.getEmployee_mg());
-		        row.put("employee_rl", employee.getEmployee_rl());
+	        row.put("employee_cd", employee.getEmployee_cd());
+	        row.put("employee_id", employee.getEmployee_id());
+	        row.put("employee_pw", employee.getEmployee_pw());
+	        row.put("employee_dp", employee.getEmployee_dp());
+	        row.put("employee_gd", employee.getEmployee_gd());
+	        row.put("employee_hd", employee.getEmployee_hd());
+	        row.put("employee_rd", employee.getEmployee_rd());
+	        row.put("employee_rr", employee.getEmployee_rr());
+	        row.put("employee_cg", employee.getEmployee_cg());
+	        row.put("employee_nt", employee.getEmployee_nt());
+	        row.put("employee_nm", employee.getEmployee_nm());
+	        row.put("employee_bd", employee.getEmployee_bd());
+	        row.put("employee_ad", employee.getEmployee_ad());
+	        row.put("employee_sb", employee.getEmployee_sb());
+	        row.put("employee_ph", employee.getEmployee_ph());
+	        row.put("employee_em", employee.getEmployee_em());
+	        row.put("employee_pi", employee.getEmployee_pi());
+	        row.put("employee_bs", employee.getEmployee_bs());
+	        row.put("employee_bk", employee.getEmployee_bk());
+	        row.put("employee_an", employee.getEmployee_an());
+	        row.put("employee_dt", employee.getEmployee_dt());
+	        row.put("employee_wr", employee.getEmployee_wr());
+	        row.put("employee_wd", employee.getEmployee_wd());
+	        row.put("employee_mf", employee.getEmployee_mf());
+	        row.put("employee_md", employee.getEmployee_md());
+	        row.put("employee_mg", employee.getEmployee_mg());
+	        row.put("employee_rl", employee.getEmployee_rl());
 	        return row;
 	    }).collect(Collectors.toList());
 
@@ -305,5 +314,116 @@ public class EmployeeController {
 	}
 	
 	
+	 
+	// 인사현황 차트
+	@GetMapping("/employee_chart")
+	public String employee_chart() {
+		return "/employee/employee_chart";
+	}
 	
+
+    // 성별 데이터 조회
+    @GetMapping("/select_GENDER")
+    public ResponseEntity<Map<String, Object>> select_GENDER(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
+    	
+    	
+        // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStatsByDate(startDt, endDt);
+    	
+    	
+        // Toast UI Chart 형식으로 변환
+        List<Map<String, Object>> series = genderStats.stream()
+            .map(stat -> Map.of(
+                "name", stat.get("name"), // "남성" 또는 "여성"
+                "data", stat.get("data")  // 인원수
+            ))
+            .toList();
+
+        Map<String, Object> response = Map.of("series", series);
+        
+        return ResponseEntity.ok(response);
+    }
+
+    // 입/퇴사자 조회 현황 데이터 조회
+    @GetMapping("/select_HDRD")
+    public ResponseEntity<Map<String, Object>> select_HDRD(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
+
+        // 서비스 호출: 입사자와 퇴사자 데이터를 조회
+        Map<String, List<?>> hireAndRetireStats = employeeService.getHireAndRetireStatsByDate(startDt, endDt);
+
+        
+        System.out.println("@@@@@@@@@@@" + hireAndRetireStats);
+        
+        // 데이터 매핑
+        Map<String, Object> response = Map.of(
+                "categories", hireAndRetireStats.get("categories"),  // List<String>
+                "series", List.of(
+                        Map.of("name", "입사자", "data", hireAndRetireStats.get("hireData")),  // List<Integer>
+                        Map.of("name", "퇴사자", "data", hireAndRetireStats.get("retireData")) // List<Integer>
+                )
+        );
+
+        System.out.println("@@@@@@@@@@@" + response);
+        
+        return ResponseEntity.ok(response);
+    }
+
+
+    
+    // 부서별 인원 현황 데이터 조회
+    @GetMapping("/select_DEPT")
+    public ResponseEntity<Map<String, Object>> select_DEPT(
+    		@RequestParam("start_dt") String startDt,
+    		@RequestParam("end_dt") String endDt) {
+    	
+    	
+    	// 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+    	List<Map<String, Object>> deptStats = employeeService.getEmployeeDeptStatsByDate(startDt, endDt);
+    	
+    	
+    	// Toast UI Chart 형식으로 변환
+    	List<Map<String, Object>> series = deptStats.stream()
+    			.map(stat -> Map.of(
+    					"name", stat.get("name"), // 각 부서
+    					"data", stat.get("data")  // 인원수
+    					))
+    			.toList();
+    	
+    	Map<String, Object> response = Map.of("series", series);
+    	
+    	return ResponseEntity.ok(response);
+    }
+    
+    
+    // 직위별 조회 현황 데이터 조회
+    @GetMapping("/select_POSI")
+    public ResponseEntity<Map<String, Object>> select_POSI(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt) {
+
+        // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
+        List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate(startDt, endDt);
+
+        // 직위명과 인원 수를 각각 카테고리와 데이터로 분리
+        List<String> categories = posiStats.stream()
+                .map(stat -> (String) stat.get("name"))  // 직위명 추출
+                .collect(Collectors.toList());
+
+        List<Integer> data = posiStats.stream()
+                .map(stat -> ((BigDecimal) stat.get("data")).intValue())  // 인원 수(BigDecimal을 Integer로 변환)
+                .collect(Collectors.toList());
+
+        // Toast UI Chart 형식으로 변환
+        Map<String, Object> response = Map.of(
+                "categories", categories,
+                "data", data
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
 }

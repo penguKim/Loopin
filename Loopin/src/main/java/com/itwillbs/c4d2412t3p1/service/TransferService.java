@@ -5,7 +5,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
+import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.TransferRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -17,6 +19,7 @@ import lombok.extern.java.Log;
 public class TransferService {
 
 	private final TransferRepository transferRepository;
+	private final CommonRepository commonRepository;
 
 	public List<Transfer> findAll() {
 
@@ -41,5 +44,15 @@ public class TransferService {
 		
 		transferRepository.deleteAllById(ids);
 
+	}
+	
+	 // 모달 부서코드 가져오기
+    public List<Common_code> selectDeptList(String string) {
+    	return commonRepository.selectDeptList("00", string);
+    }
+
+    // 모달 직급코드 가져오기
+	public List<Common_code> selectGradeList(String string) {
+		return commonRepository.selectGradeList("00", string);
 	}
 }

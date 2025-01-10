@@ -93,17 +93,19 @@
 							<div class="col">
 								<label for="transfer_og" class="form-label">기존직위</label> <select
 									id="transfer_og" class="form-select">
-									<option value="사원">사원</option>
-									<option value="대리">대리</option>
-									<option value="과장">과장</option>
+									<option value="" disabled selected>직위를 선택하세요</option>
+									<option th:each="grade : ${grade_list}"
+										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
+									</option>
 								</select>
 							</div>
 							<div class="col">
 								<label for="transfer_ag" class="form-label">발령직위</label> <select
 									id="transfer_ag" class="form-select">
-									<option value="사원">사원</option>
-									<option value="대리">대리</option>
-									<option value="과장">과장</option>
+									<option value="" disabled selected>직위를 선택하세요</option>
+									<option th:each="grade : ${grade_list}"
+										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
+									</option>
 								</select>
 							</div>
 						</div>
@@ -111,19 +113,19 @@
 							<div class="col">
 								<label for="transfer_od" class="form-label">기존부서</label> <select
 									id="transfer_od" class="form-select">
-									<option value="영업부">영업부</option>
-									<option value="개발부">개발부</option>
-									<option value="기획부">기획부</option>
-									<option value="인사부">인사부</option>
+									<option value="" disabled selected>부서를 선택하세요</option>
+									<option th:each="dept : ${dept_list}"
+										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
+									</option>
 								</select>
 							</div>
 							<div class="col">
 								<label for="transfer_adp" class="form-label">발령부서</label> <select
 									id="transfer_adp" class="form-select">
-									<option value="영업부">영업부</option>
-									<option value="개발부">개발부</option>
-									<option value="기획부">기획부</option>
-									<option value="인사부">인사부</option>
+									<option value="" disabled selected>부서를 선택하세요</option>
+									<option th:each="dept : ${dept_list}"
+										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
+									</option>
 								</select>
 							</div>
 						</div>
@@ -166,20 +168,7 @@
 						</thead>
 						<tbody>
 							<!-- 여기에 사원 정보를 동적으로 추가 -->
-							<tr>
-								<td>EMP001</td>
-								<td>홍길동</td>
-								<td>영업부</td>
-								<td>대리</td>
-								<td><button class="btn btn-primary select-emp-btn">선택</button></td>
-							</tr>
-							<tr>
-								<td>EMP002</td>
-								<td>김철수</td>
-								<td>개발부</td>
-								<td>과장</td>
-								<td><button class="btn btn-primary select-emp-btn">선택</button></td>
-							</tr>
+
 						</tbody>
 					</table>
 				</div>

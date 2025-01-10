@@ -31,8 +31,14 @@ public class TransferController {
 	private final TransferService transferService;
 
 	@GetMapping("/transfer_list")
-	public String transfer_list() {
+	public String transfer_list(Model model) {
+		
+		// 부서코드 가져오기 
+		model.addAttribute("dept_list", transferService.selectDeptList("DEPARTMENT"));
 
+		// 직위코드 가져오기 
+		model.addAttribute("grade_list", transferService.selectGradeList("POSITION"));
+		
 		return "/hr/transfer";
 	}
 
