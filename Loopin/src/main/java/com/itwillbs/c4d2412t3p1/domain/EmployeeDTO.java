@@ -39,6 +39,9 @@ public class EmployeeDTO {
 	private Timestamp employee_md;
 	private Boolean employee_mg; // 부서장 유무
 	private String employee_rl; // 룰
+	private Boolean employee_us; // 사용여부
+	private String workinghour_id; // 근로관리
+	
 	
 	private Long sequenceValue;
 	
