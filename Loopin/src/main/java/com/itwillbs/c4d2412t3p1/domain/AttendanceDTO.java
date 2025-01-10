@@ -40,7 +40,6 @@ public class AttendanceDTO {
 	private String employee_mf;
 	private Timestamp employee_md;
 	
-	private String annual_id;
 	private String annual_cc;
 	private String annual_yr;
 	private String annual_ua;
