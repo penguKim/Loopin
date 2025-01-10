@@ -472,7 +472,8 @@
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
+		
+	    var userRole = /*[[${role}]]*/ 'default';
 
 	    let grid;
 
@@ -667,13 +668,14 @@
 			  "#employee_mg", "#employee_rl"
 			];
 			
+			
 			// 필드 활성화/비활성화 처리
-			if (data.employee_rl === 'admin' || data.employee_rl === 'developer') {
+			if (userRole === 'admin' || userRole === 'developer') {
 			    // Admin과 Developer는 모든 필드 활성화
 			    fieldsToDisable.forEach(function(field) {
 			        $(field).prop("disabled", false);
 			    });
-			} else if (data.employee_rl === 'employee') {
+			} else if (userRole === 'employee') {
 			    // Employee는 모든 필드 비활성화
 			    fieldsToDisable.forEach(function(field) {
 			        $(field).prop("disabled", true);
