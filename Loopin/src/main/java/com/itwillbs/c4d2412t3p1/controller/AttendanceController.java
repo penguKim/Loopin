@@ -41,10 +41,10 @@ public class AttendanceController {
 	}
 	
 	@ResponseBody
-	@GetMapping("/select_base_ATTENDANCE")
-	public ResponseEntity<List<Attendance>> select_base_ATTENDANCE() {
+	@GetMapping("/select_ATTENDANCE")
+	public ResponseEntity<List<Attendance>> select_ATTENDANCE() {
 		log.info("조회 시도");
-		List<Attendance> attendances = attendanceService.findAll();
+		List<Attendance> attendances = attendanceService.select_ATTENDANCE();
 		
 		return ResponseEntity.ok(attendances);
 	}
@@ -169,9 +169,9 @@ public class AttendanceController {
 	}
 	
 	@PostMapping("/insert_HOLIDAY")
-    public ResponseEntity<String> insertHoliday(@RequestBody List<Map<String, String>> holidays) {
+    public ResponseEntity<String> insert_HOLIDAY(@RequestBody List<Map<String, String>> holidays) {
         try {
-        	attendanceService.insertHolidays(holidays);
+        	attendanceService.insert_HOLIDAY(holidays);
             return ResponseEntity.ok("공휴일 데이터가 성공적으로 저장되었습니다.");
         } catch (Exception e) {
             e.printStackTrace();

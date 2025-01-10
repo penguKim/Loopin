@@ -41,7 +41,7 @@ public class AttendanceService {
 	private final HolidayRepository holidayRepository;
 	private final HolidayMapper holidayMapper;
 
-	public List<Attendance> findAll() {
+	public List<Attendance> select_ATTENDANCE() {
 		return attendanceRepository.findAll();
 	}
 
@@ -65,19 +65,19 @@ public class AttendanceService {
 		return holidayMapper.select_period_HOLIDAY(holiday_dt1, holiday_dt2);
 	}
 	
-	public void insertHolidays(List<Map<String, String>> holidays) throws Exception {
+	public void insert_HOLIDAY(List<Map<String, String>> holidays) throws Exception {
 		Date now = new Date(); //Date타입으로 변수 선언
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //데이트 포맷
 		String date_string = dateFormat.format(now);
         for (Map<String, String> holiday : holidays) {
         	holiday.put("holiday_wd", date_string);
-            holidayMapper.insertHoliday(holiday);
+            holidayMapper.insert_HOLIDAY(holiday);
         }
     }
 	
 	public int delete_company_HOLIDAY(List<String> deletedRows) {
 		holidayRepository.deleteAllById(deletedRows); // 반환값 없음
-	    return deletedRows.size(); // 삭제 요청된 항목 수 반환
+		return deletedRows.size(); // 삭제 요청된 항목 수 반환
 	}
 	
 	public int insertCompanyHoliday(List<Map<String, String>> holidays) throws Exception {
