@@ -14,7 +14,9 @@ public class PRDTO {
 	private Long employee_id;
 	private String employee_nm;
 	private BigDecimal employee_bs;
-	private BigDecimal netSalary;
+	private BigDecimal RS;
+	private BigDecimal TA;
+	private BigDecimal TD;
 	private List<PRCalDTO> calculated;
 	
 }

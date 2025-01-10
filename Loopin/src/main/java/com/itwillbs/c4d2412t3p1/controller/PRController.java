@@ -1,6 +1,5 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -36,17 +35,20 @@ public class PRController {
 	@PostMapping("/calculate")
 	@ResponseBody
 	public List<PRDTO> calsal(@RequestBody PR_calculationMDTO data) throws ScriptException{
-		String B = data.getB();
-		log.info("B 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.getB());
-		log.info("D 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.getD());
-		String D = data.getD();
-		BigDecimal BS = data.getBS();
-		BigDecimal overworkingtime = data.getOverworkingtime();
-		BigDecimal nightworkingtime = data.getNightworkingtime();
-		BigDecimal weekendworkingtime = data.getWeekendworkingtime();
-		BigDecimal holydayworkingtime = data.getHolydayworkingtime();
-		BigDecimal leastannual = data.getLeastannual();
-		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual, B, D);
+		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
+		String BS = data.getBS();
+		log.info("BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+BS);
+		String overworkingtime = data.getOverworkingtime();
+		String nightworkingtime = data.getNightworkingtime();
+		String weekendworkingtime = data.getWeekendworkingtime();
+		String holydayworkingtime = data.getHolydayworkingtime();
+		String leastannual = data.getLeastannual();
+		String bonus = data.getBonus();
+		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus);
+//		for(PR_calculationMDTO d : data) {
+//		}
+//		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
+//		List<PRDTO> list = prS.calculatingMachine(data);
 		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
 		return list;
 	}
