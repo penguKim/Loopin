@@ -423,5 +423,29 @@ public class EmployeeController {
 
         return ResponseEntity.ok(response);
     }
+    
+    
+    
+    // 아이디 유효성 검사
+    @PostMapping("/check_employee_id")
+    @ResponseBody
+    public Map<String, Boolean> checkEmployeeId(@RequestBody Map<String, String> request) {
+        Map<String, Boolean> response = new HashMap<>();
+        String employee_id = request.get("employee_id");  // JSON으로 전달된 값 받기
+        try {
+            boolean isValid = employeeService.isEmployeeIdAvailable(employee_id); // 중복 여부 확인
+            response.put("isValid", isValid);
+        } catch (Exception e) {
+            // 예외 로그 출력
+            e.printStackTrace();
+            response.put("isValid", false); // 예외 발생 시 false 처리
+        }
+        return response;
+    }
+
+
+
+
+    
 
 }

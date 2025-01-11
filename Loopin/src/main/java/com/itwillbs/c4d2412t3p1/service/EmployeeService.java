@@ -205,6 +205,7 @@ public class EmployeeService {
 	}
 	
 
+	// 입사퇴자 조회
 	public Map<String, List<?>> getHireAndRetireStatsByDate(String startDate, String endDate) {
 	    // 입사자 및 퇴사자 데이터 조회
 	    List<String> categories = EmployeeRepository.findDistinctMonths(startDate, endDate); // 월별 카테고리 조회
@@ -221,14 +222,17 @@ public class EmployeeService {
 	}
 
 	
-	
+	// 직원 코드로 데이터 조회
 	public List<Employee> findByEmployeeCd(String currentCd) {
 		return EmployeeRepository.findByEmployeeCd(currentCd);
 	}
 
 
 
-
+    // 아이디 중복 여부 확인
+    public boolean isEmployeeIdAvailable(String employee_id) {
+    	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
+    }
 
 	
 	

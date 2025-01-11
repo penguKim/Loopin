@@ -53,6 +53,7 @@
 								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_id" name="employee_id">
+									<span id="employee_id_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
@@ -78,8 +79,8 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">부서장 유무</label>
 								<div class="col-sm-4">
 									<select class="form-select" id="employee_mg" name="employee_domain" aria-label="도메인 선택">
-									    <option value="false" selected>부서직원</option>
-									    <option value="ture">부서장</option>
+									    <option value="0" selected>부서직원</option>
+									    <option value="1">부서장</option>
 									</select>
 								</div>
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
@@ -115,11 +116,11 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">부서코드</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
+									<input type="text" class="form-control" id="employee_dp" name="employee_dp" readonly>
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">직위코드</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
+									<input type="text" class="form-control" id="employee_gd" name="employee_gd" readonly>
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -516,6 +517,7 @@
 						{ header: '작성일', name: 'employee_wd', hidden: true  },
 						{ header: '수정자', name: 'employee_mf', hidden: true  },
 						{ header: '수정일', name: 'employee_md', hidden: true  },
+						{ header: '부서장유무', name: 'employee_mg', hidden: true  },
 					]
 	            });
 
@@ -750,6 +752,48 @@
 		    $('#employee_pi').val('');
 		}
 
+		// 아이디 입력 유효성 처리
+		$('#employee_id').on('blur', function () {
+		    const employee_id = $(this).val().trim();
+
+		    // 입력값이 없으면 초기화
+		    if (employee_id === '') {
+		        $('#employee_id_check').text('아이디를 입력해주세요').css('color', 'red');
+		        return;
+		    }
+
+			// 정규식으로 아이디 형식 검사
+			const regex = /^[a-zA-Z0-9]{4,20}$/;  // 6자 이상 20자 이하, 영문 대소문자, 숫자만 허용
+			if (!regex.test(employee_id)) {
+			    $('#employee_id_check').text('아이디는 4자 이상 20자 이하이며, 영어 대소문자와 숫자만 허용됩니다.').css('color', 'red');
+			    return;
+			}
+			
+		    // AJAX로 아이디 유효성 검사
+		    $.ajax({
+		        url: '/check_employee_id', // 서버의 유효성 검사 엔드포인트
+		        method: 'POST',
+		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
+		        contentType: 'application/json',  // JSON 형식으로 데이터 보내기
+		        dataType: 'json',  // 응답도 JSON 형식으로 받기
+		        data: JSON.stringify({ employee_id: employee_id }), // JSON으로 변환하여 보내기
+		        success: function (response) {
+		            if (response.isValid) {
+		                $('#employee_id_check').text('사용 가능한 아이디입니다.').css('color', 'green');
+		            } else {
+		                $('#employee_id_check').text('이미 존재하는 아이디입니다.').css('color', 'red');
+		            }
+		        },
+		        error: function () {
+		            $('#employee_id_check').text('유효성 검사 중 오류가 발생했습니다.').css('color', 'red');
+		        }
+		    });
+		});
+
+
+
+		
+		
 
 		// 폼 제출 이벤트
 		$('#appointment_form').off('submit').on('submit', function (event) {
@@ -786,6 +830,7 @@
 		        employee_mf: $('#employee_mf').val(),
 		        employee_md: $('#employee_md').val(),
 		        employee_rl: $('#employee_rl').val(),
+		        employee_rl: $('#employee_mg').val(),
 		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 
