@@ -110,6 +110,9 @@ public class EmployeeController {
 		// 직위코드 가져오기 
 		model.addAttribute("grade_list", employeeService.selectGradeList("POSITION"));
 		
+		// 부서장 유무 가져오기
+		model.addAttribute("DPType_list", employeeService.selectDPTypeList("DPTYPE"));
+		
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
 

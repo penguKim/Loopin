@@ -78,14 +78,16 @@
 							<div class="row mb-3">
 							    <label for="inputText" class="col-sm-2 col-form-label">부서장 유무</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_mg" name="employee_domain" aria-label="도메인 선택">
-									    <option value="0" selected>부서직원</option>
-									    <option value="1">부서장</option>
+									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장 유무">
+										<option value="" disabled selected>부서장구분</option>
+										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
+								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+										</option>
 									</select>
 								</div>
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_rl" name="employee_domain" aria-label="도메인 선택">
+									<select class="form-select" id="employee_rl" name="employee_rl" aria-label="직원 권한">
 									    <option value="employee" selected>사원</option>
 									    <option value="admin">관리자</option>
 									    <option value="developer">개발자</option>
@@ -133,7 +135,6 @@
 							    <label for="inputDate" class="col-sm-2 col-form-label">입사일<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 								    <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date">
-<!-- 								        <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date"> -->
 							        <div id="startpicker-container" style="margin-left: -1px;"></div>
 							    </div>
 							    <label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
@@ -830,7 +831,7 @@
 		        employee_mf: $('#employee_mf').val(),
 		        employee_md: $('#employee_md').val(),
 		        employee_rl: $('#employee_rl').val(),
-		        employee_rl: $('#employee_mg').val(),
+		        employee_mg: $('#employee_mg').val(),
 		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 

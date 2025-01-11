@@ -174,6 +174,12 @@ public class EmployeeService {
 		return commonRepository.selectGradeList("00", string);
 	}
     
+	// 셀렉트박스 부서장 유무 가져오기
+	public List<Common_code> selectDPTypeList(String string) {
+		return commonRepository.selectDPTypeList("00", string);
+	}
+	
+	
 	// 성별 차트 조회
 	public List<Map<String, Object>> getEmployeeGenderStatsByDate(String startDt, String endDt) {
 		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
