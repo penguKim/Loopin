@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org"
-	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
 
 <body>
@@ -22,10 +21,9 @@
 							<div class="col-lg-12" id="grid" style="margin-top: 20px;"></div>
 							<br>
 
-							<button type="button" class="btn btn-primary"
-								data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
-							<button type="button" id="btn_transfer_delete"
-								class="btn btn-primary">삭제</button>
+							<button type="button" class="btn btn-primary" data-bs-toggle="modal"
+								data-bs-target="#modal_appointment_save">신규</button>
+							<button type="button" id="btn_transfer_delete" class="btn btn-primary">삭제</button>
 
 							<!-- End General Form Elements -->
 
@@ -42,100 +40,102 @@
 	<!-- End #main -->
 
 	<!-- Bootstrap Modal -->
-	<div class="modal fade" id="modal_appointment_save" tabindex="-1"
-		aria-labelledby="modal_appointment_save_label" aria-hidden="true"
-		data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label"
+		aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="modal_appointment_save_label">인사발령</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"
-						aria-label="Close"></button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
-					<form id="modal_appointment_save_form"
-						th:action="@{/insert_TRANSFER}" method="post">
-						<div class="row mb-3">
-							<div class="col">
-								<label for="employee_nm" class="form-label">이름</label>
-								<div class="input-group">
-									<input type="text" id="employee_nm" class="form-control"
-										readonly required>
-								</div>
-							</div>
-							<div class="col">
-								<label for="employee_cd" class="form-label">사원코드</label>
-								<div class="input-group">
-									<input type="text" id="employee_cd" class="form-control"
-										readonly required>
-								</div>
+					<form id="modal_appointment_save_form" th:action="@{/insert_TRANSFER}" method="post">
+						<div class="col">
+							<label for="employee_nm" class="form-label">이름</label>
+							<div class="input-group">
+								<input type="text" id="employee_nm" class="form-control" readonly required>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
-								<label for="transfer_ad" class="form-label">발령일</label> <input
-									type="text" id="transfer_ad" class="form-control"
-									placeholder="YYYY-MM-DD" required>
+								<label for="employee_cd" class="form-label">사원코드</label>
+								<div class="input-group">
+									<input type="text" id="employee_cd" class="form-control" readonly required>
+								</div>
+							</div>
+							<div class="col">
+								<label for="employee_mg" class="form-label">부서구분</label> <select id="employee_mg"
+									class="form-select">
+									<option value="" disabled selected>부서구분</option>
+									<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_cc}"
+										th:text="${dptype.common_nm}">
+									</option>
+								</select>
+							</div>
+						</div>
+						<div class="row mb-3">
+							<div class="col">
+								<label for="transfer_ad" class="form-label">발령일</label> <input type="text"
+									id="transfer_ad" class="form-control" placeholder="YYYY-MM-DD" required>
 							</div>
 							<div class="col-sm-2">
 								<div id="wrapper"></div>
 							</div>
 							<div class="col">
-								<label for="transfer_ac" class="form-label">발령구분</label> <select
-									id="transfer_ac" class="form-select">
-									<option value="승진">승진</option>
-									<option value="전근">전근</option>
-									<option value="복직">복직</option>
-								</select>
-							</div>
-						</div>
-						<div class="row mb-3">
-							<div class="col">
-								<label for="transfer_og" class="form-label">기존직위</label> <select
-									id="transfer_og" class="form-select">
-									<option value="" disabled selected>직위를 선택하세요</option>
-									<option th:each="grade : ${grade_list}"
-										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
-									</option>
-								</select>
-							</div>
-							<div class="col">
-								<label for="transfer_ag" class="form-label">발령직위</label> <select
-									id="transfer_ag" class="form-select">
-									<option value="" disabled selected>직위를 선택하세요</option>
-									<option th:each="grade : ${grade_list}"
-										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
+								<label for="transfer_ac" class="form-label">발령구분</label> <select id="transfer_ac"
+									class="form-select">
+									<option value="" disabled selected>발령구분을 선택하세요</option>
+									<option th:each="trtype : ${TRType_list}" th:value="${trtype.common_cc}"
+										th:text="${trtype.common_nm}">
 									</option>
 								</select>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
-								<label for="transfer_od" class="form-label">기존부서</label> <select
-									id="transfer_od" class="form-select">
-									<option value="" disabled selected>부서를 선택하세요</option>
-									<option th:each="dept : ${dept_list}"
-										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
+								<label for="transfer_og" class="form-label">기존직위</label> <select id="transfer_og"
+									class="form-select">
+									<option value="" disabled selected>직위를 선택하세요</option>
+									<option th:each="grade : ${grade_list}" th:value="${grade.common_cc}"
+										th:text="${grade.common_nm}">
 									</option>
 								</select>
 							</div>
 							<div class="col">
-								<label for="transfer_adp" class="form-label">발령부서</label> <select
-									id="transfer_adp" class="form-select">
+								<label for="transfer_ag" class="form-label">발령직위</label> <select id="transfer_ag"
+									class="form-select">
+									<option value="" disabled selected>직위를 선택하세요</option>
+									<option th:each="grade : ${grade_list}" th:value="${grade.common_cc}"
+										th:text="${grade.common_nm}">
+									</option>
+								</select>
+							</div>
+						</div>
+						<div class="row mb-3">
+							<div class="col">
+								<label for="transfer_od" class="form-label">기존부서</label> <select id="transfer_od"
+									class="form-select">
 									<option value="" disabled selected>부서를 선택하세요</option>
-									<option th:each="dept : ${dept_list}"
-										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
+									<option th:each="dept : ${dept_list}" th:value="${dept.common_cc}"
+										th:text="${dept.common_nm}">
+									</option>
+								</select>
+							</div>
+							<div class="col">
+								<label for="transfer_adp" class="form-label">발령부서</label> <select id="transfer_adp"
+									class="form-select">
+									<option value="" disabled selected>부서를 선택하세요</option>
+									<option th:each="dept : ${dept_list}" th:value="${dept.common_cc}"
+										th:text="${dept.common_nm}">
 									</option>
 								</select>
 							</div>
 						</div>
 						<div class="modal-footer d-flex justify-content-between">
-							<button type="button" class="btn btn-secondary"
-								id="btn_modal_reset">초기화</button>
+							<button type="button" class="btn btn-secondary" id="btn_modal_reset">초기화</button>
 							<div>
 								<button type="submit" class="btn btn-primary">저장</button>
-								<button type="button" class="btn btn-secondary"
-									data-bs-dismiss="modal">닫기</button>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
 							</div>
 						</div>
 					</form>
@@ -145,15 +145,13 @@
 	</div>
 
 
-	<div class="modal fade" id="modal_employee_list" tabindex="-1"
-		aria-labelledby="modal_employee_list_label" aria-hidden="true"
-		data-bs-backdrop="false" data-bs-keyboard="false">
+	<div class="modal fade" id="modal_employee_list" tabindex="-1" aria-labelledby="modal_employee_list_label"
+		aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="modal_employee_list_label">사원 선택</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal"
-						aria-label="Close"></button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<table id="empTable" class="table table-striped">
@@ -185,8 +183,8 @@
 	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-// 	const transferData = /*[[${transferList}]]*/[];
-// 	console.log(transferData);
+	// 	const transferData = /*[[${transferList}]]*/[];
+	// 	console.log(transferData);
 
 
 	document.addEventListener('DOMContentLoaded', function () {
@@ -211,8 +209,7 @@
 					el: document.getElementById('grid'),
 					data: transferData.map(row => ({
 						transfer_id: row.transfer_id,
-						// 빈 값 처리
-						employee_nm: '', 
+						employee_nm: row.employee_nm,
 						employee_cd: row.employee_cd,
 						transfer_ad: row.transfer_ad,
 						transfer_ac: row.transfer_ac,
@@ -220,17 +217,17 @@
 						transfer_ag: row.transfer_ag,
 						transfer_od: row.transfer_od,
 						transfer_adp: row.transfer_adp,
-						
+
 					})),
 					columns: [
 						{header: '이름', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
 						{header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
 						{header: '인사발령일', name: 'transfer_ad', align: 'center', filter: {type: 'date', showApplyBtn: true}, sortable: true},
-						{header: '발령구분', name: 'transfer_ac', align: 'center', filter: {type: 'select', options: ['승진', '전근', '복직']}, sortable: true},
-						{header: '기존직위', name: 'transfer_og', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
-						{header: '변경직위', name: 'transfer_ag', align: 'center', filter: {type: 'select', options: ['사원', '대리', '과장']}, sortable: true},
-						{header: '기존부서', name: 'transfer_od', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true},
-						{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select', options: ['영업부', '개발부', '기획부', '인사부']}, sortable: true}
+						{header: '발령구분', name: 'transfer_ac', align: 'center', filter: {type: 'select'}, sortable: true},
+						{header: '기존직위', name: 'transfer_og', align: 'center', filter: {type: 'select'}, sortable: true},
+						{header: '변경직위', name: 'transfer_ag', align: 'center', filter: {type: 'select'}, sortable: true},
+						{header: '기존부서', name: 'transfer_od', align: 'center', filter: {type: 'select'}, sortable: true},
+						{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select'}, sortable: true}
 					],
 					rowHeaders: ['checkbox'],
 					autoWidth: true,
@@ -278,7 +275,7 @@
 					[csrfHeader]: csrfToken
 				},
 				// 삭제할 ID 배열 전달
-				body: JSON.stringify({ids: idsToDelete}) 
+				body: JSON.stringify({ids: idsToDelete})
 			})
 				.then(response => {
 					if (!response.ok) {
@@ -290,7 +287,7 @@
 					if (data.success) {
 						alert('삭제가 완료되었습니다.');
 						// 페이지 새로고침
-						location.reload(); 
+						location.reload();
 					} else {
 						alert('삭제에 실패했습니다: ' + data.message);
 					}
@@ -315,63 +312,58 @@
 			});
 		});
 	});
-	
+
 	// 폼 데이터를 초기화
 	document.getElementById('btn_modal_reset').addEventListener('click', function () {
-	    const modalForm = document.getElementById('modal_appointment_save_form');
-	    modalForm.reset(); 
+		const modalForm = document.getElementById('modal_appointment_save_form');
+		modalForm.reset();
 	});
-	
+
 	// 모달이 닫힐 때 폼 데이터 초기화
 	document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
-	    const modalForm = document.getElementById('modal_appointment_save_form');
-	    modalForm.reset();
+		const modalForm = document.getElementById('modal_appointment_save_form');
+		modalForm.reset();
 	});
-	
+
 	// 이름 또는 사원코드 클릭 시 사원 선택 모달 열기
 	document.getElementById('employee_nm').addEventListener('click', function () {
-    const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-    modal_employee_list.show();
+		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+		modal_employee_list.show();
 
-    // 서버에서 사원 정보를 가져오는 요청
-    fetch('/select_EMPLOYEE_COMMON', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('서버 응답 오류');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            // 데이터 가져온 후 테이블 갱신
-            const tbody = document.querySelector('#empTable tbody');
-            tbody.innerHTML = ''; // 기존 내용 초기화
+		// 서버에서 사원 정보를 가져오는 요청
+		fetch('/select_EMPLOYEE_COMMON', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		})
+			.then((response) => {
+				if (!response.ok) {
+					throw new Error('서버 응답 오류');
+				}
+				return response.json();
+			})
+			.then((data) => {
+				// 데이터 가져온 후 테이블 갱신
+				const tbody = document.querySelector('#empTable tbody');
+				tbody.innerHTML = ''; // 기존 내용 초기화
 
-            // 데이터를 테이블에 동적으로 추가
-            data.forEach((employee) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+				// 데이터를 테이블에 동적으로 추가
+				data.forEach((employee) => {
+					const row = document.createElement('tr');
+					row.innerHTML = `
                     <td>${employee.employee_cd}</td>
                     <td>${employee.employee_nm}</td>
                     <td>${employee.department_name}</td>
                     <td>${employee.position_name}</td>
                     <td><button type="button" class="btn btn-primary select-emp-btn">선택</button></td>
                 `;
-                tbody.appendChild(row);
-            });
-        })
-        .catch((error) => console.error('사원 목록 가져오기 실패:', error));
-});
-
-
-	document.getElementById('employee_cd').addEventListener('click', function () {
-		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-		modal_employee_list.show();
+					tbody.appendChild(row);
+				});
+			})
+			.catch((error) => console.error('사원 목록 가져오기 실패:', error));
 	});
+
 
 	// 선택 버튼 클릭 이벤트 처리
 	document.addEventListener('click', function (event) {
@@ -407,22 +399,56 @@
 		const transfer_od = document.getElementById('transfer_od').value;
 		const transfer_adp = document.getElementById('transfer_adp').value;
 
-		// AJAX 요청
-		fetch('/insert_TRANSFER', {
+		// 부서장 존재 여부 확인 AJAX 요청
+		fetch('/select_department_manager', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
 				'X-CSRF-TOKEN': csrfToken,
 			},
 			body: JSON.stringify({
-				employee_cd: employee_cd,
-				transfer_ad: transfer_ad,
-				transfer_ac: transfer_ac,
-				transfer_og: transfer_og,
-				transfer_ag: transfer_ag,
-				transfer_od: transfer_od,
-				transfer_adp: transfer_adp,
+				transfer_adp: transfer_adp, // 발령 부서
 			}),
+		})
+			.then(response => response.json())
+			.then(managerCheck => {
+				if (managerCheck.manager_exists) {
+					// 부서장이 존재하는 경우
+					const managerInfo = managerCheck.manager_info; // 서버에서 전달된 부서장 정보
+					const confirmProceed = confirm(
+						`해당 부서(${managerInfo.department_name})에는 이미 부서장(${managerInfo.employee_nm})이 존재합니다.\n계속 진행하시겠습니까?`
+					);
+
+					if (!confirmProceed) {
+						return; // 사용자가 진행하지 않으면 종료
+					}
+				}
+
+				// 부서장이 없거나 사용자가 진행을 선택한 경우, 발령 데이터 저장
+				saveTransfer({
+					employee_cd: employee_cd,
+					transfer_ad: transfer_ad,
+					transfer_ac: transfer_ac,
+					transfer_og: transfer_og,
+					transfer_ag: transfer_ag,
+					transfer_od: transfer_od,
+					transfer_adp: transfer_adp,
+				});
+			})
+			.catch(error => {
+				console.error('부서장 체크 중 오류 발생:', error);
+			});
+	});
+
+	// 발령 데이터를 저장하는 함수
+	function saveTransfer(transferData) {
+		fetch('/insert_TRANSFER', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRF-TOKEN': csrfToken,
+			},
+			body: JSON.stringify(transferData),
 		})
 			// JSON 응답 처리
 			.then(response => response.json())
@@ -433,9 +459,10 @@
 				location.reload();
 			})
 			.catch(error => {
-				console.error('오류 발생:', error);
+				console.error('발령 저장 중 오류 발생:', error);
 			});
-	});
+	}
+
 
 </script>
 
