@@ -76,9 +76,9 @@
 								</div>
 							</div>	
 							<div class="row mb-3">
-							    <label for="inputText" class="col-sm-2 col-form-label">부서장 유무</label>
+							    <label for="inputText" class="col-sm-2 col-form-label">부서장구분</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장 유무">
+									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
 										<option value="" disabled selected>부서장구분</option>
 										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
 								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
@@ -684,8 +684,7 @@
 			        $(field).prop("disabled", true);
 			    });
 			}
-
-
+			
 			// 데이터 매핑
 				Object.keys(data).forEach(key => {
 				const $field = $(`#${key}`);
@@ -693,8 +692,23 @@
 		            $field.val(data[key] || '');
 		        }
 		    });
-
 			
+			
+			// 부서장 관련 처리
+			if (data.employee_mg === true) {
+			    $('#employee_mg option').filter(function() {
+			        return $(this).text() === "부서장";  // '부서장' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '부서장' 옵션을 선택 상태로 설정
+			} else if (data.employee_mg === false) {
+			    $('#employee_mg option').filter(function() {
+			        return $(this).text() === "부서직원";  // '부서직원' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '부서직원' 옵션을 선택 상태로 설정
+			} else {
+			    $('#employee_mg').val("");  // 기본값으로 선택을 초기화
+			}
+
+
+
 			
 		    // 주소 처리
 		    if (data.employee_ad) {

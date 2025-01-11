@@ -130,6 +130,7 @@ public class EmployeeController {
 	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
 	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
+	    
 	    List<Employee> employees;
 
 	    // 관리자일 경우 모든 직원 정보 조회
@@ -143,6 +144,8 @@ public class EmployeeController {
 	    // 공통 응답 생성
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
+	        Boolean employee_mg = employee.getEmployee_mg();
+	        
 	        row.put("employee_cd", employee.getEmployee_cd());
 	        row.put("employee_id", employee.getEmployee_id());
 	        row.put("employee_pw", employee.getEmployee_pw());
@@ -168,8 +171,9 @@ public class EmployeeController {
 	        row.put("employee_wd", employee.getEmployee_wd());
 	        row.put("employee_mf", employee.getEmployee_mf());
 	        row.put("employee_md", employee.getEmployee_md());
-	        row.put("employee_mg", employee.getEmployee_mg());
+	        row.put("employee_mg", employee_mg != null && employee_mg);
 	        row.put("employee_rl", employee.getEmployee_rl());
+	        
 	        return row;
 	    }).collect(Collectors.toList());
 
