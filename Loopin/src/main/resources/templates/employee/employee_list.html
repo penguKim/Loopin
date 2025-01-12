@@ -297,28 +297,11 @@
 					<div class="card">
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
-							<div class="row mb-3">
-									<div class="col-sm-2">
-										<select id="categorySelect"class="form-control">
-											<option value="all">전체</option>
-											<option value="employee_cd">사원코드</option>
-											<option value="employee_nm">사원명</option>
-											<option value="employee_dp">부서</option>
-											<option value="employee_bd">생년월일</option>
-											<option value="employee_ad">주소</option>
-											<option value="employee_gd">직급</option>
-											<option value="employee_ph">연락처</option>
-											<option value="employee_em">이메일</option>
-											<option value="employee_hd">입사일</option>
-										</select>
-									</div>
-									<div class="col-sm-4">
-										<input type="text" class="form-control" id="searchInput" placeholder="검색..." />
-									</div>
-								</div>
-								
 								<div class="col-sm-12">
 									<div id="grid"></div>
+									<div class="tui-pagination" id="pagination"></div>
+								</div>
+								<div class="col-sm-12">
 									<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
 										<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
 										<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
@@ -499,34 +482,42 @@
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+		var userRole = /*[[${role}]]*/ 'default';
 		
-	    var userRole = /*[[${role}]]*/ 'default';
-
+	    let currentPage = 1; // 현재 페이지
+	    const itemsPerPage = 5; // 한 페이지에 표시할 항목 수
+	    let employeeList = []; // 전체 직원 목록
 	    let grid;
+	    let pagination;
 
-	    // 데이터 가져오기 및 그리드 초기화
+	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
 	        method: 'GET',
-	        success: function (employeeList) {
+	        success: function (data) {
+	            employeeList = data; // 전체 데이터를 employeeList에 저장
+	            console.log('전체 데이터:', employeeList); // 데이터 확인
+
+	            // Grid 초기화
 	            grid = new tui.Grid({
 	                el: document.getElementById('grid'),
-	                data: employeeList,
+	                data: employeeList.slice(0, itemsPerPage), // 첫 페이지 데이터 로드
 	                scrollX: true,
 	                scrollY: true,
 	                rowHeaders: ['checkbox'],
-					columns: [
-						{ header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
-						{ header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
-						{ header: '부서', name: 'employee_dp', align: 'center', sortable: true },
-						{ header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
-						{ header: '주소', name: 'employee_ad', align: 'center', sortable: true },
-						{ header: '직급', name: 'employee_gd', align: 'center', sortable: true },
-						{ header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
-						{ header: '이메일', name: 'employee_em', align: 'center', sortable: true },
-						{ header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
-					    
-					    // 숨김 컬럼
+	                columns: [
+						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '부서', name: 'employee_dp', align: 'center', filter: {type: 'select'}, sortable: true },
+						{ header: '직급', name: 'employee_gd', align: 'center', filter: {type: 'select'}, sortable: true },
+						{ header: '생년월일', name: 'employee_bd', align: 'center', filter: {type: 'date', options: {format: 'yyyyMMdd'}}, sortable: true },
+						{ header: '입사일', name: 'employee_hd', align: 'center', filter: {type: 'date', options: {format: 'yyyy-MM-dd'}}, sortable: true },
+						{ header: '주소', name: 'employee_ad', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '연락처', name: 'employee_ph', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '이메일', name: 'employee_em', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						
+						// 숨김 컬럼
 						{ header: '사원아이디', name: 'employee_id', hidden: true },
 						{ header: '성별', name: 'employee_sb', hidden: true },
 						{ header: '채용구분', name: 'employee_cg', hidden: true },
@@ -544,14 +535,15 @@
 						{ header: '수정자', name: 'employee_mf', hidden: true  },
 						{ header: '수정일', name: 'employee_md', hidden: true  },
 						{ header: '부서장유무', name: 'employee_mg', hidden: true  },
-					]
+	                ]
 	            });
 
-	            // 그리드 클릭 이벤트 등록
-	            grid.on('click', (ev) => {
-	                const columnName = ev.columnName;
-	                const rowKey = ev.rowKey;
-	                const rowData = grid.getRow(rowKey);
+				
+				// 그리드 클릭 이벤트 등록
+				grid.on('click', (ev) => {
+				    const columnName = ev.columnName;
+				    const rowKey = ev.rowKey;
+				    const rowData = grid.getRow(rowKey);
 
 					// 헤더 클릭인지 확인
 					if (rowKey === null || rowKey === undefined) {
@@ -560,49 +552,48 @@
 					}
 					
 					
-	                if (columnName === 'employee_cd' || columnName === 'employee_nm') {
-	                    openEditModal(rowData); // 수정 모드로 모달 열기
-	                }
-	            });
-				
-				// 카테고리 선택 및 검색 기능
-				$('#categorySelect').on('change', function() {
-				    performSearch(); // 카테고리 변경 시 검색 수행
-				});
-
-				// 검색 기능
-				$('#searchInput').on('input', function () {
-				    performSearch(); // 검색어 입력 시 검색 수행
-				});
-
-				function performSearch() {
-				    const searchTerm = $('#searchInput').val().toLowerCase();
-				    const category = $('#categorySelect').val(); // 선택된 카테고리
-
-				    let filteredData;
-
-				    if (category === 'all') {
-				        // "전체" 선택 시 모든 컬럼을 대상으로 검색
-				        filteredData = employeeList.filter(item =>
-				            Object.keys(item).some(key =>
-				                item[key] && item[key].toString().toLowerCase().includes(searchTerm)
-				            )
-				        );
-				    } else {
-				        // 선택된 카테고리만 대상으로 검색
-				        filteredData = employeeList.filter(item =>
-				            item[category] && item[category].toString().toLowerCase().includes(searchTerm)
-				        );
+				    if (columnName === 'employee_cd' || columnName === 'employee_nm') {
+				        openEditModal(rowData); // 수정 모드로 모달 열기
 				    }
+				});
+				
+				
+				
+	            // Pagination 초기화
+	            pagination = new tui.Pagination(document.getElementById('pagination'), {
+	                totalItems: employeeList.length, // 전체 데이터 개수
+	                itemsPerPage: itemsPerPage, // 페이지당 항목 수
+	                visiblePages: 5, // 페이지 버튼 개수
+	                page: currentPage, // 시작 페이지
+	                centerAlign: true // 페이지 버튼을 가운데 정렬
+	            });
 
-				    // 필터링된 데이터로 그리드 갱신
-				    grid.resetData(filteredData);
-				}
+	            // 페이지 변경 이벤트 핸들러
+	            pagination.on('afterMove', function (event) {
+	                currentPage = event.page; // 현재 페이지 업데이트
+	                console.log("변경된 currentPage:", currentPage); // 디버그용
+
+	                // 해당 페이지의 데이터 로드
+	                loadPageData(currentPage);
+	            });
+
+	            // 초기 데이터 로드
+	            loadPageData(currentPage);
 	        },
 	        error: function (error) {
-	            console.error('오류 발생:', error);
+	            console.error('데이터 로드 실패:', error);
 	        }
 	    });
+
+	    // 페이지 데이터 로드 함수
+	    function loadPageData(page) {
+	        const start = (page - 1) * itemsPerPage;
+	        const end = page * itemsPerPage;
+	        const pageData = employeeList.slice(start, end); // 해당 페이지 데이터 가져오기
+
+	        console.log('로딩된 페이지 데이터:', pageData); // 디버그용
+	        grid.resetData(pageData); // Grid 데이터 업데이트
+	    }
 
 
 	    // 삭제 버튼 클릭 이벤트
