@@ -83,26 +83,11 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			""", nativeQuery = true)
 	void updateTransfer_aw(@Param("transfer_id") Long transfer_id);
 
-//	스케줄러작업 - 인사발령날짜가 오늘날짜가 아닌경우의 변경
-	@Modifying
 	@Query(value = """
-			MERGE INTO EMPLOYEE e
-			USING TRANSFER t
-			ON (e.employee_cd = t.employee_cd AND t.transfer_ad = :today)
-			WHEN MATCHED THEN
-			UPDATE SET
-			    e.employee_dp = t.transfer_adp,
-			    e.employee_gd = t.transfer_ag
+			    SELECT *
+			    FROM TRANSFER
+			    WHERE transfer_ad = :today AND transfer_aw = 0
 			""", nativeQuery = true)
-	void updateTransferAndEmployee(@Param("today") String today);
-
-//	스케줄러작업 - 인사발령날짜가 오늘날짜가 아닌경우의 변경
-	@Modifying
-	@Query(value = """
-			UPDATE TRANSFER t
-			SET t.transfer_aw = 1
-			WHERE t.transfer_ad = :today
-			""", nativeQuery = true)
-	void updateTransfer_aw(@Param("today") String today);
+	List<Transfer> findTransfersByDate(@Param("today") String today);
 
 }

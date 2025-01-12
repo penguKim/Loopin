@@ -151,22 +151,50 @@ public class TransferService {
 //	스케줄러작업 - 인사발령날짜가 오늘날짜가 아닌경우의 변경
 	@Transactional
 	public void updatePendingTransfers() {
-		log.info("UPDATE 작업 시작: TRANSFER 및 EMPLOYEE 테이블");
+	    log.info("스케줄러: TRANSFER 및 EMPLOYEE 테이블 업데이트 시작");
 
-		// 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
-		String today = java.time.LocalDate.now().toString();
+	    // 오늘 날짜를 YYYY-MM-DD 형식으로 가져오기
+	    String today = java.time.LocalDate.now().toString();
 
-		try {
-			// EMPLOYEE 테이블 업데이트 및 TRANSFER_AW 업데이트
-			transferRepository.updateTransferAndEmployee(today);
-			transferRepository.updateTransfer_aw(today); // transfer_aw 업데이트
+	    try {
+	        // 1. TRANSFER 테이블에서 오늘 날짜와 관련된 데이터 가져오기
+	        List<Transfer> transfers = transferRepository.findTransfersByDate(today); // 오늘 날짜의 인사발령 데이터 조회
 
-			log.info("TRANSFER 및 EMPLOYEE 테이블 업데이트 성공");
-		} catch (Exception e) {
-			log.log(java.util.logging.Level.SEVERE, "TRANSFER 및 EMPLOYEE 업데이트 중 오류 발생", e);
-			throw e; // 오류를 다시 던짐
-		}
+	        for (Transfer transfer : transfers) {
+	            String employee_cd = transfer.getEmployee_cd();
+	            String transfer_adp = transfer.getTransfer_adp();
+	            String transfer_ag = transfer.getTransfer_ag();
+	            Boolean transfer_mg = transfer.getTransfer_mg();
+
+	            // 2. 부서장이 발령되는 경우, 기존 부서장 처리
+	            if (transfer_mg) {
+	                Map<String, Object> existingManager = transferRepository.findDepartmentManager(transfer_adp);
+	                if (existingManager != null) {
+	                    String existingManagerCd = (String) existingManager.get("employee_cd");
+	                    // 기존 부서장을 부서원으로 변경
+	                    transferRepository.updateEmployeeManager(existingManagerCd, false);
+	                    log.info("기존 부서장(" + existingManagerCd + ")을 부서원으로 변경했습니다.");
+	                }
+	            }
+
+	            // 3. 발령된 직원 업데이트 (EMPLOYEE 테이블 업데이트)
+	            transferRepository.updateEmployeeDepartmentAndGrade(
+	                employee_cd, transfer_adp, transfer_ag, transfer_mg
+	            );
+	            log.info("발령된 직원(" + employee_cd + ")의 부서 및 직위를 업데이트했습니다.");
+
+	            // 4. TRANSFER_AW 업데이트
+	            transferRepository.updateTransfer_aw(transfer.getTransfer_id());
+	            log.info("TRANSFER_AW가 업데이트되었습니다. (TRANSFER ID: " + transfer.getTransfer_id() + ")");
+	        }
+
+	        log.info("TRANSFER 및 EMPLOYEE 테이블 업데이트 성공");
+	    } catch (Exception e) {
+	        log.log(java.util.logging.Level.SEVERE, "TRANSFER 및 EMPLOYEE 업데이트 중 오류 발생", e);
+	        throw e; // 오류를 다시 던짐
+	    }
 	}
+
 
 	// 모달 부서코드 가져오기
 	public List<Common_code> selectDeptList(String string) {
