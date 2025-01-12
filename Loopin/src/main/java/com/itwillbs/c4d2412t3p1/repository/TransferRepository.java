@@ -34,21 +34,30 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			+ "LEFT JOIN COMMON_CODE p ON e.employee_gd = p.common_cc AND p.common_gc = 'POSITION'")
 	List<Object[]> findEmployeeList();
 
-	@Query("SELECT new map(e.employee_nm as employee_nm, d.common_nm as department_name) " + "FROM Employee e "
-			+ "JOIN COMMON_CODE d ON e.employee_dp = d.common_cc "
+	@Query("SELECT new map(e.employee_cd as employee_cd, e.employee_nm as employee_nm, d.common_nm as department_name) "
+			+ "FROM Employee e " + "JOIN COMMON_CODE d ON e.employee_dp = d.common_cc "
 			+ "WHERE e.employee_mg = true AND e.employee_dp = :transfer_adp AND d.common_gc = 'DEPARTMENT'")
 	Map<String, Object> findDepartmentManager(@Param("transfer_adp") String transfer_adp);
 
-//	인사발령날짜가 오늘날짜 인경우
 	@Modifying
 	@Query(value = """
 			    UPDATE EMPLOYEE
 			    SET employee_dp = :transfer_adp,
-			        employee_gd = :transfer_ag
+			        employee_gd = :transfer_ag,
+			        employee_mg = :transfer_mg
 			    WHERE employee_cd = :employee_cd
 			""", nativeQuery = true)
 	void updateEmployeeDepartmentAndGrade(@Param("employee_cd") String employee_cd,
-			@Param("transfer_adp") String transfer_adp, @Param("transfer_ag") String transfer_ag);
+			@Param("transfer_adp") String transfer_adp, @Param("transfer_ag") String transfer_ag,
+			@Param("transfer_mg") Boolean transfer_mg);
+
+	@Modifying
+	@Query(value = """
+			    UPDATE EMPLOYEE
+			    SET employee_mg = :employee_mg
+			    WHERE employee_cd = :employee_cd
+			""", nativeQuery = true)
+	void updateEmployeeManager(@Param("employee_cd") String employee_cd, @Param("employee_mg") Boolean employee_mg);
 
 	// 인사발령날짜가 오늘날짜 인경우
 	@Modifying

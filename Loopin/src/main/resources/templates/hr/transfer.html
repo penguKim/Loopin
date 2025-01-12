@@ -366,45 +366,44 @@
 
 	// 선택 버튼 클릭 이벤트 처리
 	document.addEventListener('click', function (event) {
-	    // 선택 버튼(`select-emp-btn`)이 클릭되었는지 확인
-	    if (event.target.classList.contains('select-emp-btn')) {
-	        // 클릭된 버튼이 속한 행(`tr`)을 가져옴
-	        const selectedRow = event.target.closest('tr'); // tr_
+		// 선택 버튼(`select-emp-btn`)이 클릭되었는지 확인
+		if (event.target.classList.contains('select-emp-btn')) {
+			// 클릭된 버튼이 속한 행(`tr`)을 가져옴
+			const selectedRow = event.target.closest('tr'); // tr_
 
-	        // 행의 각 열(`td`)에서 데이터를 가져옴
-	        const employee_cd = selectedRow.cells[0].textContent; // 사원코드
-	        const employee_nm = selectedRow.cells[1].textContent; // 이름
-	        const employee_dept = selectedRow.cells[2].textContent; // 부서
-	        const employee_position = selectedRow.cells[3].textContent; // 직위
+			// 행의 각 열(`td`)에서 데이터를 가져옴
+			const employee_cd = selectedRow.cells[0].textContent; // 사원코드
+			const employee_nm = selectedRow.cells[1].textContent; // 이름
+			const employee_dept = selectedRow.cells[2].textContent; // 부서
+			const employee_position = selectedRow.cells[3].textContent; // 직위
 
-	        // 기존 모달의 필드에 값 설정
-	        document.getElementById('employee_cd').value = employee_cd;
-	        document.getElementById('employee_nm').value = employee_nm;
+			// 기존 모달의 필드에 값 설정
+			document.getElementById('employee_cd').value = employee_cd;
+			document.getElementById('employee_nm').value = employee_nm;
 
-	        // 기존부서와 기존직위 select 요소의 값 설정
-	        const transfer_od = document.getElementById('transfer_od'); // 기존부서
-	        const transfer_og = document.getElementById('transfer_og'); // 기존직위
+			// 기존부서와 기존직위 select 요소의 값 설정
+			const transfer_od = document.getElementById('transfer_od'); // 기존부서
+			const transfer_og = document.getElementById('transfer_og'); // 기존직위
 
-	        // 기존부서와 기존직위 드롭다운에서 값 설정
-	        Array.from(transfer_od.options).forEach(option => {
-	            if (option.textContent === employee_dept) {
-	                option.selected = true;
-	            }
-	        });
+			// 기존부서와 기존직위 드롭다운에서 값 설정
+			Array.from(transfer_od.options).forEach(option => {
+				if (option.textContent === employee_dept) {
+					option.selected = true;
+				}
+			});
 
-	        Array.from(transfer_og.options).forEach(option => {
-	            if (option.textContent === employee_position) {
-	                option.selected = true;
-	            }
-	        });
+			Array.from(transfer_og.options).forEach(option => {
+				if (option.textContent === employee_position) {
+					option.selected = true;
+				}
+			});
 
-	        // 사원 선택 모달 닫기
-	        const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
-	        modal_employee_list.hide();
-	    }
+			// 사원 선택 모달 닫기
+			const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
+			modal_employee_list.hide();
+		}
 	});
 
-	// 모달 저장 버튼 클릭 시 이벤트 처리
 	document.getElementById('modal_appointment_save').addEventListener('submit', function (event) {
 		event.preventDefault(); // 폼 기본 동작 방지
 
@@ -446,8 +445,10 @@
 		})
 			.then(response => response.json())
 			.then(managerCheck => {
+				console.log("부서장 정보@@@ : " + managerCheck.managerInfo);
+				console.log("부서장 tf@@@ : " + managerCheck.manager_exists);
 				if (managerCheck.manager_exists) {
-					// 부서장이 존재하는 경우
+					// 부서장이 존재하는 경우 사용자에게 확인 요청
 					const managerInfo = managerCheck.manager_info; // 서버에서 전달된 부서장 정보
 					const confirmProceed = confirm(
 						`해당 부서(${managerInfo.department_name})에는 이미 부서장(${managerInfo.employee_nm})이 존재합니다.\n계속 진행하시겠습니까?`
@@ -458,7 +459,7 @@
 					}
 				}
 
-				// 부서장이 없거나 사용자가 진행을 선택한 경우, 발령 데이터 저장
+				// 부서장이 없거나 부서장이 존재하지만 사용자가 진행을 선택한 경우, 발령 데이터 저장
 				saveTransfer({
 					employee_cd: employee_cd,
 					transfer_ad: transfer_ad,
@@ -472,8 +473,22 @@
 			})
 			.catch(error => {
 				console.error('부서장 체크 중 오류 발생:', error);
+
+				// 오류 발생 시에도 데이터 저장 시도
+				saveTransfer({
+					employee_cd: employee_cd,
+					transfer_ad: transfer_ad,
+					transfer_ac: transfer_ac,
+					transfer_og: transfer_og,
+					transfer_ag: transfer_ag,
+					transfer_od: transfer_od,
+					transfer_adp: transfer_adp,
+					transfer_mg: transfer_mg,
+				});
 			});
 	});
+
+
 
 	// 발령 데이터를 저장하는 함수
 	function saveTransfer(transferData) {

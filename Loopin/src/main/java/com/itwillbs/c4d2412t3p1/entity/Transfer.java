@@ -2,12 +2,14 @@ package com.itwillbs.c4d2412t3p1.entity;
 
 import java.sql.Timestamp;
 
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.itwillbs.c4d2412t3p1.domain.MemberDTO;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;

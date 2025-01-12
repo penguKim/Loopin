@@ -58,9 +58,9 @@ public class TransferService {
 		transfer.setTransfer_wr("1");
 		transfer.setTransfer_md("1");
 		transfer.setTransfer_mf("1");
-		
+
 		Transfer savedTransfer = transferRepository.save(transfer);
-		
+
 		transferDTO.setTransfer_id(savedTransfer.getTransfer_id());
 
 	}
@@ -89,6 +89,7 @@ public class TransferService {
 	public Map<String, Object> select_DEPARTMENT_MANAGER(String transfer_adp) {
 		return transferRepository.findDepartmentManager(transfer_adp);
 	}
+
 	@Transactional
 	public void handleTransferInsert(TransferDTO transferDTO) {
 		// TRANSFER INSERT 작업
@@ -97,30 +98,46 @@ public class TransferService {
 		// 오늘 날짜 확인 및 추가 작업
 		processTransferIfToday(transferDTO);
 	}
+
 	private void processTransferIfToday(TransferDTO transferDTO) {
-        // 오늘 날짜 확인
-        String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        if (transferDTO.getTransfer_ad().equals(today)) {
-            // 오늘 날짜라면 EMPLOYEE 업데이트 및 TRANSFER_AW 수정 처리
-        	log.info("Processing transfer for ID: " + transferDTO.getTransfer_id());
-            processTransferForToday(
-                transferDTO.getTransfer_ad(),
-                transferDTO.getEmployee_cd(),
-                transferDTO.getTransfer_adp(),
-                transferDTO.getTransfer_ag(),
-                transferDTO.getTransfer_id()
-            );
-        }
-    }
+		// 오늘 날짜 확인
+		String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		if (transferDTO.getTransfer_ad().equals(today)) {
+			// 오늘 날짜라면 EMPLOYEE 업데이트 및 TRANSFER_AW 수정 처리
+			log.info("Processing transfer for ID: " + transferDTO.getTransfer_id());
+			processTransferForToday(transferDTO.getTransfer_ad(), transferDTO.getEmployee_cd(),
+					transferDTO.getTransfer_adp(), transferDTO.getTransfer_ag(), transferDTO.getTransfer_id(),
+					transferDTO.getTransfer_mg());
+		}
+	}
 
-//	인사발령날짜가 오늘날짜인 경우의 변경
-	public void processTransferForToday(String transfer_ad, String employee_cd, String transfer_adp, String transfer_ag, Long transfer_id) {
-        // EMPLOYEE 테이블 업데이트
-        transferRepository.updateEmployeeDepartmentAndGrade(employee_cd, transfer_adp, transfer_ag);
+	// 인사발령날짜가 오늘날짜인 경우의 변경
+	public void processTransferForToday(String transfer_ad, String employee_cd, String transfer_adp, String transfer_ag,
+			Long transfer_id, Boolean transfer_mg) {
+		// 1. 기존 부서장 확인 및 부서원으로 변경
+		if (transfer_mg) { // 발령된 직원이 부서장인 경우
+			Map<String, Object> existingManager = transferRepository.findDepartmentManager(transfer_adp);
 
-        // TRANSFER_AW 업데이트
-        transferRepository.updateTransfer_aw(transfer_id);
-    }
+			if (existingManager != null && existingManager.get("employee_cd") != null) {
+				String existingManagerCd = (String) existingManager.get("employee_cd");
+
+				// 기존 부서장의 employee_mg 값을 false로 변경
+				transferRepository.updateEmployeeManager(existingManagerCd, false); // 기존 부서장 -> 부서원
+
+				log.info("기존 부서장(" + existingManagerCd + ")을 부서원으로 변경했습니다.");
+			} else {
+				log.info("기존 부서장이 없습니다. 부서원 변경 작업을 건너뜁니다.");
+			}
+		}
+
+		// 2. EMPLOYEE 테이블 업데이트 (발령된 직원 업데이트)
+		transferRepository.updateEmployeeDepartmentAndGrade(employee_cd, transfer_adp, transfer_ag, transfer_mg);
+		log.info("발령된 직원(" + employee_cd + ")을 부서장으로 설정했습니다.");
+
+		// 3. TRANSFER_AW 업데이트
+		transferRepository.updateTransfer_aw(transfer_id);
+		log.info("TRANSFER_AW가 업데이트되었습니다.");
+	}
 
 //	스케줄러작업 - 인사발령날짜가 오늘날짜가 아닌경우의 변경
 	@Transactional
