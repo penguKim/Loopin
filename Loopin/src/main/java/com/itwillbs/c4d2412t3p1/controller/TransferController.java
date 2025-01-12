@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -106,39 +107,6 @@ public class TransferController {
 		}
 	}
 
-//	// 부서장 변경
-//	@PostMapping("/update_department_manager")
-//	@ResponseBody
-//	public ResponseEntity<Map<String, String>> update_DEPARTMENT_MANAGER(@RequestBody Map<String, String> request) {
-//	    String transfer_adp = request.get("transfer_adp");
-//	    String new_employee_cd = request.get("employee_cd");
-//	    log.info("부서장 변경 요청 - 발령 부서: " + transfer_adp + ", 신규 부서장: " + new_employee_cd);
-//
-//	    Map<String, String> response = new HashMap<>();
-//	    try {
-//	        // 기존 부서장 조회
-//	        Map<String, Object> existingManager = transferService.select_DEPARTMENT_MANAGER(transfer_adp);
-//
-//	        // 기존 부서장이 있는 경우 해당 직원의 employee_mg를 false로 변경
-//	        if (existingManager != null) {
-//	            String existingManagerCd = (String) existingManager.get("employee_cd");
-//	            transferService.update_DEPARTMENT_MANAGER(existingManagerCd, false);
-//	            log.info("기존 부서장(" + existingManagerCd + ")을 부서원으로 변경");
-//	        }
-//
-//	        // 신규 부서장을 employee_mg true로 설정
-//	        transferService.update_DEPARTMENT_MANAGER(new_employee_cd, true);
-//	        log.info("신규 부서장(" + new_employee_cd + ")을 설정");
-//
-//	        response.put("message", "부서장 변경이 성공적으로 완료되었습니다.");
-//	        return ResponseEntity.ok(response);
-//
-//	    } catch (Exception e) {
-//	        log.severe("부서장 변경 중 오류 발생: " + e.getMessage());
-//	        response.put("error", "부서장 변경 중 오류 발생: " + e.getMessage());
-//	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//	    }
-//	}
 
 //	인사발령 등록
 	@LogActivity(value = "등록", action = "인사발령")
@@ -159,7 +127,26 @@ public class TransferController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	@PutMapping("/update_TRANSFER")
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            // 서비스 계층에 작업 위임
+            transferService.handleTransferUpdate(transferDTO);
 
+            response.put("message", "데이터가 성공적으로 수정되었습니다11.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", "데이터 수정 실패22: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("message", "데이터 수정 실패33: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+	
 //	인사발령 삭제
 	@LogActivity(value = "삭제", action = "인사발령")
 	@PostMapping("/delete_TRANSFER")

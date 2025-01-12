@@ -20,12 +20,14 @@
 
 							<div class="col-lg-12" id="grid" style="margin-top: 20px;"></div>
 							<br>
-							
-							
-							
-							<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
-							    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
-							    <button type="button" id="btn_transfer_delete" class="btn btn-primary">삭제</button>
+
+
+
+							<div
+								th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+								<button type="button" class="btn btn-primary" data-bs-toggle="modal"
+									data-bs-target="#modal_appointment_save">신규</button>
+								<button type="button" id="btn_transfer_delete" class="btn btn-primary">삭제</button>
 							</div>
 
 
@@ -45,7 +47,7 @@
 
 	<!-- Bootstrap Modal -->
 	<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label"
-		aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+		data-mode="insert" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
@@ -70,6 +72,7 @@
 							<div class="col">
 								<label for="transfer_mg" class="form-label">부서구분</label> <select id="transfer_mg"
 									class="form-select">
+									<option value="" disabled selected>부서구분을 선택하세요</option>
 									<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
 										th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
 								</select>
@@ -239,6 +242,69 @@
 					scrollX: true,
 					scrollY: true
 				});
+
+				// Grid 클릭 이벤트 등록
+				grid.on('click', (ev) => {
+					const columnName = ev.columnName; // 클릭된 열 이름
+					const rowKey = ev.rowKey; // 클릭된 행의 키
+					const rowData = grid.getRow(rowKey); // 클릭된 행 데이터
+
+					// 헤더 클릭 무시
+					if (rowKey === null || rowKey === undefined) {
+						console.warn("헤더 클릭은 무시됩니다.");
+						return;
+					}
+
+					// employee_nm 열 클릭 시 모달 열기
+					if (columnName === 'employee_nm') {
+						console.log("모달에 표시할 데이터:", rowData);
+						console.log(document.getElementById('employee_nm')); // null이면 렌더링 문제
+						console.log(document.getElementById('employee_cd'));
+						openEditModal(rowData);
+					}
+
+				});
+
+
+				// 모달 열기 함수
+				function openEditModal(rowData) {
+					console.log("수정 모달 열기 데이터:", rowData);
+
+					const modal = document.getElementById('modal_appointment_save');
+					modal.setAttribute('data-mode', 'update'); // 수정 모드 설정
+
+					// 일반 입력 필드 처리
+					Object.keys(rowData).forEach(key => {
+						const $field = $(`#${key}`);
+						if ($field.length && $field.is('input, textarea')) {
+							$field.val(rowData[key] || '');
+						}
+					});
+
+					// Select 필드 처리 (공통코드 매칭)
+					const selectFields = ['transfer_ac', 'transfer_og', 'transfer_ag', 'transfer_od', 'transfer_adp'];
+					selectFields.forEach(field => {
+						const $select = $(`#${field}`);
+						if ($select.length) {
+							const textToMatch = rowData[field]; // 예: "승진"
+							const matchingOption = $select.find('option').filter((_, option) => {
+								return $(option).text() === textToMatch; // 옵션 텍스트 매칭
+							});
+
+							if (matchingOption.length) {
+								$select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
+							} else {
+								console.warn(`'${field}'에 '${textToMatch}' 텍스트 옵션이 존재하지 않습니다.`);
+							}
+						}
+					});
+
+					// 모달 열기
+					$('#modal_appointment_save').modal('show');
+				}
+
+
+
 			})
 			.catch(error => {
 				console.error('오류 발생:', error);
@@ -368,28 +434,22 @@
 	});
 
 
-	// 선택 버튼 클릭 이벤트 처리
 	document.addEventListener('click', function (event) {
-		// 선택 버튼(`select-emp-btn`)이 클릭되었는지 확인
+		// 선택 버튼(`select-emp-btn`) 클릭 처리
 		if (event.target.classList.contains('select-emp-btn')) {
-			// 클릭된 버튼이 속한 행(`tr`)을 가져옴
-			const selectedRow = event.target.closest('tr'); // tr_
+			const selectedRow = event.target.closest('tr');
 
-			// 행의 각 열(`td`)에서 데이터를 가져옴
-			const employee_cd = selectedRow.cells[0].textContent; // 사원코드
-			const employee_nm = selectedRow.cells[1].textContent; // 이름
-			const employee_dept = selectedRow.cells[2].textContent; // 부서
-			const employee_position = selectedRow.cells[3].textContent; // 직위
+			const employee_cd = selectedRow.cells[0].textContent;
+			const employee_nm = selectedRow.cells[1].textContent;
+			const employee_dept = selectedRow.cells[2].textContent;
+			const employee_position = selectedRow.cells[3].textContent;
 
-			// 기존 모달의 필드에 값 설정
 			document.getElementById('employee_cd').value = employee_cd;
 			document.getElementById('employee_nm').value = employee_nm;
 
-			// 기존부서와 기존직위 select 요소의 값 설정
-			const transfer_od = document.getElementById('transfer_od'); // 기존부서
-			const transfer_og = document.getElementById('transfer_og'); // 기존직위
+			const transfer_od = document.getElementById('transfer_od');
+			const transfer_og = document.getElementById('transfer_og');
 
-			// 기존부서와 기존직위 드롭다운에서 값 설정
 			Array.from(transfer_od.options).forEach(option => {
 				if (option.textContent === employee_dept) {
 					option.selected = true;
@@ -402,41 +462,47 @@
 				}
 			});
 
-			// 사원 선택 모달 닫기
 			const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
 			modal_employee_list.hide();
 		}
 	});
 
+
+
+
 	document.getElementById('modal_appointment_save').addEventListener('submit', function (event) {
 		event.preventDefault(); // 폼 기본 동작 방지
 
-		// 모달 입력값 가져오기
-		const employee_cd = document.getElementById('employee_cd').value;
-		const transfer_ad = document.getElementById('transfer_ad').value;
-		const transfer_ac = document.getElementById('transfer_ac').value;
-		const transfer_og = document.getElementById('transfer_og').value;
-		const transfer_ag = document.getElementById('transfer_ag').value;
-		const transfer_od = document.getElementById('transfer_od').value;
-		const transfer_adp = document.getElementById('transfer_adp').value;
-		const transfer_mg = document.getElementById('transfer_mg').value; // 부서구분 값
+		const mode = document.getElementById('modal_appointment_save').getAttribute('data-mode');
 
-		// 부서장이 선택되지 않은 경우 바로 저장
-		if (transfer_mg !== "true") {
-			saveTransfer({
-				employee_cd: employee_cd,
-				transfer_ad: transfer_ad,
-				transfer_ac: transfer_ac,
-				transfer_og: transfer_og,
-				transfer_ag: transfer_ag,
-				transfer_od: transfer_od,
-				transfer_adp: transfer_adp,
-				transfer_mg: transfer_mg,
-			});
+		// 모달 입력값 가져오기
+		const transferData = {
+			employee_cd: document.getElementById('employee_cd').value,
+			transfer_ad: document.getElementById('transfer_ad').value,
+			transfer_ac: document.getElementById('transfer_ac').value,
+			transfer_og: document.getElementById('transfer_og').value,
+			transfer_ag: document.getElementById('transfer_ag').value,
+			transfer_od: document.getElementById('transfer_od').value,
+			transfer_adp: document.getElementById('transfer_adp').value,
+			transfer_mg: document.getElementById('transfer_mg').value
+		};
+
+		if (transferData.transfer_mg !== "true") {
+			// 부서장이 아닌 경우 바로 저장/수정
+			if (mode === 'insert') {
+				saveTransfer(transferData);
+			} else if (mode === 'update') {
+				updateTransfer(transferData);
+			}
 			return;
 		}
 
-		// 부서장 선택된 경우 부서장 존재 여부 확인 AJAX 요청
+		// 부서장이 선택된 경우 부서장 체크 로직 호출
+		checkDepartmentManager(transferData, mode);
+	});
+
+	// 공통 부서장 체크 로직
+	function checkDepartmentManager(transferData, mode) {
 		fetch('/select_department_manager', {
 			method: 'POST',
 			headers: {
@@ -444,7 +510,7 @@
 				'X-CSRF-TOKEN': csrfToken,
 			},
 			body: JSON.stringify({
-				transfer_adp: transfer_adp, // 발령 부서
+				transfer_adp: transferData.transfer_adp, // 발령 부서
 			}),
 		})
 			.then(response => response.json())
@@ -463,36 +529,18 @@
 					}
 				}
 
-				// 부서장이 없거나 부서장이 존재하지만 사용자가 진행을 선택한 경우, 발령 데이터 저장
-				saveTransfer({
-					employee_cd: employee_cd,
-					transfer_ad: transfer_ad,
-					transfer_ac: transfer_ac,
-					transfer_og: transfer_og,
-					transfer_ag: transfer_ag,
-					transfer_od: transfer_od,
-					transfer_adp: transfer_adp,
-					transfer_mg: transfer_mg,
-				});
+				// 부서장이 없거나 부서장이 존재하지만 사용자가 진행을 선택한 경우
+				if (mode === 'insert') {
+					saveTransfer(transferData);
+				} else if (mode === 'update') {
+					updateTransfer(transferData);
+				}
 			})
 			.catch(error => {
 				console.error('부서장 체크 중 오류 발생:', error);
-
-				// 오류 발생 시에도 데이터 저장 시도
-				saveTransfer({
-					employee_cd: employee_cd,
-					transfer_ad: transfer_ad,
-					transfer_ac: transfer_ac,
-					transfer_og: transfer_og,
-					transfer_ag: transfer_ag,
-					transfer_od: transfer_od,
-					transfer_adp: transfer_adp,
-					transfer_mg: transfer_mg,
-				});
+				alert('부서장 확인 중 오류가 발생했습니다.');
 			});
-	});
-
-
+	}
 
 	// 발령 데이터를 저장하는 함수
 	function saveTransfer(transferData) {
@@ -504,18 +552,49 @@
 			},
 			body: JSON.stringify(transferData),
 		})
-			// JSON 응답 처리
-			.then(response => response.json())
-			// 서버 응답 메시지 표시
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('등록 요청 실패');
+				}
+				return response.json();
+			})
 			.then(data => {
 				alert(data.message);
-				// 페이지 새로고침
 				location.reload();
 			})
 			.catch(error => {
-				console.error('발령 저장 중 오류 발생:', error);
+				console.error('등록 중 오류 발생:', error);
+				alert('등록 중 문제가 발생했습니다.');
 			});
 	}
+
+	// 업데이트 요청 처리 함수
+	function updateTransfer(transferData) {
+		fetch('/update_TRANSFER', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-CSRF-TOKEN': csrfToken
+			},
+			body: JSON.stringify(transferData)
+		})
+			.then(response => {
+				if (!response.ok) {
+					throw new Error('업데이트 요청 실패');
+				}
+				return response.json();
+			})
+			.then(data => {
+				alert('수정이 완료되었습니다.');
+				location.reload();
+			})
+			.catch(error => {
+				console.error('업데이트 중 오류 발생:', error);
+				alert('업데이트 중 문제가 발생했습니다.');
+			});
+	}
+
+
 
 
 </script>
