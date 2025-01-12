@@ -10,6 +10,10 @@
 	<meta content="" name="description">
 	<meta content="" name="keywords">
 
+
+	<meta name="_csrf" th:content="${_csrf.token}" />
+	<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+
 	<!-- Favicons -->
 	<link href="assets/img/favicon.png" rel="icon">
 	<link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
@@ -32,6 +36,8 @@
 	
 	<!-- Toast UI Calendar CSS File-->
 	<link rel="stylesheet" href="https://uicdn.toast.com/calendar/latest/toastui-calendar.min.css"/>
+	<!-- Toast UI time-picker CSS File-->
+	<link rel="stylesheet" href="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.css" />
 	<!-- Toast UI date-picker CSS File-->
 	<link rel="stylesheet" href="https://uicdn.toast.com/tui.date-picker/latest/tui-date-picker.css" />
 	<!-- Toast UI grid CSS File-->
@@ -40,10 +46,11 @@
 	<link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
 	<!-- Toast UI Pagination CSS File-->
 	<link rel="stylesheet" href="https://uicdn.toast.com/tui.pagination/latest/tui-pagination.css" />
-	<!-- Toast UI time-picker CSS File-->
-	<link rel="stylesheet" href="https://uicdn.toast.com/tui.time-picker/latest/tui-time-picker.css" />
+	<!-- SweetAlert2 CSS File-->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.15.10/dist/sweetalert2.min.css" />
 	
-	
+	<!-- Toast UI chart CSS File-->
+	<link rel="stylesheet" href="https://uicdn.toast.com/chart/latest/toastui-chart.min.css" />
 	<!-- =======================================================
 	* Template Name: NiceAdmin
 	* Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/

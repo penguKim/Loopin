@@ -3,7 +3,8 @@
     "http://mybatis.org/dtd/mybatis-3-config.dtd">
 
 <configuration>
-    <settings>
-        <setting name="mapUnderscoreToCamelCase" value="true" />
-    </settings>
+    <typeAliases>
+        <typeAlias type="com.itwillbs.c4d2412t3p1.domain.Common_codeDTO" alias="CommonCode"/>
+        <typeAlias type="com.itwillbs.c4d2412t3p1.domain.EmployeeDTO" alias="Employee"/>
+    </typeAliases>
 </configuration>
