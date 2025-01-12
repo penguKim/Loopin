@@ -222,7 +222,8 @@
 						transfer_ag: row.transfer_ag,
 						transfer_od: row.transfer_od,
 						transfer_adp: row.transfer_adp,
-						transfer_aw: row.transfer_aw
+						transfer_aw: row.transfer_aw,
+						transfer_mg: row.transfer_mg
 					})),
 					columns: [
 						{header: '이름', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
@@ -273,6 +274,24 @@
 					const modal = document.getElementById('modal_appointment_save');
 					modal.setAttribute('data-mode', 'update'); // 수정 모드 설정
 
+					// Select 필드 처리 (공통코드 매칭 포함)
+					const selectFields = ['transfer_ac', 'transfer_og', 'transfer_ag', 'transfer_od', 'transfer_adp', 'transfer_mg'];
+					selectFields.forEach(field => {
+						const $select = $(`#${field}`);
+						if ($select.length) {
+							const textToMatch = rowData[field]; // 예: "승진", true, false
+							const matchingOption = $select.find('option').filter((_, option) => {
+								return $(option).val() === String(textToMatch); // 옵션 value와 매칭
+							});
+
+							if (matchingOption.length) {
+								$select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
+							} else {
+								console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
+							}
+						}
+					});
+
 					// 일반 입력 필드 처리
 					Object.keys(rowData).forEach(key => {
 						const $field = $(`#${key}`);
@@ -281,27 +300,11 @@
 						}
 					});
 
-					// Select 필드 처리 (공통코드 매칭)
-					const selectFields = ['transfer_ac', 'transfer_og', 'transfer_ag', 'transfer_od', 'transfer_adp'];
-					selectFields.forEach(field => {
-						const $select = $(`#${field}`);
-						if ($select.length) {
-							const textToMatch = rowData[field]; // 예: "승진"
-							const matchingOption = $select.find('option').filter((_, option) => {
-								return $(option).text() === textToMatch; // 옵션 텍스트 매칭
-							});
-
-							if (matchingOption.length) {
-								$select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
-							} else {
-								console.warn(`'${field}'에 '${textToMatch}' 텍스트 옵션이 존재하지 않습니다.`);
-							}
-						}
-					});
-
 					// 모달 열기
 					$('#modal_appointment_save').modal('show');
 				}
+
+
 
 
 

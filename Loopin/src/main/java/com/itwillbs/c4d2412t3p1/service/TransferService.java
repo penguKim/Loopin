@@ -54,6 +54,7 @@ public class TransferService {
 			transfer.put("transfer_od", row[7]);
 			transfer.put("transfer_adp", row[8]);
 			transfer.put("transfer_aw", row[9]);
+			transfer.put("transfer_mg", row[10]);
 			return transfer;
 		}).collect(Collectors.toList());
 	}
