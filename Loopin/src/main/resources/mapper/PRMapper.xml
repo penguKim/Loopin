@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PRMapper">
+	
+	<select id="selectpradmin" resultType="map">
+		SELECT PR.pr_id, PR.pr_gm,
+		PR.pr_wm, PR.pr_td, PR.pr_ta
+		FROM PR
+		ORDER BY PR.pr_gm desc
+	</select>
+	
+	<select id="selectpradminfirstmodal" resultType="map">
+		SELECT
+		PRDETAIL.employee_cd, PRDETAIL.prdetail_bs, PRDETAIL.prdetail_ta,
+		PRDETAIL.prdetail_td, PRDETAIL.prdetail_rs, PRDETAIL.prdetail_id,
+		PRDETAIL.pr_id
+		FROM PRDETAIL
+		WHERE PRDETAIL.pr_id = #{pr_id}
+	</select>
+	
+	<select id="selectpradminfirstmodal2" resultType="map">
+		SELECT PRDETAIL.prdetail_rs, PRDETAIL.prdetail_ta, PRDETAIL.prdetail_bs, PRDETAIL.prdetail_mt, PRDETAIL.prdetail_ot, PRDETAIL.prdetail_na, PRDETAIL.prdetail_wa, PRDETAIL.prdetail_ha, PRDETAIL.prdetail_aa,
+		PRDETAIL.prdetail_bn, PRDETAIL.prdetail_td, PRDETAIL.prdetail_gm, PRDETAIL.prdetail_gy, PRDETAIL.prdetail_gg , PRDETAIL.prdetail_lg, PRDETAIL.employee_cd
+		FROM PRDETAIL
+		WHERE PRDETAIL.prdetail_id = #{prdetail_id}
+	</select>
+	
+</mapper>

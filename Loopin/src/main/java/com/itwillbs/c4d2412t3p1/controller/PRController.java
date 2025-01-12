@@ -1,10 +1,9 @@
 package com.itwillbs.c4d2412t3p1.controller;
-
 import java.util.List;
-import java.util.Map;
 
 import javax.script.ScriptException;
 
+import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,7 +15,6 @@ import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.PRCode;
 import com.itwillbs.c4d2412t3p1.service.PRService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -89,7 +87,6 @@ public class PRController {
 		
 		return list;
 	}
-
 	@GetMapping("/PRadminmadal2")
 	@ResponseBody
 	public List<Map<String,Object>> adminprmodal2(@RequestParam("prdetail_id") Long prdetail_id) {

@@ -26,10 +26,24 @@ import lombok.extern.java.Log;
 @Service
 @RequiredArgsConstructor
 public class PRService {
-
+	
 	private final PRMapper prM;
 	private final PRCodeRepository prcRep;
 //	private final EmployeeRepository empRep;
+	
+	public List<Map<String, Object>> selectpr(Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.selectpr(employee_cd);
+		
+		return list;
+	}
+	
+	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
+		
+		return list;
+	}
 	
 	public List<PRCode> getprcode() {
 
@@ -39,19 +53,15 @@ public class PRService {
 	}
 
 	public List<Map<String, Object>> selectpradmin() {
-
 		List<Map<String, Object>> list = prM.selectpradmin();
 		
 		return list;
 	}
-
 	public List<Map<String, Object>> selectpradminfirstmodal(Long pr_id) {
-
 		List<Map<String, Object>> list = prM.selectpradminfirstmodal(pr_id);
 		
 		return list;
 	}
-
 	public List<Map<String, Object>> selectpradminfirstmodal2(Long prdetail_id) {
 		
 		List<Map<String, Object>> list = prM.selectpradminfirstmodal2(prdetail_id);
@@ -234,20 +244,5 @@ public class PRService {
 //		return list;
 //	}
 	
-	public List<Map<String, Object>> selectpr(Long employee_cd) {
-		
-		List<Map<String, Object>> list = prM.selectpr(employee_cd);
-		
-		return list;
-	}
-	
-	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
-		
-		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
-		
-		return list;
-	}
 
-	
-	
 }
