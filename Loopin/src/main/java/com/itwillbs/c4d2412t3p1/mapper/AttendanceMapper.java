@@ -18,7 +18,7 @@ public interface AttendanceMapper {
 
 	List<Map<String, Object>> select_EMPLOYEE_ANNUAL(String employee_nm);
 	
-	List<Map<String, Object>> insert_ANNUAL();
+	void insert_ANNUAL(Map<String, Object> annual);
 
 	List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO);
     

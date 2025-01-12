@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.HolidayDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
@@ -221,6 +222,23 @@ public class AttendanceController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("데이터 저장 중 오류가 발생했습니다.");
         }
     }
+	
+	@PostMapping("/insert_ANNUAL")
+	public ResponseEntity<Map<String, Object>> insert_ANNUAL(@RequestBody String annual_yr) {
+		
+		List<Map<String, Object>> annuals = attendanceService.select_ATTENDANCE();
+		
+		Map<String, Object> data = new HashMap<>();
+		
+		Map<String, Object> response = new HashMap<>();
+		
+		List<Map<String, Object>> codeList = attendanceService.select_ATTENDANCE();
+		
+		attendanceService.insert_ANNUAL(annuals);
+		data.put("contents", codeList);
+		response.put("data", data);
+		return ResponseEntity.ok(response);
+	}
 	
 	@ResponseBody
 	@PostMapping("/insert_company_HOLIDAY")

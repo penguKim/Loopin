@@ -45,16 +45,11 @@ public class AttendanceService {
 		return attendanceMapper.select_ATTENDANCE();
 	}
 
-	public void insert_ANNUAL() {
-		attendanceMapper.insert_ANNUAL();
-	}
-
 	public List<Map<String, Object>> select_EMPLOYEE_ANNUAL(String employee_nm) {
 		return attendanceMapper.select_EMPLOYEE_ANNUAL(employee_nm);
 	}
 
 	public List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO) {
-		log.info("service_years 있냐 "+attendanceMapper.select_ANNUAL(attendanceDTO));
 		return attendanceMapper.select_ANNUAL(attendanceDTO);
 	}
 
@@ -94,7 +89,7 @@ public class AttendanceService {
         for (Map<String, String> holiday : holidays) {
             // 현재 시간 및 기본 값 추가
             holiday.put("holiday_wd", dateString); // 입력 일시
-            holiday.put("holiday_wr", regUser); // 입력 일시
+            holiday.put("holiday_wr", regUser); // 작성자
 
             // 데이터 삽입 호출
             try {
@@ -107,13 +102,6 @@ public class AttendanceService {
         return createdCount;
     }
 
-    /**
-     * 휴일 수정 처리
-     *
-     * @param holidays 수정할 데이터 리스트
-     * @return 수정된 항목 수
-     * @throws Exception
-     */
     public int updateCompanyHoliday(List<Map<String, String>> holidays) throws Exception {
         int updatedCount = 0;
 
@@ -127,5 +115,20 @@ public class AttendanceService {
         }
         return updatedCount;
     }
+
+	public void insert_ANNUAL(List<Map<String, Object>> annuals) {
+		Date now = new Date(); //Date타입으로 변수 선언
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //데이트 포맷
+		String date_string = dateFormat.format(now);
+		
+		String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        for (Map<String, Object> annual : annuals) {
+        	annual.put("ANNUAL_RD", date_string);
+        	annual.put("ANNUAL_RU", regUser); // 입력 일시
+        	log.info(annual.get("EMPLOYEE_CD")+"안들어냐");
+            attendanceMapper.insert_ANNUAL(annual);
+        }
+	}
 
 }

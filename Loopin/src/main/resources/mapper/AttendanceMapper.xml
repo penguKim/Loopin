@@ -9,19 +9,30 @@
 	        a.*, 
 	        e.EMPLOYEE_NM, 
 	        c.COMMON_NM, 
-	        e.EMPLOYEE_HD, 
+	        e.EMPLOYEE_HD,
+	        a.EMPLOYEE_CD,
 	        CASE 
 	            WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
 	            THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
 	            ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
 	        END AS SERVICE_YEARS,
-	        c.COMMON_NM AS DEPARTMENT_NAME
+	        c.COMMON_NM AS DEPARTMENT_NAME,
+	        CASE 
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
+		            THEN TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd'))) + NVL(a.ANNUAL_RA, 0)
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 3 
+		            THEN 15 + NVL(a.ANNUAL_RA, 0)
+		        ELSE 
+		            LEAST(15 + FLOOR((FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) - 3) / 2), 25) + NVL(a.ANNUAL_RA, 0)
+		    END AS EXPECT_ANNUAL
 	    FROM ANNUAL a
 	   INNER JOIN EMPLOYEE e 
 	       	   ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
 	    LEFT JOIN COMMON_CODE c
 	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
-	   WHERE c.COMMON_GC = 'DEPARTMENT'
+	   WHERE c.COMMON_GC = 'DEPARTMENT' 
+	   	 -- AND a.ANNUAL_YR = TO_CHAR(SYSDATE, 'yyyy')
+	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
 	</select>
     
     <select id="select_EMPLOYEE_ANNUAL" resultType="map">
@@ -29,7 +40,7 @@
         FROM employee
         <where> 1=1
 	        	AND employee_nm LIKE '%' || #{employee_nm} || '%'
-        </where>
+        </where> 
     </select>
     
     <select id="select_ANNUAL" resultType="map">
@@ -49,6 +60,9 @@
 	        <if test="employee_cd != null and employee_cd != ''">
 	            a.EMPLOYEE_CD = #{employee_cd}
 	        </if>
+	        <if test="employee_nm != null and employee_nm != ''">
+	            e.employee_nm = #{employee_nm}
+	        </if>
 	        <if test="employee_dp != null and employee_dp != ''">
 	            AND e.EMPLOYEE_DP = #{employee_dp}
 	        </if>
@@ -61,7 +75,26 @@
 	    </where>
 	</select>
 	
-<!--    <INSERT ID="INSERT_ANNUAL">-->
-<!--		INSERT -->
-<!--	</INSERT>-->
+	
+    <insert id="insert_ANNUAL" parameterType="map">
+		INSERT INTO ANNUAL (EMPLOYEE_CD
+						    , ANNUAL_YR
+						    , ANNUAL_UA
+						    , ANNUAL_RA
+						    , ANNUAL_AA
+						    , ANNUAL_RU
+						    , ANNUAL_RD
+						    , ANNUAL_UU
+						    , ANNUAL_UD
+							)
+		VALUES( #{EMPLOYEE_CD}
+				, #{ANNUAL_YR}+1
+				, 0 
+				, #{EXPECT_ANNUAL} 
+				, #{EXPECT_ANNUAL} 
+				, #{ANNUAL_RU} 
+				, #{ANNUAL_RD} 
+				, NULL
+				, NULL)
+	</insert>
 </mapper>

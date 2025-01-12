@@ -37,7 +37,7 @@
 							<button type="button" class="btn btn-primary" id='btn_grid_filter' style="display: none;" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">필터</button>
 							<!-- 상세필터 모달 -->
 							<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false" >
-								<div class="modal-dialog">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
 									<div class="modal-content">
 										<div class="modal-header">
 											<h5 class="modal-title" id="modal_appointment_save_label">상세 필터</h5>
@@ -192,6 +192,7 @@
 						modal_employee_list.show();
 					},
 					error : function(xhr, textStatus, errorThrown) {
+						alert("dsfasdfasdf");
 						console.log('조회 실패', xhr.responseText);
 					}
 				});

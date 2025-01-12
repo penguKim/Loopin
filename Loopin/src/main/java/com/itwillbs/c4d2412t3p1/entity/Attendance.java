@@ -31,8 +31,6 @@ public class Attendance {
 	@Id
 	@Column(name = "employee_cd")
 	private String employee_cd;
-	@Column(name = "annual_cc")
-	private String annual_cc;
 	@Id
 	@Column(name = "annual_yr")
 	private String annual_yr;
@@ -90,7 +88,6 @@ public class Attendance {
 	public static Attendance fromDTO(AttendanceDTO dto) {
 	    return Attendance.builder()
 	            .employee_cd(dto.getEmployee_cd()) // 사원 코드
-	            .annual_cc(dto.getAnnual_cc())     // 연차 코드
 	            .annual_yr(dto.getAnnual_yr())     // 사용 연도
 	            .annual_ua(dto.getAnnual_ua())     // 사용 연차
 	            .annual_ra(dto.getAnnual_ra())     // 잔여 연차

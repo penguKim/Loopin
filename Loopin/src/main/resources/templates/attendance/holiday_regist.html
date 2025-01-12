@@ -71,7 +71,7 @@
 	//const btn_code_insert = $('#btn_code_insert');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
-	//const holiday_wr = document.getElementById('name').innerHTML;
+	const holiday_wr = document.getElementById('name');
 	
 	// ------------------------------
 	
@@ -137,7 +137,6 @@
 			}
 			
 		    if (newRows.length >= 0) {
-				alert("dd");
 		    	newRows.forEach(row => {
 		    		grid.removeRow(row.rowKey);
 		    	});
@@ -414,13 +413,24 @@
 	
 	$('#btn_insert').on("click", function () {
 		let year = $("#year").val();
-		if (year == null || year == '') {
-			Swal.fire({
-			    icon: "warning",
-			    title: "등록년도 확인",
-			    text: "등록년도를 입력하세요.",
-			});
-			return;
+		let currentYear = new Date().getFullYear(); // 현재 연도 가져오기
+
+		if (year == null || year === '') {
+		    Swal.fire({
+		        icon: "warning",
+		        title: "등록년도 확인",
+		        text: "등록년도를 입력하세요.",
+		    });
+		    return;
+		}
+
+		if (parseInt(year) < currentYear) {
+		    Swal.fire({
+		        icon: "warning",
+		        title: "등록년도 확인",
+		        text: "등록년도가 "+ currentYear +"년보다 이전입니다.",
+		    });
+		    return;
 		}
 		
 		
@@ -462,13 +472,14 @@
 					    text: "아직 최신 정보가 없습니다.",
 					});
 	            }
-
+				
+				
 	            // Map을 list 배열로 변환
 	            tempMap.forEach((value, key) => {
 	                list.push({
 	                    holiday_dt: key,        // 날짜
 	                    holiday_nm: value,     // 이름
-	                    holiday_wr: holiday_wr   // 작성자 (예: "admin"으로 하드코딩)
+	                    holiday_wr: holiday_wr  // 작성자 (예: "admin"으로 하드코딩)
 	                });
 	            });
 
