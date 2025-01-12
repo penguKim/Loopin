@@ -93,6 +93,17 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
             nativeQuery = true)
     List<String> findDistinctMonths(@Param("startDate") String startDate, @Param("endDate") String endDate);
 
+    // 인사코드 값으로 찾기
+    @Query(value = "SELECT * FROM EMPLOYEE e WHERE e.employee_cd = :currentCd", nativeQuery = true)
+    List<Employee> findByEmployeeCd(@Param("currentCd") String currentCd);
+
+
+    // 특정 아이디 존재 여부 확인 메서드
+    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END " +
+            "FROM employee " +
+            "WHERE employee_id = :employee_id", 
+    nativeQuery = true)
+    int existsByEmployeeId(@Param("employee_id") String employee_id);
     
 	
 }
