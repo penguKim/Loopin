@@ -1,13 +1,17 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,12 +24,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
-import com.itwillbs.c4d2412t3p1.domain.CommuteResponseDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 import com.itwillbs.c4d2412t3p1.mapper.CommuteMapper;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
@@ -43,41 +48,127 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final CommonService commonService;
-	private final EmployeeService employeeService;
 	
 
 	// 출퇴근 기록부 --------------------------------------------
-	
 	@GetMapping("/commute")
-	public String commute() {
+	public String commute(Model model) {
+		EmployeeDetails employeeDetails = commuteService.getEmployee();
+		String employee_cd = employeeDetails.getEmployee_cd();
+		String workinghour_id = employeeDetails.getWorkinghour_id();
+		Commute commute = commuteService.findById(employee_cd, workinghour_id);
+		
+	    boolean isAttendance = commute != null && 
+                commute.getCommute_wt() != null && 
+                !commute.getCommute_wt().isEmpty();
+	    
+	    boolean isLeaveWork = !isAttendance || 
+               (commute != null && 
+                commute.getCommute_lt() != null && 
+                !commute.getCommute_lt().isEmpty());
+	    // 출퇴근버튼 활성화 여부(대시보드로 로직 이동)
+	    model.addAttribute("isAttendance", isAttendance);
+	    model.addAttribute("isLeaveWork", isLeaveWork);
+	    
 		return "/commute/commute_list";
 	}
 	
+	
+	// 캘린더 형식 조회(출퇴근 기록부 첫화면)
 	@ResponseBody
-	@GetMapping("/select_COMMUTE_detail")
-	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
+	@PostMapping("/select_COMMUTE_calendar")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_calendar(@RequestBody CommuteRequestDTO commuteRequest) {
+		EmployeeDetails employee = commuteService.getEmployee();
+		boolean isAdmin = commuteService.isAuthority("admin");
+		String startDate = commuteRequest.getCalendarStartDate();
+		String EndDate = commuteRequest.getCalendarEndDate();
 		
-		System.out.println("---------------------------------------- 파라미터 : " + commute_wd);
-		
-		List<Commute> list = commuteService.select_COMMUTE_detail(commute_wd);
-		
+		List<CommuteDTO> list = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate);
+		List<Holiday> holidayList = commuteService.select_HOLIDAY_month(startDate, EndDate); // 공휴일 리스트
 		
 		Map<String, Object> response = new HashMap<>(); 
-	    response.put("result", true);
-	    Map<String, Object> data = new HashMap<>();
-	    data.put("contents", list);
-	    response.put("data", data);
-	    
+		response.put("result", true);
+		response.put("list", list);
+		response.put("holidayList", holidayList);
 		
 		return ResponseEntity.ok(response);
 	}
 	
 	
+	// 캘린더에서 선택한 모달의 그리드
 	@ResponseBody
-	@PostMapping("/select_COMMUTE_list")
-	public ResponseEntity<Map<String, Object>> select_COMMUTE_list() {
+	@GetMapping("/select_COMMUTE_detail")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
+		EmployeeDetails employee = commuteService.getEmployee();
+		boolean isAdmin = commuteService.isAuthority("admin");
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_list();
+		List<CommuteDTO> list = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin, commute_wd);
+		
+		Map<String, Object> response = new HashMap<>(); 
+		response.put("result", true);
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", list);
+		response.put("data", data);
+		
+		return ResponseEntity.ok(response);
+	}
+	
+	// 출근일정등록의 미출근 사원 조회
+	@ResponseBody
+	@GetMapping("/select_EMPLOYEE_grid")
+	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_grid(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
+		Map<String, Object> response = new HashMap<>(); 
+		boolean isAdmin = commuteService.isAuthority("admin");
+		if(!isAdmin) {
+	        response.put("result", false);
+	        response.put("message", "관리자 권한이 필요합니다.");
+	        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+		}
+		List<CommuteDTO> list = commuteService.select_EMPLOYEE_grid(commute_wd);
+		
+		response.put("result", true);
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", list);
+		response.put("data", data);
+		
+		return ResponseEntity.ok(response);
+	}
+	
+	// 출근 일정 조회의 등록모달
+	@ResponseBody
+	@PostMapping("/insert_COMMUTE_modal")
+	public ResponseEntity<Map<String, Object>> insert_COMMUTE_modal(@RequestBody CommuteRequestDTO commuteRequest) {
+		CommuteDTO commute = commuteRequest.getCommute();
+		boolean isAdmin = commuteService.isAuthority("admin");
+		String startDate = commuteRequest.getCalendarStartDate();
+		String EndDate = commuteRequest.getCalendarEndDate();
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			commuteService.insert_COMMUTE_modal(commute);
+			
+			List<CommuteDTO> gridList = commuteService.select_COMMUTE_detail(commute.getEmployee_cd(), isAdmin,commute.getCommute_wd());
+			List<CommuteDTO> calendarList = commuteService.select_COMMUTE_calendar(commute.getEmployee_cd(), isAdmin, startDate, EndDate );
+			
+			response.put("result", true);
+			response.put("gridList", gridList);
+			response.put("calendarList", calendarList);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 그리드 탭 조회
+	@ResponseBody
+	@PostMapping("/select_COMMUTE_grid")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_grid() {
+		EmployeeDetails employee = commuteService.getEmployee();
+		boolean isAdmin = commuteService.isAuthority("admin");
+		
+		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(employee.getEmployee_cd(), isAdmin);
 		log.info(list.toString());
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -85,6 +176,30 @@ public class CommuteController {
 		response.put("list", list);
 		
 		return ResponseEntity.ok(response);
+	}
+	
+	// 출근 일정 조회의 등록(그리드)
+	@ResponseBody
+	@PostMapping("/insert_COMMUTE_grid")
+	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
+		EmployeeDetails employee = commuteService.getEmployee();
+		boolean isAdmin = commuteService.isAuthority("admin");
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			commuteService.insert_COMMUTE_modal(commuteRequest.getCommute());
+			
+			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(employee.getEmployee_cd(), isAdmin);
+			
+			response.put("result", true);
+			response.put("gridList", gridList);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 	
 	
@@ -198,13 +313,13 @@ public class CommuteController {
 	// 미등록 사원 근로 등록
 	@ResponseBody
 	@PostMapping("/update_EMPLOYEE_WK")
-	public ResponseEntity<Map<String, Object>> update_EMPLOYEE_WK(@RequestBody CommuteResponseDTO responseDTO) {
+	public ResponseEntity<Map<String, Object>> update_EMPLOYEE_WK(@RequestBody CommuteRequestDTO commuteRequest) {
 		Map<String, Object> response = new HashMap<>();
 		try {
 			
-			List<WorkinghourDTO> WorkinghourList = responseDTO.getWorkinghourList();
+			List<WorkinghourDTO> WorkinghourList = commuteRequest.getWorkinghourList();
 			log.info(WorkinghourList.toString());
-			String workinghour_id = responseDTO.getWorkinghour_id();
+			String workinghour_id = commuteRequest.getWorkinghour_id();
             int updateCount = commuteService.update_EMPLOYEE_WK(WorkinghourList, workinghour_id);
             System.out.println("업데이트 갯수 : " + updateCount);
             if(updateCount < 0) {
@@ -228,36 +343,31 @@ public class CommuteController {
 	// 출근 등록 -----------------------------------------------
 	@ResponseBody
 	@PostMapping("/insert_COMMUTE")
-	public String insert_COMMUTE(@RequestBody String entity) {
-		// 사원이 직접 출근한다면 시큐리티에서 사원코드를 뽑아오면 됨
-		// 관리자라면 프론트에서 사원의 사원코드를 받아와야함
-		String id = SecurityContextHolder.getContext().getAuthentication().getName();
-		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	public ResponseEntity<Map<String, Object>> insert_COMMUTE(@RequestBody CommuteRequestDTO commuteRequest) {
+		boolean isAttendance = commuteRequest.isAttendance(); // 출근여부
+		Map<String, Object> response = new HashMap<>();
+		EmployeeDetails employeeDetails = commuteService.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		String workinghour_id = employeeDetails.getWorkinghour_id();
-		
-		// 파라미터로 출근인지 퇴근인지 정하기
-		
-//		Commute commute = commuteService.findById(employeeDetails);
-		Commute commute = commuteService.findById(employee_cd, workinghour_id);
-		if(commute != null) { // 업데이트
-			System.out.println("업데이트입니다!!!!!!!!!!!!!!");
-//			int updateCount = commuteService.insert_COMMUTE(employeeDetails, commute);		
-			int updateCount = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);		
-			
-			if(updateCount > 0) {
-				// 사원근무기록 등록
-				commuteService.insert_COMHISTORY(employeeDetails.getEmployee_cd(), commute.getCommute_wt(), commute.getCommute_lt(), commute.getWorkinghour_id());
-			}
-			
-		} else { // 인서트
-			System.out.println("인서트입니다!!!!!!!!!!!!!!");
-			int insertCount = commuteService.insert_COMMUTE(employeeDetails, commute);			
+		if(workinghour_id == null) {
+			response.put("result", false);
+			response.put("msg", "근무형태를 등록해야합니다.<br>관리자에게 문의하세요.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		
-		
-		
-		return "";
+		try {
+			Commute commute = commuteService.findById(employee_cd, workinghour_id);
+			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
+			
+			response.put("result", true);
+			response.put("msg", (isAttendance ? "출근" : "퇴근") + "하였습니다.");
+			response.put("commute", commute);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", (isAttendance ? "출근" : "퇴근") + "에 실패했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 	
 	

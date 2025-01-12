@@ -49,6 +49,16 @@ public class Commute {
 	private String commute_wt;
 	@Column(name = "commute_lt")
 	private String commute_lt;
+	@Column(name = "commute_ig")
+	private String commute_ig;
+	@Column(name = "commute_eg")
+	private String commute_eg;
+	@Column(name = "commute_yg")
+	private String commute_yg;
+	@Column(name = "commute_jg")
+	private String commute_jg;
+	@Column(name = "commute_hg")
+	private String commute_hg;
 	@Column(name = "commute_ru")
 	private String commute_ru;
 	@Column(name = "commute_rd")
@@ -69,6 +79,11 @@ public class Commute {
 	    		.commute_lt(commute.getCommute_lt())
 	    		.commute_wt(commute.getCommute_wt())
 	    		.commute_lt(commute.getCommute_lt())
+	    		.commute_ig(commute.getCommute_ig())
+	    		.commute_eg(commute.getCommute_eg())
+	    		.commute_yg(commute.getCommute_yg())
+	    		.commute_jg(commute.getCommute_jg())
+	    		.commute_hg(commute.getCommute_hg())
 	    		.commute_ru(commute.getCommute_ru())
 	    		.commute_rd(commute.getCommute_rd())
 	    		.commute_uu(commute.getCommute_uu())

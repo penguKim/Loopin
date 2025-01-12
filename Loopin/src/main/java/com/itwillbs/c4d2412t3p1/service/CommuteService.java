@@ -2,19 +2,23 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.sql.Timestamp;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -59,21 +63,30 @@ public class CommuteService {
 	
 
 
-    public List<Commute> select_COMMUTE_detail(String commute_wd) {
-    	
-        if (commute_wd == null || commute_wd.isEmpty()) {
-            return commuteRepository.findAll();
-        } else {
-            return commuteRepository.select_COMMUTE_detail(commute_wd);
-        }
-    }
-
-
-
-	public List<CommuteDTO> select_COMMUTE_list() {
-		return commuteRepository.select_COMMUTE_list();
+	// 공통코드 조회
+	public List<Common_codeDTO> select_COMMON_list(String common_gc) {
+		
+		return commonRepository.select_COMMON_list(common_gc);
 	}
 
+	// 출퇴근 기록부 --------------------------------------------
+	
+    // 출퇴근 기록부 달력 조회
+	public List<CommuteDTO> select_COMMUTE_calendar(String employee_cd, boolean isAdmin, String startDate, String endDate) {
+//		return commuteRepository.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
+		return commuteMapper.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
+	}
+	
+	// 출퇴근 기록부 달력 상세 조회
+	public List<CommuteDTO> select_COMMUTE_detail(String employee_cd, boolean isAdmin, String commute_wd) {
+		return commuteMapper.select_COMMUTE_detail(employee_cd, isAdmin, commute_wd);
+	}
+	
+	// 출퇴근 기록부 그리드 조회
+	public List<CommuteDTO> select_COMMUTE_grid(String employee_cd, boolean isAdmin) {
+		return commuteMapper.select_COMMUTE_grid(employee_cd, isAdmin);
+	}
+	
 
 	// 근로관리 그리드 조회
 	public List<WorkinghourDTO> select_WORKINGHOUR() {
@@ -81,11 +94,59 @@ public class CommuteService {
 		return commuteMapper.select_WORKINGHOUR();
 	}
 	
-	// 공통코드 조회
-	public List<Common_codeDTO> select_COMMON_list(String common_gc) {
+	// 미출근 사원 조회
+	public List<CommuteDTO> select_EMPLOYEE_grid(String commute_wd) {
 		
-		return commonRepository.select_COMMON_list(common_gc);
+		return commuteMapper.select_EMPLOYEE_grid(commute_wd);
 	}
+	
+	// 출근일정 조회의 등록
+	public void insert_COMMUTE_modal(CommuteDTO commuteDTO) {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp time = new Timestamp(System.currentTimeMillis());
+	    Commute com = commuteRepository.findById(new CommutePK(commuteDTO.getEmployee_cd(), 
+	    		commuteDTO.getWorkinghour_id(), commuteDTO.getCommute_wd())).orElse(null);
+	    
+	    if (com != null) { // 업데이트
+	    	com.setCommute_wd(commuteDTO.getCommute_wd());
+	    	com.setCommute_wt(commuteDTO.getCommute_wt());
+	    	com.setCommute_uu(regUser);
+	    	com.setCommute_ud(time);
+	    	if (commuteDTO.getCommute_lt().equals("")) {
+	    		com.setCommute_ld("");
+	    		com.setCommute_lt("");
+	    		com.setCommute_ig("");
+	    		com.setCommute_eg("");
+	    		com.setCommute_yg("");
+	    		com.setCommute_jg("");
+	    		com.setCommute_hg("");
+	    	} else {
+	    		com.setCommute_ld(commuteDTO.getCommute_ld());
+	    		com.setCommute_lt(commuteDTO.getCommute_lt());
+	    		setCOMMUTE_hour(com);
+	    	}
+	    	
+	    	commuteRepository.save(com);
+	    } else {
+	    	commuteDTO.setCommute_ru(regUser);
+	    	commuteDTO.setCommute_rd(time);
+	    	
+	    	Commute commute = Commute.setCommute(commuteDTO);
+	    	
+	    	commuteRepository.save(commute);
+	    }
+	}
+
+	// 공휴일 조회
+	public List<Holiday> select_HOLIDAY_month(String calendarStartDate, String calendarEndDate) {
+	    System.out.println("------------------- calendarStartDate : " + calendarStartDate);
+	    System.out.println("------------------- calendarEndDate : " + calendarEndDate);
+	    return holidayRepository.findHolidaysInMonth(calendarStartDate, calendarEndDate);
+	}
+	
+	
+	
+	// 근로 관리 --------------------------------------------
 
 	// 근로관리 상세 항목 조회
 	public Workinghour select_WORKINGHOUR_detail(String workinghour_id) {
@@ -113,11 +174,6 @@ public class CommuteService {
 	    
 		return workinghourRepository.save(Workinghour.setWorkinghour(workinghourDTO));
 	}
-
-
-
-
-
 
 	// 사원추가 모달 - 선택안된 직원 조회
 	public List<WorkinghourDTO> select_EMPLOYEE_WORKINGHOUR(String workinghour_id) {
@@ -153,98 +209,50 @@ public class CommuteService {
 		
 		return count;
 	}
-
-
-
-	// 출근하기
-	public int insert_COMMUTE(EmployeeDetails employee, Commute commuteEntity ) {
-	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
-	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
-		LocalDate today = LocalDate.now();
-		LocalTime time = LocalTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-		String formattedTime = time.format(formatter);
-
-		String employee_cd = employee.getEmployee_cd();
-		String workinghour_id = employee.getWorkinghour_id();
-		
-		if(commuteEntity != null) { // 업데이트
-		
-			commuteEntity.setCommute_ld(today.toString());
-			commuteEntity.setCommute_lt(formattedTime);
-			commuteEntity.setCommute_uu(regUser);
-			commuteEntity.setCommute_ud(regDate);
-			
-            return commuteRepository.save(commuteEntity) != null ? 1 : 0;
-		} else { // 인서트
-			Commute commute = Commute.builder()
-					.employee_cd(employee_cd)
-					.commute_wd(today.toString())
-					.workinghour_id(workinghour_id)
-					.commute_wt(formattedTime)
-					.commute_ru(regUser)
-					.commute_rd(regDate)
-					.build();
-			return commuteRepository.save(commute) != null ? 1 : 0;
-		}
-	}
-
-
+	
+	// 출근 -------------------------------------
 	// 출퇴근 기록 찾기
-	public Commute findById(EmployeeDetails employeeDetails) {
-		String employee_cd = employeeDetails.getEmployee_cd();
-		LocalDate today = LocalDate.now();
-		String workinghour_id = employeeDetails.getWorkinghour_id();
-		
-		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, today.toString())).orElse(null);
-	}
-	
-	
-	// 로직 수정 테스트 시작 ----------------------------------------------
-	public int insert_COMMUTE(String employee_cd, String workinghour_id, Commute commuteEntity ) {
-	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
-	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
-		LocalDate today = LocalDate.now();
-		LocalTime time = LocalTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-		String formattedTime = time.format(formatter);
-
-		if(commuteEntity != null) { // 업데이트
-		
-			commuteEntity.setCommute_ld(today.toString());
-			commuteEntity.setCommute_lt(formattedTime);
-			commuteEntity.setCommute_uu(regUser);
-			commuteEntity.setCommute_ud(regDate);
-			
-			if(commuteEntity.getCommute_lt() == null || commuteEntity.getCommute_lt().equals("")) {
-				// 출근
-				
-			} else {
-				
-			}
-			
-            return commuteRepository.save(commuteEntity) != null ? 1 : 0;
-		} else { // 인서트
-			Commute commute = Commute.builder()
-					.employee_cd(employee_cd)
-					.commute_wd(today.toString())
-					.workinghour_id(workinghour_id)
-					.commute_wt(formattedTime)
-					.commute_ru(regUser)
-					.commute_rd(regDate)
-					.build();
-			return commuteRepository.save(commute) != null ? 1 : 0;
-		}
-	}
-	
 	public Commute findById(String employee_cd, String workinghour_id) {
 		String today = LocalDate.now().toString();
 		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, today)).orElse(null);
 	}
 	
-	// 로직 수정 테스트 끝 ----------------------------------------------
-	
+	// 출근하기
+	public Commute insert_COMMUTE(String employee_cd, String workinghour_id, Commute commuteEntity ) {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
+		LocalDate today = LocalDate.now();
+		LocalTime time = LocalTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		String formattedTime = time.format(formatter);
 
+		if(commuteEntity != null) { // 업데이트
+		
+			commuteEntity.setCommute_ld(today.toString());
+			commuteEntity.setCommute_lt(formattedTime);
+			commuteEntity.setCommute_uu(regUser);
+			commuteEntity.setCommute_ud(regDate);
+			
+            // 근로시간 계산 및 설정
+            setCOMMUTE_hour(commuteEntity);
+            
+            return commuteRepository.save(commuteEntity);
+            
+		} else { // 인서트
+			Commute commute = Commute.builder()
+					.employee_cd(employee_cd)
+					.commute_wd(today.toString())
+					.workinghour_id(workinghour_id)
+					.commute_wt(formattedTime)
+					.commute_ru(regUser)
+					.commute_rd(regDate)
+					.build();
+			return commuteRepository.save(commute);
+		}
+	}
+	
+	// 서비스에서 사용 -----------------------------------------------------
+	
 	// 근로 요일은 일반근무, 연장근무, 야간근무
 	// 주휴요일은 휴일근무
 	// 근로, 주휴가 아니면 주말근무
@@ -253,183 +261,312 @@ public class CommuteService {
 	// 주 40시간보다 이상이면 연장근무, 남아서 야근하면 야근수당
 	// 야간근무 -> 오후 10시 ~ 오전 6시
 	// 사원 근무 기록 등록
-	public void insert_COMHISTORY(String employee_cd, String commute_wt, String commute_lt, String workinghour_id) {
-	    int currentDay = LocalDate.now().getDayOfWeek().getValue(); // 현재 요일
-	    LocalDate date = LocalDate.now(); // 현재 날짜
+	private void setCOMMUTE_hour(Commute commute) {
+		String workinghour_id = commute.getWorkinghour_id();
+		String commute_wd = commute.getCommute_wd();
+		String commute_wt = commute.getCommute_wt();
+		String commute_ld = commute.getCommute_ld();
+		String commute_lt = commute.getCommute_lt();
+	    // 변수 계산 -------------------------------------------------------------------
+		DateTimeFormatter yMdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	    LocalDate workDate = LocalDate.parse(commute.getCommute_wd()); // 출근일자
+	    int currentDayValue = workDate.getDayOfWeek().getValue(); // 출근일자 값
 	    
-	 // 이번 주 월요일 구하기
-	    LocalDate mondayOfWeek = date.minusDays(currentDay - 1);
-	    // 이번 주 일요일 구하기
-	    LocalDate sundayOfWeek = mondayOfWeek.plusDays(6);
-
-	    DateTimeFormatter weekformatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-	    String startDate = mondayOfWeek.format(weekformatter);
-	    String endDate = sundayOfWeek.format(weekformatter);
-	    // Repository에서 데이터 조회
-	    List<Commute> weeklyCommutes = commuteRepository.findCommutesBetweenDates(
-	    		startDate,
-	    		endDate
-	    );
+	    LocalDate monday = workDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)); // 출근일자 주의 월요일
+	    String startDate = monday.format(yMdFormatter);
+	    LocalDate previousDay = workDate.getDayOfWeek() == DayOfWeek.MONDAY ? workDate : workDate.minusDays(1);
+	    String endDate = previousDay.format(yMdFormatter);
+	    double totalWeeklyHours = commuteRepository.sumCommuteIgByDateRange(commute.getEmployee_cd(), startDate, endDate);
+	    boolean isHoliday = holidayRepository.findById(workDate.format(yMdFormatter)).orElse(null) != null; // 공휴일 유무
 	    
-	 // 주간 총 근무시간 계산
-	    double totalWeeklyHours = weeklyCommutes.stream()
-	        .mapToDouble(commute -> {
-	            // 각 근무 기록의 시간 계산 로직
-	            LocalDateTime startTime = LocalDateTime.of(LocalDate.parse(commute.getCommute_wd()),LocalTime.parse(commute.getCommute_wt()));
-	            LocalDateTime endTime = LocalDateTime.of(LocalDate.parse( commute.getCommute_ld()), LocalTime.parse(commute.getCommute_lt()));
-	            return ChronoUnit.MINUTES.between(startTime, endTime) / 60.0;
-	        })
-	        .sum();
-	    
-	    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM");
-	    String formattedDate = date.format(formatter);
-	    // 공휴일유무
-	    boolean isHoliday = holidayRepository.findById(formattedDate).orElse(null) != null ? true : false;
-	    
-	    Workinghour workinghour = workinghourRepository.findById(workinghour_id).orElse(null);
+	    Workinghour workinghour = workinghourRepository.findById(workinghour_id).orElse(null); // 근로형태 조회
 	    String workinghour_hs = workinghour.getWorkinghour_hs(); // 주휴요일
 	    
-	    // 출근 시간과 퇴근 시간을 LocalTime으로 파싱
-	    LocalTime startTime = LocalTime.parse(commute_wt);
-	    LocalTime endTime = LocalTime.parse(commute_lt);
-	    LocalTime companyStartTime = LocalTime.parse(workinghour.getWorkinghour_wt());
-	 // 실제 근무 시작 시간 결정
-	    LocalTime actualStartTime = startTime.isBefore(companyStartTime) ? companyStartTime : startTime;
-	    
-	    // 근로요일 배열로 변환 및 현재 요일과 비교
+	    LocalDateTime startDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(commute_wt)); // 출근일시
+	    LocalDateTime endDateTime = LocalDateTime.of(LocalDate.parse(commute_ld), LocalTime.parse(commute_lt)); // 퇴근일시
+	    LocalDateTime companyStartDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(workinghour.getWorkinghour_wt())); // 근로형태 출근일시
+	    LocalDateTime actualStartDateTime = startDateTime.isBefore(companyStartDateTime) ? companyStartDateTime : startDateTime; // 사원 출근일시
+	    // 근로요일 판별
 	    boolean isWorkingDay = Arrays.stream(workinghour.getWorkinghour_dw().split(","))
-	            .map(String::trim)
-	            .mapToInt(Integer::parseInt)
-	            .anyMatch(day -> day == currentDay);
+	        .map(String::trim)
+	        .mapToInt(Integer::parseInt)
+	        .anyMatch(day -> day == currentDayValue);
 
-	    // 로직 시작
-	    if(isWorkingDay) { // 근로요일 -> 일반근로, 연장근로, 야간근로
-//	    LocalTime endTime = LocalTime.parse("23:16:35");
-	    	LocalTime companyEndTime = LocalTime.parse(workinghour.getWorkinghour_lt());    // 회사 퇴근 시간
-	    	LocalTime nightWorkStartTime = LocalTime.of(22, 0); // 야간근로 시작 시간 22:00
-	    	
-	        String regularHours = "0.00";
-	        String overtimeHours = "0.00";
-	        String nightHours = "0.00";
+	    if(isWorkingDay && !isHoliday) { // 근로요일이며 공휴일이 아닐 경우 경우
+	        LocalDateTime companyEndDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(workinghour.getWorkinghour_lt())); // 근로형태 퇴근일시
+	        LocalDateTime nightWorkStartDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.of(22, 0)); // 야간근무 시간
 	        
-	        // 현재 근무시간 계산
-	        long currentWorkMinutes = ChronoUnit.MINUTES.between(actualStartTime, endTime);
-	        double currentWorkHours = currentWorkMinutes / 60.0 >= 8.00 ? 8.00 : currentWorkMinutes / 60.0;
+	        String regularHours = "0.00"; // 일반근로
+	        String overtimeHours = "0.00"; // 연장근로
+	        String nightHours = "0.00"; // 야간근로
 	        
-	        // 40시간 초과 여부 확인 및 처리
-	        if (totalWeeklyHours >= 40.0) {
-	            // 이미 40시간 초과한 경우 모든 시간을 연장/야간으로 처리
-	            if (endTime.isAfter(nightWorkStartTime)) {
-	                // 야간근무 시간 계산
-	                long nightMinutes = ChronoUnit.MINUTES.between(nightWorkStartTime, endTime);
-	                nightHours = String.format("%.2f", nightMinutes / 60.0);
+	        // 점심시간
+	        LocalDateTime lunchStartDateTime = LocalDateTime.of(workDate, LocalTime.of(12, 0));
+	        LocalDateTime lunchEndDateTime = LocalDateTime.of(workDate, LocalTime.of(13, 0));
+	        
+	        double regularWorkHours; // 실제 근무시간
+	        if (endDateTime.isBefore(lunchStartDateTime)) { // 점심시간 전에 퇴근
+	            regularWorkHours = Duration.between(actualStartDateTime, endDateTime).toMinutes() / 60.0;
+	        } else if (actualStartDateTime.isAfter(lunchEndDateTime)) { // 점심시간 후에 출근
+	            regularWorkHours = Duration.between(actualStartDateTime, endDateTime).toMinutes() / 60.0;
+	        } else { // 점심시간이 포함된 경우
+	            double morningHours = actualStartDateTime.isBefore(lunchStartDateTime) ?
+	                Duration.between(actualStartDateTime, lunchStartDateTime).toMinutes() / 60.0 : 0;
+	            double afternoonHours = endDateTime.isAfter(lunchEndDateTime) ?
+	                Duration.between(lunchEndDateTime, endDateTime).toMinutes() / 60.0 : 0;
+	            regularWorkHours = morningHours + afternoonHours;
+	        }
+	        regularWorkHours = Math.min(regularWorkHours, 8.00);
+	        
+	        if (totalWeeklyHours >= 40.0) { // 주 40시간 이상(연장, 야간으로 적용)
+	            if (endDateTime.isAfter(nightWorkStartDateTime)) { // 야간 근로 시간 이후 퇴근
+	            	// 연장근무(근로형태퇴근시간, 22시)
+	            	double overtimeMinutes = Duration.between(companyEndDateTime, nightWorkStartDateTime).toMinutes();
+	            	commute.setCommute_eg(String.format("%.2f", overtimeMinutes / 60.0));
+	            	// 야간근무(22시, 퇴근시간)
+	                double nightMinutes = Duration.between(nightWorkStartDateTime, endDateTime).toMinutes();
+	                commute.setCommute_yg(String.format("%.2f", nightMinutes / 60.0));
 	                
-	                // 연장근무 시간 계산 (시작시간부터 야간근무 시작시간까지)
-	                long overtimeMinutes = ChronoUnit.MINUTES.between(startTime, nightWorkStartTime);
-	                overtimeHours = String.format("%.2f", overtimeMinutes / 60.0);
-	            } else {
-	                // 전체 시간을 연장근무로 처리
-	                overtimeHours = String.format("%.2f", currentWorkHours);
+	            } else if (endDateTime.isAfter(companyEndDateTime)) { // 근로형태 퇴근 시간 이후 퇴근
+	            	// 연장근무(근로형태퇴근시간, 퇴근시간)
+	                double overtimeMinutes = Duration.between(companyEndDateTime, endDateTime).toMinutes();
+	                commute.setCommute_eg(String.format("%.2f", overtimeMinutes / 60.0));
 	            }
-	        } else {
-	            // 40시간 미만인 경우
-	            double remainingRegularHours = 40.0 - totalWeeklyHours;
+	        } else { // 주 40시간 미만(일반, 연장, 야간으로 적용)
+	            double remainingRegularHours = 40.0 - totalWeeklyHours; // 주당 남은 일반근로시간
+	            double overtimeWorkHours = 0.0;
 	            
-	            if (currentWorkHours <= remainingRegularHours) {
-	                // 현재 근무시간이 남은 일반근무시간 내에 있는 경우
-	                regularHours = String.format("%.2f", currentWorkHours);
-	            } else {
-	                // 일반근무시간을 초과하는 경우
-	                regularHours = String.format("%.2f", remainingRegularHours);
-	                double overtimeWorkHours = currentWorkHours - remainingRegularHours;
+	    	    if (regularWorkHours <= remainingRegularHours) { // 근무시간이 더 작은 경우
+	    	        commute.setCommute_ig(String.format("%.2f", regularWorkHours)); // 근무시간으로 적용
+	    	    } else {
+	    	        commute.setCommute_ig(String.format("%.2f", remainingRegularHours)); // 주당 남은 근로시간으로 적용
+	    	        overtimeWorkHours = regularWorkHours - remainingRegularHours; // 초과 시간
+	            
+	    	    }
 	                
-	                if (endTime.isAfter(nightWorkStartTime)) {
-	                    // 야간근무 시간 계산
-	                    long nightMinutes = ChronoUnit.MINUTES.between(nightWorkStartTime, endTime);
-	                    double nightWorkHours = nightMinutes / 60.0;
-	                    nightHours = String.format("%.2f", nightWorkHours);
-	                    
-	                    // 연장근무 시간 계산 (초과시간 - 야간근무시간)
-	                    overtimeHours = String.format("%.2f", overtimeWorkHours - nightWorkHours);
-	                } else {
-	                    // 전체 초과시간을 연장근무로 처리
-	                    overtimeHours = String.format("%.2f", overtimeWorkHours);
-	                }
-	            }
-	        }
-	    	
-	    	Comhistory com = comhistoryRepository.findById(new ComhistoryPK(employee_cd, formattedDate)).orElse(null);
-	    	
-	    	if(com != null) {
-	    		// 기존 값에 새로운 근무 시간 추가
-	    		String currentIg = (com.getComhistory_ig() != null) ? com.getComhistory_ig() : "0";
-	    		String currentEg = (com.getComhistory_eg() != null) ? com.getComhistory_eg() : "0";
-	    		String currentYg = (com.getComhistory_yg() != null) ? com.getComhistory_yg() : "0";
-	    		
-	    		double totalRegular = Double.parseDouble(currentIg) + Double.parseDouble(regularHours);
-	    		double totalOvertime = Double.parseDouble(currentEg) + Double.parseDouble(overtimeHours);
-	    		double totalNight = Double.parseDouble(currentYg) + Double.parseDouble(nightHours);
-	    		
-	    		com.setComhistory_ig(String.format("%.2f", totalRegular));
-	    		com.setComhistory_eg(String.format("%.2f", totalOvertime));
-	    		com.setComhistory_yg(String.format("%.2f", totalNight));
-	    	} else {
-	    		// 새 Comhistory 엔트리 생성
-	    		com = Comhistory.builder()
-	    				.employee_cd(employee_cd)
-	    				.comhistory_ym(formattedDate)
-	    				.comhistory_ig(regularHours)
-	    				.comhistory_eg(overtimeHours)
-	    				.comhistory_yg(nightHours)
-	    				.build();
-	    	}
-	    	
-	    	comhistoryRepository.save(com);
-	    } else if (Integer.parseInt(workinghour_hs) == currentDay || isHoliday) { // 주휴요일, 공휴일 -> 휴일근로
-	        long holidayMinutes = ChronoUnit.MINUTES.between(startTime, endTime);
-	        String holidayHours = String.format("%.2f", holidayMinutes / 60.0);
-	        
-	        Comhistory com = comhistoryRepository.findById(new ComhistoryPK(employee_cd, formattedDate)).orElse(null);
-	        
-	        if(com != null) {
-	            // 기존 값에 주휴시간 추가
-	            String currentHg = (com.getComhistory_hg() != null) ? com.getComhistory_jg() : "0";
-	            double totalHoliday = Double.parseDouble(currentHg) + Double.parseDouble(holidayHours);
-	            com.setComhistory_jg(String.format("%.2f", totalHoliday));
-	        } else {
-	            // 새 Comhistory 엔트리 생성
-	            com = Comhistory.builder()
-	                .employee_cd(employee_cd)
-	                .comhistory_ym(formattedDate)
-	                .comhistory_hg(holidayHours)
-	                .build();
+                if (endDateTime.isAfter(nightWorkStartDateTime)) { // 야간 근로 시간 이후 퇴근
+                 // 야간근무(22시, 퇴근시간)
+                    double nightMinutes = Duration.between(nightWorkStartDateTime, endDateTime).toMinutes();
+                    double nightWorkHours = nightMinutes / 60.0;
+                    commute.setCommute_yg(String.format("%.2f", nightWorkHours));
+                    // 연장근무 시간 계산 (초과시간 - 야간근무시간)
+                    double overtimeMinutes = Duration.between(companyEndDateTime, endDateTime).toMinutes();
+    	            commute.setCommute_eg(String.format("%.2f", overtimeWorkHours - nightWorkHours + (overtimeMinutes / 60.0)));
+                    
+                } else if (endDateTime.isAfter(companyEndDateTime)) { // 근로형태 퇴근시간 이후 퇴근
+                	double overtimeMinutes = Duration.between(companyEndDateTime, endDateTime).toMinutes();
+                    commute.setCommute_eg(String.format("%.2f", overtimeWorkHours + (overtimeMinutes / 60.0)));
+                }
 	        }
 	        
-	        comhistoryRepository.save(com);
-	    } else { // 근로요일, 주휴요일, 공휴일이 아닌 경우 -> 주말근로
-	        long weekendMinutes = ChronoUnit.MINUTES.between(startTime, endTime);
-	        String weekendHours = String.format("%.2f", weekendMinutes / 60.0);
 	        
-	        Comhistory com = comhistoryRepository.findById(new ComhistoryPK(employee_cd, formattedDate)).orElse(null);
+	    } else if (Integer.parseInt(workinghour_hs) == currentDayValue || isHoliday) {
+	        double holidayMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+	        commute.setCommute_hg(String.format("%.2f", holidayMinutes / 60.0));
 	        
-	        if(com != null) {
-	            // 기존 값에 주말근로시간 추가
-	            String currentJg = (com.getComhistory_jg() != null) ? com.getComhistory_jg() : "0";
-	            double totalWeekend = Double.parseDouble(currentJg) + Double.parseDouble(weekendHours);
-	            com.setComhistory_jg(String.format("%.2f", totalWeekend));
-	        } else {
-	            // 새 Comhistory 엔트리 생성
-	            com = Comhistory.builder()
-	                .employee_cd(employee_cd)
-	                .comhistory_ym(formattedDate)
-	                .comhistory_jg(weekendHours)
-	                .build();
-	        }
-	        
-	        comhistoryRepository.save(com);
+	    } else {
+	        double weekendMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+	        commute.setCommute_jg(String.format("%.2f", weekendMinutes / 60.0));
 	    }
-	    
 	}
+
+
+
+
+	public EmployeeDetails getEmployee() {
+		return (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	}
+	
+	public boolean isAuthority(String Authority) {
+		Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+		return authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_" + Authority));
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+//	public int insert_COMMUTE_hour(String employee_cd, String commute_wd, String commute_ld, String commute_wt, String commute_lt, String workinghour_id) {
+//	    DateTimeFormatter yMdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//	    DateTimeFormatter yMformatter = DateTimeFormatter.ofPattern("yyyy-MM");
+//	    // 변수 계산 -------------------------------------------------------------------
+//	    LocalDate workDate = LocalDate.parse(commute_wd); // 출근일자
+//	    int currentDayValue = workDate.getDayOfWeek().getValue(); // 출근일자 값
+//	    
+//	    LocalDate monday = workDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)); // 출근일자 주의 월요일
+//	    String startDate = monday.format(yMdFormatter);
+//	    LocalDate previousDay = workDate.getDayOfWeek() == DayOfWeek.MONDAY ? workDate : workDate.minusDays(1);
+//	    String endDate = previousDay.format(yMdFormatter);
+//	    System.out.println("----------------------employee_cd : " + employee_cd);
+//	    System.out.println("----------------------startDate : " + startDate);
+//	    System.out.println("----------------------endDate : " + endDate);
+//	    double totalWeeklyHours = commuteRepository.sumCommuteIgByDateRange(employee_cd, startDate, endDate);
+//	    System.out.println("----------------------근로시간 : " + totalWeeklyHours);
+//	    String comhistory_ym = workDate.format(yMformatter); // 년-월(근로시간 테이블용)
+//	    boolean isHoliday = holidayRepository.findById(workDate.format(yMdFormatter)).orElse(null) != null; // 공휴일 유무
+//	    
+//	    Workinghour workinghour = workinghourRepository.findById(workinghour_id).orElse(null); // 근로형태 조회
+//	    String workinghour_hs = workinghour.getWorkinghour_hs(); // 주휴요일
+//	    
+//	    LocalDateTime startDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(commute_wt)); // 출근일시
+//	    LocalDateTime endDateTime = LocalDateTime.of(LocalDate.parse(commute_ld), LocalTime.parse(commute_lt)); // 퇴근일시
+//	    LocalDateTime companyStartDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(workinghour.getWorkinghour_wt())); // 근로형태 출근일시
+//	    LocalDateTime actualStartDateTime = startDateTime.isBefore(companyStartDateTime) ? companyStartDateTime : startDateTime; // 사원 출근일시
+//	    // 근로요일 판별
+//	    boolean isWorkingDay = Arrays.stream(workinghour.getWorkinghour_dw().split(","))
+//	        .map(String::trim)
+//	        .mapToInt(Integer::parseInt)
+//	        .anyMatch(day -> day == currentDayValue);
+//
+//	    if(isWorkingDay) { // 근로요일일 경우
+//	        LocalDateTime companyEndDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(workinghour.getWorkinghour_lt())); // 근로형태 퇴근일시
+//	        LocalDateTime nightWorkStartDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.of(22, 0)); // 야간근무 시간
+//	        
+//	        String regularHours = "0.00"; // 일반근로
+//	        String overtimeHours = "0.00"; // 연장근로
+//	        String nightHours = "0.00"; // 야간근로
+//	        
+//	        // 점심시간
+//	        LocalDateTime lunchStartDateTime = LocalDateTime.of(workDate, LocalTime.of(12, 0));
+//	        LocalDateTime lunchEndDateTime = LocalDateTime.of(workDate, LocalTime.of(13, 0));
+//	        
+//	        double regularWorkHours; // 실제 근무시간
+//	        if (endDateTime.isBefore(lunchStartDateTime)) { // 점심시간 전에 퇴근
+//	            regularWorkHours = Duration.between(actualStartDateTime, endDateTime).toMinutes() / 60.0;
+//	        } else if (actualStartDateTime.isAfter(lunchEndDateTime)) { // 점심시간 후에 출근
+//	            regularWorkHours = Duration.between(actualStartDateTime, endDateTime).toMinutes() / 60.0;
+//	        } else { // 점심시간이 포함된 경우
+//	            double morningHours = actualStartDateTime.isBefore(lunchStartDateTime) ?
+//	                Duration.between(actualStartDateTime, lunchStartDateTime).toMinutes() / 60.0 : 0;
+//	            double afternoonHours = endDateTime.isAfter(lunchEndDateTime) ?
+//	                Duration.between(lunchEndDateTime, endDateTime).toMinutes() / 60.0 : 0;
+//	            regularWorkHours = morningHours + afternoonHours;
+//	        }
+//	        regularWorkHours = Math.min(regularWorkHours, 8.00);
+//	        
+//	        if (totalWeeklyHours >= 40.0) { // 주 40시간 이상(연장, 야간으로 적용)
+//	            if (endDateTime.isAfter(nightWorkStartDateTime)) { // 야간 근로 시간 이후 퇴근
+//	            	// 연장근무(근로형태퇴근시간, 22시)
+//	            	double overtimeMinutes = Duration.between(companyEndDateTime, nightWorkStartDateTime).toMinutes();
+//	            	overtimeHours = String.format("%.2f", overtimeMinutes / 60.0);
+//	            	// 야간근무(22시, 퇴근시간)
+//	                double nightMinutes = Duration.between(nightWorkStartDateTime, endDateTime).toMinutes();
+//	                nightHours = String.format("%.2f", nightMinutes / 60.0);
+//	                
+//	            } else if (endDateTime.isAfter(companyEndDateTime)) { // 근로형태 퇴근 시간 이후 퇴근
+//	            	// 연장근무(근로형태퇴근시간, 퇴근시간)
+//	                double overtimeMinutes = Duration.between(companyEndDateTime, endDateTime).toMinutes();
+//	                overtimeHours = String.format("%.2f", overtimeMinutes / 60.0);
+//	            }
+//	        } else { // 주 40시간 미만(일반, 연장, 야간으로 적용)
+//	            double remainingRegularHours = 40.0 - totalWeeklyHours; // 주당 남은 일반근로시간
+//	            System.out.println("---------------------- 주당 남은 근로시간 : " + remainingRegularHours);
+//	            double overtimeWorkHours = 0.0;
+//	            if (regularWorkHours <= remainingRegularHours) { // 근무시간이 더 작은 경우
+//	                regularHours = String.format("%.2f", regularWorkHours); // 근무시간으로 적용
+//	            } else {
+//	                regularHours = String.format("%.2f", remainingRegularHours); // 주당 남은 근로시간으로 적용
+//	                overtimeWorkHours = regularWorkHours - remainingRegularHours; // 초과 시간
+//	            }
+//	            System.out.println("---------------------- 일반근로시간 : " + regularHours);
+//	            System.out.println("---------------------- 초과시간 : " + overtimeWorkHours);
+//	            
+//	            
+//	                
+//                if (endDateTime.isAfter(nightWorkStartDateTime)) { // 야간 근로 시간 이후 퇴근
+//                	System.out.println("---------------------- 야간근로 시간");
+//                 // 야간근무(22시, 퇴근시간)
+//                    double nightMinutes = Duration.between(nightWorkStartDateTime, endDateTime).toMinutes();
+//                    double nightWorkHours = nightMinutes / 60.0;
+//                    nightHours = String.format("%.2f", nightWorkHours);
+//                    System.out.println("---------------------- 야간근로 시간 : " + nightHours);
+//                    
+//                    // 연장근무 시간 계산 (초과시간 - 야간근무시간)
+//                    double overtimeMinutes = Duration.between(companyEndDateTime, endDateTime).toMinutes();
+//                    overtimeHours = String.format("%.2f", overtimeWorkHours - nightWorkHours + (overtimeMinutes / 60.0));
+//                    System.out.println("---------------------- 연장근로 시간 : " + overtimeHours);
+//                    
+//                } else if (endDateTime.isAfter(companyEndDateTime)) { // 근로형태 퇴근시간 이후 퇴근
+//                    overtimeHours = String.format("%.2f", overtimeWorkHours); // 초과시간으로 적용
+//                }
+//	        }
+//	        
+//	        return insert_COMMUTE_hour_detail(employee_cd, workinghour_id, commute_wd, regularHours, overtimeHours, nightHours, null, null);
+//	        
+//	    } else if (Integer.parseInt(workinghour_hs) == currentDayValue || isHoliday) {
+//	        double holidayMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+//	        String holidayHours = String.format("%.2f", holidayMinutes / 60.0);
+//	        
+//	        return insert_COMMUTE_hour_detail(employee_cd, workinghour_id, commute_wd, null, null, null, holidayHours, null);
+//	        
+//	    } else {
+//	        double weekendMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
+//	        String weekendHours = String.format("%.2f", weekendMinutes / 60.0);
+//	        
+//	        return insert_COMMUTE_hour_detail(employee_cd, workinghour_id, commute_wd, null, null, null, null, weekendHours);
+//	    }
+//	}
+//
+//	// 근로시간 저장
+//	private int insert_COMMUTE_hour_detail(String employee_cd, String workinghour_id, String commute_wd, String regularHours, 
+//			String overtimeHours, String nightHours, String holidayHours, String weekendHours) {
+//	    
+//	    Commute com = commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, commute_wd)).get();
+//	    
+//        com.setCommute_ig(regularHours != null ? regularHours : "0.00");
+//        com.setCommute_eg(overtimeHours != null ? overtimeHours : "0.00");
+//        com.setCommute_yg(nightHours != null ? nightHours : "0.00");
+//        com.setCommute_hg(holidayHours != null ? holidayHours : "0.00");
+//        com.setCommute_jg(weekendHours != null ? weekendHours : "0.00");
+//	    
+//	    return commuteRepository.save(com) !=null ? 1 : 0;
+//	}
+	
+	
+	
+	
+//	private int saveComhistory(String employee_cd, String comhistory_ym, String regularHours, 
+//			String overtimeHours, String nightHours, String holidayHours, String weekendHours) {
+//	    
+//	    Comhistory com = comhistoryRepository.findById(new ComhistoryPK(employee_cd, comhistory_ym))
+//	        .orElse(Comhistory.builder()
+//	            .employee_cd(employee_cd)
+//	            .comhistory_ym(comhistory_ym)
+//	            .build());
+//	    
+//	    if (regularHours != null) { // 일반근로
+//	        String currentIg = (com.getComhistory_ig() != null) ? com.getComhistory_ig() : "0";
+//	        double totalRegular = Double.parseDouble(currentIg) + Double.parseDouble(regularHours);
+//	        com.setComhistory_ig(String.format("%.2f", totalRegular));
+//	    }
+//	    if (overtimeHours != null) { // 연장근로
+//	        String currentEg = (com.getComhistory_eg() != null) ? com.getComhistory_eg() : "0";
+//	        double totalOvertime = Double.parseDouble(currentEg) + Double.parseDouble(overtimeHours);
+//	        com.setComhistory_eg(String.format("%.2f", totalOvertime));
+//	    }
+//	    if (nightHours != null) { // 야간근로
+//	        String currentYg = (com.getComhistory_yg() != null) ? com.getComhistory_yg() : "0";
+//	        double totalNight = Double.parseDouble(currentYg) + Double.parseDouble(nightHours);
+//	        com.setComhistory_yg(String.format("%.2f", totalNight));
+//	    }
+//	    if (holidayHours != null) { // 휴일근로
+//	        String currentHg = (com.getComhistory_hg() != null) ? com.getComhistory_hg() : "0";
+//	        double totalHoliday = Double.parseDouble(currentHg) + Double.parseDouble(holidayHours);
+//	        com.setComhistory_hg(String.format("%.2f", totalHoliday));
+//	    }
+//	    if (weekendHours != null) { // 주말근로
+//	        String currentJg = (com.getComhistory_jg() != null) ? com.getComhistory_jg() : "0";
+//	        double totalWeekend = Double.parseDouble(currentJg) + Double.parseDouble(weekendHours);
+//	        com.setComhistory_jg(String.format("%.2f", totalWeekend));
+//	    }
+//	    
+//	    return comhistoryRepository.save(com) !=null ? 1 : 0;
+//	}
 
 
 

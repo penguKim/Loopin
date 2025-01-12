@@ -49,6 +49,9 @@
 	// ------------------------------
 	
 	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		
 		make_grid();
 		
 
@@ -268,7 +271,7 @@
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" id="btn_workinghour_save" class="btn btn-primary">등록</button>
+							<button type="button" class="btn btn-primary" id="btn_workinghour_save">등록</button>
 						</div>
 					</div>
 				</div>

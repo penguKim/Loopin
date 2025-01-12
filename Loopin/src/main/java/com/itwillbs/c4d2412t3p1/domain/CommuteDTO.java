@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,6 +13,7 @@ import lombok.ToString;
 @Setter
 @ToString
 @AllArgsConstructor
+@Builder
 public class CommuteDTO {
 	
 	private String employee_cd;
@@ -20,6 +22,11 @@ public class CommuteDTO {
 	private String commute_ld;
 	private String commute_wt;
 	private String commute_lt;
+	private String commute_ig;
+	private String commute_eg;
+	private String commute_yg;
+	private String commute_jg;
+	private String commute_hg;
 	private String commute_ru;
 	private Timestamp commute_rd;
 	private String commute_uu;
@@ -28,6 +35,11 @@ public class CommuteDTO {
 	private BigDecimal total;
 	private BigDecimal inside;
 	private BigDecimal outside;
+	private String employee_nm;
+	private String employee_dp;
+	private String employee_gd;
+	private String commute_st;
+	
 	
 	
 	public CommuteDTO() {}
@@ -37,6 +49,6 @@ public class CommuteDTO {
 		this.commute_wd = commute_wd;
 		this.total = total;
 	};
-
+	
 	
 }

@@ -19,17 +19,18 @@ public interface CommuteRepository extends JpaRepository<Commute, CommutePK> {
     @Query("SELECT c FROM Commute c WHERE c.commute_wd = :commute_wd")
     List<Commute> select_COMMUTE_detail(@Param("commute_wd") String commute_wd);
     
-    @Query(value="SELECT commute_wd, COUNT(*) total FROM COMMUTE GROUP BY commute_wd", nativeQuery = true)
-    List<CommuteDTO> select_COMMUTE_list();
+    @Query(value="SELECT commute_wd, COUNT(*) total FROM COMMUTE WHERE commute_wd BETWEEN :startDate AND :endDate GROUP BY commute_wd", nativeQuery = true)
+    List<CommuteDTO> select_COMMUTE_calendar(String startDate, String endDate);
 
     // 40시간 조회하기
     @Query("SELECT c FROM Commute c WHERE c.commute_wd BETWEEN :startDate AND :endDate")
     List<Commute> findCommutesBetweenDates(@Param("startDate") String startDate, @Param("endDate") String endDate);
     
-//    @Query(value = "SELECT c.commute_dt AS commuteDt, COUNT(*) AS total " +
-//            "FROM COMMUTE c " +
-//            "GROUP BY c.commute_dt", nativeQuery = true)
-//List<CommuteDTO> select_COMMUTE_list();
+    @Query("SELECT NVL(SUM(c.commute_ig), 0) FROM Commute c " +
+    	       "WHERE c.employee_cd = :employeeCd " +
+    	       "AND c.commute_wd BETWEEN :startDate AND :endDate")
+    	Double sumCommuteIgByDateRange(@Param("employeeCd") String employeeCd, @Param("startDate") String startDate, @Param("endDate") String endDate);
 
+    
 
 }
