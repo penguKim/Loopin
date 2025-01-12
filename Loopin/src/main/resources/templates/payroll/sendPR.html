@@ -1,0 +1,237 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet"	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<body>
+	<main id="main" class="main">
+	<div class="pagetitle">
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<div class="d-flex items-align-center justify-content-">
+					<h5 class="card-title"><h5 th:text="${#dates.format(#dates.createNow(),'yyyy-MM')}"></h5>(귀속년월) 급여</h5>
+				</div>
+				<div class="card-body">
+					<div class="d-flex justify-content-space align-items-end">
+						<input type="button" id="btn_wt" class="btn btn-primary ml-3" value="근태확정">
+					</div>
+					<div id="grid"></div>
+					<input type="button" id="btn_send" class="btn btn-primary ml-3" value="이체하기">
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+    const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	//let originalValues ={};
+	
+	$.ajax({
+		url: "/", // employee_us가 퇴사하면 업데이트하는건지? 아니면 다른경우 사용하는건지?
+		method:"GET",
+		dataType: "JSON",
+		success: function(data){
+			console.log('첫 데이터',data);
+		},
+		error: function(xhr,status,error){
+			console.log('사원정보 데이터 조회 실패했습니다.')
+		}
+	});
+	
+$('#btn_wt').on('click', function(){
+	const today = new Date();
+	const day = today.getDate();
+	console.log('today',today);
+	console.log('day',day);
+	
+	if(day <= 1 && day >=7) {
+		
+	$.ajax({
+		url: "/",
+		method: "GET",
+		dataType: "JSON",
+		data: JSON.stringify(),
+		success: function(data){
+			console.log("가져온 데이터",data);
+			
+		},
+		error:function(xhr,status,error){
+			console.log("근태 확정 데이터 조회에 실패했습니다.",error);	
+		}
+	});
+	}else{
+		swal.fire({
+			icon:'error',
+			title:'사용불가',
+			text:'1일부터 7일사이에만 조회가능합니다.'
+		})
+	}
+});
+
+  //////////////
+ // 그리드 생성 // 
+//////////////
+// 모달 & 데이터 긁어와서 한달치 더해보기...
+/* 결과그리드 */
+const grid = new tui.Grid({
+	el: document.getElementById('grid'),
+	responsive: true,
+	scrollX: true,
+	scrollY: true,
+	bodyHeight : 330,
+	 header: {
+			height : 130,
+     	complexColumns:[
+				{
+					header : '지급액',
+					name : 'PAY',
+					childNames: ['BS','B_MT','B_OT','B_NA','B_WA','B_HA','B_AA','B_BN']
+				}, 
+				{
+					header : '공제액',
+					name : 'DEDUCATION',
+					childNames: ['D_GM','D_GY','D_GG','D_LG']
+				}, 
+     	]
+     },
+     columns: [
+			{
+				header : 'prdetail_id',
+				name : 'prdetail_id',
+				hidden : true,
+			}, 
+			{
+				header : '사원번호',
+				name : 'employee_cd'
+			}, 
+			{
+				header : '사원명',
+				name : 'employee_nm'
+			}, 
+			{
+				header : '실지급액',
+				name : 'rs'
+			}, 
+			{
+				header : '총지급액',
+				name : 'ta'
+			}, 
+			{
+				header : '기본급',
+				name : 'BS'
+			}, 
+			{
+				header : '식대',
+				name : 'B_MT'
+			}, 
+			{
+				header : '연장수당',
+				name : 'B_OT'
+			}, 
+			{
+				header : '야근수당',
+				name : 'B_NA'
+			}, 
+			{
+				header : '주말근무수당',
+				name : 'B_WA'
+			}, 
+			{
+				header : '휴일수당',
+				name : 'B_HA'
+			}, 
+			{
+				header : '연차수당',
+				name : 'B_AA'
+			}, 
+			{
+				header : '상여',
+				name : 'B_BN',
+				editor:'text',
+			}, 
+			{
+				header : '총공제액',
+				name : 'td'
+			}, 
+			{
+				header : '국민연금',
+				name : 'D_GM'
+			}, 
+			{
+				header : '고용보험',
+				name : 'D_GY'
+			}, 
+			{
+				header : '건강보험',
+				name : 'D_GG'
+			}, 
+			{
+				header : '장기요양',
+				name : 'D_LG'
+			}, 
+     ],
+	 columnOptions:{
+		resizable:true,
+	 },
+	 data:[
+	 {prdetail_id:1,employee_cd:1,employee_nm:'test',rs:9,ta:10,td:1},
+	 {prdetail_id:2,employee_cd:2,employee_nm:'test2',rs:8,ta:20,td:12},
+	 ],
+});
+
+  ////////////////
+ // 상여 업데이트 //
+////////////////
+
+let originalValues = { // 임시
+    1: { rs: 9, ta: 10, td: 1 },  // prdetail_id: 1
+    2: { rs: 8, ta: 20, td: 12 }  // prdetail_id: 2
+};
+
+grid.on('afterChange', function(e) {
+    console.log('Changes:', e);
+
+    e.changes.forEach(change => {
+        const updaterowid = change.rowKey;  // 변경된 행의 rowKey
+        const updatedValue = Number(change.value);  // 변경된 셀의 값
+		const updaterowpid = grid.getRow(updaterowid).prdetail_id;
+
+        console.log('Row ID:', updaterowid);
+        console.log('Updated Value:', updatedValue);
+        console.log('Updated type:', typeof updatedValue);
+		console.log('prdetail_id',updaterowpid)
+
+		const originalData = originalValues[updaterowpid];  // 원래 데이터 (서버에서 받아온 값)
+        console.log('Original Data:', originalData);
+		
+        const RS = originalData.rs; // 원래 급여
+        const TA = originalData.ta; // 원래 총액
+        const TD = originalData.td;
+
+        console.log('RS:', RS);
+        console.log('TA:', TA);
+        console.log('TAtype', typeof TA);
+        console.log('TD:', TD);
+
+        if (change.columnName === 'B_BN') {
+			console.log('bn임');
+            const updateta = TA + updatedValue;  // 총액 (ta) 갱신
+            const updaters = updateta - TD;      // 실제 급여 (rs) 갱신
+			console.log('updateta임',updateta);
+			console.log('updaters임',updaters);
+
+            grid.setValue(updaterowid, 'ta', updateta);  // 총액 업데이트
+            grid.setValue(updaterowid, 'rs', updaters);  // 실제 급여 업데이트
+        }
+    });
+});
+
+</script>
