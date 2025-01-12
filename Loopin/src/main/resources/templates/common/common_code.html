@@ -442,15 +442,13 @@
 			if (changeFlag) {
 			    return;
 			}
-		  const row = ev['changes'][0];
-		  console.log(row);
-		  console.log(row['rowKey']);
-		  console.log(row['value']);
-		  console.log(group_grid.getData());
-		  changeFlag = true;
-		  group_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
-		  console.log(group_grid.getData());
-		  changeFlag = false;
+			const row = ev['changes'][0];
+			
+			if(row['columnName'] == 'common_cc') {
+				changeFlag = true;
+				sub_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
+				changeFlag = false;
+			}
 		  
 		});
 	}
@@ -513,13 +511,15 @@
 		
 		sub_grid.on('beforeChange', ev => {
 			if (changeFlag) {
-			    return;
+				return;
 			}
-		  const row = ev['changes'][0];
+			const row = ev['changes'][0];
 		  
-		  changeFlag = true;
-		  sub_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
-		  changeFlag = false;
+			if(row['columnName'] == 'common_cc') {
+				changeFlag = true;
+				sub_grid.setValue(row['rowKey'], 'beforeCommon_cc', row['value']);
+				changeFlag = false;
+			}
 		  
 		});
 	}
