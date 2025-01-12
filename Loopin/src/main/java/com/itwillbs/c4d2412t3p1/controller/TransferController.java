@@ -104,14 +104,18 @@ public class TransferController {
 	public ResponseEntity<Map<String, String>> insert_TRANSFER(@RequestBody TransferDTO transferDTO) {
 		Map<String, String> response = new HashMap<>();
 		try {
-			transferService.insert_TRANSFER(transferDTO);
-			response.put("message", "데이터가 성공적으로 저장되었습니다.");
-			return ResponseEntity.ok(response); // JSON 형식으로 반환
-		} catch (Exception e) {
-			response.put("message", "데이터 저장 실패: " + e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	        // 서비스 계층에 작업 위임
+	        transferService.handleTransferInsert(transferDTO);
 
-		}
+	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
+	        return ResponseEntity.ok(response);
+	    } catch (IllegalArgumentException e) {
+	        response.put("message", "데이터 저장 실패: " + e.getMessage());
+	        return ResponseEntity.badRequest().body(response);
+	    } catch (Exception e) {
+	        response.put("message", "데이터 저장 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
 
 //	인사발령 삭제

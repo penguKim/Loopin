@@ -64,12 +64,10 @@
 								</div>
 							</div>
 							<div class="col">
-								<label for="employee_mg" class="form-label">부서구분</label> <select id="employee_mg"
+								<label for="transfer_mg" class="form-label">부서구분</label> <select id="transfer_mg"
 									class="form-select">
-									<option value="" disabled selected>부서구분</option>
-									<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_cc}"
-										th:text="${dptype.common_nm}">
-									</option>
+									<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
+										th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
 								</select>
 							</div>
 						</div>
@@ -217,7 +215,7 @@
 						transfer_ag: row.transfer_ag,
 						transfer_od: row.transfer_od,
 						transfer_adp: row.transfer_adp,
-
+						transfer_aw: row.transfer_aw
 					})),
 					columns: [
 						{header: '이름', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true},
@@ -227,7 +225,8 @@
 						{header: '기존직위', name: 'transfer_og', align: 'center', filter: {type: 'select'}, sortable: true},
 						{header: '변경직위', name: 'transfer_ag', align: 'center', filter: {type: 'select'}, sortable: true},
 						{header: '기존부서', name: 'transfer_od', align: 'center', filter: {type: 'select'}, sortable: true},
-						{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select'}, sortable: true}
+						{header: '발령부서', name: 'transfer_adp', align: 'center', filter: {type: 'select'}, sortable: true},
+						{header: '발령현황', name: 'transfer_aw', align: 'center', filter: {type: 'select'}, sortable: true}
 					],
 					rowHeaders: ['checkbox'],
 					autoWidth: true,
@@ -367,23 +366,42 @@
 
 	// 선택 버튼 클릭 이벤트 처리
 	document.addEventListener('click', function (event) {
-		// 선택 버튼(`select-emp-btn`)이 클릭되었는지 확인
-		if (event.target.classList.contains('select-emp-btn')) {
-			// 클릭된 버튼이 속한 행(`tr`)을 가져옴
-			const selectedRow = event.target.closest('tr'); // tr_
+	    // 선택 버튼(`select-emp-btn`)이 클릭되었는지 확인
+	    if (event.target.classList.contains('select-emp-btn')) {
+	        // 클릭된 버튼이 속한 행(`tr`)을 가져옴
+	        const selectedRow = event.target.closest('tr'); // tr_
 
-			// 행의 각 열(`td`)에서 데이터를 가져옴
-			const employee_cd = selectedRow.cells[0].textContent; // 사원코드
-			const employee_nm = selectedRow.cells[1].textContent;    // 이름
+	        // 행의 각 열(`td`)에서 데이터를 가져옴
+	        const employee_cd = selectedRow.cells[0].textContent; // 사원코드
+	        const employee_nm = selectedRow.cells[1].textContent; // 이름
+	        const employee_dept = selectedRow.cells[2].textContent; // 부서
+	        const employee_position = selectedRow.cells[3].textContent; // 직위
 
-			// 기존 모달의 필드에 값 설정
-			document.getElementById('employee_cd').value = employee_cd;
-			document.getElementById('employee_nm').value = employee_nm;
+	        // 기존 모달의 필드에 값 설정
+	        document.getElementById('employee_cd').value = employee_cd;
+	        document.getElementById('employee_nm').value = employee_nm;
 
-			// 사원 선택 모달 닫기
-			const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
-			modal_employee_list.hide();
-		}
+	        // 기존부서와 기존직위 select 요소의 값 설정
+	        const transfer_od = document.getElementById('transfer_od'); // 기존부서
+	        const transfer_og = document.getElementById('transfer_og'); // 기존직위
+
+	        // 기존부서와 기존직위 드롭다운에서 값 설정
+	        Array.from(transfer_od.options).forEach(option => {
+	            if (option.textContent === employee_dept) {
+	                option.selected = true;
+	            }
+	        });
+
+	        Array.from(transfer_og.options).forEach(option => {
+	            if (option.textContent === employee_position) {
+	                option.selected = true;
+	            }
+	        });
+
+	        // 사원 선택 모달 닫기
+	        const modal_employee_list = bootstrap.Modal.getInstance(document.getElementById('modal_employee_list'));
+	        modal_employee_list.hide();
+	    }
 	});
 
 	// 모달 저장 버튼 클릭 시 이벤트 처리
@@ -398,8 +416,24 @@
 		const transfer_ag = document.getElementById('transfer_ag').value;
 		const transfer_od = document.getElementById('transfer_od').value;
 		const transfer_adp = document.getElementById('transfer_adp').value;
+		const transfer_mg = document.getElementById('transfer_mg').value; // 부서구분 값
 
-		// 부서장 존재 여부 확인 AJAX 요청
+		// 부서장이 선택되지 않은 경우 바로 저장
+		if (transfer_mg !== "true") {
+			saveTransfer({
+				employee_cd: employee_cd,
+				transfer_ad: transfer_ad,
+				transfer_ac: transfer_ac,
+				transfer_og: transfer_og,
+				transfer_ag: transfer_ag,
+				transfer_od: transfer_od,
+				transfer_adp: transfer_adp,
+				transfer_mg: transfer_mg,
+			});
+			return;
+		}
+
+		// 부서장 선택된 경우 부서장 존재 여부 확인 AJAX 요청
 		fetch('/select_department_manager', {
 			method: 'POST',
 			headers: {
@@ -433,6 +467,7 @@
 					transfer_ag: transfer_ag,
 					transfer_od: transfer_od,
 					transfer_adp: transfer_adp,
+					transfer_mg: transfer_mg,
 				});
 			})
 			.catch(error => {

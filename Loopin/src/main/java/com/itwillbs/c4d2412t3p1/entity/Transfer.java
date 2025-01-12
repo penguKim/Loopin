@@ -46,7 +46,7 @@ public class Transfer {
 	@Column(name = "transfer_ag")
 	private String transfer_ag;
 	@Column(name = "transfer_aw")
-	private String transfer_aw;
+	private Boolean transfer_aw;
 	@Column(name = "transfer_wr")
 	private String transfer_wr;
 	@Column(name = "transfer_wd")
@@ -55,6 +55,8 @@ public class Transfer {
 	private String transfer_mf;
 	@Column(name = "transfer_md")
 	private String transfer_md;
+	@Column(name = "transfer_mg")
+	private Boolean transfer_mg;
 
 	// 생성자
 	public Transfer() {
@@ -75,12 +77,13 @@ public class Transfer {
 		transfer.setTransfer_wd(transferDTO.getTransfer_wd());
 		transfer.setTransfer_mf(transferDTO.getTransfer_mf());
 		transfer.setTransfer_md(transferDTO.getTransfer_md());
+		transfer.setTransfer_mg(transferDTO.getTransfer_mg());
 		return transfer;
 	}
 
 	public Transfer(long transfer_id, String employee_cd, String transfer_od, String transfer_og, String transfer_ad,
-			String transfer_ac, String transfer_adp, String transfer_ag, String transfer_aw, String transfer_wr,
-			String transfer_wd, String transfer_mf, String transfer_md) {
+			String transfer_ac, String transfer_adp, String transfer_ag, Boolean transfer_aw, String transfer_wr,
+			String transfer_wd, String transfer_mf, String transfer_md, Boolean transfer_mg) {
 		super();
 		this.transfer_id = transfer_id;
 		this.employee_cd = employee_cd;
@@ -95,6 +98,7 @@ public class Transfer {
 		this.transfer_wd = transfer_wd;
 		this.transfer_mf = transfer_mf;
 		this.transfer_md = transfer_md;
+		this.transfer_mg = transfer_mg;
 	}
 
 }
