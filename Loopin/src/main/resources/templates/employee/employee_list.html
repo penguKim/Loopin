@@ -298,6 +298,25 @@
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
 							<div class="row mb-3">
+									<div class="col-sm-2">
+										<select id="categorySelect"class="form-control">
+											<option value="all">전체</option>
+											<option value="employee_cd">사원코드</option>
+											<option value="employee_nm">사원명</option>
+											<option value="employee_dp">부서</option>
+											<option value="employee_bd">생년월일</option>
+											<option value="employee_ad">주소</option>
+											<option value="employee_gd">직급</option>
+											<option value="employee_ph">연락처</option>
+											<option value="employee_em">이메일</option>
+											<option value="employee_hd">입사일</option>
+										</select>
+									</div>
+									<div class="col-sm-4">
+										<input type="text" class="form-control" id="searchInput" placeholder="검색..." />
+									</div>
+								</div>
+								
 								<div class="col-sm-12">
 									<div id="grid"></div>
 									<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
@@ -545,6 +564,40 @@
 	                    openEditModal(rowData); // 수정 모드로 모달 열기
 	                }
 	            });
+				
+				// 카테고리 선택 및 검색 기능
+				$('#categorySelect').on('change', function() {
+				    performSearch(); // 카테고리 변경 시 검색 수행
+				});
+
+				// 검색 기능
+				$('#searchInput').on('input', function () {
+				    performSearch(); // 검색어 입력 시 검색 수행
+				});
+
+				function performSearch() {
+				    const searchTerm = $('#searchInput').val().toLowerCase();
+				    const category = $('#categorySelect').val(); // 선택된 카테고리
+
+				    let filteredData;
+
+				    if (category === 'all') {
+				        // "전체" 선택 시 모든 컬럼을 대상으로 검색
+				        filteredData = employeeList.filter(item =>
+				            Object.keys(item).some(key =>
+				                item[key] && item[key].toString().toLowerCase().includes(searchTerm)
+				            )
+				        );
+				    } else {
+				        // 선택된 카테고리만 대상으로 검색
+				        filteredData = employeeList.filter(item =>
+				            item[category] && item[category].toString().toLowerCase().includes(searchTerm)
+				        );
+				    }
+
+				    // 필터링된 데이터로 그리드 갱신
+				    grid.resetData(filteredData);
+				}
 	        },
 	        error: function (error) {
 	            console.error('오류 발생:', error);
