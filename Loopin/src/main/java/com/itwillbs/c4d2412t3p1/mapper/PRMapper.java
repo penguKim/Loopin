@@ -13,6 +13,6 @@ public interface PRMapper {
 
 	List<Map<String, Object>> selectpradminfirstmodal(Long pr_id);
 
-	List<Map<String, Object>> selectpradminfirstmodal2(Long prdetail_id);
-
+	List<Map<String, Object>> selectpradminfirstmodal2(@Param("prdetail_id") Long prdetail_id);
+	
 }
