@@ -187,6 +187,8 @@ public class EmployeeController {
 		    @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 		Map<String, String> response = new HashMap<>();
 		
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+		
 		try {
 	       
 			// 파일 업로드 처리
@@ -208,6 +210,8 @@ public class EmployeeController {
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
 			
+	        employeeDTO.setEmployee_wr(employee_id);
+	        
 	        employeeDTO.setEmployee_wd(new Timestamp(System.currentTimeMillis()));
 	        // 데이터 저장 처리
 			employeeService.insert_EMPLOYEE(employeeDTO, employee_pi);
@@ -225,6 +229,8 @@ public class EmployeeController {
 	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
 	        @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+		
 		
 	    Map<String, String> response = new HashMap<>();
 	    try {
@@ -243,6 +249,9 @@ public class EmployeeController {
 	            response.put("message", "데이터 수정 실패: 해당 ID의 데이터를 찾을 수 없습니다.");
 	            return ResponseEntity.badRequest().body(response);
 	        }
+
+	        // 기존 employee_wr 값 유지
+	        employeeDTO.setEmployee_wr(employee.getEmployee_wr());
 
 	        // 기존 employee_wd 값을 유지
 	        employeeDTO.setEmployee_wd(employee.getEmployee_wd());
@@ -273,6 +282,8 @@ public class EmployeeController {
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
 
+	        employeeDTO.setEmployee_mf(employee_id);
+	        
 	        employeeDTO.setEmployee_md(new Timestamp(System.currentTimeMillis()));
 
 	        // Service 호출

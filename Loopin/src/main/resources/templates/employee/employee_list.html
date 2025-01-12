@@ -519,9 +519,9 @@
 						
 						// 숨김 컬럼
 						{ header: '사원아이디', name: 'employee_id', hidden: true },
+						{ header: '패스워드', name: 'employee_pw', hidden: true },
 						{ header: '성별', name: 'employee_sb', hidden: true },
 						{ header: '채용구분', name: 'employee_cg', hidden: true },
-						{ header: '패스워드', name: 'employee_pw', hidden: true  },
 						{ header: '퇴사일', name: 'employee_rd', hidden: true  },
 						{ header: '퇴사사유', name: 'employee_rr', hidden: true  },
 						{ header: '비고', name: 'employee_nt', hidden: true  },
@@ -629,6 +629,7 @@
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
 			$('#appointment_form')[0].reset(); // 폼 초기화
+			$('#employee_pw_check').text('');
 			resetPhoto(); // 사진 초기화
 			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
@@ -735,13 +736,18 @@
 			    });
 			}
 			
-			// 데이터 매핑
-				Object.keys(data).forEach(key => {
-				const $field = $(`#${key}`);
-		        if ($field.length && $field.attr('type') !== 'file') {
-		            $field.val(data[key] || '');
-		        }
-		    });
+			// 제외할 필드 목록
+			const excludeKeys = ['employee_pw', 'secretField'];
+
+			Object.keys(data).forEach(key => {
+			    // 제외할 키는 건너뛴다
+			    if (!excludeKeys.includes(key)) {
+			        const $field = $(`#${key}`);
+			        if ($field.length && $field.attr('type') !== 'file') {
+			            $field.val(data[key] || '');
+			        }
+			    }
+			});
 			
 			
 			// 부서장 관련 처리
@@ -856,29 +862,6 @@
 		});
 
 
-		// 패스워드 입력 유효성 처리
-		$('#employee_pw').on('blur', function () {
-		    const employee_pw = $(this).val().trim();
-
-		    // 입력값이 없으면 초기화
-		    if (employee_pw === '') {
-		        $('#employee_pw_check').text('패스워드를 입력해주세요').css('color', 'red');
-		        return;
-		    }
-
-			// 정규식으로 아이디 형식 검사
-			// 4~16자리로
-			const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|-]{4,16}$/;
-			if (!passwordRegex.test(employee_pw)) {
-			    $('#employee_pw_check').text('패스워드는 4자 이상 16자 이하로 입력해주세요').css('color', 'red');
-			    return;
-			} else {
-                $('#employee_pw_check').text('사용 가능한 패스워드입니다.').css('color', 'green');
-				
-			}
-		
-		});
-
 		
 		// 이메일 아이디 유효성 검사
 		$('#email_id').on('blur', function () {
@@ -904,12 +887,40 @@
 		    }
 		});
 
+
+		// 패스워드 입력 유효성 처리
+		$('#employee_pw').on('blur', function () {
+		    const employee_pw = $(this).val().trim();
+
+		    // 입력값이 없으면 초기화
+		    if (employee_pw === '') {
+		        $('#employee_pw_check').text('패스워드를 입력해주세요').css('color', 'red');
+		        return;
+		    }
+
+		    // 정규식으로 패스워드 형식 검사
+		    const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|-]{4,16}$/;
+		    if (!passwordRegex.test(employee_pw)) {
+		        $('#employee_pw_check').text('패스워드는 4자 이상 16자 이하로 입력해주세요').css('color', 'red');
+		    } else {
+		        $('#employee_pw_check').text('사용 가능한 패스워드입니다.').css('color', 'green');
+		    }
+		});
 		
 
+		
+		
 		// 폼 제출 이벤트
 		$('#appointment_form').off('submit').on('submit', function (event) {
 		    event.preventDefault();
 
+			const employee_pw = $('#employee_pw').val().trim(); // 패스워드 필드 값 가져오기
+
+			if (!employee_pw) { // 패스워드가 비어있다면
+			    alert('패스워드를 입력해 주세요.'); // 사용자에게 경고
+				return;
+			}			
+			
 		    const formData = new FormData(); // FormData 객체 생성
 		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
 		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
