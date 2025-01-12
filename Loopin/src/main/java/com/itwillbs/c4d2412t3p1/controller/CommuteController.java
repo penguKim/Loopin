@@ -53,22 +53,7 @@ public class CommuteController {
 	// 출퇴근 기록부 --------------------------------------------
 	@GetMapping("/commute")
 	public String commute(Model model) {
-		EmployeeDetails employeeDetails = commuteService.getEmployee();
-		String employee_cd = employeeDetails.getEmployee_cd();
-		String workinghour_id = employeeDetails.getWorkinghour_id();
-		Commute commute = commuteService.findById(employee_cd, workinghour_id);
-		
-	    boolean isAttendance = commute != null && 
-                commute.getCommute_wt() != null && 
-                !commute.getCommute_wt().isEmpty();
-	    
-	    boolean isLeaveWork = !isAttendance || 
-               (commute != null && 
-                commute.getCommute_lt() != null && 
-                !commute.getCommute_lt().isEmpty());
-	    // 출퇴근버튼 활성화 여부(대시보드로 로직 이동)
-	    model.addAttribute("isAttendance", isAttendance);
-	    model.addAttribute("isLeaveWork", isLeaveWork);
+
 	    
 		return "/commute/commute_list";
 	}

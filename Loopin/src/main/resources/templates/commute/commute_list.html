@@ -27,8 +27,6 @@
 					<div class="card"  style="height:800px;">
 						<div class="card-body">
 							<h1 class="card-title">출퇴근 기록부</h1>
-							<input type="button" id="btn_attendance" class="btn btn-primary" value="출근하기" th:disabled="${isAttendance}">
-							<input type="button" id="btn_leave_work" class="btn btn-primary" value="퇴근하기" th:disabled="${isLeaveWork}">
 							<!-- 탭 헤드 -->
 							<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
 								<li class="nav-item" role="presentation">
@@ -136,57 +134,7 @@
 		make_calendar();
 		
 		
-		// 출근하기
-		$('#btn_attendance, #btn_leave_work').on('click', function() {
-			let isAttendance = $(this).attr('id') == 'btn_attendance';
-			let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
-			let timeInterval;
-			Swal.fire({
-				icon: 'question',
-				title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
-				html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
-				didOpen: () => {
-					// 1초마다 시간 업데이트
-					timeInterval = setInterval(() => {
-						$('#currentTime').text(getDateTime(new Date));
-					}, 1000);
-				},
-				showCancelButton: true,
-				confirmButtonColor: '#0d6efd',
-				cancelButtonColor: '#6c757d',
-				confirmButtonText: '확인',
-				cancelButtonText: '취소',
-				reverseButtons: true, 
-			}).then(result => {
-				clearInterval(timeInterval);
-				if (result.isConfirmed) { 
-					$.ajax({
-						type: 'post',
-						url: '/insert_COMMUTE',
-						contentType: 'application/json',
-						data: JSON.stringify({attendance : isAttendance}),
-						beforeSend : function(xhr) {
-						    xhr.setRequestHeader(header, token);
-						},
-						success: function(data) {
-							if(data['result']) {
-								showToast('', 'success', '', data['msg']);
-								if(isAttendance) {
-								    $('#btn_attendance').prop('disabled', true);
-								    $('#btn_leave_work').prop('disabled', false);
-								} else {
-								    $('#btn_leave_work').prop('disabled', true);
-								}
-							}
-						},
-						error : function(xhr, textStatus, errorThrown) {
-							let data = xhr.responseJSON;
-							showAlert('', 'error', '', data['msg']);
-						}
-					});
-				}
-			});
-		});
+
 		
 		// 그리드탭 클릭
 		btn_grid_tab.on('click', function() {
@@ -412,6 +360,14 @@
 									toastui-calendar-template-monthGridHeader" style="color: #fff">${dayNum}</span>`;
 					            }
 					            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
+							},
+							time: function(schedule) {
+							    return `<span class="calendar-event" 
+							        data-bs-toggle="tooltip" 
+							        data-bs-placement="top" 
+							        title="${schedule.title}">
+							        ${schedule.title}
+							    </span>`;
 							}
 						}
 					});
@@ -431,8 +387,7 @@
 					            category: 'allday',
 					            backgroundColor: '#fff'
 					        };
-					    } 
-					    else {
+					    } else {
 					        let title = '';
 					        if (commute.commute_wt) {
 					            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
