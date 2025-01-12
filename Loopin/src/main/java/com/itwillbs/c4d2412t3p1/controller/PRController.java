@@ -92,4 +92,5 @@ public class PRController {
 		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
 		return list;
 	}
+
 }

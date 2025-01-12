@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -96,6 +97,8 @@ public class PRService {
 		for (PRCode formula : formulas) {
 			log.info("계산확인"+formula);
 			BigDecimal calculatedAmount = calculateSalaryWithSpEL(formula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
+			
+			calculatedAmount = calculatedAmount.setScale(0, RoundingMode.HALF_UP); // 소수점 반올림
 			
 			calculated.add(new PRCalDTO(formula.getPrcode_id(),calculatedAmount));
 			

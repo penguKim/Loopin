@@ -36,5 +36,5 @@ public class PR {
 	private String pr_wr;
 	
 	@Column(name="pr_wd")
-	private Date pr_wd;
+	private Timestamp pr_wd;
 }
