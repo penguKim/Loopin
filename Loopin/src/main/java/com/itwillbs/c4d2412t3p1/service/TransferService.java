@@ -29,25 +29,34 @@ public class TransferService {
 	private final CommonRepository commonRepository;
 	private final EmployeeRepository employeeRepository;
 
-	public List<Map<String, Object>> select_TRANSFER_DETAIL() {
+    public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
+        List<Object[]> result;
 
-		List<Object[]> result = transferRepository.findAllWithDetails();
+        if ("admin".equals(role) || "developer".equals(role)) {
+            // 전체 조회
+            result = transferRepository.findAllWithDetails();
+        } else if ("employee".equals(role)) {
+            // 본인 데이터만 조회
+            result = transferRepository.findAllWithDetailsByEmployeeCd(employee_cd);
+        } else {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
 
-		return result.stream().map(row -> {
-			Map<String, Object> transfer = new HashMap<>();
-			transfer.put("transfer_id", row[0]);
-			transfer.put("employee_cd", row[1]);
-			transfer.put("employee_nm", row[2]);
-			transfer.put("transfer_ad", row[3]);
-			transfer.put("transfer_ac", row[4]);
-			transfer.put("transfer_og", row[5]);
-			transfer.put("transfer_ag", row[6]);
-			transfer.put("transfer_od", row[7]);
-			transfer.put("transfer_adp", row[8]);
-			transfer.put("transfer_aw", row[9]);
-			return transfer;
-		}).collect(Collectors.toList());
-	}
+        return result.stream().map(row -> {
+            Map<String, Object> transfer = new HashMap<>();
+            transfer.put("transfer_id", row[0]);
+            transfer.put("employee_cd", row[1]);
+            transfer.put("employee_nm", row[2]);
+            transfer.put("transfer_ad", row[3]);
+            transfer.put("transfer_ac", row[4]);
+            transfer.put("transfer_og", row[5]);
+            transfer.put("transfer_ag", row[6]);
+            transfer.put("transfer_od", row[7]);
+            transfer.put("transfer_adp", row[8]);
+            transfer.put("transfer_aw", row[9]);
+            return transfer;
+        }).collect(Collectors.toList());
+    }
 
 	public void insert_TRANSFER(TransferDTO transferDTO) {
 

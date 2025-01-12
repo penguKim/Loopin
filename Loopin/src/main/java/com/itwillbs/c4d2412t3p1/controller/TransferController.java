@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
@@ -53,8 +55,14 @@ public class TransferController {
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
 
 		try {
+
+			EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication()
+					.getPrincipal();
+			String role = employeeDetails.getEmployee_rl();
+			String employee_cd = employeeDetails.getEmployee_cd();
+
 			// 서비스 호출 후 결과 반환
-			List<Map<String, Object>> response = transferService.select_TRANSFER_DETAIL();
+			List<Map<String, Object>> response = transferService.select_TRANSFER_DETAIL(role, employee_cd);
 			log.info("@@@@@@@@@@@@@@@@" + response.toString());
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -81,14 +89,13 @@ public class TransferController {
 		Map<String, Object> response = new HashMap<>();
 		try {
 			Map<String, Object> managerInfo = transferService.select_DEPARTMENT_MANAGER(transfer_adp);
-			
-			
+
 			if (managerInfo != null && !managerInfo.isEmpty()) {
-	            response.put("manager_exists", true);
-	            response.put("manager_info", managerInfo);
-	        } else {
-	            response.put("manager_exists", false);
-	        }
+				response.put("manager_exists", true);
+				response.put("manager_info", managerInfo);
+			} else {
+				response.put("manager_exists", false);
+			}
 
 			return ResponseEntity.ok(response);
 
@@ -98,7 +105,7 @@ public class TransferController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	
+
 //	// 부서장 변경
 //	@PostMapping("/update_department_manager")
 //	@ResponseBody
@@ -133,25 +140,24 @@ public class TransferController {
 //	    }
 //	}
 
-
 //	인사발령 등록
 	@LogActivity(value = "등록", action = "인사발령")
 	@PostMapping("/insert_TRANSFER")
 	public ResponseEntity<Map<String, String>> insert_TRANSFER(@RequestBody TransferDTO transferDTO) {
 		Map<String, String> response = new HashMap<>();
 		try {
-	        // 서비스 계층에 작업 위임
-	        transferService.handleTransferInsert(transferDTO);
+			// 서비스 계층에 작업 위임
+			transferService.handleTransferInsert(transferDTO);
 
-	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
-	        return ResponseEntity.ok(response);
-	    } catch (IllegalArgumentException e) {
-	        response.put("message", "데이터 저장 실패: " + e.getMessage());
-	        return ResponseEntity.badRequest().body(response);
-	    } catch (Exception e) {
-	        response.put("message", "데이터 저장 실패: " + e.getMessage());
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-	    }
+			response.put("message", "데이터가 성공적으로 저장되었습니다.");
+			return ResponseEntity.ok(response);
+		} catch (IllegalArgumentException e) {
+			response.put("message", "데이터 저장 실패: " + e.getMessage());
+			return ResponseEntity.badRequest().body(response);
+		} catch (Exception e) {
+			response.put("message", "데이터 저장 실패: " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 
 //	인사발령 삭제
