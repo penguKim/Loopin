@@ -6,17 +6,18 @@
 
 <body>
 	<main id="main" class="main">
-		<!-- 인사카드 등록 모달 -->
+		<!-- 전자결재 등록 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
+						<h5 class="modal-title" id="modalTitle">결재 등록</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<form id="appointment_form" th:action="@{/insert_Approval}" method="post" enctype="multipart/form-data">
+							<input type="hidden" class="form-control" id="approval_cd" name="approval_cd"> <!-- 수정 시 사용-->
 							<div class="row mb-3">
 							    <label for="inputDate" class="col-sm-2 col-form-label">시작일<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
@@ -120,63 +121,69 @@
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
-	$(function() {
-	    var today = new Date();
+    $(function () {
+        // 모달이 열릴 때 DatePicker 초기화
+        $('#modal_appointment_save').on('shown.bs.modal', function () {
+            var today = new Date();
+            var oneMonthAfter = new Date(today);
+            oneMonthAfter.setMonth(today.getMonth() + 1);
 
-	    // 시작일 DatePicker 설정
-	    var startPicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#approval_sd',
-	            container: '#startpicker-container',
-	        },
-	        endpicker: {
-	            date: today, 
-	            input: '#approval_ed',
-	            container: '#endpicker-container',
-	            disabled: true 
-	        },
-	        format: 'YYYY-MM-dd',
-	        timePicker: false
-	    });
+            // DatePicker 초기화
+            var rangePicker = tui.DatePicker.createRangePicker({
+                startpicker: {
+                    date: today,
+                    input: '#approval_sd',
+                    container: '#startpicker-container',
+                },
+                endpicker: {
+                    date: oneMonthAfter,
+                    input: '#approval_ed',
+                    container: '#endpicker-container',
+                    disabled: true,
+                },
+                format: 'YYYY-MM-dd',
+                timePicker: false,
+            });
 
-	    startPicker.on('change:start', function(event) {
-	        if (event && event.date) {
-	            console.log("Start Date selected: ", event.date);
+            // 시작일 변경 이벤트
+            rangePicker.on('change:start', function (event) {
+                if (event && event.date) {
+                    console.log("Start Date selected: ", event.date);
 
-	            var minEndDate = new Date(event.date); 
-	            minEndDate.setDate(minEndDate.getDate() + 1);
+                    var minEndDate = new Date(event.date);
+                    minEndDate.setDate(minEndDate.getDate() + 1);
 
-	            var endPicker = tui.DatePicker.createRangePicker({
-	                startpicker: {
-	                    date: event.date, 
-	                    input: '#approval_sd',
-	                    container: '#startpicker-container',
-	                },
-	                endpicker: {
-	                    date: minEndDate, 
-	                    input: '#approval_ed',
-	                    container: '#endpicker-container',
-	                    disabled: false 
-	                },
-	                format: 'YYYY-MM-dd',
-	                timePicker: false
-	            });
+                    rangePicker.setEndpickerOptions({
+                        date: minEndDate,
+                        minDate: minEndDate,
+                        disabled: false,
+                    });
+                } else {
+                    console.error("Start date is not available in the event");
+                }
+            });
 
-	            endPicker.on('change:end', function(event) {
-	                console.log("End Date selected: ", event.date);
-	                endPicker.close();
-	            });
+            // 종료일 변경 이벤트
+            rangePicker.on('change:end', function (event) {
+                if (event && event.date) {
+                    console.log("End Date selected: ", event.date);
+                } else {
+                    console.error("End date is not valid.");
+                }
+            });
 
-	            startPicker.close();
-	        } else {
-	            console.error("Start date is not available in the event");
-	        }
-	    });
-	});
+            // 초기 값 설정
+            rangePicker.setStartpickerDate(today);
+            rangePicker.setEndpickerDate(oneMonthAfter);
+        });
 
-	
-	
+        // 모달이 닫힐 때 DatePicker 제거 (중복 방지)
+        $('#modal_appointment_save').on('hidden.bs.modal', function () {
+            $('#startpicker-container').empty();
+            $('#endpicker-container').empty();
+        });
+    });
+
 </script>
 
 	
@@ -247,16 +254,16 @@
 	            return;
 	        }
 
-	        const employee_cds = checkedRows.map(row => row.employee_cd);
-	        if (!confirm(`선택한 결재(${employee_cds.join(', ')})을 삭제하시겠습니까?`)) {
+	        const approval_cds = checkedRows.map(row => row.approval_cd);
+	        if (!confirm(`선택한 결재(${approval_cds.join(', ')})을 삭제하시겠습니까?`)) {
 	            return;
 	        }
 
 	        $.ajax({
-	            url: '/delete_EMPLOYEE',
+	            url: '/delete_APPROVAL',
 	            method: 'POST',
 	            headers: { 'X-CSRF-TOKEN': csrfToken },
-	            data: JSON.stringify({ employee_cds }),
+	            data: JSON.stringify({ approval_cds }),
 	            contentType: 'application/json',
 	            success: function () {
 	                alert('삭제가 완료되었습니다.');
@@ -272,7 +279,7 @@
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
 			$('#appointment_form')[0].reset(); // 폼 초기화
-			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#approval_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
 			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
 	    });
@@ -300,13 +307,13 @@
 		// 모달 초기화 함수
 		function resetModal() {
 		    $('#appointment_form')[0].reset(); // 폼 초기화
-		 //   $('#employee_cd').val(''); // 수정용 필드 초기화
+		 	$('#approval_cd').val(''); // 수정용 필드 초기화
 		}
 		
 		// 수정 모달 열기 함수
 		function openEditModal(data) {
 		    // 모달 제목 및 버튼 텍스트 설정
-		    $('#modalTitle').text('인사카드 수정');
+		    $('#modalTitle').text('결재 수정');
 		    $('#modal_submit_button').text('수정');
 
 				// 데이터 매핑

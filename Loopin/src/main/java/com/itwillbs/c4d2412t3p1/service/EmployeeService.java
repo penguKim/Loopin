@@ -130,6 +130,7 @@ public class EmployeeService {
 	    EmployeeRepository.save(employee);
 	}
 
+	
 	public void deleteEmployeePhoto(String employee_cd) {
 	    // 직원 조회
 	    Employee employee = EmployeeRepository.findById(employee_cd)

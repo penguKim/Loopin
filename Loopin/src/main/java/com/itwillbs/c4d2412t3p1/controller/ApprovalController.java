@@ -17,12 +17,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
-import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.service.ApprovalService;
 
@@ -40,10 +39,10 @@ public class ApprovalController {
 	private final ApprovalService approvalService;
 	
 	// 결재 페이지로 이동
-	@GetMapping("/approvals_list")
-	public String approvals_list() {
+	@GetMapping("/approval_list")
+	public String approval_list() {
 		
-		return "/approvals/approvals_list";
+		return "/approval/approval_list";
 	}
 
 	// 결재 현황 조회
@@ -90,6 +89,77 @@ public class ApprovalController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	@PostMapping("/update_APPROVAL")
+	public ResponseEntity<Map<String, String>> update_APPROVAL(
+	        @RequestPart("ApprovalDTO") ApprovalDTO approvalDTO// DTO 받기
+	        ) {
+
+		
+	    Map<String, String> response = new HashMap<>();
+	    try {
+	    	
+	    	String approval_cd = approvalDTO.getApproval_cd();
+	    	
+	        if (approval_cd == null) {
+	            response.put("message", "데이터 수정 실패: ID(approval_cd)가 전달되지 않았습니다.");
+	            return ResponseEntity.badRequest().body(response);
+	        }
+
+	        
+	        // 기존 데이터 조회
+	        Approval approval = approvalService.findEmployeeById(approvalDTO.getApproval_cd());
+	        if (approval == null) {
+	            response.put("message", "데이터 수정 실패: 해당 ID의 데이터를 찾을 수 없습니다.");
+	            return ResponseEntity.badRequest().body(response);
+	        }
+
+	        
+	        approvalDTO.setApproval_md(new Timestamp(System.currentTimeMillis()));
+
+	        // Service 호출
+	        approvalService.update_APPROVAL(approvalDTO);
+
+	        // 성공 응답
+	        response.put("message", "데이터가 성공적으로 수정되었습니다.");
+	        return ResponseEntity.ok(response);
+
+	    } catch (IllegalArgumentException e) {
+	        // ID로 조회되지 않는 경우 처리
+	        response.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+
+	    } catch (Exception e) {
+	        // 기타 예외 처리
+	        response.put("message", "데이터 수정 실패: 알 수 없는 오류가 발생했습니다. " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+
+	
+	
+//	인사발령 삭제
+	@PostMapping("/delete_APPROVAL")
+	public ResponseEntity<Map<String, Object>> delete_APPROVAL(@RequestBody Map<String, List<String>> request) {
+		
+		List<String> cds = request.get("approval_cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
+		
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			approvalService.delete_APPROVAL(cds); // Service 계층에서 삭제 처리
+			response.put("success", true);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 	
 	
 }

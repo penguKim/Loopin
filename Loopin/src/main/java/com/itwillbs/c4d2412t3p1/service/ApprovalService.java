@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,4 +50,34 @@ public class ApprovalService {
         System.out.println("@@@@@@@@@" + approval);
     }
 
+	
+//	 직원 업데이트
+	public void update_APPROVAL(ApprovalDTO approvalDTO) {
+	    // 직원 조회
+		Approval approval = approvalRepository.findById(approvalDTO.getApproval_cd())
+	            .orElseThrow(() -> new IllegalArgumentException("해당 직원이 존재하지 않습니다."));
+
+	    // 엔티티 업데이트
+		approval.setEmployeeEntity(approval, approvalDTO);
+
+	    // 데이터베이스 저장
+		approvalRepository.save(approval);
+	}
+	
+
+    // ID로 Approval 조회
+    public Approval findEmployeeById(String approval_cd) {
+        // Repository를 사용하여 데이터 조회
+        return approvalRepository.findById(approval_cd)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
+    }
+	
+    
+    // 직원 삭제
+	public void delete_APPROVAL(List<String> cds) {
+		approvalRepository.deleteAllById(cds);
+		
+	}
+    
+	
 }
