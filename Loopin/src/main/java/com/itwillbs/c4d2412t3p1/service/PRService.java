@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.PRCalDTO;
 import com.itwillbs.c4d2412t3p1.domain.PRDTO;
-import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.PRCode;
 import com.itwillbs.c4d2412t3p1.mapper.PRMapper;
 import com.itwillbs.c4d2412t3p1.repository.PRCodeRepository;
@@ -228,5 +227,27 @@ public class PRService {
 	    }
 	}
 
+//	public List<Map<String, Object>> selectpr() {
+//
+//		List<Map<String, Object>> list = prM.selectpr(null);
+//		
+//		return list;
+//	}
+	
+	public List<Map<String, Object>> selectpr(Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.selectpr(employee_cd);
+		
+		return list;
+	}
+	
+	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
+		
+		return list;
+	}
 
+	
+	
 }
