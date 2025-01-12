@@ -191,8 +191,8 @@
 						});
 						modal_employee_list.show();
 					},
-					error : function(result) {
-						console.log('조회 실패');
+					error : function(xhr, textStatus, errorThrown) {
+						console.log('조회 실패', xhr.responseText);
 					}
 				});
 		    }
@@ -208,7 +208,6 @@
 		    const employeeGd = row.find('td:nth-child(4)').text();
 			
 			$("#employee_cd").val(employeeCd);
-			
 
 		    // 부모창의 필드에 값 설정
 		    $('#employee_nm').val(row.find('td:nth-child(2)').text());
@@ -250,15 +249,16 @@
 		        success: function (result) {
 		            if (grid) {
 		                grid.resetData(result); // 기존 grid가 존재하면 데이터 리셋
+						console.log(result);
 						const modal_appointment_save = bootstrap.Modal.getInstance(document.getElementById('modal_appointment_save'));
 						modal_appointment_save.hide();
 		            } else {
 		                console.error("그리드 객체가 정의되지 않았습니다.");
 		            }
 		        },
-		        error: function (result) {
-		            console.log('조회 실패');
-		        }
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패', xhr.responseText);
+				}
 		    });
 		});
 
@@ -271,13 +271,13 @@
 		    // 처음 불러오는 데이터
 		    $.ajax({
 		        type: "get",
-		        url: "/select_base_ATTENDANCE",
+		        url: "/select_ATTENDANCE",
 		        success: function (result) {
 		            grid.resetData(result);
 		        },
-		        error: function (result) {
-		            console.log('조회 실패');
-		        }
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패', xhr.responseText);
+				}
 		    });
 
 		    // 그리드 객체 생성 + 초기 세팅
@@ -286,15 +286,13 @@
 		        scrollX: true,
 		        scrollY: true,
 		        columns: [
-		            { header: '이름', name: 'annual_wr', align: 'center', sortable: true },
-		            { header: '부서명', name: 'employee_cd', align: 'center', sortable: true },
-		            { header: '입사일', name: 'annual_cc', align: 'center', sortable: true },
-		            { header: '근속연수', name: 'annual_yr', align: 'center', sortable: true },
+		            { header: '이름', name: 'employee_nm', align: 'center', sortable: true },
+		            { header: '부서명', name: 'common_nm', align: 'center', sortable: true },
+		            { header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
+		            { header: '근속연수', name: 'service_years', align: 'center', sortable: true },
 		            { header: '사용연차', name: 'annual_ua', align: 'center', sortable: true },
 		            { header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true },
 		            { header: '총연차', name: 'annual_aa', align: 'center', sortable: true },
-		            //{ header: '날짜', name: 'locdate', align: 'center', sortable: true },
-		            //{ header: '설명', name: 'dateName', align: 'center', sortable: true },
 		        ],
 		    });
 		}
@@ -405,40 +403,6 @@
 		$('.modal').on('hidden.bs.modal', function (e) {
 		    $(this).find('form')[0].reset();
 		});
-		
-		
-		// 일단 공휴일 정보 불러와짐
-		var xhr = new XMLHttpRequest();
-		var url = 'http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo'; //URL
-		var queryParams = '?' + encodeURIComponent('serviceKey') + '=' + '%2BaS8Oo1w1bIwCjPOfx%2B2GP%2BLgO7P3KRXXhgj4TkMdyIC%2FyEtgb%2Fsv6vWOTbcRDg5veR%2FR2SE6fm3tWN9%2BwmFUQ%3D%3D'; //Service Key
-		queryParams += '&' + encodeURIComponent('solYear') + '=' + encodeURIComponent('2026'); //년도 설정
-		queryParams += '&' + encodeURIComponent('numOfRows') + '=' + encodeURIComponent('30'); //결과 행 수
-
-		xhr.open('GET', url + queryParams);
-		xhr.onreadystatechange = function () {
-		    if (this.readyState == 4 && this.status == 200) {
-		        var parser = new DOMParser();
-		        var xmlDoc = parser.parseFromString(this.responseText, "text/xml");
-				console.log(xmlDoc);
-		        var items = xmlDoc.getElementsByTagName("item");
-				let list = [];
-		        for (var i = 0; i < items.length; i++) {
-		            var locdate = items[i].getElementsByTagName("locdate")[0].textContent;
-		            var dateName = items[i].getElementsByTagName("dateName")[0].textContent;
-					var formattedDate = `${locdate.substring(0, 4)}-${locdate.substring(4, 6)}-${locdate.substring(6, 8)}`;
-					
-					list.push({
-		               date: formattedDate,
-		               name: dateName
-		           });
-		       }
-
-		       console.log(list); // 모든 값이 저장된 배열
-
-		    }
-		};
-
-		xhr.send('');
 		
 	</script>
 </html>

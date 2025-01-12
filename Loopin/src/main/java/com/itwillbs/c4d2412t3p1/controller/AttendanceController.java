@@ -42,11 +42,38 @@ public class AttendanceController {
 	
 	@ResponseBody
 	@GetMapping("/select_ATTENDANCE")
-	public ResponseEntity<List<Attendance>> select_ATTENDANCE() {
+	public ResponseEntity<List<Map<String, Object>>> select_ATTENDANCE() {
 		log.info("조회 시도");
-		List<Attendance> attendances = attendanceService.select_ATTENDANCE();
+		List<Map<String, Object>> attendances = attendanceService.select_ATTENDANCE();
 		
-		return ResponseEntity.ok(attendances);
+		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
+	        Map<String, Object> row = new HashMap<>();
+
+	        // 키를 소문자로 변환하여 새로운 맵에 저장
+	        for (Entry<String, Object> entry : attendance.entrySet()) {
+	            String key = entry.getKey().toLowerCase();
+	            Object value = entry.getValue();
+
+	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
+	            if (value instanceof oracle.sql.TIMESTAMP) {
+	                try {
+	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
+	                } catch (SQLException e) {
+//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
+	                    value = null; // 변환 실패 시 null 처리
+	                }
+	            }
+
+	            // row에 변환된 값 추가
+	            row.put(key, value);
+	        }
+
+	        log.info(row.toString() + " row 조회 시도");
+	        return row;
+	        
+	    }).collect(Collectors.toList());
+		
+		return ResponseEntity.ok(response);
 	}
 	
 	@GetMapping("/annual_regist")
@@ -103,15 +130,31 @@ public class AttendanceController {
 	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(attendanceDTO);
 	    // 로직 처리 후 성공 응답
 	    List<Map<String, Object>> response = attendances.stream().map(attendance -> {
-	    	
-	    	Map<String, Object> row = new HashMap<>();
-	    	
-	    	for (Entry<String, Object> entry : attendance.entrySet()) {
-	    		row.put(entry.getKey().toLowerCase(), entry.getValue()); 
-	    	}
+	        Map<String, Object> row = new HashMap<>();
 
-	    	return row;
-	    	
+	        // 키를 소문자로 변환하여 새로운 맵에 저장
+	        for (Entry<String, Object> entry : attendance.entrySet()) {
+	            String key = entry.getKey().toLowerCase();
+	            Object value = entry.getValue();
+
+	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
+	            if (value instanceof oracle.sql.TIMESTAMP) {
+	                try {
+	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
+	                } catch (SQLException e) {
+//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
+	                    value = null; // 변환 실패 시 null 처리
+	                }
+	            }
+
+	            // row에 변환된 값 추가
+	            row.put(key, value);
+	            row.get("service_years");
+	        }
+
+	        log.info(row.toString() + " row 조회 시도");
+	        return row;
+	        
 	    }).collect(Collectors.toList());
 	    
 	    return ResponseEntity.ok(response);

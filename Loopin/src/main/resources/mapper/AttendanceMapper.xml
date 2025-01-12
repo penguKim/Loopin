@@ -4,19 +4,48 @@
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper">
     
+    <select id="select_ATTENDANCE" resultType="map">
+	   SELECT 
+	        a.*, 
+	        e.EMPLOYEE_NM, 
+	        c.COMMON_NM, 
+	        e.EMPLOYEE_HD, 
+	        CASE 
+	            WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
+	            THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
+	            ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
+	        END AS SERVICE_YEARS,
+	        c.COMMON_NM AS DEPARTMENT_NAME
+	    FROM ANNUAL a
+	   INNER JOIN EMPLOYEE e 
+	       	   ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
+	    LEFT JOIN COMMON_CODE c
+	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
+	   WHERE c.COMMON_GC = 'DEPARTMENT'
+	</select>
+    
     <select id="select_EMPLOYEE_ANNUAL" resultType="map">
         SELECT * 
         FROM employee
         <where> 1=1
-	        	AND employee_nm LIKE #{employee_nm} || '%'
+	        	AND employee_nm LIKE '%' || #{employee_nm} || '%'
         </where>
     </select>
     
     <select id="select_ANNUAL" resultType="map">
-	    SELECT a.*
+	    SELECT 
+	        a.*,
+	        e.EMPLOYEE_NM,
+	        e.EMPLOYEE_HD, 
+	        CASE 
+		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
+		        THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
+		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
+		    END AS service_years
 	    FROM ANNUAL a
-	    INNER JOIN EMPLOYEE e ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
-	    <where> 1=1
+	    INNER JOIN EMPLOYEE e 
+	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
+	    <where>
 	        <if test="employee_cd != null and employee_cd != ''">
 	            a.EMPLOYEE_CD = #{employee_cd}
 	        </if>
@@ -31,7 +60,8 @@
 	        </if>
 	    </where>
 	</select>
-<!--    <insert id="insert_ANNUAL">-->
-
-<!--	</insert>-->
+	
+<!--    <INSERT ID="INSERT_ANNUAL">-->
+<!--		INSERT -->
+<!--	</INSERT>-->
 </mapper>

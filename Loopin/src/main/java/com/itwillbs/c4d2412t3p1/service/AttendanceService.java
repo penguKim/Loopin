@@ -41,8 +41,8 @@ public class AttendanceService {
 	private final HolidayRepository holidayRepository;
 	private final HolidayMapper holidayMapper;
 
-	public List<Attendance> select_ATTENDANCE() {
-		return attendanceRepository.findAll();
+	public List<Map<String, Object>> select_ATTENDANCE() {
+		return attendanceMapper.select_ATTENDANCE();
 	}
 
 	public void insert_ANNUAL() {
@@ -54,6 +54,7 @@ public class AttendanceService {
 	}
 
 	public List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO) {
+		log.info("service_years 있냐 "+attendanceMapper.select_ANNUAL(attendanceDTO));
 		return attendanceMapper.select_ANNUAL(attendanceDTO);
 	}
 
