@@ -25,32 +25,6 @@ public class PRController {
 
 	private final PRService prS;
 	
-	@GetMapping("/prcal")
-	public String prcal() {
-		return "payroll/prcalcul";
-	}
-	
-	@PostMapping("/calculate")
-	@ResponseBody
-	public List<PRDTO> calsal(@RequestBody PR_calculationMDTO data) throws ScriptException{
-		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
-		String BS = data.getBS();
-		log.info("BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+BS);
-		String overworkingtime = data.getOverworkingtime();
-		String nightworkingtime = data.getNightworkingtime();
-		String weekendworkingtime = data.getWeekendworkingtime();
-		String holydayworkingtime = data.getHolydayworkingtime();
-		String leastannual = data.getLeastannual();
-		String bonus = data.getBonus();
-		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus);
-//		for(PR_calculationMDTO d : data) {
-//		}
-//		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
-//		List<PRDTO> list = prS.calculatingMachine(data);
-		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
-		return list;
-	}
-	
 	@GetMapping("/prcode")
 	public String prcode() {
 		return "payroll/prcode";
@@ -87,12 +61,35 @@ public class PRController {
 		
 		return list;
 	}
+	
 	@GetMapping("/PRadminmadal2")
 	@ResponseBody
 	public List<Map<String,Object>> adminprmodal2(@RequestParam("prdetail_id") Long prdetail_id) {
 		
 		List<Map<String, Object>> list = prS.selectpradminfirstmodal2(prdetail_id);
 		
+		return list;
+	}
+	
+	@GetMapping("/prcal")
+	public String prcal() {
+		return "payroll/prcalcul";
+	}
+	
+	@PostMapping("/calculate")
+	@ResponseBody
+	public List<PRDTO> calsal(@RequestBody PR_calculationMDTO data) throws ScriptException{
+		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
+		String BS = data.getBS();
+		log.info("BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+BS);
+		String overworkingtime = data.getOverworkingtime();
+		String nightworkingtime = data.getNightworkingtime();
+		String weekendworkingtime = data.getWeekendworkingtime();
+		String holydayworkingtime = data.getHolydayworkingtime();
+		String leastannual = data.getLeastannual();
+		String bonus = data.getBonus();
+		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus);
+		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
 		return list;
 	}
 }

@@ -4,33 +4,19 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
-public class PRMapper {
+public interface PRMapper {
 
-	public List<Map<String, Object>> selectpradmin() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	List<Map<String, Object>> selectpradmin();
 
-	public List<Map<String, Object>> selectpradminfirstmodal(Long pr_id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	List<Map<String, Object>> selectpradminfirstmodal(Long pr_id);
 
-	public List<Map<String, Object>> selectpradminfirstmodal2(Long prdetail_id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	List<Map<String, Object>> selectpradminfirstmodal2(@Param("prdetail_id") Long prdetail_id);
 
-	public List<Map<String, Object>> selectpr(Long employee_cd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	List<Map<String,Object>> selectpr(Long employee_cd);
 
-	public List<Map<String, Object>> checkprmodal(Long pr_id, Long employee_cd) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	List<Map<String, Object>> checkprmodal(@Param("pr_id") Long pr_id, @Param("employee_cd") Long employee_cd);
 
 }
