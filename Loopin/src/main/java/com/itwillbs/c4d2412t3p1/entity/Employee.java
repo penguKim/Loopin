@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
@@ -47,12 +48,7 @@ public class Employee {
 	        this.employee_cd = "EM" + currentYear + "-" + formattedSequence;
 	    }
 	}
-
-
-
-
-    
-    @Column(name = "employee_id")
+    @Column(name = "employee_id", unique = true)
     private String employee_id;
     
     @Column(name = "employee_pw")
@@ -173,7 +169,7 @@ public class Employee {
 	    Boolean employee_mg,
 	    String employee_rl,
 	    Boolean employee_us,
-	    String workinghour_id,	    
+//	    String workinghour_id,	    
 	    Long sequenceValue // 추가된 매개변수
 	) {
 	    this.employee_cd = employee_cd;
@@ -204,15 +200,15 @@ public class Employee {
 	    this.employee_mg = employee_mg;
 	    this.employee_rl = employee_rl;
 	    this.employee_us = employee_us;
-	    this.workinghour_id = workinghour_id;
+//	    this.workinghour_id = workinghour_id;
 	    this.sequenceValue = sequenceValue; // 필드 설정
 	}
 
 
-    public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto) {
+    public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto, PasswordEncoder passwordEncode) {
         employee.setEmployee_cd(employeeDto.getEmployee_cd());
         employee.setEmployee_id(employeeDto.getEmployee_id());
-        employee.setEmployee_pw(employeeDto.getEmployee_pw());
+        employee.setEmployee_pw(passwordEncode.encode(employeeDto.getEmployee_pw()));
         employee.setEmployee_dp(employeeDto.getEmployee_dp());
         employee.setEmployee_gd(employeeDto.getEmployee_gd());
         employee.setEmployee_hd(employeeDto.getEmployee_hd());
@@ -238,7 +234,7 @@ public class Employee {
         employee.setEmployee_mg(employeeDto.getEmployee_mg());
         employee.setEmployee_rl(employeeDto.getEmployee_rl());
         employee.setEmployee_us(employeeDto.getEmployee_us());
-        employee.setWorkinghour_id(employeeDto.getWorkinghour_id());
+//        employee.setWorkinghour_id(employeeDto.getWorkinghour_id());
         
 
         return employee;
@@ -276,7 +272,7 @@ public class Employee {
             employeeDto.getEmployee_mg(),
             employeeDto.getEmployee_rl(),
             employeeDto.getEmployee_us(),
-            employeeDto.getWorkinghour_id(),
+//            employeeDto.getWorkinghour_id(),
             sequenceValue
         );
     }
