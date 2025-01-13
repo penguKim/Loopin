@@ -33,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 
 import lombok.RequiredArgsConstructor;
@@ -122,6 +123,7 @@ public class EmployeeController {
 
 	
 	// 인사 카드 조회
+	@LogActivity(value = "조회", action = "인사카드")
 	@GetMapping("/select_EMPLOYEE")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
@@ -180,8 +182,8 @@ public class EmployeeController {
 
 	    return ResponseEntity.ok(response);
 	}
-
-
+	
+	@LogActivity(value = "등록", action = "인사카드")
 	@PostMapping("/insert_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> insert_EMPLOYEE(
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
@@ -224,7 +226,8 @@ public class EmployeeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-
+	
+	@LogActivity(value = "수정", action = "인사카드")
 	@PostMapping("/update_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> update_EMPLOYEE(
 	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
@@ -310,6 +313,7 @@ public class EmployeeController {
 	
 	
 //	인사발령 삭제
+	@LogActivity(value = "삭제", action = "인사카드")
 	@PostMapping("/delete_EMPLOYEE")
 	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
 		
