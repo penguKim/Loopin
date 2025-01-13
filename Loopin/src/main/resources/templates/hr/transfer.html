@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
 
 <body>
@@ -19,15 +20,17 @@
 							<!-- General Form Elements -->
 
 							<div class="col-lg-12" id="grid" style="margin-top: 20px;"></div>
+							<div class="tui-pagination" id="pagination"></div>
 							<br>
 
 
 
 							<div
 								th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
-								<button type="button" class="btn btn-primary" data-bs-toggle="modal"
-									data-bs-target="#modal_appointment_save">신규</button>
-								<button type="button" id="btn_transfer_delete" class="btn btn-primary">삭제</button>
+								<button type="button" class="btn btn-primary"
+									data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
+								<button type="button" id="btn_transfer_delete"
+									class="btn btn-primary">삭제</button>
 							</div>
 
 
@@ -46,101 +49,110 @@
 	<!-- End #main -->
 
 	<!-- Bootstrap Modal -->
-	<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label"
-		data-mode="insert" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+	<div class="modal fade" id="modal_appointment_save" tabindex="-1"
+		aria-labelledby="modal_appointment_save_label" data-mode="insert"
+		aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
 		<div class="modal-dialog modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="modal_appointment_save_label">인사발령</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
-					<form id="modal_appointment_save_form" th:action="@{/insert_TRANSFER}" method="post">
+					<form id="modal_appointment_save_form"
+						th:action="@{/insert_TRANSFER}" method="post">
 						<div class="col">
 							<label for="employee_nm" class="form-label">이름</label>
 							<div class="input-group">
-								<input type="text" id="employee_nm" class="form-control" readonly required>
+								<input type="text" id="employee_nm" class="form-control"
+									readonly required>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
 								<label for="employee_cd" class="form-label">사원코드</label>
 								<div class="input-group">
-									<input type="text" id="employee_cd" class="form-control" readonly required>
+									<input type="text" id="employee_cd" class="form-control"
+										readonly required>
 								</div>
 							</div>
 							<div class="col">
-								<label for="transfer_mg" class="form-label">부서구분</label> <select id="transfer_mg"
-									class="form-select">
+								<label for="transfer_mg" class="form-label">부서구분</label> <select
+									id="transfer_mg" class="form-select">
 									<option value="" disabled selected>부서구분을 선택하세요</option>
-									<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
+									<option th:each="dptype : ${DPType_list}"
+										th:value="${dptype.common_nm}"
 										th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
 								</select>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
-								<label for="transfer_ad" class="form-label">발령일</label> <input type="text"
-									id="transfer_ad" class="form-control" placeholder="YYYY-MM-DD" required>
+								<label for="transfer_ad" class="form-label">발령일</label> <input
+									type="text" id="transfer_ad" class="form-control"
+									placeholder="YYYY-MM-DD" required>
 							</div>
 							<div class="col-sm-2">
 								<div id="wrapper"></div>
 							</div>
 							<div class="col">
-								<label for="transfer_ac" class="form-label">발령구분</label> <select id="transfer_ac"
-									class="form-select">
+								<label for="transfer_ac" class="form-label">발령구분</label> <select
+									id="transfer_ac" class="form-select">
 									<option value="" disabled selected>발령구분을 선택하세요</option>
-									<option th:each="trtype : ${TRType_list}" th:value="${trtype.common_cc}"
-										th:text="${trtype.common_nm}">
+									<option th:each="trtype : ${TRType_list}"
+										th:value="${trtype.common_cc}" th:text="${trtype.common_nm}">
 									</option>
 								</select>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
-								<label for="transfer_og" class="form-label">기존직위</label> <select id="transfer_og"
-									class="form-select">
+								<label for="transfer_og" class="form-label">기존직위</label> <select
+									id="transfer_og" class="form-select">
 									<option value="" disabled selected>직위를 선택하세요</option>
-									<option th:each="grade : ${grade_list}" th:value="${grade.common_cc}"
-										th:text="${grade.common_nm}">
+									<option th:each="grade : ${grade_list}"
+										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
 									</option>
 								</select>
 							</div>
 							<div class="col">
-								<label for="transfer_ag" class="form-label">발령직위</label> <select id="transfer_ag"
-									class="form-select">
+								<label for="transfer_ag" class="form-label">발령직위</label> <select
+									id="transfer_ag" class="form-select">
 									<option value="" disabled selected>직위를 선택하세요</option>
-									<option th:each="grade : ${grade_list}" th:value="${grade.common_cc}"
-										th:text="${grade.common_nm}">
+									<option th:each="grade : ${grade_list}"
+										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
 									</option>
 								</select>
 							</div>
 						</div>
 						<div class="row mb-3">
 							<div class="col">
-								<label for="transfer_od" class="form-label">기존부서</label> <select id="transfer_od"
-									class="form-select">
+								<label for="transfer_od" class="form-label">기존부서</label> <select
+									id="transfer_od" class="form-select">
 									<option value="" disabled selected>부서를 선택하세요</option>
-									<option th:each="dept : ${dept_list}" th:value="${dept.common_cc}"
-										th:text="${dept.common_nm}">
+									<option th:each="dept : ${dept_list}"
+										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
 									</option>
 								</select>
 							</div>
 							<div class="col">
-								<label for="transfer_adp" class="form-label">발령부서</label> <select id="transfer_adp"
-									class="form-select">
+								<label for="transfer_adp" class="form-label">발령부서</label> <select
+									id="transfer_adp" class="form-select">
 									<option value="" disabled selected>부서를 선택하세요</option>
-									<option th:each="dept : ${dept_list}" th:value="${dept.common_cc}"
-										th:text="${dept.common_nm}">
+									<option th:each="dept : ${dept_list}"
+										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
 									</option>
 								</select>
 							</div>
 						</div>
 						<div class="modal-footer d-flex justify-content-between">
-							<button type="button" class="btn btn-secondary" id="btn_modal_reset">초기화</button>
+							<button type="button" class="btn btn-secondary"
+								id="btn_modal_reset">초기화</button>
 							<div>
 								<button type="submit" class="btn btn-primary">저장</button>
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="button" class="btn btn-secondary"
+									data-bs-dismiss="modal">닫기</button>
 							</div>
 						</div>
 					</form>
@@ -150,13 +162,15 @@
 	</div>
 
 
-	<div class="modal fade" id="modal_employee_list" tabindex="-1" aria-labelledby="modal_employee_list_label"
-		aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
+	<div class="modal fade" id="modal_employee_list" tabindex="-1"
+		aria-labelledby="modal_employee_list_label" aria-hidden="true"
+		data-bs-backdrop="false" data-bs-keyboard="false">
 		<div class="modal-dialog modal-lg">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="modal_employee_list_label">사원 선택</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
 				</div>
 				<div class="modal-body">
 					<table id="empTable" class="table table-striped">
@@ -190,9 +204,15 @@
 
 	// 	const transferData = /*[[${transferList}]]*/[];
 	// 	console.log(transferData);
-
+	
 
 	document.addEventListener('DOMContentLoaded', function () {
+		
+		let currentPage = 1; // 현재 페이지
+	    const itemsPerPage = 5; // 한 페이지에 표시할 항목 수
+	    let transferList = []; // 전체 발령 데이터
+	    let grid;
+	    let pagination;
 
 		fetch('/select_TRANSFER', {
 			method: 'GET',
@@ -207,6 +227,7 @@
 				return response.json();
 			})
 			.then(transferData => {
+				transferList = transferData;
 				console.log('서버 응답 데이터:', transferData);
 
 				// Grid 초기화
@@ -243,7 +264,28 @@
 					scrollX: true,
 					scrollY: true
 				});
+				
+				// Pagination 초기화
+	            pagination = new tui.Pagination(document.getElementById('pagination'), {
+	                totalItems: transferList.length, // 전체 데이터 개수
+	                itemsPerPage: itemsPerPage, // 페이지당 항목 수
+	                visiblePages: 5, // 페이지 버튼 개수
+	                page: currentPage, // 시작 페이지
+	                centerAlign: true // 페이지 버튼을 가운데 정렬
+	            });
+				
+	         // 페이지 변경 이벤트 핸들러
+	            pagination.on('afterMove', function (event) {
+	                currentPage = event.page; // 현재 페이지 업데이트
+	                console.log("변경된 currentPage:", currentPage); // 디버그용
 
+	                // 해당 페이지의 데이터 로드
+	                loadPageData(currentPage);
+	            });
+
+	            // 초기 데이터 로드
+	            loadPageData(currentPage);
+				
 				// Grid 클릭 이벤트 등록
 				grid.on('click', (ev) => {
 					const columnName = ev.columnName; // 클릭된 열 이름
@@ -255,12 +297,15 @@
 						console.warn("헤더 클릭은 무시됩니다.");
 						return;
 					}
+					// transfer_aw 상태 확인
+				    if (rowData.transfer_aw === "완료") {
+				        alert("이미 처리된 발령입니다.");
+				        return;
+				    }
 
 					// employee_nm 열 클릭 시 모달 열기
 					if (columnName === 'employee_nm') {
 						console.log("모달에 표시할 데이터:", rowData);
-						console.log(document.getElementById('employee_nm')); // null이면 렌더링 문제
-						console.log(document.getElementById('employee_cd'));
 						openEditModal(rowData);
 					}
 
@@ -313,20 +358,36 @@
 				            $field.val(rowData[key] || '');
 				        }
 				    });
-
+					
+				 // transfer_ad 설정 ("yyyy-mm-dd" 형식인지 확인)
+				    const transferAdField = document.getElementById('transfer_ad');
+				    if (transferAdField) {
+				        const transferAd = rowData.transfer_ad;
+				        if (transferAd && /^\d{4}-\d{2}-\d{2}$/.test(transferAd)) {
+				            transferAdField.value = transferAd; // "yyyy-mm-dd" 형식으로 설정
+				        } else {
+				            console.warn("transfer_ad가 올바른 날짜 형식이 아닙니다:", transferAd);
+				        }
+				    }
 				    // 모달 열기
 				    $('#modal_appointment_save').modal('show');
 				}
-
-
-
-
-
 
 			})
 			.catch(error => {
 				console.error('오류 발생:', error);
 			});
+		
+		
+		// 페이지 데이터 로드 함수
+	    function loadPageData(page) {
+	        const start = (page - 1) * itemsPerPage;
+	        const end = page * itemsPerPage;
+	        const pageData = transferList.slice(start, end); // 해당 페이지 데이터 가져오기
+
+	        console.log('로딩된 페이지 데이터:', pageData); // 디버그용
+	        grid.resetData(pageData); // Grid 데이터 업데이트
+	    }
 
 		// 삭제 버튼 클릭 이벤트
 		document.querySelector('#btn_transfer_delete').addEventListener('click', function () {
@@ -388,16 +449,20 @@
 		// TOAST UI Date Picker
 		// 모달 열릴 때 Date Picker 초기화
 		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
-			// Date Picker 초기화
-			new tui.DatePicker('#wrapper', {
-				input: {
-					element: '#transfer_ad',
-					format: 'yyyy-MM-dd'
-				},
-				// 오늘 날짜
-				date: new Date()
-			});
+		    const transferAdField = document.getElementById('transfer_ad'); // Date Picker 입력 필드
+		    const currentValue = transferAdField.value; // 현재 설정된 값 가져오기
+
+		    // Date Picker 초기화
+		    new tui.DatePicker('#wrapper', {
+		        input: {
+		            element: '#transfer_ad',
+		            format: 'yyyy-MM-dd'
+		        },
+		        // transfer_ad 필드에 값이 있으면 해당 날짜로 설정, 없으면 오늘 날짜로 설정
+		        date: currentValue ? new Date(currentValue) : new Date()
+		    });
 		});
+
 	});
 
 	// 폼 데이터를 초기화

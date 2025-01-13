@@ -98,5 +98,12 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
     List<Employee> findByEmployeeCd(@Param("currentCd") String currentCd);
 
 
+    // 특정 아이디 존재 여부 확인 메서드
+    @Query(value = "SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END " +
+            "FROM employee " +
+            "WHERE employee_id = :employee_id", 
+    nativeQuery = true)
+    int existsByEmployeeId(@Param("employee_id") String employee_id);
+    
 	
 }

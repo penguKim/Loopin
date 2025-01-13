@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -175,6 +176,12 @@ public class EmployeeService {
 		return commonRepository.selectGradeList("00", string);
 	}
     
+	// 셀렉트박스 부서장 유무 가져오기
+	public List<Common_code> selectDPTypeList(String string) {
+		return commonRepository.selectDPTypeList("00", string);
+	}
+	
+	
 	// 성별 차트 조회
 	public List<Map<String, Object>> getEmployeeGenderStatsByDate(String startDt, String endDt) {
 		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
@@ -206,6 +213,7 @@ public class EmployeeService {
 	}
 	
 
+	// 입사퇴자 조회
 	public Map<String, List<?>> getHireAndRetireStatsByDate(String startDate, String endDate) {
 	    // 입사자 및 퇴사자 데이터 조회
 	    List<String> categories = EmployeeRepository.findDistinctMonths(startDate, endDate); // 월별 카테고리 조회
@@ -222,11 +230,19 @@ public class EmployeeService {
 	}
 
 	
-	
+	// 직원 코드로 데이터 조회
 	public List<Employee> findByEmployeeCd(String currentCd) {
 		return EmployeeRepository.findByEmployeeCd(currentCd);
 	}
 
+
+
+    // 아이디 중복 여부 확인
+    public boolean isEmployeeIdAvailable(String employee_id) {
+    	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
+    }
+
+	
 	
 	
 }

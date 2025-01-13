@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
@@ -111,6 +112,12 @@ public class EmployeeController {
 		// 직위코드 가져오기 
 		model.addAttribute("grade_list", employeeService.selectGradeList("POSITION"));
 		
+		// 부서장 유무 가져오기
+		model.addAttribute("DPType_list", employeeService.selectDPTypeList("DPTYPE"));
+		
+		// 롤값 가져오기 
+		model.addAttribute("role", role);
+
 		return "/employee/employee_list";
 	}
 
@@ -126,6 +133,7 @@ public class EmployeeController {
 	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
 	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
+	    
 	    List<Employee> employees;
 
 	    // 관리자일 경우 모든 직원 정보 조회
@@ -139,6 +147,8 @@ public class EmployeeController {
 	    // 공통 응답 생성
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
 	        Map<String, Object> row = new HashMap<>();
+	        Boolean employee_mg = employee.getEmployee_mg();
+	        
 	        row.put("employee_cd", employee.getEmployee_cd());
 	        row.put("employee_id", employee.getEmployee_id());
 	        row.put("employee_pw", employee.getEmployee_pw());
@@ -164,8 +174,9 @@ public class EmployeeController {
 	        row.put("employee_wd", employee.getEmployee_wd());
 	        row.put("employee_mf", employee.getEmployee_mf());
 	        row.put("employee_md", employee.getEmployee_md());
-	        row.put("employee_mg", employee.getEmployee_mg());
+	        row.put("employee_mg", employee_mg != null && employee_mg);
 	        row.put("employee_rl", employee.getEmployee_rl());
+	        
 	        return row;
 	    }).collect(Collectors.toList());
 
@@ -178,6 +189,8 @@ public class EmployeeController {
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
 		    @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 		Map<String, String> response = new HashMap<>();
+		
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
 		
 		try {
 	       
@@ -200,6 +213,8 @@ public class EmployeeController {
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
 			
+	        employeeDTO.setEmployee_wr(employee_id);
+	        
 	        employeeDTO.setEmployee_wd(new Timestamp(System.currentTimeMillis()));
 	        // 데이터 저장 처리
 			employeeService.insert_EMPLOYEE(employeeDTO, employee_pi);
@@ -218,6 +233,8 @@ public class EmployeeController {
 	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
 	        @RequestPart(value = "employee_pi", required = false) MultipartFile employee_pi) {
 
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+		
 		
 	    Map<String, String> response = new HashMap<>();
 	    try {
@@ -236,6 +253,9 @@ public class EmployeeController {
 	            response.put("message", "데이터 수정 실패: 해당 ID의 데이터를 찾을 수 없습니다.");
 	            return ResponseEntity.badRequest().body(response);
 	        }
+
+	        // 기존 employee_wr 값 유지
+	        employeeDTO.setEmployee_wr(employee.getEmployee_wr());
 
 	        // 기존 employee_wd 값을 유지
 	        employeeDTO.setEmployee_wd(employee.getEmployee_wd());
@@ -266,6 +286,8 @@ public class EmployeeController {
 	            employeeDTO.setEmployee_pi(uniqueFileName);
 	        }
 
+	        employeeDTO.setEmployee_mf(employee_id);
+	        
 	        employeeDTO.setEmployee_md(new Timestamp(System.currentTimeMillis()));
 
 	        // Service 호출
@@ -316,7 +338,8 @@ public class EmployeeController {
 	 
 	// 인사현황 차트
 	@GetMapping("/employee_chart")
-	public String employee_chart() {
+	public String employee_chart(Model model) {
+		
 		return "/employee/employee_chart";
 	}
 	
@@ -424,5 +447,29 @@ public class EmployeeController {
 
         return ResponseEntity.ok(response);
     }
+    
+    
+    
+    // 아이디 유효성 검사
+    @PostMapping("/check_employee_id")
+    @ResponseBody
+    public Map<String, Boolean> checkEmployeeId(@RequestBody Map<String, String> request) {
+        Map<String, Boolean> response = new HashMap<>();
+        String employee_id = request.get("employee_id");  // JSON으로 전달된 값 받기
+        try {
+            boolean isValid = employeeService.isEmployeeIdAvailable(employee_id); // 중복 여부 확인
+            response.put("isValid", isValid);
+        } catch (Exception e) {
+            // 예외 로그 출력
+            e.printStackTrace();
+            response.put("isValid", false); // 예외 발생 시 false 처리
+        }
+        return response;
+    }
+
+
+
+
+    
 
 }
