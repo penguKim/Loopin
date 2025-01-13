@@ -16,12 +16,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.service.ApprovalService;
@@ -41,7 +43,17 @@ public class ApprovalController {
 	
 	// 결재 페이지로 이동
 	@GetMapping("/approval_list")
-	public String approval_list() {
+	public String approval_list(Model model) {
+		
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		String role = employeeDetails.getEmployee_rl();
+
+		// 기안서 구분 가져오기
+		model.addAttribute("DRAFT_list", approvalService.selectDRAFTList("DRAFT"));
+		
+		// 롤값 가져오기 
+		model.addAttribute("role", role);
 		
 		return "/approval/approval_list";
 	}
@@ -50,7 +62,21 @@ public class ApprovalController {
 	@GetMapping("/select_APPROVAL")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_APPROVAL() {
-	    List<Approval> approvals = approvalService.findAll(); // 모든 결재 정보를 가져옵니다.
+		
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		
+		String currentCd = employeeDetails.getEmployee_cd();
+		String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+		
+		List<Approval> approvals;
+		
+		if(currentRole.contains("admin") || currentRole.contains("developer")) {
+			approvals = approvalService.findAll(); // 모든 결재 정보를 가져옵니다.
+		} else {
+			approvals = approvalService.findByApprovalCd(currentCd); // 모든 결재 정보를 가져옵니다.
+		}
+		
+		
 
 	    List<Map<String, Object>> response = approvals.stream().map(approval -> {
 	        Map<String, Object> row = new HashMap<>();
@@ -84,6 +110,7 @@ public class ApprovalController {
 	        // 작성자 처리
 			approvalDTO.setApproval_mf(employee_id);
 			
+			// 작성일 처리
 			approvalDTO.setApproval_wd(new Timestamp(System.currentTimeMillis()));
 	        // 데이터 저장 처리
 			approvalService.insert_APPROVAL(approvalDTO);
@@ -125,6 +152,7 @@ public class ApprovalController {
 	        // 수정자 처리
 	        approvalDTO.setApproval_mf(employee_id);
 
+	        // 수정일 처리
 	        approvalDTO.setApproval_md(new Timestamp(System.currentTimeMillis()));
 
 	        // Service 호출

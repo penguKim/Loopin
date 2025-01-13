@@ -14,8 +14,10 @@ import org.springframework.web.multipart.MultipartFile;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.ApprovalRepository;
+import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class ApprovalService {
 	
 	private final ApprovalRepository approvalRepository;
 	
+	private final CommonRepository commonRepository;
 	
 	// 결재 현황 조회
 	public List<Approval> findAll() {
@@ -78,6 +81,16 @@ public class ApprovalService {
 		approvalRepository.deleteAllById(cds);
 		
 	}
-    
+
+	// 기안서 구분 데이터 조회
+	public List<Common_code> selectDRAFTList(String string) {
+		return commonRepository.selectDRAFTList("00", string);
+	}
+	
+	
+	// 직원 코드로 데이터 조회
+	public List<Approval> findByApprovalCd(String currentCd) {
+		return approvalRepository.findByApprovalCd(currentCd);
+	}
 	
 }

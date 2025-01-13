@@ -15,6 +15,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -36,6 +38,12 @@ public class Approval {
     @Id
     @Column(name = "approval_cd", length = 15)  // String 타입으로 저장, 길이 조정 가능
     private String approval_cd;  // String으로 변경
+
+    // 외래 키 연결
+    @ManyToOne
+    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")  // EMPLOYEE 테이블의 employee_id를 참조
+    private Employee employee;  // 하나의 직원에 대한 외래 키
+    
     
 	@Transient
 	private Long sequenceValue; // 시퀀스 값을 저장하기 위한 임시 필드
