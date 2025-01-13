@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.entity;
 import java.math.BigDecimal;
+
 import groovy.transform.ToString;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,6 +16,7 @@ import lombok.Setter;
 @ToString
 @Table(name="PRDETAIL")
 public class PRDetail {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(name="prdetail_id")
@@ -38,6 +40,7 @@ public class PRDetail {
 	
 	@Column(name="prdetail_na")
 	private BigDecimal predetail_na;
+
 	@Column(name="prdetail_wa")
 	private BigDecimal predetail_wa;
 	
@@ -52,6 +55,7 @@ public class PRDetail {
 	
 	@Column(name="prdetail_ta")
 	private BigDecimal predetail_ta;
+
 	@Column(name="prdetail_gm")
 	private BigDecimal predetail_gm;
 	
@@ -60,6 +64,7 @@ public class PRDetail {
 	
 	@Column(name="prdetail_gg")
 	private BigDecimal predetail_gg;
+
 	@Column(name="prdetail_lg")
 	private BigDecimal predetail_lg;
 	
