@@ -51,7 +51,7 @@ public class Employee {
 	        this.employee_cd = "EM" + currentYear + "-" + formattedSequence;
 	    }
 	}
-    @Column(name = "employee_id")
+    @Column(name = "employee_id", unique = true)
     private String employee_id;
     
     @Column(name = "employee_pw")
