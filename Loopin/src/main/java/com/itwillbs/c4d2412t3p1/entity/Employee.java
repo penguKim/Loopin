@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
 import java.math.BigDecimal;
+
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,7 @@ import lombok.ToString;
 @SequenceGenerator(name = "em_sequence_generator", sequenceName = "em_sequence", allocationSize = 1)
 public class Employee {
 	
+
     @Id
     @Column(name = "employee_cd", length = 15)  // String 타입으로 저장, 길이 조정 가능
     private String employee_cd;  // String으로 변경

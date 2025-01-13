@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.common_codePK;
 
@@ -47,14 +48,18 @@ public interface CommonRepository extends JpaRepository<Common_code, common_code
         @Param("common_ud") Timestamp common_ud
     );
 
+
+    @Query(value = "SELECT common_cc, common_nm FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
+	List<Common_codeDTO> select_COMMON_list(@Param("common_gc") String data);
+
     
     // 사원 부서 리스트 가져오기 
     @Query(value = "SELECT common_gc, common_cc, common_nm, common_ct, common_in, common_us, common_ru, common_rd, common_uu, common_ud FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
     List<Common_code> selectDeptList(@Param("common_cc") String common_cc, @Param("common_gc") String common_gc);
     
-    // 사원 직급 리스트 가져오기 
     @Query(value = "SELECT common_gc, common_cc, common_nm, common_ct, common_in, common_us, common_ru, common_rd, common_uu, common_ud FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
 	List<Common_code> selectGradeList(@Param("common_cc") String common_cc, @Param("common_gc") String common_gc);
+
 
 	// 셀렉트 박스 부서장 유무 리스트 가져오기 
 	@Query(value = "SELECT common_gc, common_cc, common_nm, common_ct, common_in, common_us, common_ru, common_rd, common_uu, common_ud FROM COMMON_CODE WHERE common_gc = :common_gc", nativeQuery = true)
