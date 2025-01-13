@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -105,14 +106,17 @@ public class EmployeeController {
 		String role = employeeDetails.getEmployee_rl();
 		
 		// 부서코드 가져오기 
-		model.addAttribute("dept_list", employeeService.selectDeptList("DEPARTMENT"));
+		model.addAttribute("dept_list", employeeService.selectCommonList("DEPARTMENT"));
 
 		// 직위코드 가져오기 
-		model.addAttribute("grade_list", employeeService.selectGradeList("POSITION"));
+		model.addAttribute("grade_list", employeeService.selectCommonList("POSITION"));
 		
 		// 부서장 유무 가져오기
-		model.addAttribute("DPType_list", employeeService.selectDPTypeList("DPTYPE"));
-		
+		model.addAttribute("DPType_list", employeeService.selectCommonList("DPTYPE"));
+
+		// 인사카드 사용여부 가져오기
+		model.addAttribute("useyn_list", employeeService.selectCommonList("USEYN"));
+
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
 
@@ -173,14 +177,14 @@ public class EmployeeController {
 	        row.put("employee_md", employee.getEmployee_md());
 	        row.put("employee_mg", employee_mg != null && employee_mg);
 	        row.put("employee_rl", employee.getEmployee_rl());
+	        row.put("employee_us", employee.getEmployee_us());
 	        
 	        return row;
 	    }).collect(Collectors.toList());
 
 	    return ResponseEntity.ok(response);
 	}
-
-
+	
 	@PostMapping("/insert_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> insert_EMPLOYEE(
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
@@ -223,7 +227,7 @@ public class EmployeeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-
+	
 	@PostMapping("/update_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> update_EMPLOYEE(
 	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
@@ -333,7 +337,8 @@ public class EmployeeController {
 	 
 	// 인사현황 차트
 	@GetMapping("/employee_chart")
-	public String employee_chart() {
+	public String employee_chart(Model model) {
+		
 		return "/employee/employee_chart";
 	}
 	

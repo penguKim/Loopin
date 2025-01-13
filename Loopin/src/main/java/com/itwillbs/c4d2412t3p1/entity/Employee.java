@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
 import java.math.BigDecimal;
+
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -11,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -33,6 +35,7 @@ import lombok.ToString;
 @SequenceGenerator(name = "em_sequence_generator", sequenceName = "em_sequence", allocationSize = 1)
 public class Employee {
 	
+
     @Id
     @Column(name = "employee_cd", length = 15)  // String 타입으로 저장, 길이 조정 가능
     private String employee_cd;  // String으로 변경
@@ -48,7 +51,7 @@ public class Employee {
 	        this.employee_cd = "EM" + currentYear + "-" + formattedSequence;
 	    }
 	}
-    @Column(name = "employee_id")
+    @Column(name = "employee_id", unique = true)
     private String employee_id;
     
     @Column(name = "employee_pw")
@@ -208,7 +211,15 @@ public class Employee {
     public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto, PasswordEncoder passwordEncode) {
         employee.setEmployee_cd(employeeDto.getEmployee_cd());
         employee.setEmployee_id(employeeDto.getEmployee_id());
-        employee.setEmployee_pw(passwordEncode.encode(employeeDto.getEmployee_pw()));
+        // 비밀번호가 비어있지 않으면 암호화하여 설정
+        if (employeeDto.getEmployee_pw() != null && !employeeDto.getEmployee_pw().trim().isEmpty()) {
+            employee.setEmployee_pw(passwordEncode.encode(employeeDto.getEmployee_pw())); // 비밀번호 암호화
+        } else {
+            // 또는 기존 비밀번호를 유지하고 싶다면 아래와 같이 처리 가능
+            employee.setEmployee_pw(employee.getEmployee_pw());
+        }
+
+        
         employee.setEmployee_dp(employeeDto.getEmployee_dp());
         employee.setEmployee_gd(employeeDto.getEmployee_gd());
         employee.setEmployee_hd(employeeDto.getEmployee_hd());

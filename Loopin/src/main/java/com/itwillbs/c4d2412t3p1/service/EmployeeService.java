@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -133,6 +134,7 @@ public class EmployeeService {
 	    EmployeeRepository.save(employee);
 	}
 
+	
 	public void deleteEmployeePhoto(String employee_cd) {
 	    // 직원 조회
 	    Employee employee = EmployeeRepository.findById(employee_cd)
@@ -164,20 +166,11 @@ public class EmployeeService {
     }
 	
     
-    // 모달 부서코드 가져오기
-    public List<Common_code> selectDeptList(String string) {
-    	return commonRepository.selectDeptList("00", string);
+    // 공통코드 데이터 조회
+    public List<Common_code> selectCommonList(String string) {
+    	return commonRepository.selectCommonList("00", string);
     }
 
-    // 모달 직급코드 가져오기
-	public List<Common_code> selectGradeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-    
-	// 셀렉트박스 부서장 유무 가져오기
-	public List<Common_code> selectDPTypeList(String string) {
-		return commonRepository.selectDPTypeList("00", string);
-	}
 	
 	
 	// 성별 차트 조회
