@@ -7,8 +7,12 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -124,7 +128,7 @@ public class EmployeeService {
 	    }
 
 	    // 엔티티 업데이트
-	    employee.setEmployeeEntity(employee, employeeDTO);
+	    employee.setEmployeeEntity(employee, employeeDTO, passwordEncoder);
 
 	    // 데이터베이스 저장
 	    EmployeeRepository.save(employee);
@@ -172,6 +176,73 @@ public class EmployeeService {
 		return commonRepository.selectGradeList("00", string);
 	}
     
+	// 셀렉트박스 부서장 유무 가져오기
+	public List<Common_code> selectDPTypeList(String string) {
+		return commonRepository.selectDPTypeList("00", string);
+	}
+	
+	
+	// 성별 차트 조회
+	public List<Map<String, Object>> getEmployeeGenderStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+	    if (startDt == null || endDt == null) {
+	        throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+	    }
+		
+		return EmployeeRepository.findEmployeeGenderStatsByDate(startDt, endDt);
+	}
+
+	// 부서별 인원 차트 조회
+	public List<Map<String, Object>> getEmployeeDeptStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+		if (startDt == null || endDt == null) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		return EmployeeRepository.getEmployeeDeptStatsByDate(startDt, endDt);
+	}
+
+	// 직위별 인원 차트 조회
+	public List<Map<String, Object>> getEmployeePosiStatsByDate(String startDt, String endDt) {
+		// 시작일과 종료일이 올바른 형식인지 확인 (선택적
+		if (startDt == null || endDt == null) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		return EmployeeRepository.getEmployeePosiStatsByDate(startDt, endDt);
+	}
+	
+
+	// 입사퇴자 조회
+	public Map<String, List<?>> getHireAndRetireStatsByDate(String startDate, String endDate) {
+	    // 입사자 및 퇴사자 데이터 조회
+	    List<String> categories = EmployeeRepository.findDistinctMonths(startDate, endDate); // 월별 카테고리 조회
+	    List<Integer> hireData = EmployeeRepository.findHireCountsByMonth(startDate, endDate);  // 입사자 수
+	    List<Integer> retireData = EmployeeRepository.findRetireCountsByMonth(startDate, endDate); // 퇴사자 수
+
+	    // 결과 반환 (Integer 타입 그대로 사용)
+	    Map<String, List<?>> result = new HashMap<>();
+	    result.put("categories", categories);  // List<String>
+	    result.put("hireData", hireData);  // List<Integer>
+	    result.put("retireData", retireData);  // List<Integer>
+
+	    return result;
+	}
+
+	
+	// 직원 코드로 데이터 조회
+	public List<Employee> findByEmployeeCd(String currentCd) {
+		return EmployeeRepository.findByEmployeeCd(currentCd);
+	}
+
+
+
+    // 아이디 중복 여부 확인
+    public boolean isEmployeeIdAvailable(String employee_id) {
+    	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
+    }
+
+	
 	
 	
 }
