@@ -56,13 +56,7 @@
 													</div>
 													<div class="col">
 														<label for="employee_dp" class="form-label">부서</label> 
-														<select id="employee_dp" class="form-select">
-															<option value="">부서를 선택해주세요.</option>
-															<option value="개발부">개발부</option>
-															<option value="인사부">인사부</option>
-															<option value="기획부">기획부</option>
-															<option value="영업부">영업부</option>
-														</select>
+														<select id="employee_dp" class="form-select"></select>
 													</div>
 												</div>
 												<div class="row mb-3">
@@ -166,6 +160,19 @@
 			});
 		});
 		
+		function createSelectBox(el, list, title) {
+		    const selectBox = $(el);
+
+		    selectBox.empty();
+			
+			if(title) {
+			    selectBox.append(`<option value="">${title}</option>`);		
+			}
+
+		    list.forEach(data => {
+		        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+		    });
+		}
 		
 		// 이름 입력 검색
 		document.getElementById('btn_employee_nm').addEventListener('click', function () {
@@ -177,10 +184,10 @@
 					type: "get",
 					url: "/select_EMPLOYEE_ANNUAL",
 					data: {"employee_nm" : employee_nm},
-					success: function(result) {
+					success: function(data) {
 						const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
 						$("#td_select_employee").empty();
-						result.forEach( employee =>{
+						data.forEach( employee =>{
 							$("#td_select_employee").append( 
 								"<tr><td>" +employee.employee_cd+"</td>"+
 								"<td>" +employee.employee_nm+"</td>"+

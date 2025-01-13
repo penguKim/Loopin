@@ -69,7 +69,6 @@ public class AttendanceController {
 	            row.put(key, value);
 	        }
 
-	        log.info(row.toString() + " row 조회 시도");
 	        return row;
 	        
 	    }).collect(Collectors.toList());
@@ -115,7 +114,6 @@ public class AttendanceController {
 	            row.put(key, value);
 	        }
 
-	        log.info(row.toString() + " row 조회 시도");
 	        return row;
 	    }).collect(Collectors.toList());
 
@@ -153,7 +151,6 @@ public class AttendanceController {
 	            row.get("service_years");
 	        }
 
-	        log.info(row.toString() + " row 조회 시도");
 	        return row;
 	        
 	    }).collect(Collectors.toList());
@@ -203,7 +200,6 @@ public class AttendanceController {
 	            row.put(key, value);
 	        }
 
-	        log.info(row.toString() + " row 조회 시도");
 	        return row;
 	        
 	    }).collect(Collectors.toList());

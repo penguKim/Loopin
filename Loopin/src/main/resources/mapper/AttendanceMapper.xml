@@ -31,37 +31,43 @@
 	    LEFT JOIN COMMON_CODE c
 	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
 	   WHERE c.COMMON_GC = 'DEPARTMENT' 
-	   	 -- AND a.ANNUAL_YR = TO_CHAR(SYSDATE, 'yyyy')
 	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
 	</select>
     
     <select id="select_EMPLOYEE_ANNUAL" resultType="map">
-        SELECT * 
-        FROM employee
-        <where> 1=1
-	        	AND employee_nm LIKE '%' || #{employee_nm} || '%'
-        </where> 
+        SELECT e.*, c.*
+          FROM EMPLOYEE e
+          LEFT JOIN COMMON_CODE c
+	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
+         WHERE 1=1
+	        	AND e.EMPLOYEE_NM LIKE '%' || #{employee_nm} || '%'
+	        	AND c.COMMON_GC = 'DEPARTMENT'
+         ORDER BY e.EMPLOYEE_CD DESC
     </select>
     
     <select id="select_ANNUAL" resultType="map">
 	    SELECT 
 	        a.*,
 	        e.EMPLOYEE_NM,
-	        e.EMPLOYEE_HD, 
+	        e.EMPLOYEE_HD,
+	        c.COMMON_NM,
 	        CASE 
 		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
 		        THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
 		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
 		    END AS service_years
 	    FROM ANNUAL a
-	    INNER JOIN EMPLOYEE e 
+	   INNER JOIN EMPLOYEE e 
 	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
-	    <where>
+        LEFT JOIN COMMON_CODE c
+       	    ON e.EMPLOYEE_DP = c.COMMON_CC
+	    <where> 1=1
+	    		AND c.COMMON_GC = 'DEPARTMENT'
 	        <if test="employee_cd != null and employee_cd != ''">
-	            a.EMPLOYEE_CD = #{employee_cd}
+	            AND a.EMPLOYEE_CD = #{employee_cd}
 	        </if>
 	        <if test="employee_nm != null and employee_nm != ''">
-	            e.employee_nm = #{employee_nm}
+	            AND e.employee_nm = #{employee_nm}
 	        </if>
 	        <if test="employee_dp != null and employee_dp != ''">
 	            AND e.EMPLOYEE_DP = #{employee_dp}
@@ -73,6 +79,7 @@
 	            AND a.ANNUAL_RA = #{annual_ra}
 	        </if>
 	    </where>
+	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
 	</select>
 	
 	
@@ -88,7 +95,7 @@
 						    , ANNUAL_UD
 							)
 		VALUES( #{EMPLOYEE_CD}
-				, #{ANNUAL_YR}+1
+				, #{ANNUAL_YR}
 				, 0 
 				, #{EXPECT_ANNUAL} 
 				, #{EXPECT_ANNUAL} 
