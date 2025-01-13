@@ -1,0 +1,25 @@
+package com.itwillbs.c4d2412t3p1.domain;
+
+import java.util.List;
+
+import com.itwillbs.c4d2412t3p1.entity.Commute;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+public class CommuteRequestDTO {
+	
+	List<WorkinghourDTO> workinghourList;
+	CommuteDTO commute;
+	
+	String workinghour_id; // 근로형태코드
+	boolean attendance; // 출근 여부
+	String calendarStartDate; // 캘린더 시작일
+	String calendarEndDate; // 캘린더 종료일
+	
+}
