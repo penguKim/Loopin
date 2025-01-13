@@ -71,7 +71,7 @@ public class Common_code {
 //		return code;
 //	}
 	
-	public static Common_code fromDTO(Common_codeDTO common) {
+	public static Common_code setEntity(Common_codeDTO common) {
 	    return Common_code.builder()
 	    		.common_gc(common.getCommon_gc())
 	    		.common_cc(common.getCommon_cc())
