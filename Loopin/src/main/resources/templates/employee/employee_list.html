@@ -99,12 +99,12 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">이메일</label>
 							    <div class="col-sm-3">
 							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
-									<div id="email_id_check" class="text-danger"></div> <!-- 유효성 메시지 추가 -->
+									<span id="email_id_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
 							    </div>
 							    <div class="col-sm-1 text-center">@</div>
 								<div class="col-sm-3">
 								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
-									<div id="custom_domain_check" class="text-danger"></div> <!-- 유효성 메시지 추가 -->
+									<span id="custom_domain_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							    <div class="col-sm-3">
 									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
@@ -132,7 +132,7 @@
 								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" required onblur="onBlurValidate()">
-									<div id="employee_bd_check" class="text-danger"></div> <!-- 유효성 메시지 추가 -->
+									<span id="employee_bd_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -222,10 +222,12 @@
 							</div>
 						</form>
 					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-primary" id="resetFormBtn">초기화</button>
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
-						<button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+					<div class="modal-footer d-flex justify-content-between">
+						<button type="button" class="btn btn-danger" id="resetFormBtn"  style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+						<div>
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+							<button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -561,7 +563,6 @@
 				});
 				
 				
-				
 	            // Pagination 초기화
 	            pagination = new tui.Pagination(document.getElementById('pagination'), {
 	                totalItems: employeeList.length, // 전체 데이터 개수
@@ -725,9 +726,12 @@
 	        });
 
 	        // 유효성 메시지 초기화
-	        $('.text-danger').text('');
+	        $('#employee_bd_check').text('');
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+	        $('#employee_pw_check').text('');
+	        $('#employee_id_check').text('');
 	    });
-		
 		
 		// 수정 모달 열기 함수
 		function openEditModal(data) {
