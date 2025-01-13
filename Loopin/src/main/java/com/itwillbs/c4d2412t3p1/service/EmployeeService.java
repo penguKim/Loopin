@@ -5,11 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +34,8 @@ public class EmployeeService {
 	private final EmployeeRepository EmployeeRepository;
 
 	private final CommonRepository commonRepository;
+	
+	private final PasswordEncoder passwordEncoder;
 
 	@Autowired
 	@Value("${file.upload-dir}")
@@ -43,9 +48,11 @@ public class EmployeeService {
 	}
 
 	// 직원 등록
+	@Transactional
     public void insert_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
         String fileName = null;
 
+        
         // 파일 저장 처리
         if (employee_pi != null && !employee_pi.isEmpty()) {
             fileName = employee_pi.getOriginalFilename();
@@ -55,25 +62,32 @@ public class EmployeeService {
 	        if (!Files.exists(uploadPath.getParent())) {
 	            Files.createDirectories(uploadPath.getParent());
 	        }
-        
-        // 파일 저장
-        Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
-        
+	        
+	        // 파일 저장
+	        Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+	        
         }
-        // Employee 엔티티 생성
-        Employee employee = Employee.createEmployee(employeeDTO, fileName);
+        
+        // 시퀀스 값 가져오기
+        Long sequenceValue = EmployeeRepository.getNextSequenceValue();
+        System.out.println("Next Sequence Value: " + sequenceValue);
 
-        // 데이터베이스 저장
+        // Employee 엔티티 생성
+        Employee employee = Employee.createEmployee(employeeDTO, fileName, sequenceValue, passwordEncoder);
+        // EmployeeRepository.save() 호출 직전에 로그 추가
+        System.out.println("Saving employee: " + employee);
+        
         EmployeeRepository.save(employee);
+        System.out.println("Employee saved: " + employee);
     }
 
     // 직원 삭제
-	public void delete_EMPLOYEE(List<Long> cds) {
+	public void delete_EMPLOYEE(List<String> cds) {
 		EmployeeRepository.deleteAllById(cds);
 		
 	}
 
-	// 직원 업데이트
+//	 직원 업데이트
 	public void update_EMPLOYEE(EmployeeDTO employeeDTO, MultipartFile employee_pi) throws IOException {
 	    // 직원 조회
 	    Employee employee = EmployeeRepository.findById(employeeDTO.getEmployee_cd())
@@ -116,7 +130,7 @@ public class EmployeeService {
 	    EmployeeRepository.save(employee);
 	}
 
-	public void deleteEmployeePhoto(Long employee_cd) {
+	public void deleteEmployeePhoto(String employee_cd) {
 	    // 직원 조회
 	    Employee employee = EmployeeRepository.findById(employee_cd)
 	            .orElseThrow(() -> new IllegalArgumentException("해당 직원이 존재하지 않습니다. ID: " + employee_cd));
@@ -140,13 +154,18 @@ public class EmployeeService {
 	}
 
     // ID로 Employee 조회
-    public Employee findEmployeeById(Long employee_cd) {
+    public Employee findEmployeeById(String employee_cd) {
         // Repository를 사용하여 데이터 조회
         return EmployeeRepository.findById(employee_cd)
                 .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
     }
 	
     
+    // 모달 부서코드 가져오기
+    public List<Common_code> selectDeptList(String string) {
+    	return commonRepository.selectDeptList("00", string);
+    }
+
     // 모달 직급코드 가져오기
 	public List<Common_code> selectGradeList(String string) {
 		return commonRepository.selectGradeList("00", string);

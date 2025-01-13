@@ -11,16 +11,25 @@
 	<main id="main" class="main">
 	<div class="pagetitle">
 		</div>
+		<div class="col-lg-12">
 			<div class="card">
 				<h5 class="card-title">급여 계산기</h5>
 				<div class="card-body">
-					<div class="d-flex justify-content-between align-items-end">
-					<div id="grid"  style="flex-grow: 1;"></div>
-					<input type="button" id="btn_cal" class="btn btn-primary ml-3" value="계산하기">
+					<div class="d-flex justify-content-space align-items-end">
+						<div class="col-lg-8">
+							<div class="card">
+								<h5 class="card-title"></h5>
+								<div class="card-body">
+									<div id="grid"  style="flex-grow: 1;"></div>
+								</div>	
+							</div>	
+						</div>
+						<input type="button" id="btn_cal" class="btn btn-primary ml-3" value="계산하기">
 					</div>
 					<div id="grid_cal"></div>
 				</div>
 			</div>
+		</div>
 	</main>
 </body>
 <!-- Toast UI grid JS File -->
@@ -134,6 +143,9 @@ const grid = new tui.Grid({
 		{header: '상여', name: 'bonus', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 	],
 	data:[{BS:0,overworkingtime:"0",nightworkingtime:"0",weekendworkingtime:"0",holydayworkingtime:"0",leastannual:"0",bonus:"0"}],
+	columnOptions:{
+		resizable:true,
+	 },
 });
 
 /* 결과그리드 */
@@ -220,5 +232,8 @@ const grid_cal = new tui.Grid({
 				name : 'D_LG'
 			}, 
      ],
+	 columnOptions:{
+		resizable:true,
+	 },
 });
 </script>

@@ -2,7 +2,10 @@ package com.itwillbs.c4d2412t3p1.entity;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 
@@ -11,7 +14,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -23,13 +29,29 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@SequenceGenerator(name = "em_sequence_generator", sequenceName = "em_sequence", allocationSize = 1)
 public class Employee {
 	
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "employee_cd")
-	private Long employee_cd;
+    @Id
+    @Column(name = "employee_cd", length = 15)  // String 타입으로 저장, 길이 조정 가능
+    private String employee_cd;  // String으로 변경
+    
+	@Transient
+	private Long sequenceValue; // 시퀀스 값을 저장하기 위한 임시 필드
+    
+	@PrePersist
+	public void prePersist() {
+	    if (this.employee_cd == null && this.sequenceValue != null) {
+	        String currentYear = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
+	        String formattedSequence = String.format("%04d", this.sequenceValue);
+	        this.employee_cd = "EM" + currentYear + "-" + formattedSequence;
+	    }
+	}
 
+
+
+
+    
     @Column(name = "employee_id")
     private String employee_id;
     
@@ -108,73 +130,84 @@ public class Employee {
     @Column(name = "employee_rl")
     private String employee_rl;
 	
+    @Column(name = "employee_us")
+    private Boolean employee_us;
+    
+    @Column(name = "workinghour_id")
+    private String workinghour_id;
+
+
+
 	
 	// 생성자
 	public Employee() {
 	}
 	
-    public Employee(
-		    		Long employee_cd
-		    		, String employee_id
-		    		, String employee_pw
-		    		, String employee_dp
-		    		, String employee_gd
-		    		, String employee_hd
-		    		, String employee_rd
-		    		, String employee_rr
-		    		, String employee_cg
-		    		, String employee_nt
-		    		, String employee_nm
-		    		, String employee_bd
-		    		, String employee_ad
-		    		, String employee_sb
-		    		, String employee_ph
-		    		, String employee_em
-		    		, String employee_pi
-		    		, BigDecimal employee_bs
-		    		, String employee_bk
-		    		, String employee_an
-		    		, String employee_dt
-		    		, String employee_wr
-		    		, Timestamp employee_wd
-		    		, String employee_mf	
-		    		, Timestamp employee_md
-		    		, Boolean employee_mg
-		    		, String employee_rl
-		    		
-    			) {
-    	
-    	this.employee_cd = employee_cd;
-    	this.employee_id = employee_id;
-    	this.employee_pw = employee_pw;
-    	this.employee_dp = employee_dp;
-    	this.employee_gd = employee_gd;
-    	this.employee_hd = employee_hd;
-    	this.employee_rd = employee_rd;
-    	this.employee_rr = employee_rr;
-    	this.employee_cg = employee_cg;
-    	this.employee_nt = employee_nt;
-    	this.employee_nm = employee_nm;
-    	this.employee_bd = employee_bd;
-    	this.employee_ad = employee_ad;
-    	this.employee_sb = employee_sb;
-    	this.employee_ph = employee_ph;
-    	this.employee_em = employee_em;
-    	this.employee_pi = employee_pi;
-    	this.employee_bs = employee_bs;
-    	this.employee_bk = employee_bk;
-    	this.employee_an = employee_an;
-    	this.employee_dt = employee_dt;
-    	this.employee_wr = employee_wr;
-    	this.employee_wd = employee_wd;
-    	this.employee_mf = employee_mf;	
-    	this.employee_md = employee_md;
-    	this.employee_mg = employee_mg;
-    	this.employee_rl = employee_rl;
+	// Employee 클래스에 새 생성자 추가
+	public Employee(
+	    String employee_cd,
+	    String employee_id,
+	    String employee_pw,
+	    String employee_dp,
+	    String employee_gd,
+	    String employee_hd,
+	    String employee_rd,
+	    String employee_rr,
+	    String employee_cg,
+	    String employee_nt,
+	    String employee_nm,
+	    String employee_bd,
+	    String employee_ad,
+	    String employee_sb,
+	    String employee_ph,
+	    String employee_em,
+	    String employee_pi,
+	    BigDecimal employee_bs,
+	    String employee_bk,
+	    String employee_an,
+	    String employee_dt,
+	    String employee_wr,
+	    Timestamp employee_wd,
+	    String employee_mf,
+	    Timestamp employee_md,
+	    Boolean employee_mg,
+	    String employee_rl,
+	    Boolean employee_us,
+	    String workinghour_id,	    
+	    Long sequenceValue // 추가된 매개변수
+	) {
+	    this.employee_cd = employee_cd;
+	    this.employee_id = employee_id;
+	    this.employee_pw = employee_pw;
+	    this.employee_dp = employee_dp;
+	    this.employee_gd = employee_gd;
+	    this.employee_hd = employee_hd;
+	    this.employee_rd = employee_rd;
+	    this.employee_rr = employee_rr;
+	    this.employee_cg = employee_cg;
+	    this.employee_nt = employee_nt;
+	    this.employee_nm = employee_nm;
+	    this.employee_bd = employee_bd;
+	    this.employee_ad = employee_ad;
+	    this.employee_sb = employee_sb;
+	    this.employee_ph = employee_ph;
+	    this.employee_em = employee_em;
+	    this.employee_pi = employee_pi;
+	    this.employee_bs = employee_bs;
+	    this.employee_bk = employee_bk;
+	    this.employee_an = employee_an;
+	    this.employee_dt = employee_dt;
+	    this.employee_wr = employee_wr;
+	    this.employee_wd = employee_wd;
+	    this.employee_mf = employee_mf;
+	    this.employee_md = employee_md;
+	    this.employee_mg = employee_mg;
+	    this.employee_rl = employee_rl;
+	    this.employee_us = employee_us;
+	    this.workinghour_id = workinghour_id;
+	    this.sequenceValue = sequenceValue; // 필드 설정
+	}
 
-    	
-     
-    }
 
     public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto) {
         employee.setEmployee_cd(employeeDto.getEmployee_cd());
@@ -204,44 +237,49 @@ public class Employee {
         employee.setEmployee_md(employeeDto.getEmployee_md());
         employee.setEmployee_mg(employeeDto.getEmployee_mg());
         employee.setEmployee_rl(employeeDto.getEmployee_rl());
-
+        employee.setEmployee_us(employeeDto.getEmployee_us());
+        employee.setWorkinghour_id(employeeDto.getWorkinghour_id());
+        
 
         return employee;
     }
     
-	public static Employee createEmployee(EmployeeDTO employeeDto, String employee_pi) {
+    public static Employee createEmployee(EmployeeDTO employeeDto, String employee_pi, Long sequenceValue, PasswordEncoder passwordEncoder) {
+        System.out.println("createEmployee sequenceValue:" + sequenceValue);
 
-		return new Employee(
-				employeeDto.getEmployee_cd()
-				, employeeDto.getEmployee_id()
-				, employeeDto.getEmployee_pw()
-				, employeeDto.getEmployee_dp()
-				, employeeDto.getEmployee_gd()
-				, employeeDto.getEmployee_hd()
-				, employeeDto.getEmployee_rd()
-				, employeeDto.getEmployee_rr()
-				, employeeDto.getEmployee_cg()
-				, employeeDto.getEmployee_nt()
-				, employeeDto.getEmployee_nm()
-				, employeeDto.getEmployee_bd()
-				, employeeDto.getEmployee_ad()
-				, employeeDto.getEmployee_sb()
-				, employeeDto.getEmployee_ph()
-				, employeeDto.getEmployee_em()
-				, employeeDto.getEmployee_pi()
-				, employeeDto.getEmployee_bs()
-				, employeeDto.getEmployee_bk()
-				, employeeDto.getEmployee_an()
-				, employeeDto.getEmployee_dt()
-				, employeeDto.getEmployee_wr()
-				, employeeDto.getEmployee_wd()
-				, employeeDto.getEmployee_mf()
-				, employeeDto.getEmployee_md()
-				, employeeDto.getEmployee_mg()
-				, employeeDto.getEmployee_rl()
-				);
-	}
-    
+        return new Employee(
+            null,  // employee_cd는 @PrePersist에서 설정됨
+            employeeDto.getEmployee_id(),
+            passwordEncoder.encode(employeeDto.getEmployee_pw()),
+            employeeDto.getEmployee_dp(),
+            employeeDto.getEmployee_gd(),
+            employeeDto.getEmployee_hd(),
+            employeeDto.getEmployee_rd(),
+            employeeDto.getEmployee_rr(),
+            employeeDto.getEmployee_cg(),
+            employeeDto.getEmployee_nt(),
+            employeeDto.getEmployee_nm(),
+            employeeDto.getEmployee_bd(),
+            employeeDto.getEmployee_ad(),
+            employeeDto.getEmployee_sb(),
+            employeeDto.getEmployee_ph(),
+            employeeDto.getEmployee_em(),
+            employee_pi,
+            employeeDto.getEmployee_bs(),
+            employeeDto.getEmployee_bk(),
+            employeeDto.getEmployee_an(),
+            employeeDto.getEmployee_dt(),
+            employeeDto.getEmployee_wr(),
+            employeeDto.getEmployee_wd(),
+            employeeDto.getEmployee_mf(),
+            employeeDto.getEmployee_md(),
+            employeeDto.getEmployee_mg(),
+            employeeDto.getEmployee_rl(),
+            employeeDto.getEmployee_us(),
+            employeeDto.getWorkinghour_id(),
+            sequenceValue
+        );
+    }
     
 }
 	

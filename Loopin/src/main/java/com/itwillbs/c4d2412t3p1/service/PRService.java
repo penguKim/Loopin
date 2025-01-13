@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.script.ScriptException;
 
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.domain.PRCalDTO;
 import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.entity.PRCode;
+import com.itwillbs.c4d2412t3p1.mapper.PRMapper;
 import com.itwillbs.c4d2412t3p1.repository.PRCodeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -26,9 +28,47 @@ import lombok.extern.java.Log;
 @RequiredArgsConstructor
 public class PRService {
 	
+	private final PRMapper prM;
 	private final PRCodeRepository prcRep;
 //	private final EmployeeRepository empRep;
 	
+	public List<Map<String, Object>> selectpr(Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.selectpr(employee_cd);
+		
+		return list;
+	}
+	
+	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+		
+		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
+		
+		return list;
+	}
+	
+	public List<PRCode> getprcode() {
+
+		List<PRCode> list = prcRep.findAll();
+		
+		return list;
+	}
+
+	public List<Map<String, Object>> selectpradmin() {
+		List<Map<String, Object>> list = prM.selectpradmin();
+		
+		return list;
+	}
+	public List<Map<String, Object>> selectpradminfirstmodal(Long pr_id) {
+		List<Map<String, Object>> list = prM.selectpradminfirstmodal(pr_id);
+		
+		return list;
+	}
+	public List<Map<String, Object>> selectpradminfirstmodal2(Long prdetail_id) {
+		
+		List<Map<String, Object>> list = prM.selectpradminfirstmodal2(prdetail_id);
+		
+		return list;
+	}
 
 	public List<PRDTO> calculatingMachine(String bS2, String overworkingtime2, String nightworkingtime2, String weekendworkingtime2, String holydayworkingtime2, String leastannual2, String bonus2) throws ScriptException {
 		log.info("======================================================================bs2====================="+bS2);

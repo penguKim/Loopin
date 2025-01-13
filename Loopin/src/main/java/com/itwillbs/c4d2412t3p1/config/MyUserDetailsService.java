@@ -1,35 +1,30 @@
 package com.itwillbs.c4d2412t3p1.config;
 
-import org.springframework.security.core.userdetails.User;
+
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.itwillbs.c4d2412t3p1.entity.Member;
-import com.itwillbs.c4d2412t3p1.repository.MemberRepository;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 
 import lombok.RequiredArgsConstructor;
 
-// LoginPro 메서드 역할
 @RequiredArgsConstructor
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
-	private final MemberRepository memberRepository;
+	private final EmployeeRepository employeeRepository;
 	
 	@Override
-	public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
+	public UserDetails loadUserByUsername(String employee_id) throws UsernameNotFoundException {
 		
+		Employee employee = employeeRepository.findByEmployee_id(employee_id).orElseThrow(() -> 
+			new UsernameNotFoundException("없는 회원"));
 		
-		Member member = memberRepository.findById(id).orElseThrow(() -> 
-			new UsernameNotFoundException("없는 회원")
-		);
+		System.out.println(employee.toString());
 		
-		return User.builder()
-				.username(member.getId())
-				.password(member.getPass())
-				.roles(member.getRole())
-				.build();
+		return new EmployeeDetails(employee);
 	}
 }
