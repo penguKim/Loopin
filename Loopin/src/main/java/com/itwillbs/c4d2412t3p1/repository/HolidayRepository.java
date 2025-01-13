@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
-import com.itwillbs.c4d2412t3p1.entity.Member;
 
 @Repository
 public interface HolidayRepository extends JpaRepository<Holiday, String> {
@@ -18,3 +17,4 @@ public interface HolidayRepository extends JpaRepository<Holiday, String> {
     List<Holiday> findHolidaysInMonth(@Param("startDate") String startDate, @Param("endDate") String endDate);
 	
 }
+

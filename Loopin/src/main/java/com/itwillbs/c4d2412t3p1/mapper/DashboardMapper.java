@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 @Mapper
-public interface MemberMapper {
+public interface DashboardMapper {
 	
-    List<Map<String, Object>> selectMembers();
+    Map<String, Object> select_total_EMPLOYEE(String currentCd);
     
 }

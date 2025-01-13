@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.DashboardMapper">
+    
+    <select id="select_total_EMPLOYEE" resultType="map">
+		SELECT e.*, a.*, c.*, w.WORKINGHOUR_WT, w.WORKINGHOUR_LT 
+		  FROM EMPLOYEE e
+		 INNER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD 
+		 INNER JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC 
+		 INNER JOIN WORKINGHOUR w ON e.WORKINGHOUR_ID = w.WORKINGHOUR_ID
+		 WHERE e.EMPLOYEE_CD = #{currentCd}
+			   AND a.ANNUAL_YR = TO_CHAR(SYSDATE, 'YYYY')
+			   AND c.COMMON_GC = 'DEPARTMENT'
+	</select>
+	
+    
+</mapper>
