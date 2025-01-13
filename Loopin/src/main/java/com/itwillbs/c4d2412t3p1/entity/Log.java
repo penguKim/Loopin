@@ -22,6 +22,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @ToString
+@lombok.extern.java.Log
 public class Log {
 
 	@Id
@@ -61,6 +62,7 @@ public class Log {
 		String formattedSequence = String.format("%04d", sequenceValue);
 		// log_cd 생성: YY-0001 형식
 		this.log_cd = currentYear + "-" + formattedSequence;
+		log.info("this.log_cd : " + this.log_cd);
 	}
 //	CREATE SEQUENCE LOG_SEQ
 //	START WITH 1

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Log;
 import com.itwillbs.c4d2412t3p1.logging.LogConverter;
+import com.itwillbs.c4d2412t3p1.logging.LogParser;
 import com.itwillbs.c4d2412t3p1.repository.LogRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 
@@ -22,7 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class LogService {
 	private final LogRepository logRepository;
 	private final LogConverter logConverter;
-
+	private final LogParser logParser;
 //    로그 저장
 	public void saveLog(LogDTO logDTO) {
 		// SEQUENCE에서 시퀀스 값 가져오기
@@ -36,13 +37,23 @@ public class LogService {
 	}
 
 	public List<LogDTO> select_LOG() {
+		
+	    // 조인된 로그 데이터 조회
+	    List<Log> logs = logRepository.findAllLogsWithEmployee();
+	    log.info("Service_logs@@ : " + logs.toString());
 
-		// 조인된 로그 데이터 조회
-		List<Log> logs = logRepository.findAllLogsWithEmployee();
-		// 엔티티를 DTO로 변환
-		return logs.stream()
-		        .map(log -> logConverter.setLogDTO(log, true)) // log_jd 포함
-		        .collect(Collectors.toList());
+	    // 엔티티를 DTO로 변환하며 log_jd를 가공
+	    return logs.stream()
+	            .map(log -> {
+	                LogDTO dto = logConverter.setLogDTO(log, true);
+	                
+	                // log_jd 파싱 및 변환
+	                String parsedLogDetails = logParser.parseLogDetails(log.getLog_jd());
+	                dto.setParsedLogDetails(parsedLogDetails); // DTO에 저장
+	                
+	                return dto;
+	            })
+	            .collect(Collectors.toList());
 	}
 
 	public List<LogDTO> select_FILTERED_LOG(LogFilterRequest filterRequest) {

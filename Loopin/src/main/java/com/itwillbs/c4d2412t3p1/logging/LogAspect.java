@@ -12,10 +12,12 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
 import com.itwillbs.c4d2412t3p1.entity.Log;
 import com.itwillbs.c4d2412t3p1.service.LogService;
@@ -50,6 +52,15 @@ public class LogAspect {
 		logDTO.setLog_od(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))); // 현재 시간 설정
 		logDTO.setLog_oi(getClientIp());
 		logDTO.setLog_bj(getUserAgent());
+		
+		// 현재 로그인한 사용자 정보 가져오기
+        EmployeeDetails employeeDetails = getCurrentEmployeeDetails();
+        if (employeeDetails != null) {
+            logDTO.setEmployee_id(employeeDetails.getUsername()); // employee_id 저장
+            logDTO.setEmployee_cd(employeeDetails.getEmployee_cd()); // employee_cd 저장
+        } else {
+            logger.warn("로그인된 사용자 정보를 가져올 수 없습니다.");
+        }
 
 		// 메서드의 인자들을 JSON 형식으로 변환하여 로그 상세 정보에 추가
 		Object[] args = joinPoint.getArgs();
@@ -70,9 +81,10 @@ public class LogAspect {
 		// logDTO에 상세 정보 설정
 		logDTO.setLog_jdMap(logDetails);
 		// ThreadLocal에 logDTO 저장
+		logger.info("logThreadLocal : " + logDTO.toString());
 		logThreadLocal.set(logDTO);
 	}
-
+	
 //	 @LogActivity 어노테이션이 부착된 메서드 실행 후에 동작 / ThreadLocal에 저장된 로그 정보를 가져와 실제 로그 저장
 	@AfterReturning(value = "@annotation(logActivity)", returning = "result")
 	public void logAfterReturning(JoinPoint joinPoint, LogActivity logActivity, Object result) {
@@ -127,6 +139,18 @@ public class LogAspect {
 		}
 		logger.error("메서드 실행 중 예외 발생: {}", exception.getMessage()); // 예외 메시지를 로깅
 	}
+	
+	// 현재 로그인한 사용자의 employee_cd를 가져오는 메서드
+	private EmployeeDetails getCurrentEmployeeDetails() {
+        try {
+            return (EmployeeDetails) SecurityContextHolder.getContext()
+                    .getAuthentication()
+                    .getPrincipal();
+        } catch (Exception e) {
+            logger.error("로그인된 사용자 정보를 가져오는 중 오류 발생: {}", e.getMessage());
+            return null;
+        }
+    }
 
 //	 클라이언트의 IP 주소를 가져오는 메서드
 	private String getClientIp() {

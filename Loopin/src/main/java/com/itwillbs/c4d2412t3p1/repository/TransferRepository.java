@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.repository;
 import java.util.List;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
 
 @Repository
@@ -89,5 +91,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			    WHERE transfer_ad = :today AND transfer_aw = 0
 			""", nativeQuery = true)
 	List<Transfer> findTransfersByDate(@Param("today") String today);
+	
+
 
 }

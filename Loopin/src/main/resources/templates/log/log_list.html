@@ -123,7 +123,7 @@
                             employee_id: row.employee_id || '', // null 값 처리
                             log_sj: row.log_sj,
                             log_ju: row.log_ju,
-                            log_jd: row.log_jdMap ? JSON.stringify(row.log_jdMap, null, 2) : '', // JSON 변환 후 표시
+                            parsedLogDetails: row.parsedLogDetails || 'No details available', // 파싱된 데이터 표시
                             log_od: row.log_od,
                             log_oi: row.log_oi,
                             log_bj: row.log_bj,
@@ -132,9 +132,9 @@
                             { header: '로그 코드', name: 'log_cd', align: 'center', sortable: true },
                             { header: '직원 ID', name: 'employee_id', align: 'center', sortable: true },
                             { header: '수행한 작업', name: 'log_sj', align: 'center', sortable: true },
-                            { header: '작업 내용', name: 'log_ju', align: 'center', sortable: true },
-                            { header: '세부 정보', name: 'log_jd', align: 'center', sortable: true },
-                            { header: '로그 시간', name: 'log_od', align: 'center', sortable: true },
+                            { header: '정보 유형', name: 'log_ju', align: 'center', sortable: true },
+                            { header: '접근 데이터', name: 'parsedLogDetails', align: 'center', sortable: true },
+                            { header: '열람 시간', name: 'log_od', align: 'center', sortable: true },
                             { header: 'IP 주소', name: 'log_oi', align: 'center', sortable: true },
                             { header: '브라우저 정보', name: 'log_bj', align: 'center', sortable: true }
                         ],
@@ -149,12 +149,12 @@
 
                     // Cell 클릭 이벤트 등록
                     grid.on('click', (event) => {
-                        if (event.columnName === 'log_jd') {
+                        if (event.columnName === 'parsedLogDetails') {
                             // rowKey를 사용해 해당 행의 데이터를 가져옴
                             const rowData = grid.getRow(event.rowKey);
                             console.log('Row data from rowKey:', rowData); // 디버깅용
 
-                            const logDetails = rowData.log_jd || 'No details available'; // log_jd 값 확인
+                            const logDetails = rowData.parsedLogDetails || 'No details available'; // log_jd 값 확인
                             document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
                             const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
                             modal.show();
