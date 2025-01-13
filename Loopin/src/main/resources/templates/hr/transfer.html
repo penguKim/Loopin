@@ -269,40 +269,55 @@
 
 				// 모달 열기 함수
 				function openEditModal(rowData) {
-					console.log("수정 모달 열기 데이터:", rowData);
+				    console.log("수정 모달 열기 데이터:", rowData);
 
-					const modal = document.getElementById('modal_appointment_save');
-					modal.setAttribute('data-mode', 'update'); // 수정 모드 설정
+				    const modal = document.getElementById('modal_appointment_save');
+				    modal.setAttribute('data-mode', 'update'); // 수정 모드 설정
 
-					// Select 필드 처리 (공통코드 매칭 포함)
-					const selectFields = ['transfer_ac', 'transfer_og', 'transfer_ag', 'transfer_od', 'transfer_adp', 'transfer_mg'];
-					selectFields.forEach(field => {
-						const $select = $(`#${field}`);
-						if ($select.length) {
-							const textToMatch = rowData[field]; // 예: "승진", true, false
-							const matchingOption = $select.find('option').filter((_, option) => {
-								return $(option).val() === String(textToMatch); // 옵션 value와 매칭
-							});
+				    // Select 필드 처리 (공통코드 매칭 포함)
+				    const selectFields = {
+				        // 필드 이름과 매칭 기준 지정
+				        transfer_ac: 'text', // 발령구분 (텍스트 매칭)
+				        transfer_og: 'text', // 기존직위 (텍스트 매칭)
+				        transfer_ag: 'text', // 발령직위 (텍스트 매칭)
+				        transfer_od: 'text', // 기존부서 (텍스트 매칭)
+				        transfer_adp: 'text', // 발령부서 (텍스트 매칭)
+				        transfer_mg: 'value' // 부서구분 (값 매칭)
+				    };
 
-							if (matchingOption.length) {
-								$select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
-							} else {
-								console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
-							}
-						}
-					});
+				    Object.keys(selectFields).forEach(field => {
+				        const $select = $(`#${field}`);
+				        if ($select.length) {
+				            const textToMatch = rowData[field]; // 예: "승진", true, false
+				            const matchType = selectFields[field]; // 매칭 기준: 'text' 또는 'value'
+				            const matchingOption = $select.find('option').filter((_, option) => {
+				                if (matchType === 'text') {
+				                    return $(option).text() === textToMatch; // 텍스트 매칭
+				                } else {
+				                    return $(option).val() === String(textToMatch); // 값 매칭
+				                }
+				            });
 
-					// 일반 입력 필드 처리
-					Object.keys(rowData).forEach(key => {
-						const $field = $(`#${key}`);
-						if ($field.length && $field.is('input, textarea')) {
-							$field.val(rowData[key] || '');
-						}
-					});
+				            if (matchingOption.length) {
+				                $select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
+				            } else {
+				                console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
+				            }
+				        }
+				    });
 
-					// 모달 열기
-					$('#modal_appointment_save').modal('show');
+				    // 일반 입력 필드 처리
+				    Object.keys(rowData).forEach(key => {
+				        const $field = $(`#${key}`);
+				        if ($field.length && $field.is('input, textarea')) {
+				            $field.val(rowData[key] || '');
+				        }
+				    });
+
+				    // 모달 열기
+				    $('#modal_appointment_save').modal('show');
 				}
+
 
 
 
