@@ -12,30 +12,38 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PRService {
-	
+
 	private final PRMapper prM;
-	
-//	public List<Map<String, Object>> selectpr() {
-//
-//		List<Map<String, Object>> list = prM.selectpr(null);
-//		
-//		return list;
-//	}
-	
+
 	public List<Map<String, Object>> selectpr(Long employee_cd) {
-		
+
 		List<Map<String, Object>> list = prM.selectpr(employee_cd);
+
+		return list;
+	}
+
+	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+
+		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
+
+		return list;
+	}
+
+	public List<Map<String, Object>> selectpradmin() {
+		List<Map<String, Object>> list = prM.selectpradmin();
 		
 		return list;
 	}
-	
-	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+	public List<Map<String, Object>> selectpradminfirstmodal(Long pr_id) {
+		List<Map<String, Object>> list = prM.selectpradminfirstmodal(pr_id);
 		
-		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
+		return list;
+	}
+	public List<Map<String, Object>> selectpradminfirstmodal2(Long prdetail_id) {
+		
+		List<Map<String, Object>> list = prM.selectpradminfirstmodal2(prdetail_id);
 		
 		return list;
 	}
 
-	
-	
 }
