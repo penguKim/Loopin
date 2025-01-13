@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,7 +77,12 @@ public class ApprovalController {
 		    ) {
 		Map<String, String> response = new HashMap<>();
 		
+		// 시큐리티 세션 값 가져오기
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName(); 
+		
 		try {
+	        // 작성자 처리
+			approvalDTO.setApproval_mf(employee_id);
 			
 			approvalDTO.setApproval_wd(new Timestamp(System.currentTimeMillis()));
 	        // 데이터 저장 처리
@@ -94,9 +100,11 @@ public class ApprovalController {
 	public ResponseEntity<Map<String, String>> update_APPROVAL(
 	        @RequestPart("ApprovalDTO") ApprovalDTO approvalDTO// DTO 받기
 	        ) {
-
 		
 	    Map<String, String> response = new HashMap<>();
+
+	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+	    
 	    try {
 	    	
 	    	String approval_cd = approvalDTO.getApproval_cd();
@@ -114,7 +122,9 @@ public class ApprovalController {
 	            return ResponseEntity.badRequest().body(response);
 	        }
 
-	        
+	        // 수정자 처리
+	        approvalDTO.setApproval_mf(employee_id);
+
 	        approvalDTO.setApproval_md(new Timestamp(System.currentTimeMillis()));
 
 	        // Service 호출
