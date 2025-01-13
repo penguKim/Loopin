@@ -99,12 +99,12 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">이메일</label>
 							    <div class="col-sm-3">
 							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
-									<span id="email_id_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
+									<span id="email_id_check"></span> <!-- 유효성 메시지 추가 -->
 							    </div>
 							    <div class="col-sm-1 text-center">@</div>
 								<div class="col-sm-3">
 								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
-									<span id="custom_domain_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
+									<span id="custom_domain_check"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							    <div class="col-sm-3">
 									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
@@ -132,7 +132,7 @@
 								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" required onblur="onBlurValidate()">
-									<span id="employee_bd_check" class="text-danger"></span> <!-- 유효성 메시지 추가 -->
+									<span id="employee_bd_check"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -638,6 +638,12 @@
 			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
 			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
+			
+		    // #reset-password-btn 버튼 상태 초기화
+		    if ($('#reset-password-btn').is(':hidden')) {
+		        $('#reset-password-btn').show(); // 모달 닫힐 때 버튼을 다시 보이게 함
+		    }
+			
 	    });
 
 		// 사진 미리보기 초기화 함수
@@ -709,6 +715,7 @@
 		    $('#appointment_form')[0].reset(); // 폼 초기화
 		    resetPhoto(); // 사진 초기화
 		    $('#employee_cd').val(''); // 수정용 필드 초기화
+	        $('#employee_bd_check').text('');
 		}
 		
 	    // 초기화 버튼 클릭 이벤트
@@ -733,9 +740,13 @@
 	        $('#employee_id_check').text('');
 	    });
 		
+	    
+	    
+	    
 		// 수정 모달 열기 함수
 		function openEditModal(data) {
 		    // 모달 제목 및 버튼 텍스트 설정
+		    $('#employee_bd_check').text('');
 		    
 			$('#modalTitle').text('인사카드 수정');
 			$('#modal_submit_button').text('수정');
@@ -746,19 +757,47 @@
 			  "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt", 
 			  "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm", 
 			  "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr", 
-			  "#employee_mg", "#employee_rl"
+			  "#employee_mg", "#employee_rl", "#employee_pw"
 			];
 			
 			// 필드 활성화/비활성화 처리
 			if (userRole === 'admin') {
-			  // Admin은 #employee_id를 제외한 모든 필드 활성화
-			  fieldsToDisable.forEach(function(field) {
-			    if (field === "#employee_id") {
-			      $(field).prop("disabled", true); // #employee_id는 비활성화
-			    } else {
-			      $(field).prop("disabled", false); // 나머지는 활성화
-			    }
-			  });
+				// Admin은 #employee_id는 비활성화, #employee_pw는 숨기고 비활성화, 나머지는 활성화
+				fieldsToDisable.forEach(function(field) {
+					if (field === "#employee_id") {
+						$(field).prop("disabled", true); // #employee_id 비활성화
+					} else if (field === "#employee_pw") {
+						$(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
+				
+						// 버튼이 이미 생성되지 않았다면 동적으로 생성
+						if (!$('#reset-password-btn').length) {
+							$('<button>', {
+								id: 'reset-password-btn',
+								text: 'Reset Password',
+								class: 'btn btn-primary', // 원하는 스타일 클래스 추가
+							}).insertAfter(field); // #employee_pw 뒤에 버튼 삽입
+							
+							
+							// Reset Password 버튼 클릭 이벤트
+							$('#reset-password-btn').off('click').on('click', function(event) {
+								// 기본 폼 제출 동작 방지
+								event.preventDefault();
+
+								// 버튼 숨기기
+								$(this).hide();
+
+								// #employee_pw 필드 활성화 및 보이기
+								$('#employee_pw').prop("disabled", false).show().focus();
+
+						    });
+							
+						}
+					} else {
+							$(field).prop("disabled", false); // 나머지 필드 활성화
+					}
+				});
+
+				
 			} else if (userRole === 'developer') {
 			  // Developer는 모든 필드 활성화
 			  fieldsToDisable.forEach(function(field) {
@@ -768,6 +807,7 @@
 			  // Employee는 모든 필드 비활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", true);
+			    $('#employee_pw').prop("disabled", false)
 			  });
 			}
 
@@ -970,12 +1010,12 @@
 		$('#appointment_form').off('submit').on('submit', function (event) {
 		    event.preventDefault();
 
-			const employee_pw = $('#employee_pw').val().trim(); // 패스워드 필드 값 가져오기
+		    let employee_pw = $('#employee_pw').val().trim(); // 패스워드 필드 값 가져오기
 
-			if (!employee_pw) { // 패스워드가 비어있다면
-			    alert('패스워드를 입력해 주세요.'); // 사용자에게 경고
-				return;
-			}			
+		    // 패스워드가 비어있으면 employee_pw를 빈 문자열로 설정
+		    if (!employee_pw) {
+		        employee_pw = ''; // 빈 문자열로 설정
+		    }		
 			
 		    const formData = new FormData(); // FormData 객체 생성
 		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
@@ -985,7 +1025,7 @@
 		    const employeeDTO = {
 		        employee_cd: $('#employee_cd').val(),
 		        employee_id: $('#employee_id').val(),
-		        employee_pw: $('#employee_pw').val(),
+		        employee_pw: employee_pw, // 비밀번호 필드 처리
 		        employee_dp: $('#employee_dp').val(),
 		        employee_gd: $('#employee_gd').val(),
 		        employee_hd: $('#employee_hd').val(),

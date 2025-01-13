@@ -208,7 +208,15 @@ public class Employee {
     public static Employee setEmployeeEntity(Employee employee, EmployeeDTO employeeDto, PasswordEncoder passwordEncode) {
         employee.setEmployee_cd(employeeDto.getEmployee_cd());
         employee.setEmployee_id(employeeDto.getEmployee_id());
-        employee.setEmployee_pw(passwordEncode.encode(employeeDto.getEmployee_pw()));
+        // 비밀번호가 비어있지 않으면 암호화하여 설정
+        if (employeeDto.getEmployee_pw() != null && !employeeDto.getEmployee_pw().trim().isEmpty()) {
+            employee.setEmployee_pw(passwordEncode.encode(employeeDto.getEmployee_pw())); // 비밀번호 암호화
+        } else {
+            // 또는 기존 비밀번호를 유지하고 싶다면 아래와 같이 처리 가능
+            employee.setEmployee_pw(employee.getEmployee_pw());
+        }
+
+        
         employee.setEmployee_dp(employeeDto.getEmployee_dp());
         employee.setEmployee_gd(employeeDto.getEmployee_gd());
         employee.setEmployee_hd(employeeDto.getEmployee_hd());
