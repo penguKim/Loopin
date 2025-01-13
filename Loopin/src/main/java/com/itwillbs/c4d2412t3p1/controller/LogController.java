@@ -36,7 +36,7 @@ public class LogController {
 	public ResponseEntity<List<LogDTO>> select_LOG() {
         try {
             List<LogDTO> logList = logService.select_LOG(); // 로그 데이터 조회
-            log.info("logList@@ : " + logList.toString());
+//            log.info("logList@@ : " + logList.toString());
             return ResponseEntity.ok(logList); // JSON 형태로 반환
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
