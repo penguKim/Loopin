@@ -12,6 +12,7 @@ import lombok.Setter;
 @ToString
 @Table(name = "PR")
 public class PR {
+
 	@Id
 	@Column(name = "pr_id")
 	private long pr_id;
@@ -22,8 +23,8 @@ public class PR {
 	@Column(name="pr_wm")
 	private String pr_wm;
 	
-	@Column(name="pr_td")
-	private String pr_td;
+	@Column(name="pr_tg")
+	private String pr_tg;
 	
 	@Column(name="pr_ta")
 	private String pr_ta;
