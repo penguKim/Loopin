@@ -3,11 +3,11 @@ package com.itwillbs.c4d2412t3p1.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.itwillbs.c4d2412t3p1.entity.Member;
+import com.itwillbs.c4d2412t3p1.entity.Holiday;
 
 @Repository
-public interface MemberRepository extends JpaRepository<Member, String> {
+public interface HolidayRepository extends JpaRepository<Holiday, String> {
 
-	Member findByIdAndPass(String id, String pass);
+
 	
 }
