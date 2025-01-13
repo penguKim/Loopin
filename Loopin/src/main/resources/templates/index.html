@@ -58,35 +58,10 @@
 							<h6 class="card-subtitle mt-3" th:text="|${['COMMON_NM']}팀|"></h6>
 							<h6 class="card-subtitle mt-3" id="current_day"></h6>
 							<h6 class="card-subtitle mt-3" th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|근무일정 : ${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></h6>
-							<div class="d-grid mt-3" >
-<!--								<p class="card-text"><a href="#" class="btn btn-primary">출근</a></p>-->
-								<!-- Modal 창 -->
-								<button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">
-									출근
-								</button>
-								<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
-									<div class="modal-dialog modal-dialog-centered">
-										<div class="modal-content">
-											<div class="modal-header">
-					                     <h5 class="modal-title">출근하시겠습니까?</h5>
-					                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-					                   </div>
-					                   <div class="modal-body">
-					                     <p class="card-text" th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|근무일정 : ${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></p>
-					                     <p class="card-text" id="current_time"></p>
-					                   </div>
-					                   <div class="modal-footer">
-					                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
-					                     <button type="button" class="btn btn-primary" id="btn_insert_COMMUTE">출근</button>
-					                   </div>
-					                 </div>
-					               </div>
-					             </div>
+							<div class="d-flex justify-content-between">
+								<input type="button" id="btn_attendance" class="btn btn-primary flex-fill mx-4" value="출근하기" th:disabled="${isAttendance}">
+								<input type="button" id="btn_leave_work" class="btn btn-primary flex-fill mx-4" value="퇴근하기" th:disabled="${isLeaveWork}">
 							</div>
-<!--							<div class="d-grid mt-3" >-->
-<!--								<button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">퇴근</button>-->
-<!--								<p class="card-text" id="current_time"><a href="#" class="btn btn-outline-secondary" style="float: right;">출근요청</a></p>-->
-<!--							</div>-->
 						</div>
 					</div><!-- End Recent Activity -->
 					
@@ -140,6 +115,11 @@
 	
 </body>
 <script th:inline="javascript">
+	// 변수
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+
+
 	//const {year, month, day} = formatDate();
 	$(function () {
 		const { year, month, day, hours, minutes, seconds } = formatDate(); // 함수가 반환한 값 사용
@@ -227,7 +207,101 @@
 		console.log(event); // EventObject
 	});
 	
-	
+		// 출근하기
+		$('#btn_attendance, #btn_leave_work').on('click', function() {
+			console.log('asdasd');
+			let isAttendance = $(this).attr('id') == 'btn_attendance';
+			let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
+			let timeInterval;
+			Swal.fire({
+				icon: 'question',
+				title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
+				html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
+				didOpen: () => {
+					// 1초마다 시간 업데이트
+					timeInterval = setInterval(() => {
+						$('#currentTime').text(getDateTime(new Date));
+					}, 1000);
+				},
+				showCancelButton: true,
+				confirmButtonColor: '#0d6efd',
+				cancelButtonColor: '#6c757d',
+				confirmButtonText: '확인',
+				cancelButtonText: '취소',
+				reverseButtons: true, 
+			}).then(result => {
+				clearInterval(timeInterval);
+				if (result.isConfirmed) { 
+					$.ajax({
+						type: 'post',
+						url: '/insert_COMMUTE',
+						contentType: 'application/json',
+						data: JSON.stringify({attendance : isAttendance}),
+						beforeSend : function(xhr) {
+						    xhr.setRequestHeader(header, token);
+						},
+						success: function(data) {
+							if(data['result']) {
+								showToast('', 'success', '', data['msg']);
+								if(isAttendance) {
+								    $('#btn_attendance').prop('disabled', true);
+								    $('#btn_leave_work').prop('disabled', false);
+								} else {
+								    $('#btn_leave_work').prop('disabled', true);
+								}
+							}
+						},
+						error : function(xhr, textStatus, errorThrown) {
+							let data = xhr.responseJSON;
+							showAlert('', 'error', '', data['msg']);
+						}
+					});
+				}
+			});
+		});
+		
+		// -------------------------- 추후 공통js로 빠질 함수(현재 commute_list에 있음) ------------------------
+		function getDateTime(date) {
+		    // 날짜 포맷팅
+		    const year = date.getFullYear();
+		    const month = String(date.getMonth() + 1).padStart(2, '0');
+		    const day = String(date.getDate()).padStart(2, '0');
+		    // 시간 포맷팅
+		    const hours = String(date.getHours()).padStart(2, '0');
+		    const minutes = String(date.getMinutes()).padStart(2, '0');
+		    const seconds = String(date.getSeconds()).padStart(2, '0');
+		    
+		    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
+		}
+		
+		function showAlert(element, icon, title, text) {
+			Swal.fire({
+			    icon: icon,
+			    title: title,
+			    html: text,
+			});
+			
+			if(element != '') {
+				element.focus();
+			}
+		}
+		
+		function showToast(element, icon, title, msg) {
+		    Swal.fire({
+		        toast: true,
+		        position: 'center',
+		        icon: icon,
+		        title: title,
+		        html: msg,
+		        showConfirmButton: false,
+		        timer: 1500,
+		    });
+			console.log(element);
+			
+			if(element != '') {
+				element.focus();
+			}
+		}
 	
 </script>
 
