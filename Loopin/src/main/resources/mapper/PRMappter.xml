@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PRMapper">
+
+    <select id="select_empworklastmth" resultType="map">
+        <![CDATA[
+	        SELECT EMPLOYEE_CD,EMPLOYEE_NM, EMPLOYEE_BS as BS
+	        FROM EMPLOYEE
+	        WHERE employee_rd IS NULL
+	          OR TO_DATE(employee_rd, 'YYYY-MM-DD') BETWEEN TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD')
+	            AND LAST_DAY(ADD_MONTHS(SYSDATE, 0))
+        ]]>
+    </select>
+
+	<select id="select_wokringtimeformth" resultType="map">
+		<![CDATA[
+			<foreach item="employee_cd" collection="employee_cdList" open="" separator=";" close="">
+				SELECT 
+					employee_cd, 
+					TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')),'YYYY-MM') AS pr_wm, 
+					SUM(NVL(commute_ig,0)) AS workingtime, 
+					SUM(NVL(commute_eg,0)) AS overworkingtime, 
+					SUM(NVL(commute_yg,0)) AS nightworkingtime, 
+					SUM(NVL(commute_jg,0)) AS weekendworkingtime, 
+					SUM(NVL(commute_hg,0)) AS holydayworkingtime
+				FROM COMMUTE
+				WHERE TO_DATE(COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
+									AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
+									AND EMPLOYEE_CD = #{employee_cd}
+				GROUP BY EMPLOYEE_CD
+			</foreach>
+		]]>
+	</select>
+	
+</mapper>
