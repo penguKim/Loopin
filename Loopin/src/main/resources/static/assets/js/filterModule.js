@@ -1,7 +1,5 @@
 // Toast UI DateRangePicker 생성 함수
 function createDateRangePicker(elementId, format, start, end) {
-	console.log(start);
-	console.log(end);
     const startContainer = document.querySelector(`#${elementId}StartContainer`);
     const endContainer = document.querySelector(`#${elementId}EndContainer`);
 	const hasTime = format != 'YYYY-MM-dd' ? true : false;
