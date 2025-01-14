@@ -25,6 +25,8 @@ import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -233,7 +235,11 @@ public class EmployeeService {
     	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
     }
 
+    public List<Employee> select_FILTERED_EMPLOYEE(EmployeeFilterRequest filterRequest) {
+    	return EmployeeRepository.select_FILTERED_EMPLOYEE(filterRequest);
+    }
 	
+
 	
 	
 }

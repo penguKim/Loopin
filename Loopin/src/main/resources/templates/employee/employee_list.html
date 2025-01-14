@@ -4,6 +4,25 @@
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
 
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
+
 <body>
 	<main id="main" class="main">
 			<span sec:authentication="principal.employee_cd"></span><br>
@@ -320,6 +339,7 @@
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
 								<div class="col-sm-12">
+									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
 <!--									<div class="tui-pagination" id="pagination"></div>-->
 								</div>
@@ -337,7 +357,6 @@
 	</main>
 	<!-- 메인 끝 -->
 </body>
-
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
@@ -370,69 +389,69 @@
 	});
 	
 
-	$(function() {
-	    var today = new Date();
+// 	$(function() {
+// 	    var today = new Date();
 
-	    // 입사일 DatePicker 설정
-	    var startPicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#employee_hd',
-	            container: '#startpicker-container',
-	        },
-	        endpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#employee_rd',
-	            container: '#endpicker-container',
-	            disabled: true // 퇴사일 기본 비활성화
-	        },
-	        format: 'YYYY-MM-dd',
-	        timePicker: false
-	    });
+// 	    // 입사일 DatePicker 설정
+// 	    var startPicker = tui.DatePicker.createRangePicker({
+// 	        startpicker: {
+// 	            date: today, // 오늘 날짜로 초기화
+// 	            input: '#employee_hd',
+// 	            container: '#startpicker-container',
+// 	        },
+// 	        endpicker: {
+// 	            date: today, // 오늘 날짜로 초기화
+// 	            input: '#employee_rd',
+// 	            container: '#endpicker-container',
+// 	            disabled: true // 퇴사일 기본 비활성화
+// 	        },
+// 	        format: 'YYYY-MM-dd',
+// 	        timePicker: false
+// 	    });
 
-	 	// 초기 상태에서 퇴사일 비활성화
-	    $('#employee_rd').prop('disabled', true);
+// 	 	// 초기 상태에서 퇴사일 비활성화
+// 	    $('#employee_rd').prop('disabled', true);
 	    
-	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
-	    startPicker.on('change:start', function(event) {
-	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
-	        if (event && event.date) {
-	            console.log("Start Date selected: ", event.date);
+// 	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
+// 	    startPicker.on('change:start', function(event) {
+// 	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
+// 	        if (event && event.date) {
+// 	            console.log("Start Date selected: ", event.date);
 
-	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
-	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
-	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
+// 	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
+// 	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
+// 	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
 
-	            // 퇴사일 DatePicker 설정
-	            var endPicker = tui.DatePicker.createRangePicker({
-	                startpicker: {
-	                    date: event.date, // 입사일 이후 날짜부터 설정
-	                    input: '#employee_hd',
-	                    container: '#startpicker-container',
-	                },
-	                endpicker: {
-	                    date: minEndDate, // 입사일 이후 날짜로 설정
-	                    input: '#employee_rd',
-	                    container: '#endpicker-container',
-	                    disabled: false // 퇴사일 활성화
-	                },
-	                format: 'YYYY-MM-dd',
-	                timePicker: false
-	            });
+// 	            // 퇴사일 DatePicker 설정
+// 	            var endPicker = tui.DatePicker.createRangePicker({
+// 	                startpicker: {
+// 	                    date: event.date, // 입사일 이후 날짜부터 설정
+// 	                    input: '#employee_hd',
+// 	                    container: '#startpicker-container',
+// 	                },
+// 	                endpicker: {
+// 	                    date: minEndDate, // 입사일 이후 날짜로 설정
+// 	                    input: '#employee_rd',
+// 	                    container: '#endpicker-container',
+// 	                    disabled: false // 퇴사일 활성화
+// 	                },
+// 	                format: 'YYYY-MM-dd',
+// 	                timePicker: false
+// 	            });
 
-	            // 퇴사일 선택 후 캘린더 닫기
-	            endPicker.on('change:end', function(event) {
-	                console.log("End Date selected: ", event.date);
-	                endPicker.close();
-	            });
+// 	            // 퇴사일 선택 후 캘린더 닫기
+// 	            endPicker.on('change:end', function(event) {
+// 	                console.log("End Date selected: ", event.date);
+// 	                endPicker.close();
+// 	            });
 
-	            // 입사일 선택 후 캘린더 닫기
-	            startPicker.close();
-	        } else {
-	            console.error("Start date is not available in the event");
-	        }
-	    });
-	});
+// 	            // 입사일 선택 후 캘린더 닫기
+// 	            startPicker.close();
+// 	        } else {
+// 	            console.error("Start date is not available in the event");
+// 	        }
+// 	    });
+// 	});
 
 
     function validateDate() {
@@ -501,7 +520,8 @@
 	
 </script>
 
-	
+<!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>	
 <script th:inline="javascript">
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
@@ -515,6 +535,9 @@
 	    let grid;
 	   // let pagination;
 
+
+	   
+	   
 	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
@@ -530,7 +553,11 @@
 	                data: data, // 첫 페이지 데이터 로드
 	                scrollX: true,
 	                scrollY: true,
+                    autoWidth: true,
+                    rowHeight: 'auto',
+                    bodyHeight: 'fitToParent',
 	                rowHeaders: ['checkbox'],
+                    zIndex: 100,
 	                columns: [
 						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
@@ -576,7 +603,6 @@
 					    console.warn("헤더 클릭은 무시됩니다.");
 					    return;
 					}
-					
 					
 
 				    if (columnName === 'employee_cd' || columnName === 'employee_nm') {
@@ -1115,13 +1141,65 @@
 		        }
 		    });
 		});
+		
+		
+		const filterConfig = [
+            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력' },
+            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력' },
+            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력' },
+            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력' },
+        ];
+		
+            initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+                console.log('적용된 필터:', filterValues);
 
-	});
+                // 필터 적용 후 서버 요청 및 Grid 갱신
+                fetch('/select_FILTERED_EMPLOYEE', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                    			[csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(filterValues)
+                })
+                .then(response => response.json())
+                .then(filteredData => {
+                    console.log('필터링된 데이터:', filteredData);
+
+                    // Grid 데이터 갱신
+                    grid.resetData(filteredData);
+                })
+                .catch(error => console.error('필터 적용 오류:', error));
+            });
+        });
+		
+        // 필터 모듈 초기화
+// 		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+// 		    console.log('적용된 필터:', filterValues);
+		
+// 		    // 필터 적용 후 서버 요청 및 Grid 갱신
+// 		    $.ajax({
+// 		        url: '/select_FILTERED_EMPLOYEE',
+// 		        method: 'POST',
+// 		        headers: {
+// 		            'Content-Type': 'application/json',
+// 		            [csrfHeader]: csrfToken
+// 		        },
+// 		        data: JSON.stringify(filterValues),
+// 		        success: function (filteredData) {
+// 		            console.log('필터링된 데이터:', filteredData);
+		
+// 		            // Grid 데이터 갱신
+// 		            grid.resetData(filteredData);
+// 		        },
+// 		        error: function (xhr, status, error) {
+// 		            console.error('필터 적용 오류:', error);
+		            
+		            
 
 
 
     
-	//$('#employee_dp').on('click', function () {
+// 	$('#employee_dp').on('click', function () {
 	  //  const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
 	  //  modalDepartmentList.show();
 	//});
@@ -1153,7 +1231,7 @@
 		//const selectedRow = $(this).closest('tr');
 
 		// 행의 각 열(`td`)에서 데이터를 가져옴
-		//const gradeName = selectedRow.find('td').eq(0).text().trim(); // 직위코드
+	//const gradeName = selectedRow.find('td').eq(0).text().trim(); // 직위코드
 
 		// 기존 모달의 필드에 값 설정
 		//$('#employee_gd').val(gradeName);
@@ -1162,6 +1240,5 @@
 		//const modalGradeList = bootstrap.Modal.getInstance($('#modal_grade_list')[0]);
 		//modalGradeList.hide();
 	//});
-    
 </script>
 </html>

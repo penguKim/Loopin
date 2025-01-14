@@ -34,6 +34,8 @@ import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -466,8 +468,48 @@ public class EmployeeController {
         return response;
     }
 
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_EMPLOYEE")
+    public ResponseEntity<List<Employee>> select_FILTERED_EMPLOYEE(@RequestBody EmployeeFilterRequest filterRequest) {
+		log.info("@@@@@@@@@@@@@@@@@");
+		
+		System.out.println("@@@@@@@@@" + filterRequest);
+		System.out.println("@@@@@@@@@" + filterRequest.getStartDate());
+		System.out.println("@@@@@@@@@" + filterRequest.getEndDate());
+		
+        try {
+            // 필터 조건이 비어 있으면 전체 인사정보 반환
+            if (filterRequest.isEmpty()) {
+            	List<Employee> employees = employeeService.findAll();
+                return ResponseEntity.ok(employees);
+            }
+            
+            log.info(filterRequest.toString()); // 전체 필드 출력
+            log.info(filterRequest.getStartDate()); // 시작일
+            log.info(filterRequest.getEndDate()); // 종료일
+            log.info(filterRequest.getEmployeeCd());// 사원코드
+            log.info(filterRequest.getEmployeeDp()); // 부서
+            log.info(filterRequest.getEmployeeGd()); // 직급
+            log.info(filterRequest.getEmployeeHd()); // 입사일
+            log.info(filterRequest.getEmployeeNm()); // 사원명 
+            
+            
+            
+            
+            // 필터 조건에 따른 필터링된 인사정보 반환
+            List<Employee> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest);
+            
+            System.out.println("@@@@@@@@" + filteredEmployeeList);
+            
+            
+            
+            return ResponseEntity.ok(filteredEmployeeList);
 
-
+        } catch (Exception e) {
+        	e.printStackTrace();
+            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     
 

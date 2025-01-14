@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import jakarta.transaction.Transactional;
 
@@ -114,6 +116,18 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
     @Transactional
     @Query(value = "UPDATE employee SET employee_us = :status WHERE employee_cd IN (:employeeCds)", nativeQuery = true)
     void updateEmployeeStatus(@Param("employeeCds") List<String> employeeCds, @Param("status") Boolean status);
+
+    
+    @Query(value = "SELECT * FROM employee e " +
+            "WHERE (:#{#filterRequest.employeeCd} IS NULL OR e.employee_cd = :#{#filterRequest.employeeCd}) " +
+            "AND (:#{#filterRequest.employeeDp} IS NULL OR e.employee_dp = :#{#filterRequest.employeeDp}) " +
+            "AND (:#{#filterRequest.employeeGd} IS NULL OR e.employee_gd = :#{#filterRequest.employeeGd}) " +
+            "AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL " +
+            "     OR e.employee_hd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) " +
+            "AND (:#{#filterRequest.employeeNm} IS NULL OR e.employee_nm LIKE %:#{#filterRequest.employeeNm}%)",
+    nativeQuery = true)
+    List<Employee> select_FILTERED_EMPLOYEE(@Param("filterRequest") EmployeeFilterRequest filterRequest);
+
     
 	
 }
