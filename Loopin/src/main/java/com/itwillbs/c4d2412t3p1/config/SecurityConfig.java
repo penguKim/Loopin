@@ -2,8 +2,11 @@ package com.itwillbs.c4d2412t3p1.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -17,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 public class SecurityConfig {
 
 	private final MyUserDetailsService myUserDetailsService;
-	
 //	 암호화 설정
 //	@Bean => 서버 시작 시 객체 생성
 	@Bean
@@ -51,8 +53,29 @@ public class SecurityConfig {
 					.usernameParameter("id")
 					.passwordParameter("pass") 
 					.defaultSuccessUrl("/")
-					.failureUrl("/login")
+					.failureHandler((request, response, exception) -> { // 로그인 실패 시 처리
+				        String errorMessage;
+				        if (exception instanceof BadCredentialsException) {
+				            errorMessage = "아이디 또는 비밀번호가<br>일치하지 않습니다.";
+				        } else if (exception instanceof DisabledException) {
+				            errorMessage = "비활성화된 계정입니다.";
+				        } else if (exception instanceof UsernameNotFoundException) {
+				            errorMessage = "존재하지 않는 계정입니다.";
+				        } else {
+				            errorMessage = "로그인에 실패했습니다.";
+				        }
+				        
+				        request.getSession().setAttribute("loginError", errorMessage);
+				        response.sendRedirect("/login");
+					})
 						)
+		        .rememberMe(rememberMe -> // 로그인 정보 기억
+		            rememberMe
+		            .key("uniqueAndSecret")
+		            .rememberMeParameter("remember")
+		            .tokenValiditySeconds(7 * 24 * 60 * 60) // 7일
+		            .userDetailsService(myUserDetailsService)
+		        		)
 				.logout(logoutCustomizer ->
 					logoutCustomizer
 					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")) 
