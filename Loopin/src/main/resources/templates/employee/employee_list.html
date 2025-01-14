@@ -108,9 +108,10 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
 								<div class="col-sm-4">
 									<select class="form-select" id="employee_rl" name="employee_rl" aria-label="직원 권한">
-									    <option value="employee" selected>사원</option>
-									    <option value="admin">관리자</option>
-									    <option value="developer">개발자</option>
+										<option value="" disabled selected>권한을 선택하세요</option>
+										<option th:each="PMType : ${PMType_list}" th:value="${PMType.common_cc}"
+											th:text="${PMType.common_nm}">
+										</option>
 									</select>
 								</div>
 							</div>						
@@ -344,7 +345,7 @@
 <!--									<div class="tui-pagination" id="pagination"></div>-->
 								</div>
 								<div class="col-sm-12">
-									<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+									<div th:if="${#authentication.principal.employee_rl == 'HR_ADMIN' or #authentication.principal.employee_rl == 'SYS_ADMIN'}">
 										<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
 										<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
 									</div>
@@ -809,7 +810,7 @@
 			];
 			
 			// 필드 활성화/비활성화 처리
-			if (userRole === 'admin') {
+			if (userRole === 'HR_ADMIN' || userRole === 'SYS_ADMIN') {
 				// Admin은 #employee_id는 비활성화, #employee_pw는 숨기고 비활성화, 나머지는 활성화
 				fieldsToDisable.forEach(function(field) {
 					if (field === "#employee_id") {
@@ -846,13 +847,13 @@
 				});
 
 				
-			} else if (userRole === 'developer') {
-			  // Developer는 모든 필드 활성화
+			} else if (userRole === 'SYS_ADMIN') {
+			  // SYS_ADMIN는 모든 필드 활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", false); // 모든 필드 활성화
 			  });
-			} else if (userRole === 'employee') {
-			  // Employee는 모든 필드 비활성화
+			} else if (userRole === 'EMPLOYEE') {
+			  // EMPLOYEE는 모든 필드 비활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", true);
 			    $('#employee_pw').prop("disabled", false)

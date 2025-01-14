@@ -119,6 +119,9 @@ public class EmployeeController {
 		// 인사카드 사용여부 가져오기
 		model.addAttribute("useyn_list", employeeService.selectCommonList("USEYN"));
 
+		// 부서장 유무 가져오기
+		model.addAttribute("PMType_list", employeeService.selectCommonList("PERMISSION"));
+
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
 
@@ -131,6 +134,8 @@ public class EmployeeController {
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
 		
+		
+		
 		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
 	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
@@ -139,8 +144,8 @@ public class EmployeeController {
 	    
 	    List<Employee> employees;
 
-	    // 관리자일 경우 모든 직원 정보 조회
-	    if (currentRole.contains("admin") || currentRole.contains("developer")) {
+	    // 시스템 관리자나 인사관리자일 경우 모든 직원 정보 조회
+	    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
 	        employees = employeeService.findAll(); // 모든 직원 정보 조회
 	    } else {
 	        // 일반 사용자일 경우 본인 정보만 조회
