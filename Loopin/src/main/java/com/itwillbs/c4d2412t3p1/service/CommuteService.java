@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
@@ -42,6 +43,7 @@ import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommuteRepository;
 import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -82,9 +84,10 @@ public class CommuteService {
 	}
 	
 	// 출퇴근 기록부 그리드 조회
-	public List<CommuteDTO> select_COMMUTE_grid(String employee_cd, boolean isAdmin) {
-		return commuteMapper.select_COMMUTE_grid(employee_cd, isAdmin);
+	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
+		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin);
 	}
+	
 	
 
 	// 근로관리 그리드 조회
@@ -404,6 +407,7 @@ public class CommuteService {
 	    }
 	    return true;
 	}
+
 
 
 	
