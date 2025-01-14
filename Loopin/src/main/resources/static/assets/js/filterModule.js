@@ -1,5 +1,7 @@
 // Toast UI DateRangePicker 생성 함수
-function createDateRangePicker(elementId, format) {
+function createDateRangePicker(elementId, format, start, end) {
+	console.log(start);
+	console.log(end);
     const startContainer = document.querySelector(`#${elementId}StartContainer`);
     const endContainer = document.querySelector(`#${elementId}EndContainer`);
 	const hasTime = format != 'YYYY-MM-dd' ? true : false;
@@ -9,11 +11,12 @@ function createDateRangePicker(elementId, format) {
         return null;
     }
 
-    const today = new Date();
+	const startDate = start ? new Date(start) : new Date();
+	const endDate = end ? new Date(end) : new Date();
 
     // Startpicker 초기화
     const startPicker = new tui.DatePicker(`#${elementId}StartContainer`, {
-        date: today,
+        date: startDate,
         input: {
             element: `#${elementId}StartInput`,
             format: format
@@ -23,7 +26,7 @@ function createDateRangePicker(elementId, format) {
 
     // Endpicker 초기화
     const endPicker = new tui.DatePicker(`#${elementId}EndContainer`, {
-        date: today,
+        date: endDate,
         input: {
             element: `#${elementId}EndInput`,
             format: format
@@ -75,7 +78,7 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 	
     // Main DateRangePicker 초기화
     setTimeout(() => {
-        const mainPicker = createDateRangePicker('mainDateRange', startDate.format);
+        const mainPicker = createDateRangePicker('mainDateRange', startDate.format,startDate.value, endDate.value);
         if (mainPicker) {
             console.log('Main DateRangePicker 초기화 성공');
         }
@@ -124,11 +127,13 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 	        // 숨겨진 필터 값 가져오기
 	        filterConfig.forEach(config => {
 	            const element = document.getElementById(config.key);
-	            if (element) {
-	                filterValues[config.key] = element.value;
-	            } else {
-	                console.warn(`요소를 찾을 수 없습니다: ${config.key}`);
-	            }
+				if (config.key !== 'startDate' && config.key !== 'endDate') {
+		            if (element) {
+		                filterValues[config.key] = element.value;
+		            } else {
+		                console.warn(`요소를 찾을 수 없습니다: ${config.key}`);
+		            }
+				}
 	        });
 
 	        onFilterApplyCallback(filterValues);
@@ -140,10 +145,10 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 	        const endInput = document.getElementById('mainDateRangeEndInput');
 
 	        if (startInput) {
-	            startInput.value = '';
+	            startInput.value = startDate.value;
 	        }
 	        if (endInput) {
-	            endInput.value = '';
+	            endInput.value = endDate.value;
 	        }
 
 	        filterConfig.forEach(config => {
