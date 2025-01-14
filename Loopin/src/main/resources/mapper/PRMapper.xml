@@ -52,24 +52,25 @@
         ]]>
     </select>
 
-	<select id="select_wokringtimeformth" resultType="map">
-		<![CDATA[
-			<foreach item="employee_cd" collection="employee_cdList" open="" separator=";" close="">
-				SELECT 
-					employee_cd, 
-					TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')),'YYYY-MM') AS pr_wm, 
-					SUM(NVL(commute_ig,0)) AS workingtime, 
-					SUM(NVL(commute_eg,0)) AS overworkingtime, 
-					SUM(NVL(commute_yg,0)) AS nightworkingtime, 
-					SUM(NVL(commute_jg,0)) AS weekendworkingtime, 
-					SUM(NVL(commute_hg,0)) AS holydayworkingtime
-				FROM COMMUTE
-				WHERE TO_DATE(COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
-									AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
-									AND EMPLOYEE_CD = #{employee_cd}
-				GROUP BY EMPLOYEE_CD
-			</foreach>
-		]]>
+	<select id="select_wokringtimeformth" parameterType="list" resultType="map">
+	     <![CDATA[
+	        SELECT 
+	            employee_cd, 
+	            TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')), 'YYYY-MM') AS pr_wm, 
+	            SUM(NVL(commute_ig, 0)) AS workingtime, 
+	            SUM(NVL(commute_eg, 0)) AS overworkingtime, 
+	            SUM(NVL(commute_yg, 0)) AS nightworkingtime, 
+	            SUM(NVL(commute_jg, 0)) AS weekendworkingtime, 
+	            SUM(NVL(commute_hg, 0)) AS holydayworkingtime
+	        FROM COMMUTE
+	        WHERE TO_DATE(COMMUTE_WD, 'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+	                                                  AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+	          AND EMPLOYEE_CD IN 
+	          <foreach item="employee_cd" collection="list" open="(" separator="," close=")" jdbcType="VARCHAR">
+	              #{employee_cd}
+	          </foreach>
+	        GROUP BY EMPLOYEE_CD
+	    ]]>
 	</select>
 	
 </mapper>

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
@@ -28,6 +29,29 @@ public class PRController {
 
 	private final PRService prS;
 	
+	@GetMapping("/check_salary")
+	public String checkSalary() {
+		return "payroll/checkSalary";
+	}
+	
+	@GetMapping("/checkpr")
+	@ResponseBody
+	public List<Map<String,Object>> checkpr(@RequestParam("employee_cd") Long employee_cd) {
+		
+		List<Map<String, Object>> list = prS.selectpr(employee_cd);
+		
+		return list;
+	}
+	
+	@GetMapping("/checkprmodal")
+	@ResponseBody
+	public List<Map<String,Object>> checkprmodal(@RequestParam("employee_cd") Long employee_cd, @RequestParam("pr_id") Long pr_id) {
+		
+		List<Map<String, Object>> list = prS.selectprmodal(pr_id, employee_cd);
+		
+		return list;
+	}
+	
 	@GetMapping("/prcode")
 	public String prcode() {
 		return "payroll/prcode";
@@ -42,7 +66,7 @@ public class PRController {
 		return list;
 	}
 	
-	@GetMapping("/PRadmin")
+	@GetMapping("/check_pradmin")
 	public String pradmin() {
 		return "payroll/checkPRadmin";
 	}
@@ -96,4 +120,30 @@ public class PRController {
 		return list;
 	}
 
+	@GetMapping("/prsend")
+	public String prsend() {
+		return "payroll/sendPR";
+	}
+
+	@GetMapping("/getempandbs")
+	@ResponseBody
+	public List<Employee> getempandbs() {
+		
+		List<Employee> list = prS.select_empworklastmth();
+		
+		return list;
+	}
+	
+	@GetMapping("/getworkingtimeformth")
+	@ResponseBody
+	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cdList") List<String> employee_cdList) {
+		
+//		ObjectMapper objMapper = new ObjectMapper();
+//		List<String> employee_cdList = null;
+		
+		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
+		
+		return list;
+	}
+	
 }

@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -241,12 +242,19 @@ public class PRService {
 	    }
 	}
 
-//	public List<Map<String, Object>> selectpr() {
-//
-//		List<Map<String, Object>> list = prM.selectpr(null);
-//		
-//		return list;
-//	}
-	
+	public List<Employee> select_empworklastmth() {
+		List<Employee> list = prM.select_empworklastmth();
+
+		return list;
+	}
+
+	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist) {
+		Map<String, Object> employee_cdList = new HashMap<>();
+		employee_cdList.put("employee_cd", emp_cdlist);
+		List<Map<String, Object>> list = prM.select_wokringtimeformth(employee_cdList);
+
+		return list;
+//		return prM.select_wokringtimeformth(employee_cdList);
+	}
 
 }
