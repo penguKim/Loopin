@@ -37,7 +37,6 @@ public class DashboardController {
 		Commute commute = commuteService.findById(employee_cd, workinghour_id);
 		
 		String currentCd = employeeDetails.getEmployee_cd();
-		log.info(currentCd + "이걸로 조회 가능");
 		
 		Map<String, Object> employee = dashboardService.select_total_EMPLOYEE(currentCd);
 		
