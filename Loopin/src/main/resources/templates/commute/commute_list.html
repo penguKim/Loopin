@@ -135,12 +135,12 @@
 	const btn_calendar_prev = $('#btn_calendar_prev');
 	const btn_calendar_next = $('#btn_calendar_next');
 	// 관리자인지 확인(권한 설정 후 달라질 수 있음)
-	const isAdmin = /*[[${#authorization.expression('hasRole("admin")')}]]*/ false;
+	const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
 	let today = new Date();
 	// 필터 항목
 	const filterConfig = [
 		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
-		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
+		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-14' },
 		{ key: 'employee_cd', label: '사원코드', type: 'text', placeholder: '사원코드 입력', col: 'col-2' },
 		{ key: 'employee_nm', label: '사원명', type: 'text', placeholder: '사원명 입력', col: 'col-2' },
 		{ key: 'employee_dp', label: '부서명', type: 'text', placeholder: '부서명 입력', col: 'col-2' },
@@ -157,8 +157,7 @@
 		
         initializeFilterModule('filterModule', filterConfig, (filterValues) => {
             console.log('적용된 필터:', filterValues);
-
-
+            getGridList(filterValues);
         });
 
 		
@@ -444,22 +443,26 @@
 	}
 	
 	// 그리드 데이터 조회
-	function getGridList() {
+	function getGridList(filter) {
+		const data = {
+		        commuteFilter: filter || 
+		        {
+		        	startDate: mainDateRangeStartInput.value, 
+	        	 	endDate: mainDateRangeEndInput.value 
+	        	 }
+		    };
+		
 		$.ajax({
 			type: 'post',
 			url: '/select_COMMUTE_grid',
 			contentType: 'application/json',
-			data: JSON.stringify({}),
+			data: JSON.stringify(data),
 			beforeSend : function(xhr) {
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function(data) {
 				if(!data['result']) {
-					Swal.fire({
-					    icon: "error",
-					    title: "기록부 조회 실패",
-					    html: "기록부 조회에 실패하였습니다.<br>다시 접속해주세요.",
-					});
+					showAlert('', 'error', '기록부 조회 실패' , '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
 				} else {
 					let list = data['list'];
 					grid.resetData(list);

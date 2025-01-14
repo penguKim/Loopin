@@ -55,7 +55,6 @@ public class CommuteService {
 	private final CommonRepository commonRepository;
 	private final CommuteRepository commuteRepository;
 	private final WorkinghourRepository workinghourRepository;
-	private final ComhistoryRepository comhistoryRepository;
 	private final HolidayRepository holidayRepository;
 	
 	private final CommuteMapper commuteMapper; 
@@ -377,13 +376,36 @@ public class CommuteService {
 		return (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	}
 	
-	public boolean isAuthority(String Authority) {
-		Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-		return authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_" + Authority));
+	
+	public boolean isAuthority(String... authorities) {
+	    Collection<? extends GrantedAuthority> userAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+	            
+	    for (String authority : authorities) {
+	        String roleAuthority = "ROLE_" + authority;
+	        for (GrantedAuthority userAuth : userAuthorities) {
+	            if (userAuth.getAuthority().equals(roleAuthority)) {
+	                return true;
+	            }
+	        }
+	    }
+	    return false;
 	}
-	
-	
-	
+
+	public boolean isNotAuthority(String... authorities) {
+	    Collection<? extends GrantedAuthority> userAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+	            
+	    for (String authority : authorities) {
+	        String roleAuthority = "ROLE_" + authority;
+	        for (GrantedAuthority userAuth : userAuthorities) {
+	            if (userAuth.getAuthority().equals(roleAuthority)) {
+	                return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+
+
 	
 	
 	
