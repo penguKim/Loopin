@@ -38,7 +38,8 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
 					authorizeHttpRequestsCustomizer
-					.requestMatchers("/", "/login", "insert", "/mapper", "/upload", "/assets/**").permitAll() // 이 주소는 모든 권한
+					.requestMatchers("/login").anonymous() // 미인증 사용자만 접근 가능
+	                .requestMatchers("/", "/mapper", "/upload", "/assets/**").permitAll()
 					.anyRequest() // 어느 요청이든
 					.authenticated() // 권한이 적용된다.
 						)
@@ -48,13 +49,21 @@ public class SecurityConfig {
 					.loginProcessingUrl("/loginPro")
 					.usernameParameter("id")
 					.passwordParameter("pass") 
-					.defaultSuccessUrl("/main", true) // css 파일로 이동
+					.defaultSuccessUrl("/")
 					.failureUrl("/login")
 						)
 				.logout(logoutCustomizer ->
 					logoutCustomizer
 					.logoutRequestMatcher(new AntPathRequestMatcher("/logout")) 
-					.logoutSuccessUrl("/")
+					.logoutSuccessUrl("/login")
+	                .invalidateHttpSession(true)
+	                .clearAuthentication(true)
+						)
+				.exceptionHandling(handling -> 
+                	handling
+                	.accessDeniedHandler((request, response, accessDeniedException) -> {
+                		response.sendRedirect("/");
+                	})
 						)
 				.userDetailsService(myUserDetailsService)
 				.build();

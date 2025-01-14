@@ -30,6 +30,7 @@ public class DashboardController {
 	
 	@GetMapping("/")
 	public String main(Model model) {
+		
 		EmployeeDetails employeeDetails = commuteService.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		String workinghour_id = employeeDetails.getWorkinghour_id();
@@ -59,11 +60,7 @@ public class DashboardController {
 		
 		return "/index";
 	}
-	
-	@GetMapping("/logout")
-	public String logout() {
-		return "redirect:/login";
-	}
+
 
 	
 	
