@@ -18,7 +18,7 @@ import lombok.ToString;
 
 
 
-@Entity
+@Entity(name = "COMMON_CODE")
 @Table(name = "COMMON_CODE")
 @Getter
 @Setter
@@ -53,7 +53,6 @@ public class Common_code {
 	private String common_uu;
 	@Column(name = "common_ud")
 	private Timestamp common_ud;
-
 
 //	public static Common_code Common_code(Common_codeDTO common) {
 //		Common_code code = new Common_code();

@@ -6,6 +6,10 @@
 
 <body>
 	<main id="main" class="main">
+			<span sec:authentication="principal.employee_cd"></span><br>
+			<span sec:authentication="principal.employee_rl"></span>
+
+
 		<!-- 인사카드 등록 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-dialog-scrollable modal-xl">
@@ -49,10 +53,12 @@
 								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_id" name="employee_id">
+									<span id="employee_id_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
 									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
+									<span id="employee_pw_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 							</div>
 							
@@ -71,16 +77,18 @@
 								</div>
 							</div>	
 							<div class="row mb-3">
-							    <label for="inputText" class="col-sm-2 col-form-label">부서장 유무</label>
+							    <label for="inputText" class="col-sm-2 col-form-label">부서장구분</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_mg" name="employee_domain" aria-label="도메인 선택">
-									    <option value="false" selected>부서직원</option>
-									    <option value="ture">부서장</option>
+									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
+										<option value="" disabled selected>부서장구분</option>
+										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
+								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+										</option>
 									</select>
 								</div>
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_rl" name="employee_domain" aria-label="도메인 선택">
+									<select class="form-select" id="employee_rl" name="employee_rl" aria-label="직원 권한">
 									    <option value="employee" selected>사원</option>
 									    <option value="admin">관리자</option>
 									    <option value="developer">개발자</option>
@@ -91,10 +99,12 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">이메일</label>
 							    <div class="col-sm-3">
 							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
+									<span id="email_id_check"></span> <!-- 유효성 메시지 추가 -->
 							    </div>
 							    <div class="col-sm-1 text-center">@</div>
 								<div class="col-sm-3">
 								    <input class="form-control" id="custom_domain" name="custom_domain" type="text" placeholder="직접 입력" aria-label="직접 도메인 입력">
+									<span id="custom_domain_check"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							    <div class="col-sm-3">
 									<select class="form-select" id="employee_domain" name="employee_domain" aria-label="도메인 선택">
@@ -111,29 +121,29 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">부서코드</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_dp" name="employee_dp">
+									<input type="text" class="form-control" id="employee_dp" name="employee_dp" readonly>
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">직위코드</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_gd" name="employee_gd">
+									<input type="text" class="form-control" id="employee_gd" name="employee_gd" readonly>
 								</div>
 							</div>
 							<div class="row mb-3">
 								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" required onblur="onBlurValidate()">
+									<span id="employee_bd_check"></span> <!-- 유효성 메시지 추가 -->
 								</div>
 							</div>
 							<div class="row mb-3">
 							    <label for="inputDate" class="col-sm-2 col-form-label">입사일<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-								    <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date">
-<!-- 								        <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date"> -->
+								    <input type="text" class="form-control" id="employee_hd" name="employee_hd" aria-label="Date" readonly>
 							        <div id="startpicker-container" style="margin-left: -1px;"></div>
 							    </div>
 							    <label for="inputDate" class="col-sm-2 col-form-label">퇴사일</label>
 								<div class="col-sm-4">
-							        <input type="text" class="form-control" id="employee_rd" name="employee_rd" aria-label="Date">
+							        <input type="text" class="form-control" id="employee_rd" name="employee_rd" aria-label="Date" readonly>
 							        <div id="endpicker-container" style="margin-left: -1px;"></div>
 							    </div>
 							</div>
@@ -212,9 +222,12 @@
 							</div>
 						</form>
 					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
-						<button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+					<div class="modal-footer d-flex justify-content-between">
+						<button type="button" class="btn btn-danger" id="resetFormBtn"  style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+						<div>
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+							<button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -287,17 +300,20 @@
 					<div class="card">
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
-							<div class="row mb-3">
 								<div class="col-sm-12">
 									<div id="grid"></div>
-									<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
-									<button type="button" id="btn_employee_delete" class="btn btn-primary">삭제</button>
+									<div class="tui-pagination" id="pagination"></div>
+								</div>
+								<div class="col-sm-12">
+									<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+										<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
+										<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
+									</div>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 		</section>
 	</main>
 	<!-- 메인 끝 -->
@@ -355,6 +371,9 @@
 	        timePicker: false
 	    });
 
+	 	// 초기 상태에서 퇴사일 비활성화
+	    $('#employee_rd').prop('disabled', true);
+	    
 	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
 	    startPicker.on('change:start', function(event) {
 	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
@@ -402,9 +421,11 @@
 
         // 8자리 숫자 확인
         if (!/^\d{8}$/.test(dateInput)) {
-            alert("8자리 숫자로만 입력해주세요. 예시: 19900101");
+			$('#employee_bd_check').text('8자리 숫자로만 입력해주세요. ex) 19900101').css('color', 'red');
             return false;
-        }
+        } else {
+			$('#employee_bd_check').text('사용가능한 생년월일 입니다').css('color', 'green');
+		}
 
         // 날짜 분리 (YYYY, MM, DD)
         const year = parseInt(dateInput.substring(0, 4), 10);
@@ -427,22 +448,6 @@
     }
 
 		
-	// 생년월일 datepicker
-// 	$(document).ready(function() {
-// 	    const today = new Date(); // 오늘 날짜 가져오기
-
-// 	    const datepicker = new tui.DatePicker('#bd_wrapper', {
-// 	        date: today, // 초기 날짜 설정
-// 	        input: {
-// 	            element: '#employee_bd',
-// 	            format: 'yyyy-MM-dd'
-// 	        },
-// 			selectableRanges: [
-// 			    [new Date(1900, 0, 1), new Date(today.getFullYear(), today.getMonth(), today.getDate())]
-// 			] // 선택 가능 날짜 범위 설정
-// 	    });
-// 	});
-	
 	// 이메일 관련 처리
 	$('#employee_domain').on('change', function () {
 	    const customDomainInput = $('#custom_domain');
@@ -483,36 +488,45 @@
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-
+		var userRole = /*[[${role}]]*/ 'default';
+		
+	    let currentPage = 1; // 현재 페이지
+	    const itemsPerPage = 5; // 한 페이지에 표시할 항목 수
+	    let employeeList = []; // 전체 직원 목록
 	    let grid;
+	    let pagination;
 
-	    // 데이터 가져오기 및 그리드 초기화
+	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
 	        method: 'GET',
-	        success: function (employeeList) {
+	        success: function (data) {
+	            employeeList = data; // 전체 데이터를 employeeList에 저장
+	            console.log('전체 데이터:', employeeList); // 데이터 확인
+
+	            // Grid 초기화
 	            grid = new tui.Grid({
 	                el: document.getElementById('grid'),
-	                data: employeeList,
+	                data: employeeList.slice(0, itemsPerPage), // 첫 페이지 데이터 로드
 	                scrollX: true,
 	                scrollY: true,
 	                rowHeaders: ['checkbox'],
-					columns: [
-						{ header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
-						{ header: '사원명', name: 'employee_nm', align: 'center', sortable: true },
-						{ header: '부서', name: 'employee_dp', align: 'center', sortable: true },
-						{ header: '생년월일', name: 'employee_bd', align: 'center', sortable: true },
-						{ header: '주소', name: 'employee_ad', align: 'center', sortable: true },
-						{ header: '직급', name: 'employee_gd', align: 'center', sortable: true },
-						{ header: '연락처', name: 'employee_ph', align: 'center', sortable: true },
-						{ header: '이메일', name: 'employee_em', align: 'center', sortable: true },
-						{ header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
-					    
-					    // 숨김 컬럼
+	                columns: [
+						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '부서', name: 'employee_dp', align: 'center', filter: {type: 'select'}, sortable: true },
+						{ header: '직급', name: 'employee_gd', align: 'center', filter: {type: 'select'}, sortable: true },
+						{ header: '생년월일', name: 'employee_bd', align: 'center', filter: {type: 'date', options: {format: 'yyyyMMdd'}}, sortable: true },
+						{ header: '입사일', name: 'employee_hd', align: 'center', filter: {type: 'date', options: {format: 'yyyy-MM-dd'}}, sortable: true },
+						{ header: '주소', name: 'employee_ad', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '연락처', name: 'employee_ph', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '이메일', name: 'employee_em', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						
+						// 숨김 컬럼
 						{ header: '사원아이디', name: 'employee_id', hidden: true },
+						{ header: '패스워드', name: 'employee_pw', hidden: true },
 						{ header: '성별', name: 'employee_sb', hidden: true },
 						{ header: '채용구분', name: 'employee_cg', hidden: true },
-						{ header: '패스워드', name: 'employee_pw', hidden: true  },
 						{ header: '퇴사일', name: 'employee_rd', hidden: true  },
 						{ header: '퇴사사유', name: 'employee_rr', hidden: true  },
 						{ header: '비고', name: 'employee_nt', hidden: true  },
@@ -525,14 +539,16 @@
 						{ header: '작성일', name: 'employee_wd', hidden: true  },
 						{ header: '수정자', name: 'employee_mf', hidden: true  },
 						{ header: '수정일', name: 'employee_md', hidden: true  },
-					]
+						{ header: '부서장유무', name: 'employee_mg', hidden: true  },
+	                ]
 	            });
 
-	            // 그리드 클릭 이벤트 등록
-	            grid.on('click', (ev) => {
-	                const columnName = ev.columnName;
-	                const rowKey = ev.rowKey;
-	                const rowData = grid.getRow(rowKey);
+				
+				// 그리드 클릭 이벤트 등록
+				grid.on('click', (ev) => {
+				    const columnName = ev.columnName;
+				    const rowKey = ev.rowKey;
+				    const rowData = grid.getRow(rowKey);
 
 					// 헤더 클릭인지 확인
 					if (rowKey === null || rowKey === undefined) {
@@ -541,15 +557,48 @@
 					}
 					
 					
-	                if (columnName === 'employee_cd' || columnName === 'employee_nm') {
-	                    openEditModal(rowData); // 수정 모드로 모달 열기
-	                }
+
+				    if (columnName === 'employee_cd' || columnName === 'employee_nm') {
+				        openEditModal(rowData); // 수정 모드로 모달 열기
+				    }
+				});
+				
+				
+	            // Pagination 초기화
+	            pagination = new tui.Pagination(document.getElementById('pagination'), {
+	                totalItems: employeeList.length, // 전체 데이터 개수
+	                itemsPerPage: itemsPerPage, // 페이지당 항목 수
+	                visiblePages: 5, // 페이지 버튼 개수
+	                page: currentPage, // 시작 페이지
+	                centerAlign: true // 페이지 버튼을 가운데 정렬
 	            });
+
+	            // 페이지 변경 이벤트 핸들러
+	            pagination.on('afterMove', function (event) {
+	                currentPage = event.page; // 현재 페이지 업데이트
+	                console.log("변경된 currentPage:", currentPage); // 디버그용
+
+	                // 해당 페이지의 데이터 로드
+	                loadPageData(currentPage);
+	            });
+
+	            // 초기 데이터 로드
+	            loadPageData(currentPage);
 	        },
 	        error: function (error) {
-	            console.error('오류 발생:', error);
+	            console.error('데이터 로드 실패:', error);
 	        }
 	    });
+
+	    // 페이지 데이터 로드 함수
+	    function loadPageData(page) {
+	        const start = (page - 1) * itemsPerPage;
+	        const end = page * itemsPerPage;
+	        const pageData = employeeList.slice(start, end); // 해당 페이지 데이터 가져오기
+
+	        console.log('로딩된 페이지 데이터:', pageData); // 디버그용
+	        grid.resetData(pageData); // Grid 데이터 업데이트
+	    }
 
 
 	    // 삭제 버튼 클릭 이벤트
@@ -585,10 +634,17 @@
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
 			$('#appointment_form')[0].reset(); // 폼 초기화
+			$('#employee_pw_check').text('');
 			resetPhoto(); // 사진 초기화
 			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
 			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
+			
+		    // #reset-password-btn 버튼 상태 초기화
+		    if ($('#reset-password-btn').is(':hidden')) {
+		        $('#reset-password-btn').show(); // 모달 닫힐 때 버튼을 다시 보이게 함
+		    }
+			
 	    });
 
 		// 사진 미리보기 초기화 함수
@@ -660,24 +716,134 @@
 		    $('#appointment_form')[0].reset(); // 폼 초기화
 		    resetPhoto(); // 사진 초기화
 		    $('#employee_cd').val(''); // 수정용 필드 초기화
+	        $('#employee_bd_check').text('');
 		}
 		
+	    // 초기화 버튼 클릭 이벤트
+	    $('#resetFormBtn').on('click', function () {
+	        // 폼의 모든 입력 필드 초기화
+	        $('#appointment_form')[0].reset();
+
+	        // disabled 상태 초기화
+	        $('#appointment_form input, #appointment_form select').each(function () {
+	            if ($(this).is(':disabled')) {
+	                $(this).prop('disabled', true); // 기존 disabled 유지
+	            } else {
+	                $(this).prop('disabled', false); // 활성화
+	            }
+	        });
+
+	        // 유효성 메시지 초기화
+	        $('#employee_bd_check').text('');
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+	        $('#employee_pw_check').text('');
+	        $('#employee_id_check').text('');
+	    });
+		
+	    
+	    
+	    
 		// 수정 모달 열기 함수
 		function openEditModal(data) {
 		    // 모달 제목 및 버튼 텍스트 설정
-		    $('#modalTitle').text('인사카드 수정');
-		    $('#modal_submit_button').text('수정');
+		    $('#employee_bd_check').text('');
+		    
+			$('#modalTitle').text('인사카드 수정');
+			$('#modal_submit_button').text('수정');
+			$('#resetFormBtn').hide();
+			
+			// 여러 필드를 비활성화/활성화할 때 선택자 수정
+			const fieldsToDisable = [
+			  "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt", 
+			  "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm", 
+			  "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr", 
+			  "#employee_mg", "#employee_rl", "#employee_pw"
+			];
+			
+			// 필드 활성화/비활성화 처리
+			if (userRole === 'admin') {
+				// Admin은 #employee_id는 비활성화, #employee_pw는 숨기고 비활성화, 나머지는 활성화
+				fieldsToDisable.forEach(function(field) {
+					if (field === "#employee_id") {
+						$(field).prop("disabled", true); // #employee_id 비활성화
+					} else if (field === "#employee_pw") {
+						$(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
+				
+						// 버튼이 이미 생성되지 않았다면 동적으로 생성
+						if (!$('#reset-password-btn').length) {
+							$('<button>', {
+								id: 'reset-password-btn',
+								text: 'Reset Password',
+								class: 'btn btn-primary', // 원하는 스타일 클래스 추가
+							}).insertAfter(field); // #employee_pw 뒤에 버튼 삽입
+							
+							
+							// Reset Password 버튼 클릭 이벤트
+							$('#reset-password-btn').off('click').on('click', function(event) {
+								// 기본 폼 제출 동작 방지
+								event.preventDefault();
 
-			// 그리드에서 정의된 name 속성 값만 매핑
+								// 버튼 숨기기
+								$(this).hide();
 
-			// 데이터 매핑
-				Object.keys(data).forEach(key => {
-				const $field = $(`#${key}`);
-		        if ($field.length && $field.attr('type') !== 'file') {
-		            $field.val(data[key] || '');
-		        }
-		    });
+								// #employee_pw 필드 활성화 및 보이기
+								$('#employee_pw').prop("disabled", false).show().focus();
 
+						    });
+							
+						}
+					} else {
+							$(field).prop("disabled", false); // 나머지 필드 활성화
+					}
+				});
+
+				
+			} else if (userRole === 'developer') {
+			  // Developer는 모든 필드 활성화
+			  fieldsToDisable.forEach(function(field) {
+			    $(field).prop("disabled", false); // 모든 필드 활성화
+			  });
+			} else if (userRole === 'employee') {
+			  // Employee는 모든 필드 비활성화
+			  fieldsToDisable.forEach(function(field) {
+			    $(field).prop("disabled", true);
+			    $('#employee_pw').prop("disabled", false)
+			  });
+			}
+
+
+			
+			// 제외할 필드 목록
+			const excludeKeys = ['employee_pw', 'secretField'];
+
+			Object.keys(data).forEach(key => {
+			    // 제외할 키는 건너뛴다
+			    if (!excludeKeys.includes(key)) {
+			        const $field = $(`#${key}`);
+			        if ($field.length && $field.attr('type') !== 'file') {
+			            $field.val(data[key] || '');
+			        }
+			    }
+			});
+			
+			
+			// 부서장 관련 처리
+			if (data.employee_mg === true) {
+			    $('#employee_mg option').filter(function() {
+			        return $(this).text() === "부서장";  // '부서장' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '부서장' 옵션을 선택 상태로 설정
+			} else if (data.employee_mg === false) {
+			    $('#employee_mg option').filter(function() {
+			        return $(this).text() === "부서직원";  // '부서직원' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '부서직원' 옵션을 선택 상태로 설정
+			} else {
+			    $('#employee_mg').val("");  // 기본값으로 선택을 초기화
+			}
+
+
+
+			
 		    // 주소 처리
 		    if (data.employee_ad) {
 		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
@@ -735,11 +901,123 @@
 		    $('#employee_pi').val('');
 		}
 
+		// 아이디 입력 유효성 처리
+		$('#employee_id').on('blur', function () {
+		    const employee_id = $(this).val().trim();
 
+		    // 입력값이 없으면 초기화
+		    if (employee_id === '') {
+		        $('#employee_id_check').text('아이디를 입력해주세요').css('color', 'red');
+		        return;
+		    }
+
+			// 정규식으로 아이디 형식 검사
+			const regex = /^[a-zA-Z0-9]{4,16}$/;  // 6자 이상 16자 이하, 영문 대소문자, 숫자만 허용
+			if (!regex.test(employee_id)) {
+			    $('#employee_id_check').text('아이디는 4자 이상 16자 이하이며, 영어 대소문자와 숫자만 허용됩니다.').css('color', 'red');
+			    return;
+			}
+			
+		    // AJAX로 아이디 유효성 검사
+		    $.ajax({
+		        url: '/check_employee_id', // 서버의 유효성 검사 엔드포인트
+		        method: 'POST',
+		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
+		        contentType: 'application/json',  // JSON 형식으로 데이터 보내기
+		        dataType: 'json',  // 응답도 JSON 형식으로 받기
+		        data: JSON.stringify({ employee_id: employee_id }), // JSON으로 변환하여 보내기
+		        success: function (response) {
+		            if (response.isValid) {
+		                $('#employee_id_check').text('사용 가능한 아이디입니다.').css('color', 'green');
+		            } else {
+		                $('#employee_id_check').text('이미 존재하는 아이디입니다.').css('color', 'red');
+		            }
+		        },
+		        error: function () {
+		            $('#employee_id_check').text('유효성 검사 중 오류가 발생했습니다.').css('color', 'red');
+		        }
+		    });
+		});
+
+
+		
+	    // 이메일 아이디 유효성 검사
+	    $('#email_id').on('blur', function () {
+	        const email_id = $(this).val().trim();
+	        const emailIdRegex = /^[a-zA-Z0-9_-]{1,20}$/; // 영어, 숫자, 하이픈(-), 밑줄(_)만 허용
+
+	        if (!emailIdRegex.test(email_id)) {
+	            $('#email_id_check').text('이메일 아이디는 영어, 숫자, 하이픈(-), 밑줄(_)만 허용됩니다.').css('color', 'red');
+	        } else {
+	            $('#email_id_check').text('');
+	        }
+	    });
+
+	    // 도메인 선택에 따른 동작
+	    $('#employee_domain').on('change', function () {
+	        const selectedDomain = $(this).val();
+
+	        if (selectedDomain === 'custom') {
+	            // "직접 입력" 선택 시 custom_domain 활성화
+	            $('#custom_domain').prop('disabled', false).val(''); // 초기화
+	            $('#custom_domain_check').text(''); // 에러 메시지 초기화
+	        } else {
+	            // 다른 도메인 선택 시 custom_domain에 선택된 도메인 값을 설정
+	            $('#custom_domain').prop('disabled', true).val(selectedDomain);
+	            $('#custom_domain_check').text('');
+	        }
+	    });
+
+	    // 직접 입력 도메인 유효성 검사
+	    $('#custom_domain').on('blur', function () {
+	        const customDomain = $(this).val().trim();
+	        const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // 도메인 형식 검사
+
+	        if ($('#employee_domain').val() === 'custom') {
+	            // 직접 입력 도메인의 유효성 검사 수행
+	            if (!domainRegex.test(customDomain)) {
+	                $('#custom_domain_check').text('올바른 도메인 형식이 아닙니다.').css('color', 'red');
+	            } else {
+	                $('#custom_domain_check').text('');
+	            }
+	        }
+	    });
+
+
+
+		// 패스워드 입력 유효성 처리
+		$('#employee_pw').on('blur', function () {
+		    const employee_pw = $(this).val().trim();
+
+		    // 입력값이 없으면 초기화
+		    if (employee_pw === '') {
+		        $('#employee_pw_check').text('패스워드를 입력해주세요').css('color', 'red');
+		        return;
+		    }
+
+		    // 정규식으로 패스워드 형식 검사
+		    const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+={}\[\]:;"'<>,.?/\\|-]{4,16}$/;
+		    if (!passwordRegex.test(employee_pw)) {
+		        $('#employee_pw_check').text('패스워드는 4자 이상 16자 이하로 입력해주세요').css('color', 'red');
+		    } else {
+		        $('#employee_pw_check').text('사용 가능한 패스워드입니다.').css('color', 'green');
+		    }
+		});
+		
+
+		
+		
 		// 폼 제출 이벤트
 		$('#appointment_form').off('submit').on('submit', function (event) {
 		    event.preventDefault();
 
+		    let employee_pw = $('#employee_pw').val().trim(); // 패스워드 필드 값 가져오기
+
+		    // 패스워드가 비어있으면 employee_pw를 빈 문자열로 설정
+		    if (!employee_pw) {
+		        employee_pw = ''; // 빈 문자열로 설정
+		    }		
+			
 		    const formData = new FormData(); // FormData 객체 생성
 		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
 		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
@@ -748,7 +1026,7 @@
 		    const employeeDTO = {
 		        employee_cd: $('#employee_cd').val(),
 		        employee_id: $('#employee_id').val(),
-		        employee_pw: $('#employee_pw').val(),
+		        employee_pw: employee_pw, // 비밀번호 필드 처리
 		        employee_dp: $('#employee_dp').val(),
 		        employee_gd: $('#employee_gd').val(),
 		        employee_hd: $('#employee_hd').val(),
@@ -770,6 +1048,8 @@
 		        employee_wd: $('#employee_wd').val(),
 		        employee_mf: $('#employee_mf').val(),
 		        employee_md: $('#employee_md').val(),
+		        employee_rl: $('#employee_rl').val(),
+		        employee_mg: $('#employee_mg').val(),
 		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 
@@ -822,7 +1102,7 @@
 		const selectedRow = $(this).closest('tr');
 
 		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const departmentName  = selectedRow.find('td').eq(1).text(); // 부서명
+		const departmentName  = selectedRow.find('td').eq(0).text().trim(); // 부서코드
 
 		// 기존 모달의 필드에 값 설정
 		$('#employee_dp').val(departmentName);
@@ -838,7 +1118,7 @@
 		const selectedRow = $(this).closest('tr');
 
 		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const gradeName = selectedRow.find('td').eq(1).text(); // 직위명
+		const gradeName = selectedRow.find('td').eq(0).text().trim(); // 직위코드
 
 		// 기존 모달의 필드에 값 설정
 		$('#employee_gd').val(gradeName);

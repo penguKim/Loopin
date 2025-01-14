@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
+
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">로그</h5>
+
+							<!-- General Form Elements -->
+
+							<!-- 필터 UI -->
+							<div id="filterModule" class="mb-3"></div>
+
+
+							<div id="grid"></div>
+							<br>
+
+							<!-- End General Form Elements -->
+
+						</div>
+					</div>
+
+				</div>
+
+
+			</div>
+		</section>
+
+	</main>
+
+	<div id="grid"></div>
+
+	<!-- Modal -->
+	<div class="modal fade" id="logDetailModal" tabindex="-1"
+		aria-labelledby="logDetailModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="logDetailModalLabel">Log Details</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal"
+						aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<!-- JSON Data Display -->
+					<pre id="modalLogDetails" class="bg-light p-3 rounded"
+						style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary"
+						data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+<!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>
+<script th:inline="javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	
+	let grid;
+	
+        document.addEventListener('DOMContentLoaded', function () {
+            const filterConfig = [
+                { key: 'log_od', label: '열람 시간', type: 'daterangepicker' },
+                { key: 'employee_id', label: '직원 ID', type: 'text', placeholder: '사용자 ID 입력' },
+                { key: 'log_sj', label: '수행한 작업', type: 'text', placeholder: '작업명 입력' },
+                { key: 'log_ju', label: '정보 유형', type: 'text', placeholder: '유형 입력' },
+                { key: 'log_oi', label: 'IP 주소', type: 'text', placeholder: 'IP 입력' },
+                { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력'},
+            ];
+
+            // 초기 로그 데이터를 가져와 Grid 초기화
+            fetch('/select_LOG', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('네트워크 응답이 실패했습니다.');
+                    }
+                    return response.json();
+                })
+                .then(logData => {
+                    console.log('서버 응답 데이터:', logData);
+
+                    // Grid 초기화
+                    grid = new tui.Grid({
+                        el: document.getElementById('grid'),
+                        data: logData.map(row => ({
+                            log_cd: row.log_cd,
+                            employee_id: row.employee_id || '', // null 값 처리
+                            log_sj: row.log_sj,
+                            log_ju: row.log_ju,
+                            parsedLogDetails: row.parsedLogDetails || 'No details available', // 파싱된 데이터 표시
+                            log_od: row.log_od,
+                            log_oi: row.log_oi,
+                            log_bj: row.log_bj,
+                        })),
+                        columns: [
+                            { header: '로그 코드', name: 'log_cd', align: 'center', sortable: true },
+                            { header: '직원 ID', name: 'employee_id', align: 'center', sortable: true },
+                            { header: '수행한 작업', name: 'log_sj', align: 'center', sortable: true },
+                            { header: '정보 유형', name: 'log_ju', align: 'center', sortable: true },
+                            { header: '접근 데이터', name: 'parsedLogDetails', align: 'center', sortable: true },
+                            { header: '열람 시간', name: 'log_od', align: 'center', sortable: true },
+                            { header: 'IP 주소', name: 'log_oi', align: 'center', sortable: true },
+                            { header: '브라우저 정보', name: 'log_bj', align: 'center', sortable: true }
+                        ],
+                        rowHeaders: ['checkbox'],
+                        autoWidth: true,
+                        rowHeight: 'auto',
+                        bodyHeight: 'fitToParent',
+                        scrollX: true,
+                        scrollY: true,
+                        zIndex: 100
+                    });
+
+                    // Cell 클릭 이벤트 등록
+                    grid.on('click', (event) => {
+                        if (event.columnName === 'parsedLogDetails') {
+                            // rowKey를 사용해 해당 행의 데이터를 가져옴
+                            const rowData = grid.getRow(event.rowKey);
+                            console.log('Row data from rowKey:', rowData); // 디버깅용
+
+                            const logDetails = rowData.parsedLogDetails || 'No details available'; // log_jd 값 확인
+                            document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+                            const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                            modal.show();
+                        }
+                        
+                        if (event.columnName === 'log_bj') {
+                            // rowKey를 사용해 해당 행의 데이터를 가져옴
+                            const rowData = grid.getRow(event.rowKey);
+                            console.log('Row data from rowKey:', rowData); // 디버깅용
+
+                            const logDetails = rowData.log_bj || 'No details available'; // log_bj 값 확인
+                            document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+                            const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                            modal.show();
+                        }
+                    });
+                })
+                .catch(error => console.error('오류 발생:', error));
+            
+            // 필터 모듈 초기화
+            initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+                console.log('적용된 필터:', filterValues);
+
+                // 필터 적용 후 서버 요청 및 Grid 갱신
+                fetch('/select_FILTERED_LOG', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                    			[csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(filterValues)
+                })
+                .then(response => response.json())
+                .then(filteredData => {
+                    console.log('필터링된 데이터:', filteredData);
+
+                    // Grid 데이터 갱신
+                    grid.resetData(filteredData);
+                })
+                .catch(error => console.error('필터 적용 오류:', error));
+            });
+        });
+    </script>
+
+
+</html>
