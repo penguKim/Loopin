@@ -50,7 +50,7 @@ public class TransferController {
 	}
 
 //	인사발령 조회
-	@LogActivity(value = "조회", action = "인사발령")
+//	@LogActivity(value = "조회", action = "인사발령")
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
@@ -127,25 +127,27 @@ public class TransferController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	
+	@LogActivity(value = "수정", action = "인사발령")
 	@PutMapping("/update_TRANSFER")
-    @ResponseBody
-    public ResponseEntity<Map<String, String>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            // 서비스 계층에 작업 위임
-            transferService.handleTransferUpdate(transferDTO);
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
+	    try {
+	        // Service에서 업데이트 처리 및 파싱된 데이터 반환
+	        Map<String, Object> response = transferService.update_TRANSFER(transferDTO);
+	        
+	        // 성공 응답 반환
+	        return ResponseEntity.ok(response);
+	    } catch (IllegalArgumentException e) {
+	        Map<String, Object> errorResponse = new HashMap<>();
+	        errorResponse.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.badRequest().body(errorResponse);
+	    } catch (Exception e) {
+	        Map<String, Object> errorResponse = new HashMap<>();
+	        errorResponse.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+	    }
+	}
 
-            response.put("message", "데이터가 성공적으로 수정되었습니다11.");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("message", "데이터 수정 실패22: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        } catch (Exception e) {
-            response.put("message", "데이터 수정 실패33: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
 	
 //	인사발령 삭제
 	@LogActivity(value = "삭제", action = "인사발령")

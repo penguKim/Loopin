@@ -19,30 +19,44 @@ public class LogParser {
 
 	public String parseLogDetails(String jsonString) {
 		try {
-			// 1. 최상위 JSON 파싱
+			// 최상위 JSON 파싱
 			Map<String, Object> logData = objectMapper.readValue(jsonString, new TypeReference<>() {
 			});
 
-			// 2. "반환값" 추출 및 다시 파싱
+			// "반환값" 추출 및 파싱
 			String nestedJsonString = (String) logData.get("반환값");
 			if (nestedJsonString == null) {
 				return "반환값이 없습니다.";
 			}
 
-			// 3. 반환값 내부 JSON 파싱
+			// 반환값 내부 JSON 파싱
 			Map<String, Object> nestedJson = objectMapper.readValue(nestedJsonString, new TypeReference<>() {
 			});
-			List<Map<String, Object>> body = (List<Map<String, Object>>) nestedJson.get("body");
 
-			if (body == null || body.isEmpty()) {
+			// body 필드 처리
+			Object body = nestedJson.get("body");
+			if (body == null) {
 				return "body 데이터가 없습니다.";
 			}
 
-			// 4. body 데이터 가공 - 대괄호로 감싸기
-			return body.stream()
-					.map(entry -> entry.entrySet().stream().map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
-							.collect(Collectors.joining(", ", "[", "]")))
-					.collect(Collectors.joining("\n\n")); // 각 레코드 사이에 빈 줄 추가
+			// body가 List인지 Map인지 확인 후 처리
+			if (body instanceof List<?>) {
+				// body가 List<Map>일 때
+				List<Map<String, Object>> bodyList = (List<Map<String, Object>>) body;
+				return bodyList.stream()
+						.map(entry -> entry.entrySet().stream()
+								.map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
+								.collect(Collectors.joining(", ", "[", "]")))
+						.collect(Collectors.joining("\n\n"));
+			} else if (body instanceof Map<?, ?>) {
+				// body가 단일 Map일 때
+				Map<String, Object> bodyMap = (Map<String, Object>) body;
+				return bodyMap.entrySet().stream().map(e -> String.format("%s: %s", e.getKey(), e.getValue()))
+						.collect(Collectors.joining(", ", "[", "]"));
+			} else {
+				// body가 예상치 못한 데이터 타입일 때
+				return "body 데이터가 예상한 구조와 다릅니다.";
+			}
 
 		} catch (Exception e) {
 			System.err.println("JSON 파싱 오류 발생: " + e.getMessage());
@@ -50,4 +64,5 @@ public class LogParser {
 			return "파싱 오류 발생: " + e.getMessage();
 		}
 	}
+
 }

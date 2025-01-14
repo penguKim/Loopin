@@ -29,11 +29,12 @@ public interface LogRepository extends JpaRepository<Log, String> {
 	Long getNextSequenceValue();
 
 	@Query("""
-		    SELECT lo 
-		    FROM LOG lo 
-		    LEFT JOIN FETCH lo.employee em
-		""")
-		List<Log> findAllLogsWithEmployee();
+			    SELECT lo
+			    FROM LOG lo
+			    LEFT JOIN FETCH lo.employee em
+			    ORDER BY lo.log_od DESC
+			""")
+	List<Log> findAllLogsWithEmployee();
 
 	@Query("SELECT LO FROM LOG LO " + "LEFT JOIN FETCH LO.employee EM " + // EMPLOYEE 테이블과 조인
 			"WHERE " + "(:#{#filterRequest.startDate} IS NULL OR LO.log_od >= :#{#filterRequest.startDate}) AND "

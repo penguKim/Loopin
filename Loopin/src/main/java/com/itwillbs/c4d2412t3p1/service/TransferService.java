@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
+import com.itwillbs.c4d2412t3p1.logging.LogParser;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.TransferRepository;
@@ -28,6 +29,7 @@ public class TransferService {
 	private final TransferRepository transferRepository;
 	private final CommonRepository commonRepository;
 	private final EmployeeRepository employeeRepository;
+	private final LogParser logParser;
 
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
@@ -119,7 +121,7 @@ public class TransferService {
 	}
 
 	@Transactional
-	public void update_TRANSFER(TransferDTO transferDTO) {
+	public Map<String, Object> update_TRANSFER(TransferDTO transferDTO) {
 		// 1. 기존 데이터 조회
 		List<Object[]> result = transferRepository.findAllWithDetailsByEmployeeCd(transferDTO.getEmployee_cd());
 		if (result.isEmpty()) {
@@ -156,6 +158,16 @@ public class TransferService {
 
 		// 5. transferDTO에 저장된 ID 설정
 		transferDTO.setTransfer_id(savedTransfer.getTransfer_id());
+		
+		// 6. 기존 데이터 파싱 (LogParser 활용)
+	    String parsedDetails = logParser.parseLogDetails(existingData.toString());
+	    
+	    // 7. 결과를 Map에 담아 반환
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("updatedTransfer", transferDTO); // 업데이트된 TransferDTO
+	    response.put("parsedDetails", parsedDetails); // 파싱된 데이터
+
+	    return response;
 	}
 
 	private void processTransferIfToday(TransferDTO transferDTO) {
