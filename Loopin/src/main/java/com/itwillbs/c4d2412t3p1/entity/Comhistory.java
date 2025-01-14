@@ -1,9 +1,6 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
-import java.sql.Timestamp;
-
 import com.itwillbs.c4d2412t3p1.domain.ComhistoryDTO;
-import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -28,7 +28,13 @@
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
-
+  
+  <!-- Template Main JS File -->
+   <script src="assets/js/main.js"></script>
+   <!-- ToastUi -->
+   <script src="tui-grid/dist/tui-grid.js"></script>
+   <link href="tui-grid/dist/tui-grid.css" rel="stylesheet"/>
+		     
   <!-- =======================================================
   * Template Name: NiceAdmin
   * Template URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
@@ -523,25 +529,38 @@
       <div class="row">
         <div class="col-lg-6">
 
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Example Card</h5>
-              <p>This is an examle page with no contrnt. You can use it as a starter for your custom pages.</p>
-            </div>
-          </div>
-
+          <div id="grid"></div>
+		  <script>
+			const gridtest = new tui.Grid({
+				el:document.getElementById('grid'),
+				columns:[
+					{name:'name',header:'name'},
+					{name:'test',header:'test'},
+					{name:'plz',header:'plz'},
+				],
+				data:[
+					{name: 'toast', test: 'ui', plz: 'plz'}
+				]
+			});
+		  </script>
+		  <script>
+			    // Toast UI Grid 생성
+			    const grid = new tui.Grid({
+			        el: document.getElementById('grid'),
+			        columns: [
+			            {name: 'name', header: 'Name'},
+			            {name: 'age', header: 'Age'},
+			            {name: 'address', header: 'Address'}
+			        ],
+			        data: [
+			            {name: 'John Doe', age: 30, address: 'New York'},
+			            {name: 'Jane Doe', age: 25, address: 'San Francisco'},
+			            {name: 'Bob Smith', age: 50, address: 'Los Angeles'}
+			        ]
+			    });
+		  </script>
         </div>
 
-        <div class="col-lg-6">
-
-          <div class="card">
-            <div class="card-body">
-              <h5 class="card-title">Example Card</h5>
-              <p>This is an examle page with no contrnt. You can use it as a starter for your custom pages.</p>
-            </div>
-          </div>
-
-        </div>
       </div>
     </section>
 
