@@ -86,8 +86,8 @@ public class EmployeeService {
     }
 
     // 직원 삭제
-	public void delete_EMPLOYEE(List<String> cds) {
-		EmployeeRepository.deleteAllById(cds);
+	public void updateEmployeeStatus(List<String> employeeCds, Boolean status) {
+		EmployeeRepository.updateEmployeeStatus(employeeCds, status);
 		
 	}
 

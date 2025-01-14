@@ -312,18 +312,18 @@ public class EmployeeController {
 
 	
 	
-//	인사발령 삭제
+	//	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
 	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
 		
-		List<String> cds = request.get("employee_cds");
+		List<String> employeeCds  = request.get("employee_cds");
 		
 		log.info("삭제 요청 데이터: " + request.toString());
 		
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			employeeService.delete_EMPLOYEE(cds); // Service 계층에서 삭제 처리
+			employeeService.updateEmployeeStatus(employeeCds, false);
 			response.put("success", true);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {

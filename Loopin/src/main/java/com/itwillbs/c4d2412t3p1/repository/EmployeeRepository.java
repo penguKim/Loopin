@@ -5,11 +5,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+
+import jakarta.transaction.Transactional;
 
 @Repository
 public interface EmployeeRepository  extends JpaRepository<Employee, String> {
@@ -104,6 +107,13 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
             "WHERE employee_id = :employee_id", 
     nativeQuery = true)
     int existsByEmployeeId(@Param("employee_id") String employee_id);
+    
+    
+    
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE employee SET employee_us = :status WHERE employee_cd IN (:employeeCds)", nativeQuery = true)
+    void updateEmployeeStatus(@Param("employeeCds") List<String> employeeCds, @Param("status") Boolean status);
     
 	
 }
