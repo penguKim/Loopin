@@ -38,8 +38,9 @@ public class SecurityConfig {
 		return http
 				.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> 
 					authorizeHttpRequestsCustomizer
-					.requestMatchers("/login").anonymous() // 미인증 사용자만 접근 가능
-	                .requestMatchers("/", "/mapper", "/upload", "/assets/**").permitAll()
+					.requestMatchers("/login").anonymous()
+	                .requestMatchers("/assets/**").permitAll()
+	                .requestMatchers("/", "/mapper", "/upload").authenticated()
 					.anyRequest() // 어느 요청이든
 					.authenticated() // 권한이 적용된다.
 						)
