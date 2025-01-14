@@ -73,5 +73,10 @@ public class EmployeeDetails extends User {
         this.employee_us = employee.getEmployee_us();
         this.workinghour_id = employee.getWorkinghour_id();
     }
+    
+    @Override
+    public boolean isEnabled() {
+        return Boolean.TRUE.equals(employee_us);
+    }
 }
 
