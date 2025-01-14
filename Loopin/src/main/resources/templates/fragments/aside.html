@@ -9,6 +9,13 @@
 	<aside id="sidebar" class="sidebar" layout:fragment="aside">
 		
 		<ul class="sidebar-nav" id="sidebar-nav">
+			<li class="nav-item">
+				<a class="nav-link collapsed" href="common_code">
+				<i class="bi bi-grid"></i>
+				<span>공통코드관리</span>
+				</a>
+			</li>
+			
 			<div sec:authorize="hasAnyRole('SYS_ADMIN','HR_ADMIN')">
 				<li class="nav-heading">인사관리</li>
 				<li class="nav-item">
