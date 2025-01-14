@@ -16,8 +16,6 @@ public interface PRMapper {
 	
 	List<Map<String, Object>>select_wokringtimeformth(List<String> employee_cdList);
 	
-
-
 	List<Map<String, Object>> selectpradmin();
 
 	List<Map<String, Object>> selectpradminfirstmodal(Long pr_id);

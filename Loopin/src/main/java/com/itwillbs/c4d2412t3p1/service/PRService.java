@@ -241,12 +241,16 @@ public class PRService {
 	    }
 	}
 
-//	public List<Map<String, Object>> selectpr() {
-//
-//		List<Map<String, Object>> list = prM.selectpr(null);
-//		
-//		return list;
-//	}
-	
+	public List<Employee> select_empworklastmth() {
+		List<Employee> list = prM.select_empworklastmth();
+
+		return list;
+	}
+
+	public List<Map<String, Object>> select_worktimelastmth(List<String> employee_cdList) {
+		List<Map<String, Object>> list = prM.select_wokringtimeformth(employee_cdList);
+
+		return list;
+	}
 
 }

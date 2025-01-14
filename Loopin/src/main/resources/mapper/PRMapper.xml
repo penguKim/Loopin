@@ -42,7 +42,7 @@
 		WHERE pr_id = #{pr_id} AND employee_cd = #{employee_cd}
 	</select>
 	
-	    <select id="select_empworklastmth" resultType="map">
+    <select id="select_empworklastmth" resultType="map">
         <![CDATA[
 	        SELECT EMPLOYEE_CD,EMPLOYEE_NM, EMPLOYEE_BS as BS
 	        FROM EMPLOYEE
