@@ -12,6 +12,7 @@ import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.DashboardService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -24,8 +25,13 @@ public class DashboardController {
 	private final CommuteService commuteService;
 
 	@GetMapping("/login")
-	public String login() {
-		return "/login";
+	public String login(HttpSession session, Model model) {
+	    String errorMessage = (String) session.getAttribute("loginError");
+	    if (errorMessage != null) {
+	        model.addAttribute("errorMessage", errorMessage);
+	        session.removeAttribute("loginError");
+	    }
+	    return "/login";
 	}
 	
 	@GetMapping("/")
