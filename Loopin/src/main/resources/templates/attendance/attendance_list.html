@@ -25,8 +25,8 @@
 					<div class="tab-content pt-2" id="myTabContent"> 
 						<!-- 달력 -->
 						<div class="text-center" id='btn_calendar'>
-							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_'>이전</button>
-							<span class="d-inline-block text-center mx-4 fs-4 fw-bold" style="min-width: 140px;"></span>
+							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_prev'>이전</button>
+							<span id="title_calendar" class="d-inline-block text-center mx-4 fs-4 fw-bold" style="min-width: 140px;"></span>
 							<button type='button' class='btn btn-outline-secondary' id='btn_calendar_next'>다음</button>
 						</div>
 						<div class="tab-pane fade show active" id="pills-home" role="tabpanel" aria-labelledby="home-tab" style="height: 600px;">
@@ -133,11 +133,13 @@
 		const btn_calendar_container = document.getElementById('pills-home-tab');
 		const grid_container = document.getElementById('pills-profile');
 		const btn_grid_filter = document.getElementById('btn_grid_filter');
+		const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
+		
 		
 		
 		// 첫 로딩
 		window.onload = function(){
-			calendar_function();
+			make_calendar();
 			
 		}
 		
@@ -184,10 +186,10 @@
 					type: "get",
 					url: "/select_EMPLOYEE_ANNUAL",
 					data: {"employee_nm" : employee_nm},
-					success: function(data) {
+					success: function(result) {
 						const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
 						$("#td_select_employee").empty();
-						data.forEach( employee =>{
+						result.forEach( employee =>{
 							$("#td_select_employee").append( 
 								"<tr><td>" +employee.employee_cd+"</td>"+
 								"<td>" +employee.employee_nm+"</td>"+
@@ -199,7 +201,6 @@
 						modal_employee_list.show();
 					},
 					error : function(xhr, textStatus, errorThrown) {
-						alert("dsfasdfasdf");
 						console.log('조회 실패', xhr.responseText);
 					}
 				});
@@ -279,9 +280,9 @@
 		    // 처음 불러오는 데이터
 		    $.ajax({
 		        type: "get",
-		        url: "/select_ATTENDANCE",
+		        url: "/select_APPROVAL_ANNUAL",
 		        success: function (result) {
-		            grid.resetData(result);
+		            grid.resetData(result['data']);
 		        },
 				error : function(xhr, textStatus, errorThrown) {
 					console.log('조회 실패', xhr.responseText);
@@ -294,122 +295,265 @@
 		        scrollX: true,
 		        scrollY: true,
 		        columns: [
-		            { header: '이름', name: 'employee_nm', align: 'center', sortable: true },
-		            { header: '부서명', name: 'common_nm', align: 'center', sortable: true },
-		            { header: '입사일', name: 'employee_hd', align: 'center', sortable: true },
-		            { header: '근속연수', name: 'service_years', align: 'center', sortable: true },
-		            { header: '사용연차', name: 'annual_ua', align: 'center', sortable: true },
-		            { header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true },
-		            { header: '총연차', name: 'annual_aa', align: 'center', sortable: true },
+		            { header: '이름', name: 'EMPLOYEE_NM', align: 'center', sortable: true },
+		            { header: '부서명', name: 'DEPARTMENT_NAME', align: 'center', sortable: true },
+		            { header: '근속연수', name: 'SERVICE_YEARS', align: 'center', sortable: true },
+		            { header: '사용연차', name: 'TOTAL_APPROVALS', align: 'center', sortable: true }, 
+		            // { header: '잔여연차', name: 'ANNUAL_RA', align: 'center', sortable: true }, 아직 쿼리 추가 못함
+		            { header: '총연차', name: 'ANNUAL_AA', align: 'center', sortable: true },
 		        ],
 		    });
 		}
 		
 		// 캘린더
-		
-		// 캘린더 버튼 이벤트
-		btn_calendar_container.addEventListener('click', function(){
+		// 달력 만들기
+		function make_calendar(){ 
 			btn_grid_filter.style.display = "none";
-			if(btn_calendar.style.display == "none"){
-				btn_calendar.style.display = "block"
-			}
-		});
-		
-		// 달력 날짜 출력
-		function updateCalendarText(calendar, selector) {
-		    const originalDate = calendar.getDate();
-		    const year = originalDate.getFullYear();
-		    const month = originalDate.getMonth() + 1;
-		    const formattedDate = `${year}년 ${month}월`;
-		    $(selector).text(formattedDate);
-		}
-		
-		// 캘린더 호출 함수
-		function calendar_function(){ 
-			
-			// 캘린더 초기세팅
-			let options = {  
+			calendar = new tui.Calendar(calendar_container, {
+				usageStatistics: false,
 				defaultView: 'month',
-				useDetailPopup: true,
 				isReadOnly: true,
+				month: {
+					isAlways6Weeks: false, // 해당 달만 표시 (6주 고정 아님)
+				},
+				theme: {
+					common: {
+						holiday: {
+						    color: 'rgba(255, 64, 64)', // 공휴일 텍스트 색상
+						},
+						saturday: {
+						    color: 'rgba(64, 64, 255)', // 토요일 텍스트 색상
+						},
+					},
+				},
 				calendars: [
-					{ id: 'cal1', name: '총결원', backgroundColor: '#03bd9e', },
-					{ id: 'cal2', name: '휴가자', backgroundColor: '#ffffff', },
-					{ id: 'cal3', name: '출장', backgroundColor: '#ffffff', },
-				],
-			};
-		
-			let calendar = new tui.Calendar(calendar_container, options);
-			
-			
-			// 각 이벤트 만들어주는 메서드
-			calendar.createEvents([
-				{
-					id: 'event1',
-					calendarId: 'cal1',
-					title: '10/1',
-					start: '2025-01-01',
-					end: '2025-01-01',
-					isAllday: true,  // allday 타임스탬프 노상관
-					category: 'allday',
-				}, 
-				{
-					id: 'event2',
-					calendarId: 'cal2',
-					title: '김길동',
-					start: '2025-01-01T09:36:50',
-					end: '2025-01-01T09:36:37',
-					isAllday: true,
-					category: 'allday',
-				},
-				{
-					id: 'event3',
-					calendarId: 'cal3',
-					title: '홍길동',
-					start: '2025-01-01T09:36:50',
-					end: '2025-01-01T09:36:37',
-					isAllday: true,
-					category: 'allday',
-				},
-			]);
-			
-			calendar.setOptions({
-				// 해당 달만 보여주기
-				month: { isAlways6Weeks: false, },
-				
+					{
+						id: 'cal1',
+						name: '총결원',
+						backgroundColor: '#03bd9e',
+					},
+					{
+						id: 'cal2',
+						name: '휴가자',
+						backgroundColor: '#ffffff',
+						borderLeft: '#ffffff',
+					},
+					{
+						id: 'cal3',
+						name: '출장',
+						backgroundColor: '#ffffff',
+					},
+				]
 			});
 			
-			calendar.setTheme({
-				// 주말 css
-				common: { holiday: { color: 'rgba(255, 64, 64)', },
-						  saturday: { color: 'rgba(64, 64, 255)', },
-				},
+			updateCalendarTitle(); // 년월 타이틀
+			getCalendarList(); // 출퇴근 목록 조회
+			
+			calendar.on('clickDayname', function(event) {
+			    const clickedDate = event.date; // 클릭된 날짜 정보
+			    console.log('클릭된 날짜:', clickedDate);
 			});
-			
-			
-			updateCalendarText(calendar, "#btn_calendar span");
-			
-			// 이전 달 보기 이벤트
-			btn_calendar_prev.addEventListener('click', function(){ 
-				calendar.prev();
-				updateCalendarText(calendar, "#btn_calendar span");
-			
+		    
+		    calendar.on('clickEvent', ({ event }) => {
+					modal_detail(event);
 			});
-			
-			
-			// 다음 달 보기 이벤트
-			btn_calendar_next.addEventListener('click', function(){ 
-				calendar.next();
-				updateCalendarText(calendar, "#btn_calendar span");				
-				
-			});
-			
-	
+
 		};
 		
-		// 모달 초기화
-		$('.modal').on('hidden.bs.modal', function (e) {
-		    $(this).find('form')[0].reset();
+		function modal_detail(data) {
+			let date = getDate(data.start);
+			let title = `${date} 기록부`;
+
+			const div_modal = 'div_COMMUTE_modal';
+			let modalElement = document.getElementById('#${div_modal}');
+			
+			if(!modalElement) {
+				let modalHtml = `
+				<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+					<div class="modal-dialog modal-dialog-centered modal-xl">
+			            <div class="modal-content">
+							<div class="modal-header">
+			            		<h5 class="modal-title">${title}</h5>
+			                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<div id="modal_grid"></div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="button" class="btn btn-primary" id="btn_COMMUTE_show">등록</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				`;
+				
+				document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+				
+				modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+			}
+			const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+			
+
+			
+	        modalElement.addEventListener('shown.bs.modal', function () {
+	        	make_modal_grid(date);
+				
+				$('#btn_COMMUTE_show').on('click', function() {
+					make_insert_COMMUTE_modal(date, '', 'insert');
+				});
+	        });
+			
+			modalElement.addEventListener('hidden.bs.modal', function () {
+	/* 			$('button, input, select, textarea').each(function () {
+	                $(this).blur();
+	            }); */
+				modalElement.remove();
+			});
+			
+			modal.show();
+		}
+		
+		// 달력 제목 업데이트
+		function updateCalendarTitle() {
+		    const currentDate = calendar.getDate();
+		    const year = currentDate.getFullYear();
+		    const month = currentDate.getMonth() + 1;
+		    const formattedDate = `${year}년 ${month}월`;
+		    $("#title_calendar").empty().text(formattedDate);
+		}
+		
+		// 년월일 -> 문자열 리턴
+		function getDate(date) {
+	        const year = date.getFullYear();
+	        const month = String(date.getMonth() + 1).padStart(2, '0');
+	        const day = String(date.getDate()).padStart(2, '0');
+	        return `${year}-${month}-${day}`;
+		}
+		
+		// 시분초 -> 문자열 리턴
+		function getTime(date) {
+		    const hours = String(date.getHours()).padStart(2, '0');
+		    const minutes = String(date.getMinutes()).padStart(2, '0');
+		    const seconds = String(date.getSeconds()).padStart(2, '0');
+		    return `${hours}:${minutes}:${seconds}`;
+		}
+		
+		// 년월일 시분초 -> 문자열 리턴
+		function getDateTime(date) {
+		    // 날짜 포맷팅
+		    const year = date.getFullYear();
+		    const month = String(date.getMonth() + 1).padStart(2, '0');
+		    const day = String(date.getDate()).padStart(2, '0');
+		    // 시간 포맷팅
+		    const hours = String(date.getHours()).padStart(2, '0');
+		    const minutes = String(date.getMinutes()).padStart(2, '0');
+		    const seconds = String(date.getSeconds()).padStart(2, '0');
+		    
+		    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
+		}
+		
+		// 달력 데이터 조회
+		function getCalendarList() {
+			calendarStartDate = getDate(calendar.getDateRangeStart().toDate());
+			calendarEndDate = getDate(calendar.getDateRangeEnd().toDate());
+			$.ajax({
+				type: 'post',
+				url: '/select_COMMUTE_calendar',
+				contentType: 'application/json',
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				data: JSON.stringify({
+				    calendarStartDate: calendarStartDate,
+				    calendarEndDate: calendarEndDate
+				}),
+				success: function(data) {
+					if(!data['result']) {
+						showAlert('', 'error', '기록부 조회 실패', '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
+					} else {
+						// 캘린더 템플릿 업데이트
+						calendar.setOptions({
+							template: {
+								monthGridHeader: function(model) {
+									const date = model.date;
+									const dayNum = date.split('-')[2];
+									const holiday = data.holidayList.find(h => h.holiday_dt == date);
+									const isToday = date == getDate(new Date());
+									if(holiday) {
+										return `
+										<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
+											${dayNum}
+											<span class="holiday-name" style="font-size: 12px;">
+												${holiday.holiday_nm}
+											</span>
+										</span>`;
+									}
+									if(isToday) {
+						                return `<span class="toastui-calendar-weekday-grid-date 
+										toastui-calendar-weekday-grid-date-decorator 
+										toastui-calendar-template-monthGridHeader" style="color: #fff">${dayNum}</span>`;
+						            }
+						            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
+								},
+								time: function(schedule) {
+								    return `<span class="calendar-event" 
+								        data-bs-toggle="tooltip" 
+								        data-bs-placement="top" 
+								        title="${schedule.title}">
+								        ${schedule.title}
+								    </span>`;
+								}
+							}
+						});
+						   
+						// calendar.render();
+						calendar.clear();
+										
+						let list = data['list'];
+						const event = list.map(commute => {
+						    if (isAdmin) {
+						        return {
+						            id: `${commute.commute_wd}`,
+						            title: `${commute.total} ()`,
+						            start: commute.commute_wd,
+						            end: commute.commute_wd,
+						            isAllday: true,
+						            category: 'allday',
+						            backgroundColor: '#fff'
+						        };
+						    } else {
+						        let title = '';
+						        if (commute.commute_wt) {
+						            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
+						            const startTime = commute.commute_wt;
+						            title = commute.commute_lt 
+						                ? `${startTime} ~ ${commute.commute_lt}` 
+						                : `${startTime} ~`;
+						        }
+						        
+						        return {
+						            id: `${commute.commute_wd}`,
+						            title: title,
+						            start: commute.commute_wd,
+						            end: commute.commute_wd,
+						            isAllday: true,
+						            category: 'allday',
+						            backgroundColor: '#fff'
+						        };
+						    }
+						});
+						calendar.createEvents(event);
+					}
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		}
+		
+		btn_calendar_container.addEventListener('click',function(){
+			btn_grid_filter.style.display = "none";
 		});
 		
 	</script>

@@ -13,6 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
@@ -24,6 +25,7 @@ import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.mapper.AttendanceMapper;
 import com.itwillbs.c4d2412t3p1.mapper.HolidayMapper;
 import com.itwillbs.c4d2412t3p1.repository.AttendanceRepository;
+import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 
@@ -39,6 +41,7 @@ public class AttendanceService {
 	private final AttendanceRepository attendanceRepository;
 	private final AttendanceMapper attendanceMapper;
 	private final HolidayRepository holidayRepository;
+	private final CommonRepository commonRepository;
 	private final HolidayMapper holidayMapper;
 
 	public List<Map<String, Object>> select_ATTENDANCE() {
@@ -49,8 +52,8 @@ public class AttendanceService {
 		return attendanceMapper.select_EMPLOYEE_ANNUAL(employee_nm);
 	}
 
-	public List<Map<String, Object>> select_ANNUAL(AttendanceDTO attendanceDTO) {
-		return attendanceMapper.select_ANNUAL(attendanceDTO);
+	public List<Map<String, Object>> select_filer_ANNUAL(AttendanceDTO attendanceDTO) {
+		return attendanceMapper.select_filer_ANNUAL(attendanceDTO);
 	}
 
 	public List<Holiday> select_HOLIDAY() {
@@ -65,9 +68,18 @@ public class AttendanceService {
 		Date now = new Date(); //Date타입으로 변수 선언
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"); //데이트 포맷
 		String date_string = dateFormat.format(now);
+		String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+		
+		int createdCount = 0;
         for (Map<String, String> holiday : holidays) {
-        	holiday.put("holiday_wd", date_string);
-            holidayMapper.insert_HOLIDAY(holiday);
+        	holiday.put("holiday_wd", date_string); // 입력 일시
+        	holiday.put("holiday_wr", regUser); // 작성자
+            try {
+            	holidayMapper.insert_HOLIDAY(holiday);
+                createdCount++;
+            } catch (Exception e) {
+                log.info("휴일 데이터 삽입 실패: {}"+ holiday+ e);
+            }
         }
     }
 	
@@ -129,6 +141,10 @@ public class AttendanceService {
         	log.info(annual.get("EMPLOYEE_CD")+"안들어냐");
             attendanceMapper.insert_ANNUAL(annual);
         }
+	}
+
+	public List<Map<String, Object>> select_APPROVAL_ANNUAL() {
+		return attendanceMapper.select_APPROVAL_ANNUAL();
 	}
 
 }

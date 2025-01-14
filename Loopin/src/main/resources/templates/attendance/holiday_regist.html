@@ -13,13 +13,14 @@
 			margin-left: 100px; 
 	}
 </style>
+<script src="/assets/js/filterModule.js"></script>
 	<body>
 		<main id="main" class="main">
 			<div class="card">
 				<div class="card-body">
 					<div class="d-flex align-items-center justify-content-between ">
 						<div class="col">
-							<h5 class="card-title">휴일 등록</h5>
+							<h5 class="card-title" id="current_year"></h5>
 						</div>
 						<div class="d-flex align-items-center justify-content-between">
 							<label for="year" ></label>
@@ -27,6 +28,7 @@
 							<input type="button" id="btn_insert" class="btn btn-primary" value="공휴일 등록">
 						</div>
 					</div>
+<!--					<div id="filterModule" class="mb-3"></div>-->
 					<div class="d-flex align-items-center justify-content-between">
 						<form id="modal_appointment_save" method="post" th:action="@{/select_period_HOLIDAY}">
 							<div class="row mb-3">
@@ -68,27 +70,32 @@
 	const btn_group_insert = $('#btn_group_insert');
 	const btn_code_remove = $('#btn_code_remove');
 	const btn_code_add = $('#btn_code_add');
-	//const btn_code_insert = $('#btn_code_insert');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const holiday_wr = document.getElementById('name');
+	const { year, month, day, hours, minutes, seconds } = formatDate();
+	const filterConfig = [
+		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
+		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
+		{ key: 'holiday_nm', label: '휴일명', type: 'text', placeholder: '휴일명 입력', col: 'col-2' },
+		{ key: 'holiday_aa', label: '유급휴가 여부', type: 'text', placeholder: '유급휴가 여부', col: 'col-2' },
+		{ key: 'holiday_ma', label: '수정여부', type: 'text', placeholder: '수정여부 입력', col: 'col-2' },
+	];
 	
-	// ------------------------------
-	
-	$(document).ready(function () {
-	    const swalMessage = sessionStorage.getItem('swalMessage');
-	    if (swalMessage) {
-	        Swal.fire({
-	            title: "등록 완료",
-	            text: swalMessage,
-	            icon: "success",
-	        });
-	        sessionStorage.removeItem('swalMessage'); // 메시지 삭제
-	    }
-	});
-	
+		
+	// 로딩 데이터
 	$(function() {
+		
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		$("#current_year").text(`${year}년 휴일 등록`);
+		
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            console.log('적용된 필터:', filterValues);
 
+
+        });
+		
 		make_grid();
 		
 		$.ajax({
@@ -100,6 +107,21 @@
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
 			}
+		});
+		
+		new tui.DatePicker('#wrapper1', {
+			language: 'ko',
+			input: {
+				element: '#holiday_dt1',
+				format: 'yyyy-MM-dd'
+			},
+		});
+		new tui.DatePicker('#wrapper2', {
+			language: 'ko',
+			input: {
+				element: '#holiday_dt2',
+				format: 'yyyy-MM-dd'
+			},
 		});
 		
 		// 행 추가
@@ -129,11 +151,19 @@
 				});
 			    return;
 			}
-			let newRows = checkedRows.filter(row => row['holiday_dt'] == null);
-			checkedRows = checkedRows.filter(row => row['holiday_dt'] != null);
+			let newRows = checkedRows.filter(row => row['holiday_dt', 'holiday_nm'] == null);
+			checkedRows = checkedRows.filter(row => row['holiday_dt'] != null && row['holiday_nm'] != null && row['holiday_ma'] !== 'X');
+			
+			if(checkedRows.length <= 0){
+				Swal.fire({
+				    icon: "warning",
+				    title: "삭제 항목 체크",
+				    text: "삭제할 수 없습니다.",
+				});
+			}
 			
 			if(checkedRows.length > 0) {
-				delete_company_HOLIDAY(grid, checkedRows);				
+				delete_company_HOLIDAY(grid, checkedRows);
 			}
 			
 		    if (newRows.length >= 0) {
@@ -143,18 +173,6 @@
 		    }
 		});
 		
-		new tui.DatePicker('#wrapper1', {
-			input: {
-				element: '#holiday_dt1',
-				format: 'yyyy-MM-dd'
-			},
-		});
-		new tui.DatePicker('#wrapper2', {
-			input: {
-				element: '#holiday_dt2',
-				format: 'yyyy-MM-dd'
-			},
-		});
 
 	});
 	
@@ -199,6 +217,26 @@
 	
 	
 	// 함수 영역 -------------------
+	
+	function formatDate() {
+		const originalDate = new Date(); // 기존 날짜 가져오기
+	    const year = originalDate.getFullYear();
+	    const month = String(originalDate.getMonth() + 1).padStart(2, '0'); // 2자리로 포맷
+	    const day = String(originalDate.getDate()).padStart(2, '0'); // 2자리로 포맷
+	    const hours = String(originalDate.getHours()).padStart(2, '0'); // 2자리로 포맷
+	    const minutes = String(originalDate.getMinutes()).padStart(2, '0'); // 2자리로 포맷
+	    const seconds = String(originalDate.getSeconds()).padStart(2, '0'); // 2자리로 포맷
+		
+		return {
+		        year,
+		        month,
+		        day,
+		        hours,
+		        minutes,
+		        seconds
+		    };
+	}
+	
 	function insert_company_HOLIDAY(grid) {
 		let validationResult = grid.validate();
 		const valChecked = validationResult.some(row => {
@@ -340,16 +378,16 @@
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
 			data : gridData,
-			scrollX : true,
+			scrollX : false,
 			scrollY : true,
 			rowHeaders : [ // 헤더 추가
 				{type : 'rowNum',}, 
 				{type : 'checkbox',}, 
 			],
 			selectionUnit : 'row', // 행 선택
-			bodyHeight : 590,
+			bodyHeight : 600,
 			columns : [ 
-				{header : '날짜', name : 'holiday_dt', sortable : true, editor: 'text',
+				{header : '날짜', name : 'holiday_dt', sortable : true, editor: 'text', align: 'center', sortingType: 'desc',
 					validation: {
 						required: true,
 						regExp: /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/
@@ -360,7 +398,7 @@
 						showClearBrn: true 
 					}
 				},
-				{header : '휴일 이름', name : 'holiday_nm', sortable : true, editor: 'text',
+				{header : '휴일명', name : 'holiday_nm', sortable : true, editor: 'text', align: 'center',
 					validation: {
 						required: true,
 					},
@@ -373,6 +411,7 @@
 				{header : '유급휴가 여부', name : 'holiday_aa', sortable : true, editor: 'text', align: 'center',
 					validation: {
 						required: true,
+						regExp: /^[XO]$/,
 					},
 					filter: {
 						type: 'text',
@@ -380,14 +419,22 @@
 						showClearBrn: true
 					}
 				}, 
-				/*{header : '작성자', name : 'holiday_wr', sortable : true, editor: 'text',
+				{header : '수정여부', name : 'holiday_ma', sortable : true, editor: 'text', align: 'center',
+					validation: {
+						required: true,
+						regExp: /^[XO]$/,
+					},
 					filter: {
 						type: 'text',
 						showApplyBtn: true,
 						showClearBrn: true 
 					}
-				},*/ 
-			]
+				},
+			],
+			sortOptions: {
+		        column: 'holiday_dt', // 초기 정렬할 컬럼
+		        ascending: false // 내림차순 정렬
+		    }
 		});
 		grid.on('beforeChange', ev => {
 			if (changeFlag) {
@@ -413,7 +460,7 @@
 	
 	$('#btn_insert').on("click", function () {
 		let year = $("#year").val();
-		let currentYear = new Date().getFullYear(); // 현재 연도 가져오기
+		let currentYear = new Date().getFullYear();
 
 		if (year == null || year === '') {
 		    Swal.fire({
@@ -423,7 +470,7 @@
 		    });
 		    return;
 		}
-
+/*
 		if (parseInt(year) < currentYear) {
 		    Swal.fire({
 		        icon: "warning",
@@ -432,7 +479,7 @@
 		    });
 		    return;
 		}
-		
+*/		
 		
 	    let list = [];
 	    let xhr = new XMLHttpRequest();
@@ -471,6 +518,7 @@
 					    title: "등록년도 확인",
 					    text: "아직 최신 정보가 없습니다.",
 					});
+					return;
 	            }
 				
 				
@@ -495,8 +543,7 @@
 	                .then(response => response.text())
 	                .then(data => {
 	                    console.log(data);
-						sessionStorage.setItem('swalMessage', '성공적으로 등록했습니다.');
-						location.reload();
+						grid.resetData(data);
 	                })
 	                .catch(error => {
 	                    console.error('Error:', error);
@@ -507,7 +554,7 @@
 						});
 	                });
 	        } else if (this.readyState == 4) {
-	            console.error('오류 발생. HTTP 상태 코드:', this.status);
+	            console.error('오류 발생');
 				Swal.fire({
 					icon: "warning",
 				    title: "요청 실패",
