@@ -1144,10 +1144,12 @@
 		
 		
 		const filterConfig = [
-            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력' },
-            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력' },
-            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력' },
-            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력' },
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력',  col: 'col-3' },
+            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력',  col: 'col-3' },
+            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력',  col: 'col-3' },
+            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력',  col: 'col-3' },
         ];
 		
             initializeFilterModule('filterModule', filterConfig, (filterValues) => {
