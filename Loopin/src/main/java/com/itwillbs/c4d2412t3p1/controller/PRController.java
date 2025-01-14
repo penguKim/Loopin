@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
@@ -133,16 +134,16 @@ public class PRController {
 		return list;
 	}
 	
-//	@GetMapping("/getworkingtimeformth")
-//	@ResponseBody
-//	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cdList") String employee_cds) {
-//		
+	@GetMapping("/getworkingtimeformth")
+	@ResponseBody
+	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cdList") List<String> employee_cdList) {
+		
 //		ObjectMapper objMapper = new ObjectMapper();
 //		List<String> employee_cdList = null;
-//		
-//		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
-//		
-//		return list;
-//	}
+		
+		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
+		
+		return list;
+	}
 	
 }
