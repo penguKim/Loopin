@@ -18,11 +18,11 @@
 <script type="text/javascript">
 		var employee_cd = document.getElementById('employee_cd').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
 		var employee_nm = document.getElementById('employee_nm').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
-		console.log('가져온 ecd',employee_cd);
+		
 		// Ajax로 급여 데이터 조회
 		$.ajax({
 			url : "/checkpr",
-			method : "GET",
+			method : "GET", 
 			dataType : "JSON",
 			data:{
 				employee_cd : employee_cd

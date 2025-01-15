@@ -244,22 +244,9 @@ public class TransferService {
 		}
 	}
 
-	// 모달 부서코드 가져오기
-	public List<Common_code> selectDeptList(String string) {
-		return commonRepository.selectDeptList("00", string);
-	}
-
-	// 모달 직급코드 가져오기
-	public List<Common_code> selectGradeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-
-	public List<Common_code> selectTRTypeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-
-	public List<Common_code> selectDPTypeList(String string) {
-		return commonRepository.selectGradeList("00", string);
+	// 공통데이터 가져오기
+	public List<Common_code> selectCommonList(String string) {
+		return commonRepository.selectCommonList("00", string);
 	}
 
 }
