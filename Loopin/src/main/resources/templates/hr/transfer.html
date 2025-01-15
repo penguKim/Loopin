@@ -26,7 +26,7 @@
 
 
 							<div
-								th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+								th:if="${#authentication.principal.employee_rl == 'SYS_ADMIN' or #authentication.principal.employee_rl == 'developer'}">
 								<button type="button" class="btn btn-primary"
 									data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
 								<button type="button" id="btn_transfer_delete"

@@ -48,6 +48,8 @@ public class ApprovalController {
 		// 기안서 구분 가져오기
 		model.addAttribute("DRAFT_list", approvalService.selectCommonList("DRAFT"));
 		
+		model.addAttribute("ANNUAL_list", approvalService.selectCommonList("ANNUAL"));
+		
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
 		
@@ -87,7 +89,7 @@ public class ApprovalController {
 	        row.put("approval_wd", approval.getApproval_wd());
 	        row.put("approval_mf", approval.getApproval_mf());
 	        row.put("approval_md", approval.getApproval_md());
-	        row.put("employee_cd", approval.getEmployee().getEmployee_cd());
+//	        row.put("employee_cd", approval.getEmployee().getEmployee_cd());
 
 	        return row;
 	    }).collect(Collectors.toList());

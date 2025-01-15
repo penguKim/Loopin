@@ -32,7 +32,7 @@ public class TransferService {
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
 
-		if ("admin".equals(role) || "developer".equals(role)) {
+		if ("SYS_ADMIN".equals(role) || "developer".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
 		} else if ("employee".equals(role)) {
