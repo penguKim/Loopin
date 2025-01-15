@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+  /* 드롭다운 메뉴 크기 조정 */
+  .dropdown-menu {
+      min-width: 600px; /* 너비 설정 */
+      max-height: 500px; /* 최대 높이 설정 */
+	  overflow: visible !important; /* 컨텐츠가 영역 밖으로 나옴 */
+  }
+  .toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
+      font-size: 16px !important;
+      font-weight: bold !important;
+  }
+  
+  .tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
+<script src="/assets/js/filterModule.js"></script>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card"  style="height:800px;">
+						<div class="card-body">
+							<h1 class="card-title">출퇴근 기록부</h1>
+							<!-- 탭 헤드 -->
+							<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
+								<li class="nav-item" role="presentation">
+									<button class="nav-link active" id="btn_calendar_tab" data-bs-toggle="pill" data-bs-target="#tab_calendar" 
+									type="button" role="tab" aria-controls="tab_calendar" aria-selected="true">달력</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+									type="button" role="tab" aria-controls="tab_grid" aria-selected="false">그리드</button>
+								</li>
+							</ul>
+							<!-- 탭 바디 -->
+							<div class="tab-content pt-2" id="myTabContent">
+								<!-- 달력 탭 -->
+								<div class="tab-pane fade show active" id="tab_calendar" role="tabpanel" aria-labelledby="calendar-tab">
+									<div class="d-flex justify-content-center align-items-center mb-2">
+									    <button type="button" class="btn btn-outline-secondary" id="btn_calendar_prev">이전</button>
+									    <span id="title_calendar" class="d-inline-block text-center mx-4 fs-4 fw-bold" style="min-width: 140px;"></span>
+									    <button type="button" class="btn btn-outline-secondary" id="btn_calendar_next">다음</button>
+									</div>
+									<div id="div_calendar" style="height: 600px;"></div>
+								</div>
+								<!-- 그리드 탭 -->
+								<div class="tab-pane fade" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
+								<div id="filterModule" class="mb-3"></div>
+									<div class="dropdown d-none">
+										<button type="button" id="btn_drop" class="btn btn-primary dropdown-toggle mb-1" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside">
+											검색
+										</button>
+										<div class="dropdown-menu p-4">
+											<div class="row">
+												<div class="col-6 mb-3">
+													<label for="input_employee_nm" class="form-label">사원명</label>
+													<input type="text" class="form-control" id="input_employee_nm" placeholder="사원을 선택하세요.">
+												</div>
+												<div class="col-6 mb-3">
+													<label for="select_employee_dt" class="form-label">소속부서</label>
+													<select class="form-select" id="select_employee_dt"></select>
+												</div>
+											</div>
+											<div class="row">
+												<div class="col-4 mb-3">
+													<label for="input_commute_wd" class="form-label">출근일자</label>
+													<div>
+														<input type="text" class="form-control" id="input_commute_wd" name="employee_hd" aria-label="Date-Time">
+													</div>
+													<div>
+														<div id="wd_wrapper"></div>
+													</div>
+												</div>
+												<div class="col-8">
+													<div class="tui-datepicker-input tui-datetime-input tui-has-focus">
+													    <input id="startpicker-input" class="form-control" type="text" aria-label="Date">
+													    <span class="tui-ico-date"></span>
+													    <div id="startpicker-container" style="margin-left: -1px;"></div>
+													</div>
+													<span>to</span>
+													<div class="tui-datepicker-input tui-datetime-input tui-has-focus">
+													    <input id="endpicker-input" type="text" aria-label="Date">
+													    <span class="tui-ico-date"></span>
+													    <div id="endpicker-container" style="margin-left: -1px;"></div>
+													</div>
+												</div>
+											</div>
+											<div class="row">
+												<button type="button" class="btn btn-primary">상세 검색</button>												
+											</div>
+										</div>
+									</div>
+									<div id="grid"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, calendar, modal_grid, select_EMPLOYEE_grid;
+	changeFlag = false;
+	let employee_cd, employee_nm; // 사원선택모달 인풋
+	let workinghour_id;
+	let calendarStartDate; // 캘린더 시작일
+	let calendarEndDate; // 캘린더 종료일
+	
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	
+	const btn_attendance = $('#btn_attendance');
+	const btn_grid_tab = $('#btn_grid_tab');
+	const btn_drop = $('#btn_drop'); // 드롭다운
+	const div_calendar = document.getElementById('div_calendar');
+	const btn_calendar_prev = $('#btn_calendar_prev');
+	const btn_calendar_next = $('#btn_calendar_next');
+	// 관리자인지 확인(권한 설정 후 달라질 수 있음)
+	const isAdmin = /*[[${#authorization.expression('hasRole("admin")')}]]*/ false;
+	let today = new Date();
+	// 필터 항목
+	const filterConfig = [
+		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
+		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
+		{ key: 'employee_cd', label: '사원코드', type: 'text', placeholder: '사원코드 입력', col: 'col-2' },
+		{ key: 'employee_nm', label: '사원명', type: 'text', placeholder: '사원명 입력', col: 'col-2' },
+		{ key: 'employee_dp', label: '부서명', type: 'text', placeholder: '부서명 입력', col: 'col-2' },
+		{ key: 'employee_gd', label: '직위명', type: 'text', placeholder: '직위명 입력', col: 'col-2' },
+		{ key: 'commute_wt', label: '출근시간(이후)', type: 'text', placeholder: '00:00:00', col: 'col-2'},
+		{ key: 'commute_lt', label: '퇴근시간(이전)', type: 'text', placeholder: '00:00:00', col: 'col-2'},
+	];
+	// ------------------------------
+	
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		make_calendar();
+		
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            console.log('적용된 필터:', filterValues);
+
+
+        });
+
+		
+		// 그리드탭 클릭
+		btn_grid_tab.on('click', function() {
+			if(grid == null) {
+				make_grid();
+			}
+			getGridList();
+		});
+		
+		
+		// ------- 임시사용 레인지피커
+		var today = new Date();
+		var picker = tui.DatePicker.createRangePicker({
+		    startpicker: {
+		        date: today,
+		        input: '#startpicker-input',
+		        container: '#startpicker-container'
+		    },
+		    endpicker: {
+		        date: today,
+		        input: '#endpicker-input',
+		        container: '#endpicker-container'
+		    },
+		    format: 'YYYY-MM-dd',
+		    timePicker: false
+		});
+
+		picker.on('change:end', () => {
+		    console.log(123);
+		})
+		
+		// 달력 ----------------------
+		// 이전 달 보기 이벤트
+		btn_calendar_prev.on('click', function(){ 
+			calendar.prev();
+			updateCalendarTitle();
+			getCalendarList();
+		}); 
+
+
+		// 다음 달 보기 이벤트
+		btn_calendar_next.on('click', function(){ 
+			calendar.next();
+			updateCalendarTitle();
+			getCalendarList();
+		});
+	
+		
+		// 그리드 ----------------------
+		
+		
+
+		
+		// 드롭다운
+		let buseoList = [];
+		btn_drop.on('shown.bs.dropdown', function() {
+			let data = ['BUSEO'];
+			let jsonData = JSON.stringify(data);
+			
+			$.ajax({
+				type: 'post',
+				url: '/select_COMMON_list',
+				contentType: 'application/json',
+				data: jsonData,
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+					let list = data['list'];
+					buseoList = list['BUSEO'];
+					createSelectBox('#select_employee_wd', buseoList);
+					
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
+		
+	});
+	
+
+	// ----------- 초기화 -------------
+
+	
+	
+	
+	// 함수 영역 -------------------
+	
+	// 달력 만들기
+	function make_calendar(){ 
+		calendar = new tui.Calendar(div_calendar, {
+			usageStatistics: false,
+			defaultView: 'month',
+			isReadOnly: true,
+			month: {
+				isAlways6Weeks: false, // 해당 달만 표시 (6주 고정 아님)
+			},
+			theme: {
+				common: {
+					holiday: {
+					    color: 'rgba(255, 64, 64)', // 공휴일 텍스트 색상
+					},
+					saturday: {
+					    color: 'rgba(64, 64, 255)', // 토요일 텍스트 색상
+					},
+				},
+			},
+			calendars: [
+				{
+					id: 'cal1',
+					name: '총결원',
+					backgroundColor: '#03bd9e',
+				},
+				{
+					id: 'cal2',
+					name: '휴가자',
+					backgroundColor: '#ffffff',
+					borderLeft: '#ffffff',
+				},
+				{
+					id: 'cal3',
+					name: '출장',
+					backgroundColor: '#ffffff',
+				},
+			]
+		});
+		
+		updateCalendarTitle(); // 년월 타이틀
+		getCalendarList(); // 출퇴근 목록 조회
+		
+		calendar.on('clickDayname', function(event) {
+		    const clickedDate = event.date; // 클릭된 날짜 정보
+		    console.log('클릭된 날짜:', clickedDate);
+		});
+	    
+	    calendar.on('clickEvent', ({ event }) => {
+			if(isAdmin) {
+				modal_detail(event);
+			}
+		});
+
+	};
+	
+	// 달력 제목 업데이트
+	function updateCalendarTitle() {
+	    const currentDate = calendar.getDate();
+	    const year = currentDate.getFullYear();
+	    const month = currentDate.getMonth() + 1;
+	    const formattedDate = `${year}년 ${month}월`;
+	    $("#title_calendar").empty().text(formattedDate);
+	}
+	
+	// 년월일 -> 문자열 리턴
+	function getDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+	}
+	
+	// 시분초 -> 문자열 리턴
+	function getTime(date) {
+	    const hours = String(date.getHours()).padStart(2, '0');
+	    const minutes = String(date.getMinutes()).padStart(2, '0');
+	    const seconds = String(date.getSeconds()).padStart(2, '0');
+	    return `${hours}:${minutes}:${seconds}`;
+	}
+	
+	// 년월일 시분초 -> 문자열 리턴
+	function getDateTime(date) {
+	    // 날짜 포맷팅
+	    const year = date.getFullYear();
+	    const month = String(date.getMonth() + 1).padStart(2, '0');
+	    const day = String(date.getDate()).padStart(2, '0');
+	    // 시간 포맷팅
+	    const hours = String(date.getHours()).padStart(2, '0');
+	    const minutes = String(date.getMinutes()).padStart(2, '0');
+	    const seconds = String(date.getSeconds()).padStart(2, '0');
+	    
+	    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
+	}
+	
+	// 달력 데이터 조회
+	function getCalendarList() {
+		calendarStartDate = getDate(calendar.getDateRangeStart().toDate());
+		calendarEndDate = getDate(calendar.getDateRangeEnd().toDate());
+		$.ajax({
+			type: 'post',
+			url: '/select_COMMUTE_calendar',
+			contentType: 'application/json',
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			data: JSON.stringify({
+			    calendarStartDate: calendarStartDate,
+			    calendarEndDate: calendarEndDate
+			}),
+			success: function(data) {
+				if(!data['result']) {
+					showAlert('', 'error', '기록부 조회 실패', '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
+				} else {
+					// 캘린더 템플릿 업데이트
+					calendar.setOptions({
+						template: {
+							monthGridHeader: function(model) {
+								const date = model.date;
+								const dayNum = date.split('-')[2];
+								const holiday = data.holidayList.find(h => h.holiday_dt == date);
+								const isToday = date == getDate(new Date());
+								if(holiday) {
+									return `
+									<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
+										${dayNum}
+										<span class="holiday-name" style="font-size: 12px;">
+											${holiday.holiday_nm}
+										</span>
+									</span>`;
+								}
+								if(isToday) {
+					                return `<span class="toastui-calendar-weekday-grid-date 
+									toastui-calendar-weekday-grid-date-decorator 
+									toastui-calendar-template-monthGridHeader" style="color: #fff">${dayNum}</span>`;
+					            }
+					            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
+							},
+							time: function(schedule) {
+							    return `<span class="calendar-event" 
+							        data-bs-toggle="tooltip" 
+							        data-bs-placement="top" 
+							        title="${schedule.title}">
+							        ${schedule.title}
+							    </span>`;
+							}
+						}
+					});
+					   
+					// calendar.render();
+					calendar.clear();
+									
+					let list = data['list'];
+					const event = list.map(commute => {
+					    if (isAdmin) {
+					        return {
+					            id: `${commute.commute_wd}`,
+					            title: `${commute.total} ()`,
+					            start: commute.commute_wd,
+					            end: commute.commute_wd,
+					            isAllday: true,
+					            category: 'allday',
+					            backgroundColor: '#fff'
+					        };
+					    } else {
+					        let title = '';
+					        if (commute.commute_wt) {
+					            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
+					            const startTime = commute.commute_wt;
+					            title = commute.commute_lt 
+					                ? `${startTime} ~ ${commute.commute_lt}` 
+					                : `${startTime} ~`;
+					        }
+					        
+					        return {
+					            id: `${commute.commute_wd}`,
+					            title: title,
+					            start: commute.commute_wd,
+					            end: commute.commute_wd,
+					            isAllday: true,
+					            category: 'allday',
+					            backgroundColor: '#fff'
+					        };
+					    }
+					});
+					calendar.createEvents(event);
+				}
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+	
+	// 그리드 데이터 조회
+	function getGridList() {
+		$.ajax({
+			type: 'post',
+			url: '/select_COMMUTE_grid',
+			contentType: 'application/json',
+			data: JSON.stringify({}),
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				if(!data['result']) {
+					Swal.fire({
+					    icon: "error",
+					    title: "기록부 조회 실패",
+					    html: "기록부 조회에 실패하였습니다.<br>다시 접속해주세요.",
+					});
+				} else {
+					let list = data['list'];
+					grid.resetData(list);
+				}
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+	
+	function make_grid() {
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 400,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', hidden : true},
+				{header : '출근일자', name : 'commute_wd', sortable : true},
+				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
+				{header : '출근시간', name : 'commute_wt', sortable : true, filter: 'text'}, 
+				{header : '퇴근일자', name : 'commute_ld', sortable : true, filter: 'text'},
+				{header : '퇴근시간', name : 'commute_lt', sortable : true, filter: 'text'},
+				{header : '출근상태', name : 'commute_st', sortable : true, filter: 'select'},
+			]
+		});
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			make_insert_COMMUTE_modal(row['commute_wd'], row, 'grid');
+		});
+	}
+
+	// 달력 상세 모달
+	function modal_detail(data) {
+		let date = getDate(data.start);
+		let title = `${date} 기록부`;
+
+		const div_modal = 'div_COMMUTE_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="modal_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" class="btn btn-primary" id="btn_COMMUTE_show">등록</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	make_modal_grid(date);
+			
+			$('#btn_COMMUTE_show').on('click', function() {
+				make_insert_COMMUTE_modal(date, '', 'insert');
+			});
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		modal.show();
+	}
+	
+	// 달력 상세 모달의 그리드
+	function make_modal_grid(date) {
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
+			data : {api: {readData: {url: '/select_COMMUTE_detail', method: 'GET', initParams: {commute_wd: date} }}},
+			scrollX : false,
+			scrollY : false,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', hidden : true},
+				{header : '일자', name : 'commute_wd', sortable : true},
+				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
+				{header : '출근시간', name : 'commute_wt', sortable : true, filter: 'text'}, 
+				{header : '퇴근일자', name : 'commute_ld', sortable : true, filter: 'text'},
+				{header : '퇴근시간', name : 'commute_lt', sortable : true, filter: 'text'},
+				{header : '출근상태', name : 'commute_st', sortable : true, filter: 'select'},
+			],
+
+		});
+		
+		modal_grid.on('dblclick', function(ev) {
+			let row = modal_grid.getRow(ev.rowKey);
+			make_insert_COMMUTE_modal(date, row, 'update');
+		});
+		
+	}
+	
+	// 상세 모달의 사원 출근 일정 등록
+	function make_insert_COMMUTE_modal(date,row, process) {
+		let title = `출근 일정 ${process == 'insert' ? '등록' : '수정'}`;
+		console.log(row);
+
+		const div_modal = 'div_EMPLOYEE_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+								<label for="employee_cd" class="col-sm-auto col-form-label">사원번호</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_cd" readonly>
+								</div>
+								<label for="employee_nm" class="col-sm-auto col-form-label">사원명</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="employee_nm" readonly>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<legend class="col-form-label col-sm-auto">출근일시</legend>
+								<div class="col-sm-4">
+									<div class="tui-has-focus">
+									    <input type="text" id="input_employee_wd" class="form-control" value=${date} disabled>
+									</div>
+									<div id="employee_wd_wrapper"></div>
+								</div>
+								<div class="col-sm-auto ms-3">
+									<input type="text" id="commute_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;">
+								</div>
+								<div class="col-sm-auto ps-0 ms-1">
+									<input type="text" id="commute_lt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;">
+								</div>
+							</div>
+							<input type="hidden" id="workinghour_id">
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" class="btn btn-primary" id="btn_COMMUTE_save">${process == 'insert' ? '등록' : '수정'}</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			employee_cd = $('#employee_cd');
+			employee_nm = $('#employee_nm');
+			workinghour_id = $('#workinghour_id');
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+		// 사원선택
+		if(process == 'insert') {
+			$('#employee_cd, #employee_nm').on('click', function() {
+			    make_select_EMPLOYEE_modal(date);
+			});
+		} else {
+			employee_cd.val(row['employee_cd']);
+			employee_nm.val(row['employee_nm']);
+			workinghour_id.val(row['workinghour_id']);
+			$('#commute_wt').val(row['commute_wt']);
+			$('#commute_lt').val(row['commute_lt']);
+			employee_cd.prop('disabled', true);
+			employee_nm.prop('disabled', true);
+			
+		}
+		
+		
+		
+		// 출근일정 등록
+		$('#btn_COMMUTE_save').on('click', function() {
+			if(employee_cd.val().trim() == '') {
+				showToast(employee_cd, 'warning', '', '사원을 선택해주세요.');
+				return;
+			}
+			if(employee_nm.val().trim() == '') {
+				showToast(employee_nm, 'warning', '', '사원을 선택해주세요.');
+				return;
+			}
+			if($('#commute_wt').val().trim() == '') {
+				showToast($('#commute_wt'), 'warning', '', '출근시간을 입력해주세요.');
+				return;
+			}
+			if($('#commute_lt').val().trim() == '') {
+				showToast($('#commute_lt'), 'warning', '', '퇴근시간을 입력해주세요.');
+				return;
+			}
+			
+			let commute = {
+				employee_cd: employee_cd.val().trim(),
+				workinghour_id: workinghour_id.val(),
+				commute_wd: date,
+				commute_ld: date,
+				commute_wt: $('#commute_wt').val().trim(),
+				commute_lt: $('#commute_lt').val().trim(),
+			}
+			
+			let data = {
+				commute: commute,
+				calendarStartDate: calendarStartDate,
+				calendarEndDate: calendarEndDate
+			}
+			
+			let jsonData = JSON.stringify(data);
+			
+			$.ajax({
+				type: 'post',
+				url: process != 'grid' ? '/insert_COMMUTE_modal' : '/insert_COMMUTE_grid',
+				contentType: 'application/json',
+				data: jsonData,
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+					if(!data['result']) {
+						showAlert('', 'error', '등록 실패', '등록에 실패했습니다.');
+					} else {
+						if(process != 'grid') {
+							modal_grid.resetData(data['gridList']);
+							
+							calendar.clear();
+							
+							const event = data['calendarList'].map(commute => ({
+							    id: `${commute.commute_wd}`,
+							    title: `${commute.total} ()`,
+							    start: commute.commute_wd,
+							    end: commute.commute_wd,
+							    isAllday: true,
+							    category: 'allday',
+							    backgroundColor: '#fff', 
+							}));
+							calendar.createEvents(event);
+							
+						} else {
+							grid.resetData(data['gridList']);
+						}
+						modal.hide();
+					}
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+			
+		});
+		
+		
+		// 출근일자
+		/*const datepicker = new tui.DatePicker('#employee_wd_wrapper', {
+			language: 'ko',
+		    date: new Date(date),
+		    input: {
+		        element: '#input_employee_wd',
+		        format: 'yyyy-MM-dd'
+		    },
+		});*/
+		
+
+	}
+	
+	// 출근 일정 등록의 사원 선택 모달
+	function make_select_EMPLOYEE_modal(date) {
+		let title = '사원 선택';
+
+		const div_modal = 'select_EMPLOYEE_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="select_EMPLOYEE_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			make_select_EMPLOYEE_grid(date, modal);
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	// 사원 선택 모달의 그리드
+	function make_select_EMPLOYEE_grid(date, modal) {
+		select_EMPLOYEE_grid = new tui.Grid({
+			el : document.getElementById('select_EMPLOYEE_grid'),
+			data : {api: {readData: {url: '/select_EMPLOYEE_grid', method: 'GET', initParams: {commute_wd: date} }}},
+			scrollX : false,
+			scrollY : false,
+			rowHeaders : [
+				{type : 'rowNum',}
+			],
+			bodyHeight : 500,
+			columns : [
+				{header : '근로번호', name : 'workinghour_id', hidden : true},
+				{header : '사원번호', name : 'employee_cd', sortable : true},
+				{header : '사원명', name : 'employee_nm', sortable : true}, 
+				{header : '부서명', name : 'employee_dp', sortable : true}, 
+				{header : '직위명', name : 'employee_gd', sortable : true}, 
+			]
+		});
+
+		select_EMPLOYEE_grid.on('dblclick', function(ev) {
+		    let row = select_EMPLOYEE_grid.getRow(ev.rowKey);
+			employee_cd.val(row['employee_cd']);
+			employee_nm.val(row['employee_nm']);
+			workinghour_id.val(row['workinghour_id']);
+			modal.hide();
+			
+		});
+	}
+
+	
+
+	
+	function inputTimeFormat(input) {
+	    // 숫자와 콜론만 입력 가능하도록 필터링
+	    input.value = input.value.replace(/[^0-9:]/g, '');
+	    
+	    input.addEventListener('blur', function() {
+	        let value = this.value;
+	        
+	        // 입력값 검증
+	        if (value === '') return;
+	        
+	        // 시간 형식 검증 함수
+	        function validateTime(timeStr) {
+	            const timePattern = /^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?$/;
+	            if (!timePattern.test(timeStr)) return false;
+	            
+	            const [hours, minutes, seconds = "00"] = timeStr.split(':').map(Number);
+	            return hours >= 0 && hours <= 23 && 
+	                   minutes >= 0 && minutes <= 59 && 
+	                   seconds >= 0 && seconds <= 59;
+	        }
+	        
+	        // 숫자만 입력된 경우 (시간만 입력)
+	        if(/^\d{1,2}$/.test(value)) {
+	            const hours = parseInt(value);
+	            if(hours >= 0 && hours <= 23) {
+	                this.value = value.padStart(2, '0') + ':00:00';
+	            } else {
+	                showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
+	                this.value = '';
+	            }
+	            return;
+	        }
+	        
+	        // HH:mm 형식으로 입력된 경우
+	        if(/^([0-9]{1,2}):([0-9]{2})$/.test(value)) {
+	            const [hours, minutes] = value.split(':').map(Number);
+	            if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+	                this.value = hours.toString().padStart(2, '0') + ':' + 
+	                            minutes.toString().padStart(2, '0') + ':00';
+	                return;
+	            }
+	        }
+	        
+	        // HH:mm:ss 형식 검증
+	        if(!validateTime(value)) {
+	            showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
+	            this.value = '';
+	            return;
+	        }
+	        
+	        // 올바른 형식인 경우 포맷팅
+	        const [hours, minutes, seconds = "00"] = value.split(':');
+	        this.value = hours.padStart(2, '0') + ':' + 
+	                    minutes.padStart(2, '0') + ':' + 
+	                    seconds.padStart(2, '0');
+	    });
+
+	    // 입력 중 콜론 자동 추가
+	    if(input.value.length === 2 && !input.value.includes(':')) {
+	        const hours = parseInt(input.value);
+	        if(hours >= 0 && hours <= 23) {
+	            input.value = input.value + ':';
+	        }
+	    } else if(input.value.length === 5 && input.value.split(':').length === 2) {
+	        const [hours, minutes] = input.value.split(':').map(Number);
+	        if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+	            input.value = input.value + ':';
+	        }
+	    }
+	}
+
+	
+	function showAlert(element, icon, title, text) {
+		Swal.fire({
+		    icon: icon,
+		    title: title,
+		    html: text,
+		});
+		
+		if(element != '') {
+			element.focus();
+		}
+		
+	}
+	
+	function showToast(element, icon, title, msg) {
+	    Swal.fire({
+	        toast: true,
+	        position: 'center',
+	        icon: icon,
+	        title: title,
+	        html: msg,
+	        showConfirmButton: false,
+	        timer: 1500,
+	    });
+		console.log(element);
+		
+		if(element != '') {
+			element.focus();
+		}
+	}
+
+
+	
+	
+	function createSelectBox(el, list, title) {
+	    const selectBox = $(el);
+
+	    selectBox.empty();
+		
+		if(title) {
+		    selectBox.append('<option value="">부서를 선택하세요</option>');		
+		}
+
+	    list.forEach(data => {
+	        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+	    });
+	}
+	
+</script>
+</html>

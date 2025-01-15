@@ -1,0 +1,239 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet"	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<body>
+	<main id="main" class="main">
+	<div class="pagetitle">
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<h5 class="card-title">급여 계산기</h5>
+				<div class="card-body">
+					<div class="d-flex justify-content-space align-items-end">
+						<div class="col-lg-8">
+							<div class="card">
+								<h5 class="card-title"></h5>
+								<div class="card-body">
+									<div id="grid"  style="flex-grow: 1;"></div>
+								</div>	
+							</div>	
+						</div>
+						<input type="button" id="btn_cal" class="btn btn-primary ml-3" value="계산하기">
+					</div>
+					<div id="grid_cal"></div>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+    const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+
+$('#btn_cal').on('click', function(){
+	
+	const griddata = grid.getData();
+	console.log('그리드 데이터',griddata[0]);
+	
+	// 불필요한 필드를 제거
+    const senddata = griddata[0];
+
+    // `rowKey`와 `_attributes` 필드를 삭제
+    delete senddata.rowKey;
+    delete senddata._attributes;
+
+    console.log('보낼 데이터2', JSON.stringify(senddata));
+    
+	$.ajax({
+		url: "/calculate",
+		method: "POST",
+		contentType: "application/json",
+		data: JSON.stringify(senddata),
+		beforeSend: function(xhr){
+			xhr.setRequestHeader(header,token);
+		},
+		success: function(data){
+			console.log("가져온 데이터",data);
+			console.log("가져온 데이터",data[0]);
+			const calculatedData = data[0].calculated;
+            if (Array.isArray(calculatedData)) {
+                const result = calculatedData.reduce((acc, item) => {
+                    acc[item.prdetail_nm] = item.amount;
+                    return acc;
+                }, {
+                    ta: data[0].ta,
+                    td: data[0].td,
+                    rs: data[0].rs
+                });
+                console.log('변환된 데이터:', result);
+                const setdata = [result];
+                grid_cal.resetData(setdata);
+            } 
+		},
+		error:function(xhr,status,error){
+			console.log("급여 계산 데이터 전송에 실패했습니다.",error);	
+		}
+	});
+});
+
+
+//커스텀 숫자 입력 에디터
+/* class numberEditor {
+    constructor() {
+        this.el = document.createElement('input');
+        this.el.type = 'text'; // 숫자만 입력 받도록 텍스트로 설정
+        this.el.style.width = '100%';
+        this.el.style.height = '100%';
+        this.el.style.textAlign = 'right';
+        this.el.addEventListener('input', (event) => {
+            // 숫자 외의 문자는 입력하지 못하도록 필터링
+            this.el.value = this.el.value.replace(/[^0-9]/g, '');
+        });
+    }
+
+    getElement() {
+        return this.el;  // 셀에서 사용할 DOM 요소를 반환해야 합니다.
+    }
+    
+    getValue() {
+        return this.el.value || 0; // 값이 없으면 0 반환
+    }
+
+    setValue(value) {
+        this.el.value = value || 0; // 값을 설정 (없으면 0)
+    }
+
+    focus() {
+        this.el.focus();
+    }
+
+    blur() {
+        this.el.blur();
+    } 
+
+    destroy() {
+        this.el.remove(); // 에디터 제거
+    }
+} */
+
+  //////////////
+ // 그리드 생성 //
+//////////////
+
+/* 계산그리드 */
+const grid = new tui.Grid({
+	el: document.getElementById('grid'),
+	scrollX: true,
+	scrollY: true,
+	columns: [
+		{header: '기본급', name: 'BS', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '연장시간', name: 'overworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '야근시간', name: 'nightworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '주말근무시간', name: 'weekendworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '휴일근무시간', name: 'holydayworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '남은연차', name: 'leastannual', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '상여', name: 'bonus', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+	],
+	data:[{BS:0,overworkingtime:"0",nightworkingtime:"0",weekendworkingtime:"0",holydayworkingtime:"0",leastannual:"0",bonus:"0"}],
+	columnOptions:{
+		resizable:true,
+	 },
+});
+
+/* 결과그리드 */
+const grid_cal = new tui.Grid({
+	el: document.getElementById('grid_cal'),
+	responsive: true,
+	scrollX: true,
+	scrollY: true,
+	bodyHeight : 330,
+	 header: {
+			height : 130,
+     	complexColumns:[
+				{
+					header : '지급액',
+					name : 'PAY',
+					childNames: ['BS','B_MT','B_OT','B_NA','B_WA','B_HA','B_AA','B_BN']
+				}, 
+				{
+					header : '공제액',
+					name : 'DEDUCATION',
+					childNames: ['D_GM','D_GY','D_GG','D_LG']
+				}, 
+     	]
+     },
+     columns: [
+			{
+				header : '실지급액',
+				name : 'rs'
+			}, 
+			{
+				header : '총지급액',
+				name : 'ta'
+			}, 
+			{
+				header : '기본급',
+				name : 'BS'
+			}, 
+			{
+				header : '식대',
+				name : 'B_MT'
+			}, 
+			{
+				header : '연장수당',
+				name : 'B_OT'
+			}, 
+			{
+				header : '야근수당',
+				name : 'B_NA'
+			}, 
+			{
+				header : '주말근무수당',
+				name : 'B_WA'
+			}, 
+			{
+				header : '휴일수당',
+				name : 'B_HA'
+			}, 
+			{
+				header : '연차수당',
+				name : 'B_AA'
+			}, 
+			{
+				header : '상여',
+				name : 'B_BN'
+			}, 
+			{
+				header : '총공제액',
+				name : 'td'
+			}, 
+			{
+				header : '국민연금',
+				name : 'D_GM'
+			}, 
+			{
+				header : '고용보험',
+				name : 'D_GY'
+			}, 
+			{
+				header : '건강보험',
+				name : 'D_GG'
+			}, 
+			{
+				header : '장기요양',
+				name : 'D_LG'
+			}, 
+     ],
+	 columnOptions:{
+		resizable:true,
+	 },
+});
+</script>

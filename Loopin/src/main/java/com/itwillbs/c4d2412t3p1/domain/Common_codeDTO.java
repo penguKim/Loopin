@@ -35,4 +35,18 @@ public class Common_codeDTO {
 	private String beforeCommon_cc;
 	
 	
+	public Common_codeDTO() {}
+
+
+	public Common_codeDTO(String common_cc, String common_nm) {
+		super();
+		this.common_cc = common_cc;
+		this.common_nm = common_nm;
+	}
+
+
+	
+	
+	
+	
 }
