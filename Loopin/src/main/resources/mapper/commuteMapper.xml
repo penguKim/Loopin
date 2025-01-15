@@ -33,7 +33,7 @@
 	<!-- 출퇴근 상세 조회 -->
 	<select id="select_COMMUTE_detail" resultType="Commute">
 		SELECT CM.COMMUTE_WD, CM.COMMUTE_LD, CM.EMPLOYEE_CD, EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP,
-			   CC2.COMMON_NM EMPLOYEE_GD, CM.COMMUTE_WT, CM.COMMUTE_LT, CM.WORKINGHOUR_ID,
+			   CC2.COMMON_NM EMPLOYEE_GD, CM.COMMUTE_WT, CM.COMMUTE_LT, CM.WORKINGHOUR_ID, CM.COMMUTE_PR,
 			   (SELECT CC.COMMON_NM FROM COMMON_CODE CC 
 			     WHERE CC.COMMON_GC = 'ATDC' AND CC.COMMON_CC = 
 			      CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 'LATE'
@@ -66,9 +66,10 @@
 			<choose>
 				<when test="isAdmin == false">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
 				<otherwise>
-					CM.COMMUTE_WD, COUNT(*) total, COUNT(CM.COMMUTE_LT) AS leave,
+					CM.COMMUTE_WD,(SELECT COUNT(*) FROM EMPLOYEE EM WHERE EM.EMPLOYEE_US = 1 ) AS total_emp,
+				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late,
 				    SUM(CASE WHEN CM.COMMUTE_LT IS NULL THEN 1 ELSE 0 END) AS working,
-				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late
+				    COUNT(CM.COMMUTE_LT) AS leave, count(*) total
 				</otherwise>
 			</choose>
 		FROM COMMUTE CM
@@ -112,6 +113,8 @@
 	<update id="update_EMPLOYEE_WK">
 		UPDATE EMPLOYEE SET 
 			WORKINGHOUR_ID = #{workinghour.workinghour_id, jdbcType=VARCHAR}
+		  , EMPLOYEE_MF = #{workinghour.workinghour_uu}
+		  , EMPLOYEE_MD = #{workinghour.workinghour_ud}
 		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
 	</update>
 	

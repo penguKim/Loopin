@@ -108,6 +108,17 @@ public class CommuteService {
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
 	    Commute com = commuteRepository.findById(new CommutePK(commuteDTO.getEmployee_cd(), 
 	    		commuteDTO.getWorkinghour_id(), commuteDTO.getCommute_wd())).orElse(null);
+	    // 출퇴근 시간 비교
+	    if (!commuteDTO.getCommute_lt().isEmpty()) {
+	        String workTime = commuteDTO.getCommute_wt().replace(":", "");
+	        String leaveTime = commuteDTO.getCommute_lt().replace(":", "");
+	        if (Integer.parseInt(leaveTime) < Integer.parseInt(workTime)) {
+	            LocalDate workDate = LocalDate.parse(commuteDTO.getCommute_wd());
+	            commuteDTO.setCommute_ld(workDate.plusDays(1).toString());
+	        } else {
+	            commuteDTO.setCommute_ld(commuteDTO.getCommute_wd());
+	        }
+	    }
 	    
 	    if (com != null) { // 업데이트
 	    	com.setCommute_wd(commuteDTO.getCommute_wd());
@@ -133,16 +144,13 @@ public class CommuteService {
 	    	commuteDTO.setCommute_ru(regUser);
 	    	commuteDTO.setCommute_rd(time);
 	    	
-	    	Commute commute = Commute.setCommute(commuteDTO);
-	    	
-	    	commuteRepository.save(commute);
+	    	commuteRepository.save(Commute.setCommute(commuteDTO));
 	    }
 	}
 
+
 	// 공휴일 조회
 	public List<Holiday> select_HOLIDAY_month(String calendarStartDate, String calendarEndDate) {
-	    System.out.println("------------------- calendarStartDate : " + calendarStartDate);
-	    System.out.println("------------------- calendarEndDate : " + calendarEndDate);
 	    return holidayRepository.findHolidaysInMonth(calendarStartDate, calendarEndDate);
 	}
 	

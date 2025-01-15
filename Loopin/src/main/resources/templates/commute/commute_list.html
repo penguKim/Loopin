@@ -77,7 +77,7 @@
 	// 변수 지정
 	let grid, calendar, modal_grid, select_EMPLOYEE_grid;
 	changeFlag = false;
-	let employee_cd, employee_nm, commute_wt, commute_lt; // 사원선택모달 인풋
+	let employee_cd, employee_nm, commute_wt, commute_lt, div_commute_ld; // 사원선택모달 인풋
 	let workinghour_id;
 	let calendarStartDate; // 캘린더 시작일
 	let calendarEndDate; // 캘린더 종료일
@@ -310,7 +310,6 @@
 								const dayNum = date.split('-')[2];
 								const holiday = data.holidayList.find(h => h.holiday_dt == date);
 								const work = data.list.find(w => w.commute_wd == date);
-								console.log(work);
 								const isToday = date == getDate(new Date());
 								if(holiday && work) {
 									return `
@@ -320,7 +319,7 @@
 											${holiday.holiday_nm}
 										</span>
 									</span>
-									<span class="fw-bold" style="color: #ff4040"> | ${work.total}명 출근</span>
+									<span class="fw-bold" style="color: #ff4040"> | ( ${work.total} / ${work.total_emp} )</span>
 									`;
 								}
 								if(holiday) {
@@ -336,7 +335,7 @@
 									return `
 									<span class="tui-full-calendar-weekday-grid-date ms-1">
 										${dayNum}
-										<span class="fw-bold"> | ${work.total}명 출근</span>
+										<span class="fw-bold"> | ( ${work.total} / ${work.total_emp} )</span>
 									</span>`;
 								}
 								if(isToday) {
@@ -357,7 +356,7 @@
 					    if (isAdmin) {
 					        return {
 					            id: `${commute.commute_wd}`,
-					            title: `지각: ${commute.late} / 근무중: ${commute.working} / 퇴근: ${commute.leave}`,
+					            title: `지각: ${commute.late} 근무중: ${commute.working} 퇴근: ${commute.leave}`,
 					            start: commute.commute_wd,
 					            end: commute.commute_wd,
 					            isAllday: true,
@@ -426,6 +425,7 @@
 		});
 	}
 	
+	// 그리드 탭 그리드
 	function make_grid() {
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
@@ -465,6 +465,10 @@
 		
 		grid.on('dblclick', function(ev) {
 			let row = grid.getRow(ev.rowKey);
+			if(row['commute_pr']) {
+				showAlert('', 'warning', '정산 완료', '정산이 완료된 기록은<br>수정이 불가능합니다.');
+				return;
+			}
 			make_insert_COMMUTE_modal(row['commute_wd'], row, 'grid');
 		});
 	}
@@ -569,6 +573,11 @@
 		
 		modal_grid.on('dblclick', function(ev) {
 			let row = modal_grid.getRow(ev.rowKey);
+			console.log('123123123123',row['commute_pr']);
+			if(row['commute_pr']) {
+				showAlert('', 'warning', '정산 완료', '정산이 완료된 기록은<br>수정이 불가능합니다.');
+				return;
+			}
 			make_insert_COMMUTE_modal(date, row, 'update');
 		});
 		
@@ -576,7 +585,8 @@
 	
 	// 상세 모달의 사원 출근 일정 등록
 	function make_insert_COMMUTE_modal(date,row, process) {
-		let title = `출근 일정 ${process == 'insert' ? '등록' : '수정'}`;
+		let text = process == 'insert' ? '등록' : '수정';
+		let title = `출근 일정 ${text}`;
 		console.log(row);
 
 		const div_modal = 'div_EMPLOYEE_modal';
@@ -593,35 +603,36 @@
 						</div>
 						<div class="modal-body">
 							<div class="row mb-3">
-								<label for="modal_employee_cd" class="col-sm-auto col-form-label">사원번호</label>
-								<div class="col-sm-4">
+								<label for="modal_employee_cd" class="col-sm-auto col-form-label">사원코드<span class="text-danger">*</span></label>
+								<div class="col">
 									<input type="text" class="form-control" id="modal_employee_cd" readonly>
 								</div>
-								<label for="modal_employee_nm" class="col-sm-auto col-form-label">사원명</label>
-								<div class="col-sm-4">
+								<label for="modal_employee_nm" class="col-sm-auto col-form-label">사원명<span class="text-danger">*</span></label>
+								<div class="col">
 									<input type="text" class="form-control" id="modal_employee_nm" readonly>
 								</div>
 							</div>
 							<div class="row mb-3">
-								<legend class="col-form-label col-sm-auto">출근일시</legend>
+								<legend class="col-form-label col-sm-auto">출근일시<span class="text-danger">*</span></legend>
 								<div class="col-sm-4">
 									<div class="tui-has-focus">
-									    <input type="text" id="input_employee_wd" class="form-control" value=${date} disabled>
+									    <input type="text" id="input_employee_wd" class="form-control" style="width:132px;" value=${date} disabled>
 									</div>
 									<div id="employee_wd_wrapper"></div>
 								</div>
-								<div class="col-sm-auto ms-3">
+								<div class="col-sm-auto ms-2">
 									<input type="text" id="modal_commute_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;">
 								</div>
 								<div class="col-sm-auto ps-0 ms-1">
 									<input type="text" id="modal_commute_lt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;">
 								</div>
 							</div>
+							<div class="position-absolute bottom-0 end-0 pe-3 pb-1 text-body-secondary" id="div_commute_ld"></div>
 							<input type="hidden" id="workinghour_id">
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" class="btn btn-primary" id="btn_COMMUTE_save">${process == 'insert' ? '등록' : '수정'}</button>
+							<button type="button" class="btn btn-primary" id="btn_COMMUTE_save">${text}</button>
 						</div>
 					</div>
 				</div>
@@ -642,7 +653,8 @@
 			commute_wt = $('#modal_commute_wt');
 			commute_lt = $('#modal_commute_lt');
 			workinghour_id = $('#workinghour_id');
-
+			div_commute_ld = $('#div_commute_ld');
+			
         });
 		
 		modalElement.addEventListener('hidden.bs.modal', function () {
@@ -668,12 +680,19 @@
 			employee_cd.prop('disabled', true);
 			employee_nm.prop('disabled', true);
 			
+			if(process == 'grid') {
+				inputDiv_commute_ld(commute_wt, commute_lt, div_commute_ld);
+			}
 		}
 		
-		
+		// 퇴근 시간 이벤트
+		commute_lt.on('input', function () {
+			inputDiv_commute_ld(commute_wt, commute_lt, div_commute_ld);
+		});
+	
 		
 		// 출근일정 등록
-		$('#btn_COMMUTE_save').on('click', function() {
+		$('#btn_COMMUTE_save').on('click', async function() {
 			if(employee_cd.val().trim() == '') {
 				showToast(employee_cd, 'warning', '', '사원을 선택해주세요.');
 				return;
@@ -691,68 +710,73 @@
 				return;
 			}
 			
-			let commute = {
-				employee_cd: employee_cd.val().trim(),
-				workinghour_id: workinghour_id.val(),
-				commute_wd: date,
-				commute_ld: date,
-				commute_wt: commute_wt.val().trim(),
-				commute_lt: commute_lt.val().trim(),
-			}
-			
-			let data = {
-				commute: commute,
-				calendarStartDate: calendarStartDate,
-				calendarEndDate: calendarEndDate
-			}
-			
-			if(process == 'grid') {
-				data['commuteFilter'] = {
-					startDate: mainDateRangeStartInput.value, 
-	        	 	endDate: mainDateRangeEndInput.value 
+			const isConfirmed = await showConfirm(`출근 기록 ${text}`, `출근 기록을 ${text}하시겠습니까?`);
+			if (isConfirmed) {
+				let commute = {
+					employee_cd: employee_cd.val().trim(),
+					workinghour_id: workinghour_id.val(),
+					commute_wd: date,
+					commute_ld: date,
+					commute_wt: commute_wt.val().trim(),
+					commute_lt: commute_lt.val().trim(),
 				}
-			}
-			
-			let jsonData = JSON.stringify(data);
-			
-			$.ajax({
-				type: 'post',
-				url: process != 'grid' ? '/insert_COMMUTE_modal' : '/insert_COMMUTE_grid',
-				contentType: 'application/json',
-				data: jsonData,
-				beforeSend : function(xhr) {
-				    xhr.setRequestHeader(header, token);
-				},
-				success: function(data) {
-					if(!data['result']) {
-						showAlert('', 'error', '등록 실패', '등록에 실패했습니다.');
-					} else {
-						if(process != 'grid') {
-							modal_grid.resetData(data['gridList']);
-							
-							calendar.clear();
-							
-							const event = data['calendarList'].map(commute => ({
-							    id: `${commute.commute_wd}`,
-							    title: `${commute.total} ()`,
-							    start: commute.commute_wd,
-							    end: commute.commute_wd,
-							    isAllday: true,
-							    category: 'allday',
-							    backgroundColor: '#fff', 
-							}));
-							calendar.createEvents(event);
-							
-						} else {
-							grid.resetData(data['gridList']);
-						}
-						modal.hide();
+				
+				let data = {
+					commute: commute,
+					calendarStartDate: calendarStartDate,
+					calendarEndDate: calendarEndDate
+				}
+				
+				if(process == 'grid') {
+					data['commuteFilter'] = {
+						startDate: mainDateRangeStartInput.value, 
+		        	 	endDate: mainDateRangeEndInput.value 
 					}
-				},
-				error : function(xhr, textStatus, errorThrown) {
-					console.log('조회 실패');
 				}
-			});
+				
+				let jsonData = JSON.stringify(data);
+				
+				$.ajax({
+					type: 'post',
+					url: process != 'grid' ? '/insert_COMMUTE_modal' : '/insert_COMMUTE_grid',
+					contentType: 'application/json',
+					data: jsonData,
+					beforeSend : function(xhr) {
+					    xhr.setRequestHeader(header, token);
+					},
+					success: function(data) {
+						if(!data['result']) {
+							showAlert('', 'error', '등록 실패', '등록에 실패했습니다.');
+						} else {
+							if(process != 'grid') {
+								modal_grid.resetData(data['gridList']);
+								
+								calendar.clear();
+								
+								const event = data['calendarList'].map(commute => ({
+								    id: `${commute.commute_wd}`,
+								    title: `${commute.total} ()`,
+								    start: commute.commute_wd,
+								    end: commute.commute_wd,
+								    isAllday: true,
+								    category: 'allday',
+								    backgroundColor: '#fff', 
+								}));
+								calendar.createEvents(event);
+								
+							} else {
+								grid.resetData(data['gridList']);
+							}
+							showAlert('', 'success', '등록 성공', '등록하였습니다.');
+							modal.hide();
+						}
+					},
+					error : function(xhr, textStatus, errorThrown) {
+						console.log('조회 실패');
+					}
+				});
+				
+			}
 			
 		});
 		
@@ -870,6 +894,25 @@
 		    }
 		});
 
+	}
+	
+	function inputDiv_commute_ld(commute_wt, commute_lt, div_commute_ld) {
+		console.log('안녕');
+		console.log(commute_lt.val());
+		if (validateTime(commute_lt.val())){
+			let workTime = commute_wt.val().replace(':', '');
+			let leaveTime = commute_lt.val().replace(':', '');
+			let workDate = $('#input_employee_wd').val();
+			console.log('workDate', workDate);
+			if (parseInt(leaveTime) < parseInt(workTime)) {
+				const nextDay = new Date(workDate);
+	            nextDay.setDate(nextDay.getDate() + 1);
+	            let test = getDate(nextDay);
+	            div_commute_ld.html(`퇴근일자 : ${test}`);
+			}
+		} else {
+			div_commute_ld.html('');
+		}
 	}
 	
 </script>

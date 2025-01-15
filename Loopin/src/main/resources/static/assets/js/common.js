@@ -43,6 +43,28 @@ function showToast(element, icon, title, msg) {
 }
 
 /**
+ * 컨펌 띄움(await / async)
+ * @param {String} title 제목
+ * @param {String} msg 내용
+ */
+async function showConfirm(title, msg) {
+    const result = await Swal.fire({
+        title: title,
+        html: msg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+		reverseButtons: true, 
+    });
+    
+    return result.isConfirmed;
+}
+
+
+/**
  * 년월일 -> 문자열 리턴
  * @param {date} date 객체
  * @returns {String} 년월일
@@ -210,6 +232,10 @@ function validateTime(timeStr) {
  */
 function setRadioValue(radioName, value) {
     $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
+}
+
+function getRadioValue(radioName) {
+	return radioName.filter(':checked').val();
 }
 
 /**
