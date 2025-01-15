@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
@@ -42,6 +43,7 @@ import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommuteRepository;
 import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +57,6 @@ public class CommuteService {
 	private final CommonRepository commonRepository;
 	private final CommuteRepository commuteRepository;
 	private final WorkinghourRepository workinghourRepository;
-	private final ComhistoryRepository comhistoryRepository;
 	private final HolidayRepository holidayRepository;
 	
 	private final CommuteMapper commuteMapper; 
@@ -83,9 +84,10 @@ public class CommuteService {
 	}
 	
 	// 출퇴근 기록부 그리드 조회
-	public List<CommuteDTO> select_COMMUTE_grid(String employee_cd, boolean isAdmin) {
-		return commuteMapper.select_COMMUTE_grid(employee_cd, isAdmin);
+	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
+		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin);
 	}
+	
 	
 
 	// 근로관리 그리드 조회
@@ -377,13 +379,37 @@ public class CommuteService {
 		return (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	}
 	
-	public boolean isAuthority(String Authority) {
-		Collection<? extends GrantedAuthority> authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
-		return authorities.stream().anyMatch(role -> role.getAuthority().equals("ROLE_" + Authority));
+	
+	public boolean isAuthority(String... authorities) {
+	    Collection<? extends GrantedAuthority> userAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+	            
+	    for (String authority : authorities) {
+	        String roleAuthority = "ROLE_" + authority;
+	        for (GrantedAuthority userAuth : userAuthorities) {
+	            if (userAuth.getAuthority().equals(roleAuthority)) {
+	                return true;
+	            }
+	        }
+	    }
+	    return false;
 	}
-	
-	
-	
+
+	public boolean isNotAuthority(String... authorities) {
+	    Collection<? extends GrantedAuthority> userAuthorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+	            
+	    for (String authority : authorities) {
+	        String roleAuthority = "ROLE_" + authority;
+	        for (GrantedAuthority userAuth : userAuthorities) {
+	            if (userAuth.getAuthority().equals(roleAuthority)) {
+	                return false;
+	            }
+	        }
+	    }
+	    return true;
+	}
+
+
+
 	
 	
 	

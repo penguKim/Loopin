@@ -52,8 +52,16 @@
 		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
 		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
 		WHERE 1 = 1
-		<if test="isAdmin == false">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
-		ORDER BY CM.COMMUTE_WD DESC
+	    <if test="isAdmin == false">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
+	    <if test="filter.employee_cd != null and filter.employee_cd != ''">AND CM.EMPLOYEE_CD LIKE '%${filter.employee_cd}%'</if>
+	    <if test="filter.employee_nm != null and filter.employee_nm != ''">AND EM.EMPLOYEE_NM LIKE '%${filter.employee_nm}%'</if>
+	    <if test="filter.employee_dp != null and filter.employee_dp != ''">AND CC.COMMON_NM LIKE '%${filter.employee_dp}%'</if>
+	    <if test="filter.employee_gd != null and filter.employee_gd != ''">AND CC2.COMMON_NM LIKE '%${filter.employee_gd}%'</if>
+	    <if test="filter.commute_wt != null and filter.commute_wt != ''">AND CM.COMMUTE_WT<![CDATA[ >= ]]>#{filter.commute_wt}</if>
+	    <if test="filter.commute_lt != null and filter.commute_lt != ''">AND CM.COMMUTE_LT<![CDATA[ <= ]]>#{filter.commute_lt}</if>
+	    AND CM.COMMUTE_WD<![CDATA[ >= ]]>TO_DATE(#{filter.startDate}, 'YYYY-MM-DD')
+	    AND CM.COMMUTE_LD<![CDATA[ <= ]]>TO_DATE(#{filter.endDate}, 'YYYY-MM-DD')
+	    ORDER BY CM.COMMUTE_WD DESC
 	</select>
 	
 	<!-- 출퇴근 상세 조회 -->

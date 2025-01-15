@@ -175,5 +175,10 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
             toggleIcon.classList.add('bi-chevron-down');
             console.log('숨겨진 필터가 숨겨졌습니다.');
         }
+		
+		const event = new CustomEvent('filterToggled', {
+		    detail: { isVisible: !additionalFilters.classList.contains('d-none') }
+		});
+		document.dispatchEvent(event);
     });
 }
