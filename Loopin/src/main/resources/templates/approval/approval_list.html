@@ -4,6 +4,30 @@
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
 
+
+<style>
+  /* 드롭다운 메뉴 크기 조정 */
+  .dropdown-menu {
+      min-width: 600px; /* 너비 설정 */
+      max-height: 500px; /* 최대 높이 설정 */
+	  overflow: visible !important; /* 컨텐츠가 영역 밖으로 나옴 */
+  }
+  .toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
+      font-size: 16px !important;
+      font-weight: bold !important;
+  }
+  
+  .tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
+
 <body>
 	<main id="main" class="main">
 		<!-- 전자결재 등록 모달 -->
@@ -33,8 +57,12 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">기안서구분</label>
 								<div class="col-sm-4">
-									<!-- 기안서명 입력 필드 (보이기만 함) -->
-									<input type="text" class="form-control" id="approval_dv" name="approval_dv" readonly>
+									<select class="form-select" id="approval_dv" name="approval_dv" aria-label="직원 권한">
+										<option value="" disabled selected>기안서 선택하세요</option>
+										<option th:each="DRAFT : ${DRAFT_list}" th:value="${DRAFT.common_cc}"
+											th:text="${DRAFT.common_nm}">
+										</option>
+									</select>
 								</div>
 							</div>	
 
@@ -62,35 +90,6 @@
 			</div>
 		</div>
 		
-		<div class="modal" id="modal_approval_list" tabindex="-1" aria-labelledby="modal_approval_list_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="modal_approval_list_label">기안서 선택</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<table id="apTable" class="table table-striped">
-							<thead>
-								<tr>
-									<th>기안서코드</th>
-									<th>기안서명</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="DRAFT, DRAFT_list : ${DRAFT_list}">
-									<td><span th:text="${DRAFT.common_cc}"></span>
-									<td><span th:text="${DRAFT.common_nm}"></span>
-									<td><button class="btn btn-primary select-ap-btn">선택</button></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-
 		<!-- 그리드 및 등록 버튼 -->
 		<section class="section">
 			<div class="row">
@@ -101,8 +100,8 @@
 							<h5 class="card-title">결재 현황</h5>
 							<div class="row mb-3">
 								<div class="col-sm-12">
+									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
-									<div class="tui-pagination" id="pagination"></div>
 								</div>
 								<div class="col-sm-12">
 									<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
@@ -118,8 +117,8 @@
 	<!-- 메인 끝 -->
 </body>
 
-
-<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>	
 <script>
     $(function () {
         // 모달이 열릴 때 DatePicker 초기화
@@ -194,11 +193,8 @@
 
 		var userRole = /*[[${role}]]*/ 'default';
 		
-	    let currentPage = 1; // 현재 페이지
-	    const itemsPerPage = 5; // 한 페이지에 표시할 항목 수
 	    let approvalList = []; // 전체 결재 목록
 	    let grid;
-	    let pagination;
 
 
 	    // 데이터 가져오기 및 그리드 초기화
@@ -207,12 +203,11 @@
 	        method: 'GET',
 	        success: function (data) {
 	        	approvalList = data; // 전체 데이터를 approvalList에 저장
-	            console.log('전체 데이터:', approvalList); // 데이터 확인
 	            
 	            // Grid 초기화
 	            grid = new tui.Grid({
 	                el: document.getElementById('grid'),
-	                data: approvalList.slice(0, itemsPerPage), // 첫 페이지 데이터 로드
+	                data: approvalList,
 	                scrollX: true,
 	                scrollY: true,
 	                rowHeaders: ['checkbox'],
@@ -249,72 +244,79 @@
 	                    openEditModal(rowData); // 수정 모드로 모달 열기
 	                }
 	            });
-	            // Pagination 초기화
-	            pagination = new tui.Pagination(document.getElementById('pagination'), {
-	                totalItems: approvalList.length, // 전체 데이터 개수
-	                itemsPerPage: itemsPerPage, // 페이지당 항목 수
-	                visiblePages: 5, // 페이지 버튼 개수
-	                page: currentPage, // 시작 페이지
-	                centerAlign: true // 페이지 버튼을 가운데 정렬
-	            });
-
-	            // 페이지 변경 이벤트 핸들러
-	            pagination.on('afterMove', function (event) {
-	                currentPage = event.page; // 현재 페이지 업데이트
-	                console.log("변경된 currentPage:", currentPage); // 디버그용
-
-	                // 해당 페이지의 데이터 로드
-	                loadPageData(currentPage);
-	            });
-
-	            // 초기 데이터 로드
-	            loadPageData(currentPage);
 	        },
 	        error: function (error) {
 	            console.error('데이터 로드 실패:', error);
 	        }
 	    });
 
-	    // 페이지 데이터 로드 함수
-	    function loadPageData(page) {
-	        const start = (page - 1) * itemsPerPage;
-	        const end = page * itemsPerPage;
-	        const pageData = approvalList.slice(start, end); // 해당 페이지 데이터 가져오기
-
-	        console.log('로딩된 페이지 데이터:', pageData); // 디버그용
-	        grid.resetData(pageData); // Grid 데이터 업데이트
-	    }
-
 
 	    // 삭제 버튼 클릭 이벤트
 	    $('#btn_approval_delete').on('click', function () {
 	        const checkedRows = grid.getCheckedRows();
 	        if (checkedRows.length === 0) {
-	            alert('삭제할 결재을 선택하세요.');
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '삭제할 결재을 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
 	            return;
 	        }
 
 	        const approval_cds = checkedRows.map(row => row.approval_cd);
-	        if (!confirm(`선택한 결재(${approval_cds.join(', ')})을 삭제하시겠습니까?`)) {
-	            return;
-	        }
-
-	        $.ajax({
-	            url: '/delete_APPROVAL',
-	            method: 'POST',
-	            headers: { 'X-CSRF-TOKEN': csrfToken },
-	            data: JSON.stringify({ approval_cds }),
-	            contentType: 'application/json',
-	            success: function () {
-	                alert('삭제가 완료되었습니다.');
-	                location.reload();
-	            },
-	            error: function (xhr) {
-	                console.error('삭제 중 오류 발생:', xhr.responseText);
-	                alert('삭제 중 오류가 발생했습니다.');
+	        
+	        Swal.fire({
+	            title: '삭제 확인',
+	            text: `선택한 결재(${approval_cds.join(', ')})을 삭제하시겠습니까?`,
+	            icon: 'warning',
+	            showCancelButton: true,
+	            confirmButtonText: '삭제',
+	            cancelButtonText: '취소',
+	            reverseButtons: true
+	        }).then((result) => {
+	            if (result.isConfirmed) {
+	                // 확인 버튼을 눌렀을 때 실행할 코드
+	                console.log(`선택한 결재(${approval_cds.join(', ')}) 삭제를 진행합니다.`);
+	                // 여기에서 실제 삭제 처리 로직을 추가합니다.
+	                
+	    	        $.ajax({
+	    	            url: '/delete_APPROVAL',
+	    	            method: 'POST',
+	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	    	            data: JSON.stringify({ approval_cds }),
+	    	            contentType: 'application/json',
+	    	            success: function () {
+	    		            Swal.fire({
+	    		                icon: 'success',
+	    		                title: '삭제완료!',
+	    		                text: '삭제가 완료되었습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    		            setTimeout(() => {
+	    		                location.reload();
+	    		            }, 1000);
+	    	            },
+	    	            error: function (xhr) {
+	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	    		            Swal.fire({
+	    		                icon: 'error',
+	    		                title: '오류발생',
+	    		                text: '삭제 중 오류가 발생했습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    	            }
+	    	        });
+	                
+	                
+	            } else if (result.dismiss === Swal.DismissReason.cancel) {
+	                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+	                console.log('삭제가 취소되었습니다.');
 	            }
 	        });
 	    });
+	        
+	        
 
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
@@ -406,43 +408,62 @@
 		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
 		        data: formData,
 		        success: function () {
-		            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
+		        	Swal.fire({
+		        		  icon: 'success',
+		        		  title: mode === '등록' ? '등록 완료' : '수정 완료',
+		        		  text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		        		  confirmButtonText: '확인'
+		        		});
 		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-		            location.reload(); // 페이지 새로고침
+		            setTimeout(() => {
+		                location.reload();
+		            }, 1000);
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
 		            console.error('AJAX Error:', ApprovalDTO);
-		            alert('작업 중 오류가 발생했습니다.');
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '작업 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
 		        }
 		    });
 		});
 
+
+		const filterConfig = [
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+	        { key: 'approvalCd', label: '결재코드', type: 'text', placeholder: '결재 CD 입력',  col: 'col-4' },
+	        { key: 'approvalDv', label: '기안서구분', type: 'text', placeholder: '기안서 입력',  col: 'col-4' },
+	        { key: 'approvalWr', label: '작성자', type: 'text', placeholder: '작성자 입력',  col: 'col-4' }
+	    ];
+		
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		    console.log('적용된 필터:', filterValues);
+		
+		    // 필터 적용 후 서버 요청 및 Grid 갱신
+		    fetch('/select_FILTERED_APPROVAL', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json',
+		        			[csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(filterValues)
+		    })
+		    .then(response => response.json())
+		    .then(filteredData => {
+		        console.log('필터링된 데이터:', filteredData);
+		
+		        // Grid 데이터 갱신
+		        grid.resetData(filteredData);
+		    })
+		    .catch(error => console.error('필터 적용 오류:', error));
+		});
+		
 	});
-
 	
-	$('#approval_dv').on('click', function () {
-	    const modalApprovalList = new bootstrap.Modal($('#modal_approval_list')[0]);
-	    modalApprovalList.show();
-	});
-	
-	
- 	// 부서 선택 버튼 클릭 이벤트 처리
-	$(document).on('click', '.select-ap-btn', function () {
-		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
-		const selectedRow = $(this).closest('tr');
-
-		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const approvalName  = selectedRow.find('td').eq(0).text().trim(); // 기안서코드
-
-		// 기존 모달의 필드에 값 설정
-		$('#approval_dv').val(approvalName);
-
-		// 부서 선택 모달 닫기
-		const modalApprovalList = bootstrap.Modal.getInstance($('#modal_approval_list')[0]);
-		modalApprovalList.hide();
-	});
-
     
 </script>
 </html>

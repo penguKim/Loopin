@@ -1,6 +1,5 @@
 package com.itwillbs.c4d2412t3p1.util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -66,6 +65,28 @@ public class FilterRequest {
 						&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
 				}
 			}
+
+		
+		@Getter
+		@Setter
+		@ToString
+		// 인사 전용 필터 클래스
+		public static class APPROVALFilterRequest extends FilterRequest {
+			
+			private String approvalCd;
+			private String approvalDv;
+			private String approvalWr;
+			
+			public APPROVALFilterRequest() {
+				super();
+			}
+			// 로그 필터 조건이 비어 있는지 확인
+			@Override
+			public boolean isEmpty() {
+				return super.isEmpty() && (approvalCd == null || approvalCd.isEmpty())
+						&& (approvalDv == null || approvalDv.isEmpty()) && (approvalWr == null || approvalWr.isEmpty());
+			}
+		}
 
 	}
 }
