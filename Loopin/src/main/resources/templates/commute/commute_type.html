@@ -54,49 +54,15 @@
 		
 		make_grid();
 		
-
-		
 		btn_employee_modal.on('click', function (){
 			make_employee_modal(commute_grid_row);
 		});
 		
-
-
-		
 	});
 	
-	// 라디오 버튼 체크
-	function setRadioValue(radioName, value) {
-	    $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
-	}
-	
-	function createSelectBox(el, list, title) {
-	    const selectBox = $(el);
 
-	    selectBox.empty();
-		
-		if(title) {
-		    selectBox.append(`<option value="">${title}</option>`);		
-		}
 
-	    list.forEach(data => {
-	        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
-	    });
-	}
-
-	function setCheckBox(week) {
-	    let weekHtml = '';
-	    for (const day of week) {
-	        weekHtml += `
-	            <div class="form-check-inline">
-	                <input class="form-check-input" type="checkbox" name="workinghour_dw" id="check_${day.common_cc}" value="${day.common_cc}">
-	                <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
-	            </div>
-	        `;
-	    }
-	    $('#div_week').html(weekHtml);
-	}
-	
+	// 인풋 항목 입력
 	function inputWork(data) {
 		workinghour_id.val(data['workinghour_id']);
 		workinghour_nm.val(data['workinghour_nm']);
@@ -119,31 +85,7 @@
 	}
 
 	
-	// 시간 입력
-	function inputTimeFormat(input) {
-	    let value = input.value.replace(/[^0-9]/g, '');
-	    value = value.slice(0, 4);
-	    
-	    if (value.length >= 4) {
-	        const hours = parseInt(value.substring(0, 2));
-	        const minutes = parseInt(value.substring(2, 4));
-	        
-	        if (hours > 24) {
-	            input.value = "24:00";
-	            return;
-	        }
-	        if (minutes > 59) {
-	            input.value = `${hours.toString().padStart(2, '0')}:00`;
-	            return;
-	        }
-	        input.value = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-	    } else {
-	        input.value = value;
-	    }
-	};
-
-	
-	
+	// 근로관리 그리드 생성
 	function make_grid() {
 		
 		const dataSource = {
@@ -186,6 +128,7 @@
 		});
 	}
 	
+	// 근로관리 모달 생성
 	function modal_detail(data) {
 		let week = /*[[${WEEK}]]*/[];
 		let title = '근무 설정';
@@ -284,10 +227,7 @@
 		}
 		commute_modal = new bootstrap.Modal(modalElement);  // 모달 초기화
 		
-
-		
         modalElement.addEventListener('shown.bs.modal', function () {
-        	
         	workinghour_id = $('#workinghour_id');
         	workinghour_nm = $('#workinghour_nm');
         	workinghour_tt = $('input:radio[name=workinghour_tt]');
@@ -307,7 +247,6 @@
                 $('#check_all').prop('checked', allChecked);
             });
             workinghour_detail(data['workinghour_id']);
-        	
             
         });
 		
@@ -320,19 +259,13 @@
 		
 		commute_modal.show();
 		
-		
 		btn_workinghour_save.on('click', function() {
-			
 			let week = [];
 			$('input[name="workinghour_dw"]:not(#check_all):checked').each(function() {
 			    week.push($(this).val());
 			});
 			if(week.includes(workinghour_hs.val())) {
-		        Swal.fire({
-		            icon: 'warning',
-		            title: '입력 오류',
-		            html: '주휴요일은 근로요일과 중복될 수 없습니다.'
-		        });
+		        showAlert('', 'warning', '입력 오류', '주휴요일은 근로요일과 중복될 수 없습니다.');
 		        return;
 			}
 			let data = {
@@ -384,6 +317,7 @@
 		});
 	}
 	
+	// 근로관리 상세내역 조회
 	function workinghour_detail(id) {
 		$.ajax({
 			type: 'post',
@@ -414,14 +348,10 @@
 		});
 	}
 
-	
+	// 사원추가 모달
 	function make_employee_modal(row) {
 		if(!row) {
-			Swal.fire({
-			    icon: 'warning',
-			    title: '근로항목 선택',
-			    html: '근로항목을 선택해주세요.'
-			})
+			showAlert('', 'warning', '근로항목 선택' ,'근로항목을 선택해주세요.');
 			return;
 		}
 		let title = `${row['workinghour_nm']} 설정`;
@@ -480,8 +410,6 @@
 		}
 		employee_modal = new bootstrap.Modal(modalElement);
 		
-
-		
         modalElement.addEventListener('shown.bs.modal', function () {
         	make_employee_grid();
         	make_insert_grid();
@@ -501,20 +429,23 @@
 		
 		employee_modal.show();
 		
+		// 추가 버튼 이벤트
 		btn_employee_insert.on('click', function() {
 		    const checkedRow = employee_grid.getCheckedRows();
+		    // 컨펌 추가
 		    update_EMPLOYEE_WK(employee_grid, checkedRow, row['workinghour_id'], '미지정 사원');
 		});
 
 		// 삭제 버튼 이벤트
 		btn_employee_delete.on('click', function() {
 		    const checkedRow = insert_grid.getCheckedRows();
+		    // 컨펌 추가
 		    update_EMPLOYEE_WK(insert_grid, checkedRow, row['workinghour_id'], '등록 사원');
 		});
 		
-		
 	}
 	
+	// 사원추가 모달의 미지정 그리드
 	function make_employee_grid() {
 		employee_grid = new tui.Grid({
 			el : document.getElementById('employee_grid'),
@@ -544,6 +475,7 @@
 		
 	}
 	
+	// 사원추가 모달의 지정 그리드
 	function make_insert_grid() {
 		insert_grid = new tui.Grid({
 			el : document.getElementById('insert_grid'),
@@ -573,6 +505,7 @@
 		
 	}
 
+	// 사원추가 모달의 데이터 조회
 	function select_EMPLOYEE_WORKINGHOUR(id) {
 		console.log(id);
 		$.ajax({
@@ -593,14 +526,10 @@
 		});
 	}
 	
+	// 사원추가 모달의 업데이트
 	function update_EMPLOYEE_WK(grid, checkedRow, workinghour_id, warningTitle) {
-		console.log(workinghour_id);
 	    if(checkedRow.length == 0) {
-	        Swal.fire({
-	            icon: 'warning',
-	            title: warningTitle,
-	            html: warningTitle + '을 선택해주세요.'
-	        });
+	        showAlert('' ,'warning', warningTitle,  warningTitle + '을 선택해주세요.');
 	        return;
 	    }
 	    
@@ -631,16 +560,27 @@
 	                msg = '등록에 실패했습니다.';
 	            }
 	            
-	            Swal.fire({
-	                icon: icon,
-	                title: title,
-	                html: msg
-	            });
+	            showAlert('', icon, title, msg);
 	        },
 	        error: function(xhr, textStatus, errorThrown) {
 	            console.log('조회 실패');
 	        }
 	    });
+	}
+	
+
+	// 체크박스 생성
+	function setCheckBox(week) {
+	    let weekHtml = '';
+	    for (const day of week) {
+	        weekHtml += `
+	            <div class="form-check-inline">
+	                <input class="form-check-input" type="checkbox" name="workinghour_dw" id="check_${day.common_cc}" value="${day.common_cc}">
+	                <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
+	            </div>
+	        `;
+	    }
+	    $('#div_week').html(weekHtml);
 	}
 
 </script>

@@ -8,7 +8,7 @@
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <style>
 	.toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
-	    font-size: 16px !important;
+	    font-size: 14px !important;
 	    font-weight: bold !important;
 	}
   
@@ -182,7 +182,7 @@
 		btn_grid_tab.on('click', function() {
 			if(grid == null) {
 				make_grid();
-				setGridHeight(grid, -600);
+				setGridHeight(grid, -430);
 			}
 			getGridList();
 		});
@@ -190,22 +190,22 @@
 		
 		
 		// 창크기 -------------------------
-		setElementHeight('#div_card', -230);
-		setElementHeight('#div_calendar', -440);
+		setElementHeight('#div_card', -105);
+		setElementHeight('#div_calendar', -320);
 		
 		$(window).resize(function() {
-		    setElementHeight('#div_card', -230);
-			setElementHeight('#div_calendar', -440);
+			setElementHeight('#div_card', -105);
+			setElementHeight('#div_calendar', -320);
 			if(grid != null) {
-				setGridHeight(grid, -600);
+				setGridHeight(grid, -430);
 			}
 		});
 
 		$(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -670);
+		        setGridHeight(grid, -500);
 		    } else {
-		        setGridHeight(grid, -600);
+		        setGridHeight(grid, -430);
 		    }
 		});
 		
@@ -309,7 +309,20 @@
 								const date = model.date;
 								const dayNum = date.split('-')[2];
 								const holiday = data.holidayList.find(h => h.holiday_dt == date);
+								const work = data.list.find(w => w.commute_wd == date);
+								console.log(work);
 								const isToday = date == getDate(new Date());
+								if(holiday && work) {
+									return `
+									<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
+										${dayNum}
+										<span class="holiday-name" style="font-size: 12px;">
+											${holiday.holiday_nm}
+										</span>
+									</span>
+									<span class="fw-bold" style="color: #ff4040"> | ${work.total}명 출근</span>
+									`;
+								}
 								if(holiday) {
 									return `
 									<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
@@ -319,6 +332,13 @@
 										</span>
 									</span>`;
 								}
+								if(isAdmin && work) {
+									return `
+									<span class="tui-full-calendar-weekday-grid-date ms-1">
+										${dayNum}
+										<span class="fw-bold"> | ${work.total}명 출근</span>
+									</span>`;
+								}
 								if(isToday) {
 					                return `<span class="toastui-calendar-weekday-grid-date 
 									toastui-calendar-weekday-grid-date-decorator 
@@ -326,14 +346,6 @@
 					            }
 					            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
 							},
-							time: function(schedule) {
-							    return `<span class="calendar-event" 
-							        data-bs-toggle="tooltip" 
-							        data-bs-placement="top" 
-							        title="${schedule.title}">
-							        ${schedule.title}
-							    </span>`;
-							}
 						}
 					});
 					   
@@ -345,7 +357,7 @@
 					    if (isAdmin) {
 					        return {
 					            id: `${commute.commute_wd}`,
-					            title: `${commute.total} ()`,
+					            title: `지각: ${commute.late} / 근무중: ${commute.working} / 퇴근: ${commute.leave}`,
 					            start: commute.commute_wd,
 					            end: commute.commute_wd,
 					            isAllday: true,
@@ -427,6 +439,7 @@
 			bodyHeight : 400,
 			columns : [
 				{header : '근무코드', name : 'workinghour_id', hidden : true},
+				{header : '마감여부', name : 'commute_pr', hidden : true},
 				{header : '출근일자', name : 'commute_wd', sortable : true, align: 'center', filter: 'date'},
 				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
 				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
@@ -529,6 +542,7 @@
 			bodyHeight : 600,
 			columns : [
 				{header : '근무코드', name : 'workinghour_id', hidden : true},
+				{header : '마감여부', name : 'commute_pr', hidden : true},
 				{header : '출근일자', name : 'commute_wd', sortable : true, align: 'center', filter: 'date'},
 				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
 				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
@@ -856,26 +870,6 @@
 		    }
 		});
 
-	}
-
-	
-
-
-
-	
-	
-	function createSelectBox(el, list, title) {
-	    const selectBox = $(el);
-
-	    selectBox.empty();
-		
-		if(title) {
-		    selectBox.append('<option value="">부서를 선택하세요</option>');		
-		}
-
-	    list.forEach(data => {
-	        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
-	    });
 	}
 	
 </script>
