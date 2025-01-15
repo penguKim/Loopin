@@ -59,6 +59,8 @@ public class Commute {
 	private String commute_jg;
 	@Column(name = "commute_hg")
 	private String commute_hg;
+	@Column(name = "commute_pr")
+	private boolean commute_pr;
 	@Column(name = "commute_ru")
 	private String commute_ru;
 	@Column(name = "commute_rd")
@@ -84,6 +86,7 @@ public class Commute {
 	    		.commute_yg(commute.getCommute_yg())
 	    		.commute_jg(commute.getCommute_jg())
 	    		.commute_hg(commute.getCommute_hg())
+	    		.commute_pr(commute.isCommute_pr())
 	    		.commute_ru(commute.getCommute_ru())
 	    		.commute_rd(commute.getCommute_rd())
 	    		.commute_uu(commute.getCommute_uu())

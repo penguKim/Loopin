@@ -27,14 +27,16 @@ public class CommuteDTO {
 	private String commute_yg;
 	private String commute_jg;
 	private String commute_hg;
+	private boolean commute_pr;
 	private String commute_ru;
 	private Timestamp commute_rd;
 	private String commute_uu;
 	private Timestamp commute_ud;
 	
 	private BigDecimal total;
-	private BigDecimal inside;
-	private BigDecimal outside;
+	private BigDecimal late;
+	private BigDecimal working;
+	private BigDecimal leave;
 	private String employee_nm;
 	private String employee_dp;
 	private String employee_gd;

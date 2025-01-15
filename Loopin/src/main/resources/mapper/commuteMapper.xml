@@ -3,45 +3,11 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.CommuteMapper">
-	<select id="select_WORKINGHOUR" resultType="Workinghour">
-		SELECT WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM,
-		    '( ' ||COUNT(EM.EMPLOYEE_CD) || ' / ' || 
-		    (SELECT COUNT(*) FROM EMPLOYEE WHERE EMPLOYEE_US = 1) || ' )' EMPLOYEE_CNT
-		FROM WORKINGHOUR WH
-		LEFT JOIN EMPLOYEE EM ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID AND EM.EMPLOYEE_US = 1
-		GROUP BY WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM
-	</select>
-
-	<!-- // 사원추가 모달 - 선택안된 직원 조회 -->
-	<select id="select_EMPLOYEE_WORKINGHOUR" resultType="Workinghour">
-		SELECT EM.EMPLOYEE_CD, EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP, CC2.COMMON_NM EMPLOYEE_GD, EM.WORKINGHOUR_ID
-		FROM EMPLOYEE EM
-		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
-		LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'DEPARTMENT' AND CC.COMMON_CC = EM.EMPLOYEE_DP
-		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
-	    WHERE EM.EMPLOYEE_RD IS NULL
-	    AND
-	    <choose>
-	        <when test="workinghour_id == null or workinghour_id == ''">
-	            EM.WORKINGHOUR_ID IS NULL
-	        </when>
-	        <otherwise>
-	            EM.WORKINGHOUR_ID = #{workinghour_id}
-	        </otherwise>
-	    </choose>
-	    ORDER BY EM.EMPLOYEE_NM
-	</select>
-	
-	<update id="update_EMPLOYEE_WK">
-		UPDATE EMPLOYEE SET 
-			WORKINGHOUR_ID = #{workinghour.workinghour_id, jdbcType=VARCHAR}
-		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
-	</update>
-	
+<!-- //////////////////////////////////////////////////////////// 출퇴근 기록부 //////////////////////////////////////////////////////////// -->
 	<!-- 출퇴근 그리드탭 조회 -->
 	<select id="select_COMMUTE_grid" resultType="Commute">
 		SELECT CM.COMMUTE_WD, CM.COMMUTE_LD, CM.EMPLOYEE_CD, EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP,
-			   CC2.COMMON_NM EMPLOYEE_GD, CM.COMMUTE_WT, CM.COMMUTE_LT, CM.WORKINGHOUR_ID,
+			   CC2.COMMON_NM EMPLOYEE_GD, CM.COMMUTE_WT, CM.COMMUTE_LT, CM.WORKINGHOUR_ID, CM.COMMUTE_PR,
 			   (SELECT CC.COMMON_NM FROM COMMON_CODE CC 
 			     WHERE CC.COMMON_GC = 'ATDC' AND CC.COMMON_CC = 
 			      CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 'LATE'
@@ -94,19 +60,60 @@
 		AND EM.WORKINGHOUR_ID IS NOT NULL
 	</select>
 	
+	<!-- 출퇴근 캘린더 조회 -->
 	<select id="select_COMMUTE_calendar" resultType="Commute">
 		SELECT
 			<choose>
 				<when test="isAdmin == false">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
-				<otherwise>COMMUTE_WD, COUNT(*) total</otherwise>
+				<otherwise>
+					CM.COMMUTE_WD, COUNT(*) total, COUNT(CM.COMMUTE_LT) AS leave,
+				    SUM(CASE WHEN CM.COMMUTE_LT IS NULL THEN 1 ELSE 0 END) AS working,
+				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late
+				</otherwise>
 			</choose>
 		FROM COMMUTE CM
+		<if test="isAdmin == true">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
 		WHERE COMMUTE_WD BETWEEN #{startDate} AND #{endDate}
 	    <if test="isAdmin == false">AND EMPLOYEE_CD = #{employee_cd}</if>
-		<if test="isAdmin == true">GROUP BY COMMUTE_WD</if>
+		<if test="isAdmin == true">GROUP BY CM.COMMUTE_WD</if>
 	</select>	
 	
+<!-- //////////////////////////////////////////////////////////// 근로 관리 //////////////////////////////////////////////////////////// -->
+
+	<select id="select_WORKINGHOUR" resultType="Workinghour">
+		SELECT WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM,
+		    '( ' ||COUNT(EM.EMPLOYEE_CD) || ' / ' || 
+		    (SELECT COUNT(*) FROM EMPLOYEE WHERE EMPLOYEE_US = 1) || ' )' EMPLOYEE_CNT
+		FROM WORKINGHOUR WH
+		LEFT JOIN EMPLOYEE EM ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID AND EM.EMPLOYEE_US = 1
+		GROUP BY WH.WORKINGHOUR_ID, WH.WORKINGHOUR_NM, WH.WORKINGHOUR_US, WH.WORKINGHOUR_RM
+	</select>
+
+	<!-- // 사원추가 모달 - 선택안된 직원 조회 -->
+	<select id="select_EMPLOYEE_WORKINGHOUR" resultType="Workinghour">
+		SELECT EM.EMPLOYEE_CD, EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP, CC2.COMMON_NM EMPLOYEE_GD, EM.WORKINGHOUR_ID
+		FROM EMPLOYEE EM
+		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
+		LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'DEPARTMENT' AND CC.COMMON_CC = EM.EMPLOYEE_DP
+		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
+	    WHERE EM.EMPLOYEE_US = 1
+	    AND
+	    <choose>
+	        <when test="workinghour_id == null or workinghour_id == ''">
+	            EM.WORKINGHOUR_ID IS NULL
+	        </when>
+	        <otherwise>
+	            EM.WORKINGHOUR_ID = #{workinghour_id}
+	        </otherwise>
+	    </choose>
+	    ORDER BY EM.EMPLOYEE_NM
+	</select>
 	
+	<update id="update_EMPLOYEE_WK">
+		UPDATE EMPLOYEE SET 
+			WORKINGHOUR_ID = #{workinghour.workinghour_id, jdbcType=VARCHAR}
+		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
+	</update>
 	
 	
 	
