@@ -54,8 +54,10 @@ function getpreMth(){
 	}
 	return year + '-' + month;
 };
-	
-	window.onload = function(){ document.getElementById('premth').innerText = getpreMth();}
+	const premth = getpreMth();
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('premth').innerText = getpreMth();
+});
 	
 	  //////////
 	 // AJAX // 
@@ -97,13 +99,13 @@ function getpreMth(){
 	       
 		console.log('day',day);
 		console.log('empCD',employee_cd);
-		
+		//debugger;
 		if(day >= 1 && day <=15) {
 		$.ajax({
 			url: "/getworkingtimeformth",
 			method: "GET",
 			dataType: "JSON",
-			data: {employee_cds: employee_cd},
+			data: {employee_cds: employee_cd, premth: premth},
 			success: function(data){
 				console.log("근태 데이터",data);
 				

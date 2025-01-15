@@ -135,14 +135,10 @@ public class PRController {
 	
 	@GetMapping("/getworkingtimeformth")
 	@ResponseBody
-	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList) {
+	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList, @RequestParam("premth") String premth) {
 		
-//		ObjectMapper objMapper = new ObjectMapper();
-//		List<String> employee_cdList = null;
-		
-//		List<String> employee_cdList = Arrays.asList(employee_cd.split(","));
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!employee_list :"+employee_cdList);
-		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
+		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList, premth);
 		
 		return list;
 	}

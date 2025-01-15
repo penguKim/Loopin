@@ -2,8 +2,8 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -249,8 +249,16 @@ public class PRService {
 		return list;
 	}
 
-	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist) {
-		return prM.select_wokringtimeformth(emp_cdlist);
+	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist, String premth) {
+		
+		if(premth.equals("12") ) {
+			List<Map<String, Object>> wtlist = prM.select_wokringtimeformth(emp_cdlist);
+			// 여기서 emp_cdlist로 남은연차 구하기 + 한번에 담아서 넘겨주기
+			return null;
+		}else {
+			return prM.select_wokringtimeformth(emp_cdlist);
+		}
+		
 	}
 
 }
