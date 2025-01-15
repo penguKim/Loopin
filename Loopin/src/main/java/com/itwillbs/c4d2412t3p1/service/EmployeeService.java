@@ -25,7 +25,8 @@ import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
-import com.itwillbs.c4d2412t3p1.repository.TransferRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -87,8 +88,8 @@ public class EmployeeService {
     }
 
     // 직원 삭제
-	public void delete_EMPLOYEE(List<String> cds) {
-		EmployeeRepository.deleteAllById(cds);
+	public void updateEmployeeStatus(List<String> employeeCds, Boolean status) {
+		EmployeeRepository.updateEmployeeStatus(employeeCds, status);
 		
 	}
 
@@ -167,20 +168,11 @@ public class EmployeeService {
     }
 	
     
-    // 모달 부서코드 가져오기
-    public List<Common_code> selectDeptList(String string) {
-    	return commonRepository.selectDeptList("00", string);
+    // 공통코드 데이터 조회
+    public List<Common_code> selectCommonList(String string) {
+    	return commonRepository.selectCommonList("00", string);
     }
 
-    // 모달 직급코드 가져오기
-	public List<Common_code> selectGradeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-    
-	// 셀렉트박스 부서장 유무 가져오기
-	public List<Common_code> selectDPTypeList(String string) {
-		return commonRepository.selectDPTypeList("00", string);
-	}
 	
 	
 	// 성별 차트 조회
@@ -243,7 +235,9 @@ public class EmployeeService {
     	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
     }
 
-	
+    public List<Employee> select_FILTERED_EMPLOYEE(EmployeeFilterRequest filterRequest) {
+    	return EmployeeRepository.select_FILTERED_EMPLOYEE(filterRequest);
+    }
 	
 	
 }

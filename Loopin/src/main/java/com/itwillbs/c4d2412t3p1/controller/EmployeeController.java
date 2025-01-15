@@ -10,9 +10,9 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -33,12 +33,11 @@ import org.springframework.web.multipart.MultipartFile;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
-import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
-
 
 
 @RequiredArgsConstructor
@@ -107,14 +106,20 @@ public class EmployeeController {
 		String role = employeeDetails.getEmployee_rl();
 		
 		// 부서코드 가져오기 
-		model.addAttribute("dept_list", employeeService.selectDeptList("DEPARTMENT"));
+		model.addAttribute("dept_list", employeeService.selectCommonList("DEPARTMENT"));
 
 		// 직위코드 가져오기 
-		model.addAttribute("grade_list", employeeService.selectGradeList("POSITION"));
+		model.addAttribute("grade_list", employeeService.selectCommonList("POSITION"));
 		
 		// 부서장 유무 가져오기
-		model.addAttribute("DPType_list", employeeService.selectDPTypeList("DPTYPE"));
-		
+		model.addAttribute("DPType_list", employeeService.selectCommonList("DPTYPE"));
+
+		// 인사카드 사용여부 가져오기
+		model.addAttribute("useyn_list", employeeService.selectCommonList("USEYN"));
+
+		// 부서장 유무 가져오기
+		model.addAttribute("PMType_list", employeeService.selectCommonList("PERMISSION"));
+
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
 
@@ -123,10 +128,11 @@ public class EmployeeController {
 
 	
 	// 인사 카드 조회
-	@LogActivity(value = "조회", action = "인사카드")
 	@GetMapping("/select_EMPLOYEE")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
+		
+		
 		
 		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
@@ -136,8 +142,8 @@ public class EmployeeController {
 	    
 	    List<Employee> employees;
 
-	    // 관리자일 경우 모든 직원 정보 조회
-	    if (currentRole.contains("admin") || currentRole.contains("developer")) {
+	    // 시스템 관리자나 인사관리자일 경우 모든 직원 정보 조회
+	    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
 	        employees = employeeService.findAll(); // 모든 직원 정보 조회
 	    } else {
 	        // 일반 사용자일 경우 본인 정보만 조회
@@ -176,6 +182,7 @@ public class EmployeeController {
 	        row.put("employee_md", employee.getEmployee_md());
 	        row.put("employee_mg", employee_mg != null && employee_mg);
 	        row.put("employee_rl", employee.getEmployee_rl());
+	        row.put("employee_us", employee.getEmployee_us());
 	        
 	        return row;
 	    }).collect(Collectors.toList());
@@ -183,7 +190,6 @@ public class EmployeeController {
 	    return ResponseEntity.ok(response);
 	}
 	
-	@LogActivity(value = "등록", action = "인사카드")
 	@PostMapping("/insert_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> insert_EMPLOYEE(
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
@@ -227,7 +233,6 @@ public class EmployeeController {
 		}
 	}
 	
-	@LogActivity(value = "수정", action = "인사카드")
 	@PostMapping("/update_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> update_EMPLOYEE(
 	        @RequestPart("employeeDTO") EmployeeDTO employeeDTO,// DTO 받기
@@ -312,19 +317,18 @@ public class EmployeeController {
 
 	
 	
-//	인사발령 삭제
-	@LogActivity(value = "삭제", action = "인사카드")
+	//	인사발령 삭제
 	@PostMapping("/delete_EMPLOYEE")
 	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
 		
-		List<String> cds = request.get("employee_cds");
+		List<String> employeeCds  = request.get("employee_cds");
 		
 		log.info("삭제 요청 데이터: " + request.toString());
 		
 		Map<String, Object> response = new HashMap<>();
 
 		try {
-			employeeService.delete_EMPLOYEE(cds); // Service 계층에서 삭제 처리
+			employeeService.updateEmployeeStatus(employeeCds, false);
 			response.put("success", true);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -467,8 +471,48 @@ public class EmployeeController {
         return response;
     }
 
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_EMPLOYEE")
+    public ResponseEntity<List<Employee>> select_FILTERED_EMPLOYEE(@RequestBody EmployeeFilterRequest filterRequest) {
+		log.info("@@@@@@@@@@@@@@@@@");
+		
+		System.out.println("@@@@@@@@@" + filterRequest);
+		System.out.println("@@@@@@@@@" + filterRequest.getStartDate());
+		System.out.println("@@@@@@@@@" + filterRequest.getEndDate());
+		
+        try {
+            // 필터 조건이 비어 있으면 전체 인사정보 반환
+            if (filterRequest.isEmpty()) {
+            	List<Employee> employees = employeeService.findAll();
+                return ResponseEntity.ok(employees);
+            }
+            
+            log.info(filterRequest.toString()); // 전체 필드 출력
+            log.info(filterRequest.getStartDate()); // 시작일
+            log.info(filterRequest.getEndDate()); // 종료일
+            log.info(filterRequest.getEmployeeCd());// 사원코드
+            log.info(filterRequest.getEmployeeDp()); // 부서
+            log.info(filterRequest.getEmployeeGd()); // 직급
+            log.info(filterRequest.getEmployeeHd()); // 입사일
+            log.info(filterRequest.getEmployeeNm()); // 사원명 
+            
+            
+            
+            
+            // 필터 조건에 따른 필터링된 인사정보 반환
+            List<Employee> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest);
+            
+            System.out.println("@@@@@@@@" + filteredEmployeeList);
+            
+            
+            
+            return ResponseEntity.ok(filteredEmployeeList);
 
-
+        } catch (Exception e) {
+        	e.printStackTrace();
+            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 
     
 

@@ -15,16 +15,16 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class MyUserDetailsService implements UserDetailsService {
 
-	private final EmployeeRepository employeeRepository;
-	
-	@Override
-	public UserDetails loadUserByUsername(String employee_id) throws UsernameNotFoundException {
-		
-		Employee employee = employeeRepository.findByEmployee_id(employee_id).orElseThrow(() -> 
-			new UsernameNotFoundException("없는 회원"));
-		
-		System.out.println(employee.toString());
-		
-		return new EmployeeDetails(employee);
-	}
+    private final EmployeeRepository employeeRepository;
+    
+    @Override
+    public UserDetails loadUserByUsername(String employee_id) throws UsernameNotFoundException {
+    	Employee employee = employeeRepository.findByEmployee_id(employee_id)
+                .orElseThrow(() -> new UsernameNotFoundException("존재하지 않는 계정입니다"));
+                
+            return new EmployeeDetails(employee);
+        }
 }
+
+
+
