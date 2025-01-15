@@ -152,6 +152,7 @@
 					});
 				} else {
 					grid.resetData(respose['data']);
+					console.log(respose['data']);
 				}
 	        },
 			error : function(xhr, textStatus, errorThrown) {
@@ -186,7 +187,8 @@
 	}
 	
 	$('#btn_insert_ANNUAL').on("click", function () {
-		let annual_yr = new Date().getFullYear(); // 현재 연도 가져오기
+		let annual_yr = new Date().getFullYear();
+
 		
 		$.ajax({
 			type: 'post',

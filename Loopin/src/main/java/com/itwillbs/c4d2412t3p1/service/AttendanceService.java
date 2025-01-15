@@ -60,8 +60,8 @@ public class AttendanceService {
 		return holidayRepository.findAll();
 	}
 
-	public List<Map<String, Object>> select_period_HOLIDAY(Map<String, Object> params) {
-		return holidayMapper.select_period_HOLIDAY(params);
+	public List<Map<String, Object>> select_period_HOLIDAY(String holiday_dt1, String holiday_dt2) {
+		return holidayMapper.select_period_HOLIDAY(holiday_dt1, holiday_dt2);
 	}
 	
 	public void insert_HOLIDAY(List<Map<String, String>> holidays) throws Exception {
@@ -138,13 +138,13 @@ public class AttendanceService {
         for (Map<String, Object> annual : annuals) {
         	annual.put("ANNUAL_RD", date_string);
         	annual.put("ANNUAL_RU", regUser); // 입력 일시
-        	log.info(annual.get("EMPLOYEE_CD")+"안들어냐");
             attendanceMapper.insert_ANNUAL(annual);
         }
 	}
 
-	public List<Map<String, Object>> select_APPROVAL_ANNUAL() {
-		return attendanceMapper.select_APPROVAL_ANNUAL();
+	public List<Map<String, Object>> select_APPROVAL_ANNUAL(Map<String, Object> params) {
+		log.info(params.get("isAdmin")+"안들어냐");
+		return attendanceMapper.select_APPROVAL_ANNUAL(params);
 	}
 
 	public List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params) {

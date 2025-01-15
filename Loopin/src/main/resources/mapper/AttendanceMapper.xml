@@ -95,7 +95,7 @@
 						    , ANNUAL_UD
 							)
 					VALUES (#{EMPLOYEE_CD}
-							, #{ANNUAL_YR}+1
+				        	, #{ANNUAL_YR} 
 							, 0 
 							, #{EXPECT_ANNUAL} 
 							, #{EXPECT_ANNUAL} 
@@ -106,57 +106,37 @@
 	</insert>
 	
 	<select id="select_APPROVAL_ANNUAL" resultType="map">
-		 SELECT 
-		    e.EMPLOYEE_CD, -- 사원코드
-		    e.EMPLOYEE_NM, -- 이름
-		    a.APPROVAL_DV, -- 휴가코드
-		    CASE 
-		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
-		        THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
-		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
-		    END AS SERVICE_YEARS,
-		    cc.COMMON_NM AS DEPARTMENT_NAME,
-		    COUNT(a.APPROVAL_CD) AS total_approvals, -- 승인받은 휴가 개수 합산
-		    SUM(
-		        CASE 
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN'  
-		            THEN TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') 
-		                 - TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') + 1
-		            ELSE 0
-		        END
-		    ) AS total_days, -- AN의 전체 일수 합산
-		    SUM(
-		        CASE 
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1  
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5
-		            ELSE 0
-		        END
-		    ) AS total_mapped_value 			-- 연차 시작 끝 고려안하고 갯수만 들어갔고, 반차 갯수만 들어감 고쳐야함
-		    , ann.ANNUAL_AA
-		FROM APPROVAL a
-		LEFT OUTER JOIN COMMON_CODE c 
-		    ON a.APPROVAL_DV = c.COMMON_CC 
-		   AND c.COMMON_GC = 'DRAFT' 
-		LEFT JOIN EMPLOYEE e 
-		    ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
-		LEFT JOIN COMMON_CODE cc -- 부서 코드 테이블 조인
-		    ON e.EMPLOYEE_DP = cc.COMMON_CC 
-		   AND cc.COMMON_GC = 'DEPARTMENT' -- 부서 코드
-		   LEFT JOIN ANNUAL ann -- ANNUAL 테이블 조인
-		    ON e.EMPLOYEE_CD = ann.EMPLOYEE_CD 
-		   AND ann.ANNUAL_YR = '2024' 														-- 동적 변환!!!!!!!!
-		WHERE a.APPROVAL_DV = '50'  														-- 동적 변환!!!!!!!!
-		GROUP BY 
-		    e.EMPLOYEE_CD, 
-		    e.EMPLOYEE_NM, 
-		    a.APPROVAL_DV, -- 기안코드
-		    cc.COMMON_NM, -- 부서명 
-		    CASE 
-		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
-		        THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월'
-		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
-		    END, -- 근속연수
-		   ann.ANNUAL_AA
+		SELECT e.EMPLOYEE_NM
+			   , a.APPROVAL_CD
+			   , c.COMMON_NM EMPLOYEE_DP
+			   , cc.COMMON_NM EMPLOYEE_GD
+			   , a.APPROVAL_WR  
+			   , a.APPROVAL_DV
+			   , a.APPROVAL_AV
+			   , JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS annualtype
+		       , JSON_VALUE(a.APPROVAL_CT, '$.startday') AS startday
+		       , JSON_VALUE(a.APPROVAL_CT, '$.endday') AS endday
+		       , CASE 
+		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1
+		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5
+		             ELSE 0 -- 병가
+		          END AS mapped_value
+		       , CASE
+		       		 WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN'
+		             AND JSON_VALUE(a.APPROVAL_CT, '$.startday') &lt;&gt; JSON_VALUE(a.APPROVAL_CT, '$.endday') 
+		         THEN 
+		             TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') 
+		             - TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') + 1
+		         ELSE 0
+		       END AS day_difference -- startday와 endday 간 차이 계산 (연차 갯수 계산)
+		  FROM APPROVAL a 
+	 LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_CD = a.APPROVAL_WR 
+	 LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
+	 LEFT JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = e.EMPLOYEE_GD
+		 WHERE 1=1
+		   AND a.APPROVAL_DV = '10'
+		   AND a.APPROVAL_AV = '5'
+<!--		   <if test="isAdmin == false">AND e.EMPLOYEE_CD = 'EM25-0014'</if>  사원이라면 동적추가(employee_rl != 'sys, at')-->
     </select>
 	
 </mapper>
