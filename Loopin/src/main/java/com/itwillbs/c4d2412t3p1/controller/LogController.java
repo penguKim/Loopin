@@ -22,6 +22,7 @@ import lombok.extern.java.Log;
 @Log
 public class LogController {
 	
+	
 	private final LogService logService;
 	
 	@GetMapping("/log_list")
