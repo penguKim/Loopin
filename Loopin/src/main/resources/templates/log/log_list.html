@@ -17,7 +17,7 @@
 			<div class="row">
 				<div class="col-lg-12">
 
-					<div class="card">
+					<div class="card" id="div_card">
 						<div class="card-body">
 							<h5 class="card-title">로그</h5>
 
@@ -72,7 +72,6 @@
 </body>
 
 <!-- 필터 모듈 JS File -->
-<script src="/assets/js/filterModule.js"></script>
 <script th:inline="javascript">
 	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
@@ -80,6 +79,15 @@
 	let grid;
 	
         document.addEventListener('DOMContentLoaded', function () {
+        	
+        
+        	$(window).resize(function() {
+    		    setElementHeight('#div_card', -230);
+    			if(grid != null) {
+    				setGridHeight(grid, -600);
+    			}
+    		});
+        	
         	const filterConfig = [
         	    {
         	        key: 'startDate',
@@ -133,24 +141,39 @@
                             log_bj: row.log_bj,
                         })),
                         columns: [
-                            { header: '로그 코드', name: 'log_cd', align: 'center', sortable: true },
-                            { header: '직원 ID', name: 'employee_id', align: 'center', sortable: true },
+                            { header: '로그 코드', name: 'log_cd', sortable: true },
+                            { header: '직원 ID', name: 'employee_id', sortable: true },
                             { header: '수행한 작업', name: 'log_sj', align: 'center', sortable: true },
-                            { header: '정보 유형', name: 'log_ju', align: 'center', sortable: true },
-                            { header: '접근 데이터', name: 'parsedLogDetails', align: 'center', sortable: true },
+                            { header: '정보 유형', name: 'log_ju', sortable: true },
+                            { header: '접근 데이터', name: 'parsedLogDetails', sortable: true },
                             { header: '열람 시간', name: 'log_od', align: 'center', sortable: true },
-                            { header: 'IP 주소', name: 'log_oi', align: 'center', sortable: true },
-                            { header: '브라우저 정보', name: 'log_bj', align: 'center', sortable: true }
+                            { header: 'IP 주소', name: 'log_oi', sortable: true },
+                            { header: '브라우저 정보', name: 'log_bj', sortable: true }
                         ],
-                        rowHeaders: ['checkbox'],
-                        autoWidth: true,
-                        rowHeight: 'auto',
-                        bodyHeight: 'fitToParent',
-                        scrollX: true,
+                        bodyHeight : 400,
+                        scrollX: false,
                         scrollY: true,
-                        zIndex: 100
+                        zIndex: 100,
+            			summary: {
+            			    height: 40,
+            			    position: 'bottom', // or 'top'
+            			    columnContent: {
+            			    	log_cd: {
+            			            template: (valueMap) => {
+            			                return `총  ${valueMap.cnt} 건`
+            			            }
+            			        }
+            			    }
+            			}
                     });
-
+					
+                    if (grid) {
+                        setElementHeight('#div_card', -230);
+                        setGridHeight(grid, -600);
+                    } else {
+                        console.warn('Grid가 초기화되지 않았습니다.');
+                    }
+                    
                     // Cell 클릭 이벤트 등록
                     grid.on('click', (event) => {
                         if (event.columnName === 'parsedLogDetails') {
