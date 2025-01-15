@@ -65,9 +65,9 @@ function getpreMth(){
 		url: "/getempandbs",
 		method:"GET",
 		dataType: "JSON",
-		success: function(data){
-			console.log('첫 데이터',data);
-			const firstdata = data.map(item =>{
+		success: function(empdata){
+			console.log('첫 데이터',empdata);
+			const firstdata = empdata.map(item =>{
 				return {
 					employee_cd : item.EMPLOYEE_CD,
 					employee_nm : item.EMPLOYEE_NM,
@@ -75,8 +75,8 @@ function getpreMth(){
 				};
 			})
 			grid.resetData(firstdata);
-			const BS = data.map(item=>item.BS);
-			const employee_cd = data.map(item=>item.EMPLOYEE_CD);
+			const BS = empdata.map(item=>item.BS);
+			const employee_cd = empdata.map(item=>item.EMPLOYEE_CD);
 			window.BS = BS;
 			window.employee_cd = employee_cd;
 		},
@@ -94,6 +94,7 @@ function getpreMth(){
 		const currentday = new Date();
 		console.log('근태cday',currentday);
 		const day = currentday.getDate();
+	       
 		console.log('day',day);
 		console.log('empCD',employee_cd);
 		
@@ -246,7 +247,7 @@ function getpreMth(){
 				{header:'야간근무',name:'nightworkingtime'},
 				{header:'주말근무',name:'weekendworkingtime'},
 				{header:'휴일근무',name:'holydayworkingtime'},
-				//{header:'남은연차',name:'employee_cd'}, 연차 남은거 어디서 가져와...?
+				{header:'남은연차',name:'leastannual'}, //연차 남은거 어디서 가져와...?
 			],
 			columnOptions:{
 				resizable:true,
@@ -270,6 +271,7 @@ function getpreMth(){
 	        const updatedValue = Number(change.value);  // 변경된 셀의 값
 			const updaterowpid = grid.getRow(updaterowid).prdetail_id;
 	
+	        
 	        console.log('Row ID:', updaterowid);
 	        console.log('Updated Value:', updatedValue);
 	        console.log('Updated type:', typeof updatedValue);

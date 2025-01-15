@@ -94,6 +94,7 @@ public class PRService {
 		BigDecimal D_GG = BigDecimal.ZERO;
 		BigDecimal totalSalary = BigDecimal.ZERO; //총지급액 
 		BigDecimal totalDeduction = BigDecimal.ZERO; //총공제액
+//		BigDecimal totalNetsalary = BigDecimal.ZERO; //실지급액
 		BigDecimal totalNonTax = BigDecimal.ZERO; //총비과세
 		log.info("======================================================================BS====================="+BS);
 		
@@ -249,14 +250,7 @@ public class PRService {
 	}
 
 	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist) {
-		Map<String, Object> employee_cdList = new HashMap<>();
-		employee_cdList.put("employee_cd", emp_cdlist);
-		System.out.println("====================================employee_cdLsit: "+employee_cdList);
-//		List<Map<String, Object>> list = prM.select_wokringtimeformth(employee_cdList);
-		List<Map<String, Object>> listA = prM.select_wokringtimeformth(emp_cdlist);
-
-		return listA;
-//		return prM.select_wokringtimeformth(employee_cdList);
+		return prM.select_wokringtimeformth(emp_cdlist);
 	}
 
 }

@@ -27,6 +27,4 @@ public interface PRMapper {
 
 	List<Map<String, Object>> checkprmodal(@Param("pr_id") Long pr_id, @Param("employee_cd") String employee_cd);
 
-	List<Map<String, Object>> select_wokringtimeformth(Map<String, Object> employee_cdList);
-
 }

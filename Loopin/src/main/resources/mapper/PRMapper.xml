@@ -52,8 +52,7 @@
         ]]>
     </select>
 
-	<select id="select_wokringtimeformth" parameterType="list" resultType="map">
-	     <![CDATA[
+	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
 	        SELECT 
 	            employee_cd, 
 	            TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')), 'YYYY-MM') AS pr_wm, 
@@ -66,11 +65,10 @@
 	        WHERE TO_DATE(COMMUTE_WD, 'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
 	                                                  AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
 	          AND EMPLOYEE_CD IN 
-	          <foreach item="employee_cd" collection="list" open="(" separator="," close=")" jdbcType="VARCHAR">
+	          <foreach item="employee_cd" collection="employee_cdList" open="(" separator="," close=")">
 	              #{employee_cd}
 	          </foreach>
 	        GROUP BY EMPLOYEE_CD
-	    ]]>
 	</select>
 	
 </mapper>
