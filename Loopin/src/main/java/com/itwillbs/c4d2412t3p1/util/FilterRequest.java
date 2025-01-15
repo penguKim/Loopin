@@ -43,33 +43,33 @@ public class FilterRequest {
 					&& (log_oi == null || log_oi.isEmpty()) && (log_bj == null || log_bj.isEmpty());
 		}
 
-		@Getter
-		@Setter
-		@ToString
-		// 인사 전용 필터 클래스
-		public static class EmployeeFilterRequest extends FilterRequest {
-			
-			private String employeeHd;
-			private String employeeCd;
-			private String employeeNm;
-			private String employeeDp;
-			private String employeeGd;
-			
-			public EmployeeFilterRequest() {
-				super();
-			}
-			// 로그 필터 조건이 비어 있는지 확인
-			@Override
-			public boolean isEmpty() {
-				return super.isEmpty() && (employeeHd == null || employeeHd.isEmpty())
-						&& (employeeCd == null || employeeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty())
-						&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
-				}
-			}
 		
 	}
 	
 	
+	@Getter
+	@Setter
+	@ToString
+	// 인사 전용 필터 클래스
+	public static class EmployeeFilterRequest extends FilterRequest {
+		
+		private String employeeHd;
+		private String employeeCd;
+		private String employeeNm;
+		private String employeeDp;
+		private String employeeGd;
+		
+		public EmployeeFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (employeeHd == null || employeeHd.isEmpty())
+					&& (employeeCd == null || employeeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty())
+					&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
+		}
+	}
 	
 	
 	// 출퇴근 필터 클래스

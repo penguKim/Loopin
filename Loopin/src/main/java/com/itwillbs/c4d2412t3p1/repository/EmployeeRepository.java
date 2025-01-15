@@ -12,7 +12,7 @@ import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.EmployeeFilterRequest;
 
 import jakarta.transaction.Transactional;
 

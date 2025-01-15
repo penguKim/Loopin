@@ -34,7 +34,7 @@ import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.EmployeeFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
