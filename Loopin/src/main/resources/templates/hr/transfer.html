@@ -27,8 +27,8 @@
 
 							<div
 								th:if="${#authentication.principal.employee_rl == 'SYS_ADMIN' or #authentication.principal.employee_rl == 'HR_ADMIN'}">
-								<button type="button" class="btn btn-primary"
-									data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
+								<button type="button" id="btn_transfer_insert"
+									class="btn btn-primary">신규</button>
 								<button type="button" id="btn_transfer_delete"
 									class="btn btn-primary">삭제</button>
 							</div>
@@ -478,7 +478,33 @@
 					alert('삭제 중 오류가 발생했습니다.');
 				});
 		});
+		
+		// 신규 클릭 시 모달
+		document.getElementById('btn_transfer_insert').addEventListener('click', function () {
+		    const modal = document.getElementById('modal_appointment_save');
 
+		    // 신규 모드 설정
+		    modal.setAttribute('data-mode', 'insert');
+
+		    // 필드 초기화
+		    const fieldsToReset = ['employee_nm', 'employee_cd', 'transfer_ac', 'transfer_og', 'transfer_ag', 'transfer_od', 'transfer_adp', 'transfer_mg', 'transfer_ad'];
+		    fieldsToReset.forEach(fieldId => {
+		        const field = document.getElementById(fieldId);
+		        if (field) {
+		            if (field.tagName === 'SELECT') {
+		                field.selectedIndex = 0; // SELECT 필드 초기화
+		            } else {
+		                field.value = ''; // INPUT 필드 초기화
+		            }
+		        }
+		    });
+
+		    // 모달 열기
+		    const modalInstance = new bootstrap.Modal(modal);
+		    modalInstance.show();
+		});
+
+		
 		// TOAST UI Date Picker
 		// 모달 열릴 때 Date Picker 초기화
 		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
@@ -512,42 +538,50 @@
 
 	// 이름 또는 사원코드 클릭 시 사원 선택 모달 열기
 	document.getElementById('employee_nm').addEventListener('click', function () {
-		const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
-		modal_employee_list.show();
+    const modal = document.getElementById('modal_appointment_save');
+    const mode = modal.getAttribute('data-mode'); // data-mode 속성 확인
 
-		// 서버에서 사원 정보를 가져오는 요청
-		fetch('/select_EMPLOYEE_COMMON', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error('서버 응답 오류');
-				}
-				return response.json();
-			})
-			.then((data) => {
-				// 데이터 가져온 후 테이블 갱신
-				const tbody = document.querySelector('#empTable tbody');
-				tbody.innerHTML = ''; // 기존 내용 초기화
+    if (mode === 'update') {
+        console.warn("수정 모드에서는 사원 선택 모달이 열리지 않습니다.");
+        return; // 수정 모드일 경우 모달 열기 중단
+    }
 
-				// 데이터를 테이블에 동적으로 추가
-				data.forEach((employee) => {
-					const row = document.createElement('tr');
-					row.innerHTML = `
+    const modal_employee_list = new bootstrap.Modal(document.getElementById('modal_employee_list'));
+    modal_employee_list.show();
+
+    // 서버에서 사원 정보를 가져오는 요청
+    fetch('/select_EMPLOYEE_COMMON', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('서버 응답 오류');
+            }
+            return response.json();
+        })
+        .then((data) => {
+            const tbody = document.querySelector('#empTable tbody');
+            tbody.innerHTML = ''; // 기존 내용 초기화
+
+            // 데이터를 테이블에 동적으로 추가
+            data.forEach((employee) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
                     <td>${employee.employee_cd}</td>
                     <td>${employee.employee_nm}</td>
                     <td>${employee.department_name}</td>
                     <td>${employee.position_name}</td>
                     <td><button type="button" class="btn btn-primary select-emp-btn">선택</button></td>
                 `;
-					tbody.appendChild(row);
-				});
-			})
-			.catch((error) => console.error('사원 목록 가져오기 실패:', error));
-	});
+                tbody.appendChild(row);
+            });
+        })
+        .catch((error) => console.error('사원 목록 가져오기 실패:', error));
+});
+
 
 
 	document.addEventListener('click', function (event) {

@@ -1,10 +1,8 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
-import com.itwillbs.c4d2412t3p1.entity.Transfer;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.service.TransferService;
@@ -34,23 +30,23 @@ import lombok.extern.java.Log;
 public class TransferController {
 
 	private final TransferService transferService;
-	private final EmployeeService employeeService;
- 
+
 	@GetMapping("/transfer_list")
 	public String transfer_list(Model model) {
 
-		model.addAttribute("dept_list", transferService.selectDeptList("DEPARTMENT"));
+		model.addAttribute("dept_list", transferService.selectCommonList("DEPARTMENT"));
 
-		model.addAttribute("grade_list", transferService.selectGradeList("POSITION"));
+		model.addAttribute("grade_list", transferService.selectCommonList("POSITION"));
 
-		model.addAttribute("TRType_list", transferService.selectTRTypeList("TRTYPE"));
+		model.addAttribute("TRType_list", transferService.selectCommonList("TRTYPE"));
 
-		model.addAttribute("DPType_list", transferService.selectTRTypeList("DPTYPE"));
+		model.addAttribute("DPType_list", transferService.selectCommonList("DPTYPE"));
 
 		return "/hr/transfer";
 	}
 
 //	인사발령 조회
+	@LogActivity(value = "조회", action = "인사발령")
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
@@ -127,27 +123,25 @@ public class TransferController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	@LogActivity(value = "수정", action = "인사발령")
+	
 	@PutMapping("/update_TRANSFER")
-	@ResponseBody
-	public ResponseEntity<Map<String, Object>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
-	    try {
-	        // Service에서 업데이트 처리 및 파싱된 데이터 반환
-	        Map<String, Object> response = transferService.update_TRANSFER(transferDTO);
-	        
-	        // 성공 응답 반환
-	        return ResponseEntity.ok(response);
-	    } catch (IllegalArgumentException e) {
-	        Map<String, Object> errorResponse = new HashMap<>();
-	        errorResponse.put("message", "데이터 수정 실패: " + e.getMessage());
-	        return ResponseEntity.badRequest().body(errorResponse);
-	    } catch (Exception e) {
-	        Map<String, Object> errorResponse = new HashMap<>();
-	        errorResponse.put("message", "데이터 수정 실패: " + e.getMessage());
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-	    }
-	}
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            // 서비스 계층에 작업 위임
+            transferService.handleTransferUpdate(transferDTO);
 
+            response.put("message", "데이터가 성공적으로 수정되었습니다11.");
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            response.put("message", "데이터 수정 실패22: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            response.put("message", "데이터 수정 실패33: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
 	
 //	인사발령 삭제
 	@LogActivity(value = "삭제", action = "인사발령")
@@ -171,4 +165,3 @@ public class TransferController {
 	}
 
 }
-

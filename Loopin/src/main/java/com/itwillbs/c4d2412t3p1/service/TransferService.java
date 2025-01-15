@@ -1,7 +1,6 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.time.LocalDate;
-
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Transfer;
-import com.itwillbs.c4d2412t3p1.logging.LogParser;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.TransferRepository;
@@ -30,7 +28,6 @@ public class TransferService {
 	private final TransferRepository transferRepository;
 	private final CommonRepository commonRepository;
 	private final EmployeeRepository employeeRepository;
-	private final LogParser logParser;
 
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
@@ -38,7 +35,7 @@ public class TransferService {
 		if ("SYS_ADMIN".equals(role) || "HR_ADMIN".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
-		} else if ("EMPLOYEE".equals(role)) {
+		} else if ("employee".equals(role)) {
 			// 본인 데이터만 조회
 			result = transferRepository.findAllWithDetailsByEmployeeCd(employee_cd);
 		} else {
@@ -122,7 +119,7 @@ public class TransferService {
 	}
 
 	@Transactional
-	public Map<String, Object> update_TRANSFER(TransferDTO transferDTO) {
+	public void update_TRANSFER(TransferDTO transferDTO) {
 		// 1. 기존 데이터 조회
 		List<Object[]> result = transferRepository.findAllWithDetailsByEmployeeCd(transferDTO.getEmployee_cd());
 		if (result.isEmpty()) {
@@ -159,16 +156,6 @@ public class TransferService {
 
 		// 5. transferDTO에 저장된 ID 설정
 		transferDTO.setTransfer_id(savedTransfer.getTransfer_id());
-		
-		// 6. 기존 데이터 파싱 (LogParser 활용)
-	    String parsedDetails = logParser.parseLogDetails(existingData.toString());
-	    
-	    // 7. 결과를 Map에 담아 반환
-	    Map<String, Object> response = new HashMap<>();
-	    response.put("updatedTransfer", transferDTO); // 업데이트된 TransferDTO
-	    response.put("parsedDetails", parsedDetails); // 파싱된 데이터
-
-	    return response;
 	}
 
 	private void processTransferIfToday(TransferDTO transferDTO) {
@@ -257,22 +244,9 @@ public class TransferService {
 		}
 	}
 
-	// 모달 부서코드 가져오기
-	public List<Common_code> selectDeptList(String string) {
-		return commonRepository.selectDeptList("00", string);
-	}
-
-	// 모달 직급코드 가져오기
-	public List<Common_code> selectGradeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-
-	public List<Common_code> selectTRTypeList(String string) {
-		return commonRepository.selectGradeList("00", string);
-	}
-
-	public List<Common_code> selectDPTypeList(String string) {
-		return commonRepository.selectGradeList("00", string);
+	// 공통데이터 가져오기
+	public List<Common_code> selectCommonList(String string) {
+		return commonRepository.selectCommonList("00", string);
 	}
 
 }
