@@ -10,9 +10,9 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -34,12 +34,10 @@ import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.EmployeeFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
-
 
 
 @RequiredArgsConstructor

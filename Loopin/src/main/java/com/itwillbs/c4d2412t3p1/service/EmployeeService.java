@@ -239,7 +239,5 @@ public class EmployeeService {
     	return EmployeeRepository.select_FILTERED_EMPLOYEE(filterRequest);
     }
 	
-
-	
 	
 }
