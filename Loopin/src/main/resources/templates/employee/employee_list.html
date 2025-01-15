@@ -416,7 +416,12 @@
         // 날짜 유효성 검사 (2월 30일 등 잘못된 날짜 체크)
         const date = new Date(year, month - 1, day);
         if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-            alert("잘못된 날짜입니다.");
+            Swal.fire({
+                icon: 'error',
+                title: '오류 발생!',
+                text: '잘못된 날짜입니다.',
+                confirmButtonText: '확인'
+            });
             return false;
         }
 
@@ -556,28 +561,63 @@
 	    $('#btn_employee_delete').on('click', function () {
 	        const checkedRows = grid.getCheckedRows();
 	        if (checkedRows.length === 0) {
-	            alert('삭제할 사원을 선택하세요.');
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '삭제할 사원을 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
 	            return;
 	        }
 
 	        const employee_cds = checkedRows.map(row => row.employee_cd);
-	        if (!confirm(`선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`)) {
-	            return;
-	        }
 
-	        $.ajax({
-	            url: '/delete_EMPLOYEE',
-	            method: 'POST',
-	            headers: { 'X-CSRF-TOKEN': csrfToken },
-	            data: JSON.stringify({ employee_cds }),
-	            contentType: 'application/json',
-	            success: function () {
-	                alert('삭제가 완료되었습니다.');
-	                location.reload();
-	            },
-	            error: function (xhr) {
-	                console.error('삭제 중 오류 발생:', xhr.responseText);
-	                alert('삭제 중 오류가 발생했습니다.');
+	        Swal.fire({
+	            title: '삭제 확인',
+	            text: `선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`,
+	            icon: 'warning',
+	            showCancelButton: true,
+	            confirmButtonText: '삭제',
+	            cancelButtonText: '취소',
+	            reverseButtons: true
+	        }).then((result) => {
+	            if (result.isConfirmed) {
+	                // 확인 버튼을 눌렀을 때 실행할 코드
+	                console.log(`선택한 사원(${employee_cds.join(', ')}) 삭제를 진행합니다.`);
+	                // 여기에서 실제 삭제 처리 로직을 추가합니다.
+	                
+	    	        $.ajax({
+	    	            url: '/delete_EMPLOYEE',
+	    	            method: 'POST',
+	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	    	            data: JSON.stringify({ employee_cds }),
+	    	            contentType: 'application/json',
+	    	            success: function () {
+	    		            Swal.fire({
+	    		                icon: 'success',
+	    		                title: '삭제완료!',
+	    		                text: '삭제가 완료되었습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    		            setTimeout(() => {
+	    		                location.reload();
+	    		            }, 1000);
+	    	            },
+	    	            error: function (xhr) {
+	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	    		            Swal.fire({
+	    		                icon: 'error',
+	    		                title: '오류발생',
+	    		                text: '삭제 중 오류가 발생했습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    	            }
+	    	        });
+	                
+	                
+	            } else if (result.dismiss === Swal.DismissReason.cancel) {
+	                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+	                console.log('삭제가 취소되었습니다.');
 	            }
 	        });
 	    });
@@ -1034,14 +1074,27 @@
 		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
 		        data: formData,
 		        success: function () {
-		            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
+		        	Swal.fire({
+		        		  icon: 'success',
+		        		  title: mode === '등록' ? '등록 완료' : '수정 완료',
+		        		  text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		        		  confirmButtonText: '확인'
+		        		});
+
 		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-		            location.reload(); // 페이지 새로고침
+		            setTimeout(() => {
+		                location.reload();
+		            }, 1000);
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
 		            console.error('AJAX Error:', employeeDTO);
-		            alert('작업 중 오류가 발생했습니다.');
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '작업 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
 		        }
 		    });
 		});
