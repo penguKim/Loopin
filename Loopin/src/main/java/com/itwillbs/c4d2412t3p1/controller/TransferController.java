@@ -38,13 +38,13 @@ public class TransferController {
 	@GetMapping("/transfer_list")
 	public String transfer_list(Model model) {
 
-		model.addAttribute("dept_list", transferService.selectDeptList("DEPARTMENT"));
+		model.addAttribute("dept_list", transferService.selectCommonList("DEPARTMENT"));
 
-		model.addAttribute("grade_list", transferService.selectGradeList("POSITION"));
+		model.addAttribute("grade_list", transferService.selectCommonList("POSITION"));
 
-		model.addAttribute("TRType_list", transferService.selectTRTypeList("TRTYPE"));
+		model.addAttribute("TRType_list", transferService.selectCommonList("TRTYPE"));
 
-		model.addAttribute("DPType_list", transferService.selectTRTypeList("DPTYPE"));
+		model.addAttribute("DPType_list", transferService.selectCommonList("DPTYPE"));
 
 		return "/hr/transfer";
 	}
