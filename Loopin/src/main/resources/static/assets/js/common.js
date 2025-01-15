@@ -128,6 +128,7 @@ function setGridHeight(grid, height) {
 	console.log(newHeight);
     grid.setBodyHeight(newHeight);
 }
+
 /**
  * 인풋을 hh:mm:ss 형식으로 입력
  * @param {*} input 선택자 객체
@@ -201,3 +202,34 @@ function validateTime(timeStr) {
            minutes >= 0 && minutes <= 59 && 
            seconds >= 0 && seconds <= 59;
 }
+
+/**
+ * 라디오버튼 체크
+ * @param {String} radioName 라디오 요소 name
+ * @param {String} value 값
+ */
+function setRadioValue(radioName, value) {
+    $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
+}
+
+/**
+ * 셀렉트박스 생성
+ * @param {String} el 셀렉트박스 선택자
+ * @param {*} list 리스트
+ * @param {String} title 기본값
+ */
+function createSelectBox(el, list, title) {
+    const selectBox = $(el);
+
+    selectBox.empty();
+	
+	if(title) {
+	    selectBox.append(`<option value="">${title}</option>`);		
+	}
+
+    list.forEach(data => {
+        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+    });
+}
+
+
