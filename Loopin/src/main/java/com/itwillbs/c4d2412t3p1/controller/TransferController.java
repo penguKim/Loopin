@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.util.HashMap;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -50,7 +51,6 @@ public class TransferController {
 	}
 
 //	인사발령 조회
-//	@LogActivity(value = "조회", action = "인사발령")
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
@@ -171,3 +171,4 @@ public class TransferController {
 	}
 
 }
+

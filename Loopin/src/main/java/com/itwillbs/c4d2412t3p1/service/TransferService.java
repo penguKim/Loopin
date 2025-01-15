@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.time.LocalDate;
+
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -34,10 +35,10 @@ public class TransferService {
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
 
-		if ("admin".equals(role) || "developer".equals(role)) {
+		if ("SYS_ADMIN".equals(role) || "HR_ADMIN".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
-		} else if ("employee".equals(role)) {
+		} else if ("EMPLOYEE".equals(role)) {
 			// 본인 데이터만 조회
 			result = transferRepository.findAllWithDetailsByEmployeeCd(employee_cd);
 		} else {

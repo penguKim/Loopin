@@ -26,7 +26,7 @@
 
 
 							<div
-								th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+								th:if="${#authentication.principal.employee_rl == 'SYS_ADMIN' or #authentication.principal.employee_rl == 'HR_ADMIN'}">
 								<button type="button" class="btn btn-primary"
 									data-bs-toggle="modal" data-bs-target="#modal_appointment_save">신규</button>
 								<button type="button" id="btn_transfer_delete"
@@ -52,7 +52,7 @@
 	<div class="modal fade" id="modal_appointment_save" tabindex="-1"
 		aria-labelledby="modal_appointment_save_label" data-mode="insert"
 		aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
-		<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title" id="modal_appointment_save_label">인사발령</h5>
@@ -62,63 +62,68 @@
 				<div class="modal-body">
 					<form id="modal_appointment_save_form"
 						th:action="@{/insert_TRANSFER}" method="post">
-						<div class="col">
-							<label for="employee_nm" class="form-label">이름</label>
-							<div class="input-group">
+
+						<!-- 이름 -->
+						<div class="row mb-3 align-items-center">
+							<label for="employee_nm" class="col-sm-2 col-form-label">이름</label>
+							<div class="col-sm-10">
 								<input type="text" id="employee_nm" class="form-control"
 									readonly required>
 							</div>
 						</div>
-						<div class="row mb-3">
-							<div class="col">
-								<label for="employee_cd" class="form-label">사원코드</label>
-								<div class="input-group">
-									<input type="text" id="employee_cd" class="form-control"
-										readonly required>
-								</div>
+
+						<!-- 사원코드와 부서구분 -->
+						<div class="row mb-3 align-items-center">
+							<label for="employee_cd" class="col-sm-2 col-form-label">사원코드</label>
+							<div class="col-sm-4">
+								<input type="text" id="employee_cd" class="form-control"
+									readonly required>
 							</div>
-							<div class="col">
-								<label for="transfer_mg" class="form-label">부서구분</label> <select
-									id="transfer_mg" class="form-select">
+							<label for="transfer_mg" class="col-sm-2 col-form-label">부서구분</label>
+							<div class="col-sm-4">
+								<select id="transfer_mg" class="form-select">
 									<option value="" disabled selected>부서구분을 선택하세요</option>
 									<option th:each="dptype : ${DPType_list}"
 										th:value="${dptype.common_nm}"
 										th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+									</option>
 								</select>
 							</div>
 						</div>
-						<div class="row mb-3">
-							<div class="col">
-								<label for="transfer_ad" class="form-label">발령일</label> <input
-									type="text" id="transfer_ad" class="form-control"
+
+						<!-- 발령일과 발령구분 -->
+						<div class="row mb-3 align-items-center">
+							<label for="transfer_ad" class="col-sm-2 col-form-label">발령일</label>
+							<div class="col-sm-4 d-flex align-items-center">
+								<input type="text" id="transfer_ad" class="form-control"
 									placeholder="YYYY-MM-DD" required>
+								<div id="wrapper" class="ms-2"></div>
 							</div>
-							<div class="col-sm-2">
-								<div id="wrapper"></div>
-							</div>
-							<div class="col">
-								<label for="transfer_ac" class="form-label">발령구분</label> <select
-									id="transfer_ac" class="form-select">
+							<label for="transfer_ac" class="col-sm-2 col-form-label">발령구분</label>
+							<div class="col-sm-4">
+								<select id="transfer_ac" class="form-select">
 									<option value="" disabled selected>발령구분을 선택하세요</option>
 									<option th:each="trtype : ${TRType_list}"
-										th:value="${trtype.common_cc}" th:text="${trtype.common_nm}">
-									</option>
+										th:value="${trtype.common_cc}" th:text="${trtype.common_nm}"></option>
 								</select>
 							</div>
 						</div>
-						<div class="row mb-3">
-							<div class="col">
-								<label for="transfer_og" class="form-label">기존직위</label> <select
-									id="transfer_og" class="form-select">
+
+
+						<!-- 기존직위와 발령직위 -->
+						<div class="row mb-3 align-items-center">
+							<label for="transfer_og" class="col-sm-2 col-form-label">기존직위</label>
+							<div class="col-sm-4">
+								<select id="transfer_og" class="form-select">
 									<option value="" disabled selected>직위를 선택하세요</option>
 									<option th:each="grade : ${grade_list}"
 										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
 									</option>
 								</select>
 							</div>
-							<div class="col">
-								<label for="transfer_ag" class="form-label">발령직위</label> <select
-									id="transfer_ag" class="form-select">
+							<label for="transfer_ag" class="col-sm-2 col-form-label">발령직위</label>
+							<div class="col-sm-4">
+								<select id="transfer_ag" class="form-select">
 									<option value="" disabled selected>직위를 선택하세요</option>
 									<option th:each="grade : ${grade_list}"
 										th:value="${grade.common_cc}" th:text="${grade.common_nm}">
@@ -126,19 +131,21 @@
 								</select>
 							</div>
 						</div>
-						<div class="row mb-3">
-							<div class="col">
-								<label for="transfer_od" class="form-label">기존부서</label> <select
-									id="transfer_od" class="form-select">
+
+						<!-- 기존부서와 발령부서 -->
+						<div class="row mb-3 align-items-center">
+							<label for="transfer_od" class="col-sm-2 col-form-label">기존부서</label>
+							<div class="col-sm-4">
+								<select id="transfer_od" class="form-select">
 									<option value="" disabled selected>부서를 선택하세요</option>
 									<option th:each="dept : ${dept_list}"
 										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
 									</option>
 								</select>
 							</div>
-							<div class="col">
-								<label for="transfer_adp" class="form-label">발령부서</label> <select
-									id="transfer_adp" class="form-select">
+							<label for="transfer_adp" class="col-sm-2 col-form-label">발령부서</label>
+							<div class="col-sm-4">
+								<select id="transfer_adp" class="form-select">
 									<option value="" disabled selected>부서를 선택하세요</option>
 									<option th:each="dept : ${dept_list}"
 										th:value="${dept.common_cc}" th:text="${dept.common_nm}">
@@ -146,13 +153,15 @@
 								</select>
 							</div>
 						</div>
+
+						<!-- 모달 Footer -->
 						<div class="modal-footer d-flex justify-content-between">
 							<button type="button" class="btn btn-secondary"
 								id="btn_modal_reset">초기화</button>
 							<div>
-								<button type="submit" class="btn btn-primary">저장</button>
 								<button type="button" class="btn btn-secondary"
 									data-bs-dismiss="modal">닫기</button>
+								<button type="submit" class="btn btn-primary">저장</button>
 							</div>
 						</div>
 					</form>
@@ -160,6 +169,7 @@
 			</div>
 		</div>
 	</div>
+
 
 
 	<div class="modal fade" id="modal_employee_list" tabindex="-1"
@@ -313,15 +323,21 @@
 
 
 				// 모달 열기 함수
+				// 모달 열기 함수
 				function openEditModal(rowData) {
 				    console.log("수정 모달 열기 데이터:", rowData);
+
+				    // 이름 클릭 시 모달 생성 방지
+				    if (!rowData || !rowData.transfer_id) { // 예: transfer_id가 없으면 생성 방지
+				        console.warn("유효하지 않은 데이터입니다. 모달이 열리지 않습니다.");
+				        return;
+				    }
 
 				    const modal = document.getElementById('modal_appointment_save');
 				    modal.setAttribute('data-mode', 'update'); // 수정 모드 설정
 
 				    // Select 필드 처리 (공통코드 매칭 포함)
 				    const selectFields = {
-				        // 필드 이름과 매칭 기준 지정
 				        transfer_ac: 'text', // 발령구분 (텍스트 매칭)
 				        transfer_og: 'text', // 기존직위 (텍스트 매칭)
 				        transfer_ag: 'text', // 발령직위 (텍스트 매칭)
@@ -348,6 +364,11 @@
 				            } else {
 				                console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
 				            }
+
+				            // 기존직위와 발령직위는 선택 불가능하도록 설정
+				            if (field === 'transfer_og' || field === 'transfer_od') {
+				                $select.prop('disabled', true);
+				            }
 				        }
 				    });
 
@@ -358,8 +379,8 @@
 				            $field.val(rowData[key] || '');
 				        }
 				    });
-					
-				 // transfer_ad 설정 ("yyyy-mm-dd" 형식인지 확인)
+
+				    // transfer_ad 설정 ("yyyy-mm-dd" 형식인지 확인)
 				    const transferAdField = document.getElementById('transfer_ad');
 				    if (transferAdField) {
 				        const transferAd = rowData.transfer_ad;
@@ -369,9 +390,21 @@
 				            console.warn("transfer_ad가 올바른 날짜 형식이 아닙니다:", transferAd);
 				        }
 				    }
+				
+				 // 이름 클릭 시 사원 선택 모달 방지
+				    const employeeNameField = document.getElementById('employee_nm');
+				    if (employeeNameField) {
+				        employeeNameField.addEventListener('click', () => {
+				            if (modal.getAttribute('data-mode') === 'update') {
+				                console.warn("수정 모드에서는 이름 클릭 시 사원 선택 모달이 열리지 않습니다.");
+				            }
+				        });
+				    }
+				    
 				    // 모달 열기
 				    $('#modal_appointment_save').modal('show');
 				}
+
 
 			})
 			.catch(error => {

@@ -41,7 +41,7 @@ public class Approval {
 
     // 외래 키 연결
     @ManyToOne
-    @JoinColumn(name = "employee_id", referencedColumnName = "employee_id")  // EMPLOYEE 테이블의 employee_id를 참조
+    @JoinColumn(name = "employee_cd", referencedColumnName = "employee_cd")  // EMPLOYEE 테이블의 employee_cd를 참조
     private Employee employee;  // 하나의 직원에 대한 외래 키
     
     

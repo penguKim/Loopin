@@ -9,10 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.LogDTO;
-import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.LogService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest;
 
@@ -74,3 +72,4 @@ public class LogController {
 
 	
 }
+

@@ -1,5 +1,4 @@
 package com.itwillbs.c4d2412t3p1.entity;
-
 import java.math.BigDecimal;
 
 import groovy.transform.ToString;

@@ -12,6 +12,7 @@ import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.DashboardService;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -24,12 +25,18 @@ public class DashboardController {
 	private final CommuteService commuteService;
 
 	@GetMapping("/login")
-	public String login() {
-		return "/login";
+	public String login(HttpSession session, Model model) {
+	    String errorMessage = (String) session.getAttribute("loginError");
+	    if (errorMessage != null) {
+	        model.addAttribute("errorMessage", errorMessage);
+	        session.removeAttribute("loginError");
+	    }
+	    return "/login";
 	}
 	
 	@GetMapping("/")
 	public String main(Model model) {
+		
 		EmployeeDetails employeeDetails = commuteService.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		String workinghour_id = employeeDetails.getWorkinghour_id();
@@ -59,11 +66,7 @@ public class DashboardController {
 		
 		return "/index";
 	}
-	
-	@GetMapping("/logout")
-	public String logout() {
-		return "redirect:/login";
-	}
+
 
 	
 	

@@ -3,11 +3,6 @@
 	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
 <style>
-.col1 {
-	width: 160px !important;
-	position: relative;
-	margin-right: 5px;
-}
 
 .tui-datepicker, .tui-timepicker {
     z-index: 1050 !important; 
@@ -85,14 +80,28 @@
 	let grid;
 	
         document.addEventListener('DOMContentLoaded', function () {
-            const filterConfig = [
-                { key: 'log_od', label: '열람 시간', type: 'daterangepicker' },
-                { key: 'employee_id', label: '직원 ID', type: 'text', placeholder: '사용자 ID 입력' },
-                { key: 'log_sj', label: '수행한 작업', type: 'text', placeholder: '작업명 입력' },
-                { key: 'log_ju', label: '정보 유형', type: 'text', placeholder: '유형 입력' },
-                { key: 'log_oi', label: 'IP 주소', type: 'text', placeholder: 'IP 입력' },
-                { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력'},
-            ];
+        	const filterConfig = [
+        	    {
+        	        key: 'startDate',
+        	        label: '열람 시간 설정',
+        	        type: 'daterangepicker',
+        	        format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+        	        value: '2025-01-01 00:00' // 기본값 (예시)
+        	    },
+        	    {
+        	        key: 'endDate',
+        	        label: '',
+        	        type: 'daterangepicker',
+        	        format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+        	        value: '2025-01-31 23:59' // 기본값 (예시)
+        	    },
+        	    { key: 'employee_id', label: '직원 ID', type: 'text', placeholder: '사용자 ID 입력', col: 'col-md-3' },
+        	    { key: 'log_sj', label: '수행한 작업', type: 'text', placeholder: '작업명 입력', col: 'col-md-3' },
+        	    { key: 'log_ju', label: '정보 유형', type: 'text', placeholder: '유형 입력', col: 'col-md-3' },
+        	    { key: 'log_oi', label: 'IP 주소', type: 'text', placeholder: 'IP 입력', col: 'col-md-3' },
+        	    { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력', col: 'col-md-3' },
+        	];
+
 
             // 초기 로그 데이터를 가져와 Grid 초기화
             fetch('/select_LOG', {
