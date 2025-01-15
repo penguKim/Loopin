@@ -9,12 +9,14 @@
 	<aside id="sidebar" class="sidebar" layout:fragment="aside">
 		
 		<ul class="sidebar-nav" id="sidebar-nav">
-			<li class="nav-item">
-				<a class="nav-link collapsed" href="common_code">
-				<i class="bi bi-grid"></i>
-				<span>공통코드관리</span>
-				</a>
-			</li>
+			<div sec:authorize="hasAnyRole('SYS_ADMIN')">
+				<li class="nav-item">
+					<a class="nav-link collapsed" href="common_code">
+					<i class="bi bi-grid"></i>
+					<span>공통코드관리</span>
+					</a>
+				</li>
+			</div>
 			
 			<div sec:authorize="hasAnyRole('SYS_ADMIN','HR_ADMIN')">
 				<li class="nav-heading">인사관리</li>
@@ -41,13 +43,8 @@
 					</a>
 					<ul id="formss-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
-							<a href="employee_list">
+							<a href="transfer_list">
 								<i class="bi bi-circle"></i><span>인사발령 등록</span>
-							</a>
-						</li>
-						<li>
-							<a href="employee_chart">
-								<i class="bi bi-circle"></i><span>인사발령 현황</span>
 							</a>
 						</li>
 					</ul>
@@ -62,17 +59,17 @@
 				    <ul id="components-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
 				        <li>
 				            <a href="annual_regist">
-				                <i class="bi bi-circle"></i><span>연차 등록</span>
+				                <i class="bi bi-circle"></i><span>연차등록</span>
 				            </a>
 				        </li>
 				        <li>
 				            <a href="holiday_regist">
-				                <i class="bi bi-circle"></i><span>휴가 등록</span>
+				                <i class="bi bi-circle"></i><span>휴가등록</span>
 				            </a>
 				        </li>
 				        <li>
 				            <a href="attendance_list">
-				                <i class="bi bi-circle"></i><span>연차 조회</span>
+				                <i class="bi bi-circle"></i><span>휴가조회</span>
 				            </a>
 				        </li>
 				    </ul>
@@ -103,12 +100,12 @@
 					</a>
 					<ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
-							<a href="charts-chartjs.html">
+							<a href="check_salary">
 								<i class="bi bi-circle"></i><span>급여조회</span>
 							</a>
 						</li>
 						<li>
-							<a href="charts-apexcharts.html">
+							<a href="prcal">
 								<i class="bi bi-circle"></i><span>급여계산기</span>
 							</a>
 						</li>
@@ -121,19 +118,24 @@
 					</a>
 					<ul id="icons-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
-							<a href="icons-bootstrap.html">
+							<a href="check_pradmin">
+								<i class="bi bi-circle"></i><span>급여이력조회</span>
+							</a>
+						</li>
+						<li>
+							<a href="prsend">
 								<i class="bi bi-circle"></i><span>급여이체</span>
 							</a>
 						</li>
 						<li>
-							<a href="icons-remix.html">
-								<i class="bi bi-circle"></i><span>급여설정</span>
+							<a href="prcode">
+								<i class="bi bi-circle"></i><span>급여코드</span>
 							</a>
 						</li>
 					</ul>
 				</li>
-				<li class="nav-heading">사원목록</li>
 			</div>
+				<li class="nav-heading">사원목록</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="approval_list">
 						<i class="bi bi-person"></i>
@@ -141,9 +143,15 @@
 					</a>
 				</li>
 				<li class="nav-item">
-					<a class="nav-link collapsed" href="approval_list">
+					<a class="nav-link collapsed" href="attendance_list">
 						<i class="bi bi-calendar-date"></i>
-						<span>근태</span>
+						<span>휴가</span>
+					</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link collapsed" href="commute">
+						<i class="bi bi-calendar-date"></i>
+						<span>출퇴근</span>
 					</a>
 				</li>
 				<li class="nav-item">
@@ -159,6 +167,7 @@
 					</a>
 				</li>
 			<div sec:authorize="hasRole('SYS_ADMIN')">
+				<li class="nav-heading">시스템 권한</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="log_list">
 						<i class="bi bi-card-heading"></i>
