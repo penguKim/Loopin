@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Param;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface CommuteMapper {
 	// 출퇴근 캘린더 탭 조회
 	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("startDate") String startDate, @Param("endDate") String endDate);
 	// 출퇴근 그리드 탭 조회
-	List<CommuteDTO> select_COMMUTE_grid(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
+	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
 	// 일자별 출퇴근 기록 조회
 	List<CommuteDTO> select_COMMUTE_detail(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("commute_wd") String commute_wd);
 	// 미출근 사원 조회

@@ -66,7 +66,36 @@ public class FilterRequest {
 						&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
 				}
 			}
-
+		
+	}
+	
+	
+	
+	
+	// 출퇴근 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class CommuteFilterRequest extends FilterRequest {
+		
+		private String employee_cd;
+		private String employee_nm;
+		private String employee_dp;
+		private String employee_gd;
+		private String commute_wt;
+		private String commute_lt;
+		
+		public CommuteFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (employee_cd == null || employee_cd.isEmpty())
+					&& (employee_nm == null || employee_nm.isEmpty()) && (employee_dp == null || employee_dp.isEmpty())
+					&& (employee_gd == null || employee_gd.isEmpty()) && (commute_wt == null || commute_wt.isEmpty())
+					&& (commute_lt == null || commute_lt.isEmpty());
+		}
 	}
 }
 
