@@ -20,11 +20,10 @@ public class FilterRequest {
 		return (startDate == null || startDate.isEmpty()) && (endDate == null || endDate.isEmpty());
 	}
 	
-	
-	// 로그 전용 필터 클래스
 	@Getter
 	@Setter
 	@ToString
+	// 로그 전용 필터 클래스
 	public static class LogFilterRequest extends FilterRequest {
 		
 		private String employee_id; // 사용자 ID
@@ -43,5 +42,31 @@ public class FilterRequest {
 					&& (log_sj == null || log_sj.isEmpty()) && (log_ju == null || log_ju.isEmpty())
 					&& (log_oi == null || log_oi.isEmpty()) && (log_bj == null || log_bj.isEmpty());
 		}
+
+		@Getter
+		@Setter
+		@ToString
+		// 인사 전용 필터 클래스
+		public static class EmployeeFilterRequest extends FilterRequest {
+			
+			private String employeeHd;
+			private String employeeCd;
+			private String employeeNm;
+			private String employeeDp;
+			private String employeeGd;
+			
+			public EmployeeFilterRequest() {
+				super();
+			}
+			// 로그 필터 조건이 비어 있는지 확인
+			@Override
+			public boolean isEmpty() {
+				return super.isEmpty() && (employeeHd == null || employeeHd.isEmpty())
+						&& (employeeCd == null || employeeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty())
+						&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
+				}
+			}
+
 	}
 }
+

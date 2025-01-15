@@ -4,6 +4,25 @@
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
 
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+</style>
+
 <body>
 	<main id="main" class="main">
 			<span sec:authentication="principal.employee_cd"></span><br>
@@ -12,7 +31,7 @@
 
 		<!-- 인사카드 등록 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-			<div class="modal-dialog modal-dialog-scrollable modal-xl">
+			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
@@ -52,12 +71,12 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_id" name="employee_id">
+									<input type="text" class="form-control" id="employee_id" name="employee_id" minlength="4" maxlength="16" placeholder="4자 이상, 16자 이하 입력">
 									<span id="employee_id_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="password" class="form-control" id="employee_pw" name="employee_pw">
+									<input type="password" class="form-control" id="employee_pw" name="employee_pw" minlength="4" maxlength="16" placeholder="4자 이상, 16자 이하 입력">
 									<span id="employee_pw_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 							</div>
@@ -65,7 +84,7 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">사원명<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_nm" name="employee_nm">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="4" maxlength="16">
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">채용구분</label>
 								<div class="col-sm-4">
@@ -89,16 +108,17 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
 								<div class="col-sm-4">
 									<select class="form-select" id="employee_rl" name="employee_rl" aria-label="직원 권한">
-									    <option value="employee" selected>사원</option>
-									    <option value="admin">관리자</option>
-									    <option value="developer">개발자</option>
+										<option value="" disabled selected>권한을 선택하세요</option>
+										<option th:each="PMType : ${PMType_list}" th:value="${PMType.common_cc}"
+											th:text="${PMType.common_nm}">
+										</option>
 									</select>
 								</div>
 							</div>						
 							<div class="row mb-3">
 							    <label for="inputText" class="col-sm-2 col-form-label">이메일</label>
 							    <div class="col-sm-3">
-							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력">
+							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력"  minlength="4" maxlength="16">
 									<span id="email_id_check"></span> <!-- 유효성 메시지 추가 -->
 							    </div>
 							    <div class="col-sm-1 text-center">@</div>
@@ -119,20 +139,39 @@
 							</div>
 							
 							<div class="row mb-3">
-								<label for="inputText" class="col-sm-2 col-form-label">부서코드</label>
+						   		<label for="inputText" class="col-sm-2 col-form-label">부서</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_dp" name="employee_dp" readonly>
+									<select id="employee_dp" class="form-select">
+										<option value="" disabled selected>부서를 선택하세요</option>
+										<option th:each="dept : ${dept_list}" th:value="${dept.common_cc}"
+											th:text="${dept.common_nm}">
+										</option>
+									</select>
 								</div>
-								<label for="inputText" class="col-sm-2 col-form-label">직위코드</label>
+						   		<label for="inputText" class="col-sm-2 col-form-label">직위</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_gd" name="employee_gd" readonly>
+									<select id="employee_gd" class="form-select">
+										<option value="" disabled selected>직위를 선택하세요</option>
+										<option th:each="grade : ${grade_list}" th:value="${grade.common_cc}"
+											th:text="${grade.common_nm}">
+										</option>
+									</select>
 								</div>
 							</div>
 							<div class="row mb-3">
 								<label for="employee_bd" class="col-sm-2 col-form-label">생년월일</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" required onblur="onBlurValidate()">
+									<input type="text" class="form-control" id="employee_bd" name="employee_bd" placeholder="ex) 19900101" onblur="onBlurValidate()"  minlength="8" maxlength="8">
 									<span id="employee_bd_check"></span> <!-- 유효성 메시지 추가 -->
+								</div>
+							    <label for="inputText" class="col-sm-2 col-form-label">사용여부</label>
+								<div class="col-sm-4">
+									<select class="form-select" id="employee_us" name="employee_us" aria-label="부서장구분">
+										<option value="" disabled selected>사용여부 구분</option>
+										<option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
+								                th:text="${useyn.common_nm == 'true' ? '사용중' : '사용중지'}">
+										</option>
+									</select>
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -233,64 +272,6 @@
 			</div>
 		</div>
 		
-		<div class="modal" id="modal_department_list" tabindex="-1" aria-labelledby="modal_department_list_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="modal_department_list_label">부서 선택</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<table id="dpTable" class="table table-striped">
-							<thead>
-								<tr>
-									<th>부서코드</th>
-									<th>부서명</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="dept, dept_list : ${dept_list}">
-									<td><span th:text="${dept.common_cc}"></span>
-									<td><span th:text="${dept.common_nm}"></span>
-									<td><button class="btn btn-primary select-dp-btn">선택</button></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<div class="modal" id="modal_grade_list" tabindex="-1" aria-labelledby="modal_grade_list_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="modal_grade_list_label">직위 선택</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<table id="gdTable" class="table table-striped">
-							<thead>
-								<tr>
-									<th>직위코드</th>
-									<th>직위</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="grade, grade_list : ${grade_list}">
-									<td><span th:text="${grade.common_cc}"></span>
-									<td><span th:text="${grade.common_nm}"></span>
-									<td><button class="btn btn-primary select-gd-btn">선택</button></td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
-			</div>
-		</div>
-		
 		
 		<!-- 그리드 및 등록 버튼 -->
 		<section class="section">
@@ -301,11 +282,12 @@
 						<div class="card-body">
 							<h5 class="card-title">인사카드 등록</h5>
 								<div class="col-sm-12">
+									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
-									<div class="tui-pagination" id="pagination"></div>
+<!--									<div class="tui-pagination" id="pagination"></div>-->
 								</div>
 								<div class="col-sm-12">
-									<div th:if="${#authentication.principal.employee_rl == 'admin' or #authentication.principal.employee_rl == 'developer'}">
+									<div th:if="${#authentication.principal.employee_rl == 'HR_ADMIN' or #authentication.principal.employee_rl == 'SYS_ADMIN'}">
 										<button type="button" class="btn btn-primary" id="openCreateModal">등록</button>
 										<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
 									</div>
@@ -318,7 +300,6 @@
 	</main>
 	<!-- 메인 끝 -->
 </body>
-
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
@@ -351,69 +332,69 @@
 	});
 	
 
-	$(function() {
-	    var today = new Date();
+ 	$(function() {
+ 	    var today = new Date();
 
-	    // 입사일 DatePicker 설정
-	    var startPicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#employee_hd',
-	            container: '#startpicker-container',
-	        },
-	        endpicker: {
-	            date: today, // 오늘 날짜로 초기화
-	            input: '#employee_rd',
-	            container: '#endpicker-container',
-	            disabled: true // 퇴사일 기본 비활성화
-	        },
-	        format: 'YYYY-MM-dd',
-	        timePicker: false
-	    });
+ 	    // 입사일 DatePicker 설정
+ 	    var startPicker = tui.DatePicker.createRangePicker({
+ 	        startpicker: {
+ 	            date: today, // 오늘 날짜로 초기화
+ 	            input: '#employee_hd',
+ 	            container: '#startpicker-container',
+ 	        },
+ 	        endpicker: {
+ 	            date: today, // 오늘 날짜로 초기화
+ 	            input: '#employee_rd',
+ 	            container: '#endpicker-container',
+ 	            disabled: true // 퇴사일 기본 비활성화
+ 	        },
+ 	        format: 'YYYY-MM-dd',
+ 	        timePicker: false
+ 	    });
 
-	 	// 초기 상태에서 퇴사일 비활성화
-	    $('#employee_rd').prop('disabled', true);
+ 	 	// 초기 상태에서 퇴사일 비활성화
+ 	    $('#employee_rd').prop('disabled', true);
 	    
-	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
-	    startPicker.on('change:start', function(event) {
-	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
-	        if (event && event.date) {
-	            console.log("Start Date selected: ", event.date);
+ 	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
+ 	    startPicker.on('change:start', function(event) {
+ 	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
+ 	        if (event && event.date) {
+ 	            console.log("Start Date selected: ", event.date);
 
-	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
-	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
-	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
+ 	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
+ 	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
+ 	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
 
-	            // 퇴사일 DatePicker 설정
-	            var endPicker = tui.DatePicker.createRangePicker({
-	                startpicker: {
-	                    date: event.date, // 입사일 이후 날짜부터 설정
-	                    input: '#employee_hd',
-	                    container: '#startpicker-container',
-	                },
-	                endpicker: {
-	                    date: minEndDate, // 입사일 이후 날짜로 설정
-	                    input: '#employee_rd',
-	                    container: '#endpicker-container',
-	                    disabled: false // 퇴사일 활성화
-	                },
-	                format: 'YYYY-MM-dd',
-	                timePicker: false
-	            });
+ 	            // 퇴사일 DatePicker 설정
+ 	            var endPicker = tui.DatePicker.createRangePicker({
+ 	                startpicker: {
+ 	                    date: event.date, // 입사일 이후 날짜부터 설정
+ 	                    input: '#employee_hd',
+ 	                    container: '#startpicker-container',
+ 	                },
+ 	                endpicker: {
+ 	                    date: minEndDate, // 입사일 이후 날짜로 설정
+ 	                    input: '#employee_rd',
+ 	                    container: '#endpicker-container',
+ 	                    disabled: false // 퇴사일 활성화
+ 	                },
+ 	                format: 'YYYY-MM-dd',
+ 	                timePicker: false
+ 	            });
 
-	            // 퇴사일 선택 후 캘린더 닫기
-	            endPicker.on('change:end', function(event) {
-	                console.log("End Date selected: ", event.date);
-	                endPicker.close();
-	            });
+ 	            // 퇴사일 선택 후 캘린더 닫기
+ 	            endPicker.on('change:end', function(event) {
+ 	                console.log("End Date selected: ", event.date);
+ 	                endPicker.close();
+ 	            });
 
-	            // 입사일 선택 후 캘린더 닫기
-	            startPicker.close();
-	        } else {
-	            console.error("Start date is not available in the event");
-	        }
-	    });
-	});
+ 	            // 입사일 선택 후 캘린더 닫기
+ 	            startPicker.close();
+ 	        } else {
+ 	            console.error("Start date is not available in the event");
+ 	        }
+ 	    });
+ 	});
 
 
     function validateDate() {
@@ -435,7 +416,12 @@
         // 날짜 유효성 검사 (2월 30일 등 잘못된 날짜 체크)
         const date = new Date(year, month - 1, day);
         if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
-            alert("잘못된 날짜입니다.");
+            Swal.fire({
+                icon: 'error',
+                title: '오류 발생!',
+                text: '잘못된 날짜입니다.',
+                confirmButtonText: '확인'
+            });
             return false;
         }
 
@@ -482,7 +468,8 @@
 	
 </script>
 
-	
+<!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>	
 <script th:inline="javascript">
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
@@ -490,27 +477,25 @@
 
 		var userRole = /*[[${role}]]*/ 'default';
 		
-	    let currentPage = 1; // 현재 페이지
-	    const itemsPerPage = 5; // 한 페이지에 표시할 항목 수
-	    let employeeList = []; // 전체 직원 목록
 	    let grid;
-	    let pagination;
-
+	   
 	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
 	        method: 'GET',
 	        success: function (data) {
-	            employeeList = data; // 전체 데이터를 employeeList에 저장
-	            console.log('전체 데이터:', employeeList); // 데이터 확인
 
 	            // Grid 초기화
 	            grid = new tui.Grid({
 	                el: document.getElementById('grid'),
-	                data: employeeList.slice(0, itemsPerPage), // 첫 페이지 데이터 로드
+	                data: data, // 첫 페이지 데이터 로드
 	                scrollX: true,
 	                scrollY: true,
+                    autoWidth: true,
+                    rowHeight: 'auto',
+                    bodyHeight: 'fitToParent',
 	                rowHeaders: ['checkbox'],
+                    zIndex: 100,
 	                columns: [
 						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
@@ -540,6 +525,7 @@
 						{ header: '수정자', name: 'employee_mf', hidden: true  },
 						{ header: '수정일', name: 'employee_md', hidden: true  },
 						{ header: '부서장유무', name: 'employee_mg', hidden: true  },
+						{ header: '사용여부', name: 'employee_us', hidden: true  },
 	                ]
 	            });
 
@@ -556,7 +542,6 @@
 					    return;
 					}
 					
-					
 
 				    if (columnName === 'employee_cd' || columnName === 'employee_nm') {
 				        openEditModal(rowData); // 수정 모드로 모달 열기
@@ -564,69 +549,75 @@
 				});
 				
 				
-	            // Pagination 초기화
-	            pagination = new tui.Pagination(document.getElementById('pagination'), {
-	                totalItems: employeeList.length, // 전체 데이터 개수
-	                itemsPerPage: itemsPerPage, // 페이지당 항목 수
-	                visiblePages: 5, // 페이지 버튼 개수
-	                page: currentPage, // 시작 페이지
-	                centerAlign: true // 페이지 버튼을 가운데 정렬
-	            });
-
-	            // 페이지 변경 이벤트 핸들러
-	            pagination.on('afterMove', function (event) {
-	                currentPage = event.page; // 현재 페이지 업데이트
-	                console.log("변경된 currentPage:", currentPage); // 디버그용
-
-	                // 해당 페이지의 데이터 로드
-	                loadPageData(currentPage);
-	            });
-
-	            // 초기 데이터 로드
-	            loadPageData(currentPage);
 	        },
 	        error: function (error) {
 	            console.error('데이터 로드 실패:', error);
 	        }
 	    });
 
-	    // 페이지 데이터 로드 함수
-	    function loadPageData(page) {
-	        const start = (page - 1) * itemsPerPage;
-	        const end = page * itemsPerPage;
-	        const pageData = employeeList.slice(start, end); // 해당 페이지 데이터 가져오기
-
-	        console.log('로딩된 페이지 데이터:', pageData); // 디버그용
-	        grid.resetData(pageData); // Grid 데이터 업데이트
-	    }
 
 
 	    // 삭제 버튼 클릭 이벤트
 	    $('#btn_employee_delete').on('click', function () {
 	        const checkedRows = grid.getCheckedRows();
 	        if (checkedRows.length === 0) {
-	            alert('삭제할 사원을 선택하세요.');
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '삭제할 사원을 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
 	            return;
 	        }
 
 	        const employee_cds = checkedRows.map(row => row.employee_cd);
-	        if (!confirm(`선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`)) {
-	            return;
-	        }
 
-	        $.ajax({
-	            url: '/delete_EMPLOYEE',
-	            method: 'POST',
-	            headers: { 'X-CSRF-TOKEN': csrfToken },
-	            data: JSON.stringify({ employee_cds }),
-	            contentType: 'application/json',
-	            success: function () {
-	                alert('삭제가 완료되었습니다.');
-	                location.reload();
-	            },
-	            error: function (xhr) {
-	                console.error('삭제 중 오류 발생:', xhr.responseText);
-	                alert('삭제 중 오류가 발생했습니다.');
+	        Swal.fire({
+	            title: '삭제 확인',
+	            text: `선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`,
+	            icon: 'warning',
+	            showCancelButton: true,
+	            confirmButtonText: '삭제',
+	            cancelButtonText: '취소',
+	            reverseButtons: true
+	        }).then((result) => {
+	            if (result.isConfirmed) {
+	                // 확인 버튼을 눌렀을 때 실행할 코드
+	                console.log(`선택한 사원(${employee_cds.join(', ')}) 삭제를 진행합니다.`);
+	                // 여기에서 실제 삭제 처리 로직을 추가합니다.
+	                
+	    	        $.ajax({
+	    	            url: '/delete_EMPLOYEE',
+	    	            method: 'POST',
+	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	    	            data: JSON.stringify({ employee_cds }),
+	    	            contentType: 'application/json',
+	    	            success: function () {
+	    		            Swal.fire({
+	    		                icon: 'success',
+	    		                title: '삭제완료!',
+	    		                text: '삭제가 완료되었습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    		            setTimeout(() => {
+	    		                location.reload();
+	    		            }, 1000);
+	    	            },
+	    	            error: function (xhr) {
+	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	    		            Swal.fire({
+	    		                icon: 'error',
+	    		                title: '오류발생',
+	    		                text: '삭제 중 오류가 발생했습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    	            }
+	    	        });
+	                
+	                
+	            } else if (result.dismiss === Swal.DismissReason.cancel) {
+	                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+	                console.log('삭제가 취소되었습니다.');
 	            }
 	        });
 	    });
@@ -701,7 +692,7 @@
 		function openCreateModal() {
 		    // 모달 초기화
 		    resetModal();
-
+		    $('#resetFormBtn').show();
 		    // 모달 설정
 		    $('#modalTitle').text('인사카드 등록');
 		    $('#modal_submit_button').text('등록');
@@ -717,6 +708,21 @@
 		    resetPhoto(); // 사진 초기화
 		    $('#employee_cd').val(''); // 수정용 필드 초기화
 	        $('#employee_bd_check').text('');
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+	        $('#employee_pw_check').text('');
+	        $('#employee_id_check').text('');
+	        
+	        // #employee_id, #employee_pw 상태 초기화
+	        $('#employee_id').prop('disabled', false);
+	        $('#employee_pw').prop('disabled', false).show();
+
+	        // Reset Password 버튼 삭제
+	        $('#reset-password-btn').remove();
+	        
+	        // endpicker 비활성화 처리
+	        $('#employee_rd').prop('disabled', true); // input 비활성화
+	        
 		}
 		
 	    // 초기화 버튼 클릭 이벤트
@@ -758,11 +764,11 @@
 			  "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt", 
 			  "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm", 
 			  "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr", 
-			  "#employee_mg", "#employee_rl", "#employee_pw"
+			  "#employee_mg", "#employee_rl", "#employee_pw", "#employee_us"
 			];
 			
 			// 필드 활성화/비활성화 처리
-			if (userRole === 'admin') {
+			if (userRole === 'HR_ADMIN' || userRole === 'SYS_ADMIN') {
 				// Admin은 #employee_id는 비활성화, #employee_pw는 숨기고 비활성화, 나머지는 활성화
 				fieldsToDisable.forEach(function(field) {
 					if (field === "#employee_id") {
@@ -799,13 +805,13 @@
 				});
 
 				
-			} else if (userRole === 'developer') {
-			  // Developer는 모든 필드 활성화
+			} else if (userRole === 'SYS_ADMIN') {
+			  // SYS_ADMIN는 모든 필드 활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", false); // 모든 필드 활성화
 			  });
-			} else if (userRole === 'employee') {
-			  // Employee는 모든 필드 비활성화
+			} else if (userRole === 'EMPLOYEE') {
+			  // EMPLOYEE는 모든 필드 비활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", true);
 			    $('#employee_pw').prop("disabled", false)
@@ -839,6 +845,19 @@
 			    }).prop("selected", true);  // '부서직원' 옵션을 선택 상태로 설정
 			} else {
 			    $('#employee_mg').val("");  // 기본값으로 선택을 초기화
+			}
+
+			// 사용 관련 처리
+			if (data.employee_us === true) {
+			    $('#employee_us option').filter(function() {
+			        return $(this).text() === "사용중";  // '사용중' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '사용중' 옵션을 선택 상태로 설정
+			} else if (data.employee_us === false) {
+			    $('#employee_us option').filter(function() {
+			        return $(this).text() === "사용중지";  // '사용중지' 텍스트가 있는 옵션을 찾음
+			    }).prop("selected", true);  // '사용중지' 옵션을 선택 상태로 설정
+			} else {
+			    $('#employee_us').val("");  // 기본값으로 선택을 초기화
 			}
 
 
@@ -1050,6 +1069,7 @@
 		        employee_md: $('#employee_md').val(),
 		        employee_rl: $('#employee_rl').val(),
 		        employee_mg: $('#employee_mg').val(),
+		        employee_us: $('#employee_us').val(),
 		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 
@@ -1069,64 +1089,62 @@
 		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
 		        data: formData,
 		        success: function () {
-		            alert(mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.');
+		        	Swal.fire({
+		        		  icon: 'success',
+		        		  title: mode === '등록' ? '등록 완료' : '수정 완료',
+		        		  text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		        		  confirmButtonText: '확인'
+		        		});
+
 		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-		            location.reload(); // 페이지 새로고침
+		            setTimeout(() => {
+		                location.reload();
+		            }, 1000);
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
 		            console.error('AJAX Error:', employeeDTO);
-		            alert('작업 중 오류가 발생했습니다.');
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '작업 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
 		        }
 		    });
 		});
+		
+		
+		const filterConfig = [
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력',  col: 'col-3' },
+            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력',  col: 'col-3' },
+            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력',  col: 'col-3' },
+            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력',  col: 'col-3' },
+        ];
+		
+            initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+                console.log('적용된 필터:', filterValues);
 
-	});
+                // 필터 적용 후 서버 요청 및 Grid 갱신
+                fetch('/select_FILTERED_EMPLOYEE', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                    			[csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(filterValues)
+                })
+                .then(response => response.json())
+                .then(filteredData => {
+                    console.log('필터링된 데이터:', filteredData);
 
-
-
-    
-	$('#employee_dp').on('click', function () {
-	    const modalDepartmentList = new bootstrap.Modal($('#modal_department_list')[0]);
-	    modalDepartmentList.show();
-	});
-
-	$('#employee_gd').on('click', function () {
-	    const modalDepartmentList = new bootstrap.Modal($('#modal_grade_list')[0]);
-	    modalDepartmentList.show();
-	});
-
- 	// 부서 선택 버튼 클릭 이벤트 처리
-	$(document).on('click', '.select-dp-btn', function () {
-		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
-		const selectedRow = $(this).closest('tr');
-
-		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const departmentName  = selectedRow.find('td').eq(0).text().trim(); // 부서코드
-
-		// 기존 모달의 필드에 값 설정
-		$('#employee_dp').val(departmentName);
-
-		// 부서 선택 모달 닫기
-		const modalDepartmentList = bootstrap.Modal.getInstance($('#modal_department_list')[0]);
-		modalDepartmentList.hide();
-	});
- 	
- 	// 직위 선택 버튼 클릭 이벤트 처리
-	$(document).on('click', '.select-gd-btn', function () {
-		// 클릭된 버튼이 속한 행(`tr`)을 가져옴
-		const selectedRow = $(this).closest('tr');
-
-		// 행의 각 열(`td`)에서 데이터를 가져옴
-		const gradeName = selectedRow.find('td').eq(0).text().trim(); // 직위코드
-
-		// 기존 모달의 필드에 값 설정
-		$('#employee_gd').val(gradeName);
-
-		// 부서 선택 모달 닫기
-		const modalGradeList = bootstrap.Modal.getInstance($('#modal_grade_list')[0]);
-		modalGradeList.hide();
-	});
-    
+                    // Grid 데이터 갱신
+                    grid.resetData(filteredData);
+                })
+                .catch(error => console.error('필터 적용 오류:', error));
+            });
+        });
+		
 </script>
 </html>
