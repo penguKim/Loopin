@@ -37,6 +37,7 @@ import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -64,7 +65,7 @@ public class CommuteController {
 	@PostMapping("/select_COMMUTE_calendar")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_calendar(@RequestBody CommuteRequestDTO commuteRequest) {
 		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("admin");
+		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
 		
@@ -85,7 +86,7 @@ public class CommuteController {
 	@GetMapping("/select_COMMUTE_detail")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
 		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("admin");
+		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin, commute_wd);
 		
@@ -103,8 +104,8 @@ public class CommuteController {
 	@GetMapping("/select_EMPLOYEE_grid")
 	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_grid(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
 		Map<String, Object> response = new HashMap<>(); 
-		boolean isAdmin = commuteService.isAuthority("admin");
-		if(!isAdmin) {
+		boolean isEmp = commuteService.isAuthority("EMPLOYEE");
+		if(isEmp) {
 	        response.put("result", false);
 	        response.put("message", "관리자 권한이 필요합니다.");
 	        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -124,9 +125,10 @@ public class CommuteController {
 	@PostMapping("/insert_COMMUTE_modal")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_modal(@RequestBody CommuteRequestDTO commuteRequest) {
 		CommuteDTO commute = commuteRequest.getCommute();
-		boolean isAdmin = commuteService.isAuthority("admin");
+		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
+		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			commuteService.insert_COMMUTE_modal(commute);
@@ -149,11 +151,12 @@ public class CommuteController {
 	// 그리드 탭 조회
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_grid")
-	public ResponseEntity<Map<String, Object>> select_COMMUTE_grid() {
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
 		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("admin");
+		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(employee.getEmployee_cd(), isAdmin);
+		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
 		log.info(list.toString());
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -168,13 +171,14 @@ public class CommuteController {
 	@PostMapping("/insert_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
 		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("admin");
+		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			commuteService.insert_COMMUTE_modal(commuteRequest.getCommute());
 			
-			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(employee.getEmployee_cd(), isAdmin);
+			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
 			
 			response.put("result", true);
 			response.put("gridList", gridList);
@@ -209,7 +213,7 @@ public class CommuteController {
 	}
 	
 	// 근로 관리 --------------------------------------------
-	
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_AT_ADMIN')")
 	@GetMapping("/commute_type")
 	public String commute_type() {
 		

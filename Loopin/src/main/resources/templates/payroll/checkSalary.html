@@ -5,6 +5,8 @@
 <!-- Toast UI grid CSS File-->
 <link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
 <main id="main" class="main">
+<span id="employee_cd" sec:authentication="principal.employee_cd" style="display: none;"></span>
+<span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
 	<div class="card">
 		<div class="card-body">
 			<div id="grid"></div>
@@ -14,12 +16,13 @@
 <!-- Toast UI grid JS File -->
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
-		const employee_cd = 1; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
-		const employee_nm = '테스터'; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
+		var employee_cd = document.getElementById('employee_cd').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
+		var employee_nm = document.getElementById('employee_nm').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
+		
 		// Ajax로 급여 데이터 조회
 		$.ajax({
 			url : "/checkpr",
-			method : "GET",
+			method : "GET", 
 			dataType : "JSON",
 			data:{
 				employee_cd : employee_cd

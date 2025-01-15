@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.io.IOException;
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -10,7 +11,6 @@ import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.repository.ApprovalRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.LogFilterRequest.APPROVALFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -87,9 +87,9 @@ public class ApprovalService {
 	}
 	
 	
-    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {
-    	return approvalRepository.select_FILTERED_APPROVAL(filterRequest);
-    }
+//    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {
+//    	return approvalRepository.select_FILTERED_APPROVAL(filterRequest);
+//    }
 	
 	
 }

@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.domain;
 import java.util.List;
 
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,6 +14,7 @@ import lombok.ToString;
 @Setter
 @ToString
 public class CommuteRequestDTO {
+	CommuteFilterRequest commuteFilter;
 	
 	List<WorkinghourDTO> workinghourList;
 	CommuteDTO commute;
