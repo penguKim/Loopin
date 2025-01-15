@@ -7,28 +7,29 @@
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <style>
-  /* 드롭다운 메뉴 크기 조정 */
-  .dropdown-menu {
-      min-width: 600px; /* 너비 설정 */
-      max-height: 500px; /* 최대 높이 설정 */
-	  overflow: visible !important; /* 컨텐츠가 영역 밖으로 나옴 */
-  }
-  .toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
-      font-size: 16px !important;
-      font-weight: bold !important;
-  }
+	.toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
+	    font-size: 16px !important;
+	    font-weight: bold !important;
+	}
   
-  .tui-datepicker {
-	z-index: 9999 !important;
-	overflow: visible !important;
-}
+	.tui-datepicker {
+		z-index: 9999 !important;
+		overflow: visible !important;
+	}
 
-.tui-timepicker {
-	z-index: 9999 !important;
-	overflow: visible !important;
-}
+	.tui-timepicker {
+		z-index: 9999 !important;
+		overflow: visible !important;
+	}
+	
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
 </style>
-<script src="/assets/js/filterModule.js"></script>
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -282,36 +283,6 @@
 	    $("#title_calendar").empty().text(formattedDate);
 	}
 	
-	// 년월일 -> 문자열 리턴
-	function getDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-	}
-	
-	// 시분초 -> 문자열 리턴
-	function getTime(date) {
-	    const hours = String(date.getHours()).padStart(2, '0');
-	    const minutes = String(date.getMinutes()).padStart(2, '0');
-	    const seconds = String(date.getSeconds()).padStart(2, '0');
-	    return `${hours}:${minutes}:${seconds}`;
-	}
-	
-	// 년월일 시분초 -> 문자열 리턴
-	function getDateTime(date) {
-	    // 날짜 포맷팅
-	    const year = date.getFullYear();
-	    const month = String(date.getMonth() + 1).padStart(2, '0');
-	    const day = String(date.getDate()).padStart(2, '0');
-	    // 시간 포맷팅
-	    const hours = String(date.getHours()).padStart(2, '0');
-	    const minutes = String(date.getMinutes()).padStart(2, '0');
-	    const seconds = String(date.getSeconds()).padStart(2, '0');
-	    
-	    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
-	}
-	
 	// 달력 데이터 조회
 	function getCalendarList() {
 		calendarStartDate = getDate(calendar.getDateRangeStart().toDate());
@@ -456,21 +427,21 @@
 			bodyHeight : 400,
 			columns : [
 				{header : '근무코드', name : 'workinghour_id', hidden : true},
-				{header : '출근일자', name : 'commute_wd', sortable : true, filter: 'date'},
+				{header : '출근일자', name : 'commute_wd', sortable : true, align: 'center', filter: 'date'},
 				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
 				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
 				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
 				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
-				{header : '출근시간', name : 'commute_wt', sortable : true}, 
-				{header : '퇴근일자', name : 'commute_ld', sortable : true, filter: 'date'},
-				{header : '퇴근시간', name : 'commute_lt', sortable : true},
+				{header : '출근시간', name : 'commute_wt', sortable : true, align: 'center'}, 
+				{header : '퇴근일자', name : 'commute_ld', sortable : true, align: 'center', filter: 'date'},
+				{header : '퇴근시간', name : 'commute_lt', sortable : true, align: 'center'},
 				{header : '출근상태', name : 'commute_st', sortable : true, filter: 'select'},
 			],
 			summary: {
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			        employee_nm: {
+			    	commute_st: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }
@@ -558,21 +529,21 @@
 			bodyHeight : 600,
 			columns : [
 				{header : '근무코드', name : 'workinghour_id', hidden : true},
-				{header : '일자', name : 'commute_wd', sortable : true},
+				{header : '출근일자', name : 'commute_wd', sortable : true, align: 'center', filter: 'date'},
 				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
 				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
 				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
 				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
-				{header : '출근시간', name : 'commute_wt', sortable : true, filter: 'text'}, 
-				{header : '퇴근일자', name : 'commute_ld', sortable : true, filter: 'text'},
-				{header : '퇴근시간', name : 'commute_lt', sortable : true, filter: 'text'},
+				{header : '출근시간', name : 'commute_wt', sortable : true, align: 'center'}, 
+				{header : '퇴근일자', name : 'commute_ld', sortable : true, align: 'center', filter: 'date'},
+				{header : '퇴근시간', name : 'commute_lt', sortable : true, align: 'center'},
 				{header : '출근상태', name : 'commute_st', sortable : true, filter: 'select'},
 			],
 			summary: {
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			        employee_nm: {
+			    	commute_st: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }
@@ -851,11 +822,11 @@
 			],
 			bodyHeight : 500,
 			columns : [
-				{header : '근로번호', name : 'workinghour_id', hidden : true, filter: 'text'},
-				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
+				{header : '근무코드', name : 'workinghour_id', hidden : true, filter: 'text'},
+				{header : '사원코드', name : 'employee_cd', sortable : true, align: 'center', filter: 'text'},
 				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
-				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
-				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
+				{header : '부서명', name : 'employee_dp', sortable : true, align: 'center', filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', sortable : true, align: 'center', filter: 'select'}, 
 				{header: '선택', name: 'choice', align: 'center',
 					formatter: function () {
 						return `<button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">선택</button>`;
@@ -866,7 +837,7 @@
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			        employee_nm: {
+			    	choice: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }
