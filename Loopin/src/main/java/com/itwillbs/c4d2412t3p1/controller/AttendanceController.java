@@ -144,42 +144,55 @@ public class AttendanceController {
 	    return ResponseEntity.ok(list);
 	}
 	
+	// 캘린더 형식 조회(출퇴근 기록부 첫화면)
+	@ResponseBody
+	@PostMapping("/select_calendar_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_calendar_ANNUAL(@RequestBody Map<String, Object> params) {
+		
+		EmployeeDetails employee = commuteService.getEmployee();
+		List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY(params);
+		log.info("홀리데이리스트" + holidayList);
+		
+		
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		params.put("employee", employee.getEmployee_cd());		
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			log.info("파람" + params);
+			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
+			
+			response.put("result", true);
+			response.put("holidayList", holidayList);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 
 	@ResponseBody
 	@GetMapping("/select_period_HOLIDAY")
-	public ResponseEntity<List<Map<String, Object>>> select_period_HOLIDAY(@RequestParam("holiday_dt1") String holiday_dt1, @RequestParam("holiday_dt2") String holiday_dt2) {
-		log.info(holiday_dt1 + holiday_dt2 + " select_period_HOLIDAY 조회 시도");
-		
-		List<Map<String, Object>> list = attendanceService.select_period_HOLIDAY(holiday_dt1, holiday_dt2);
-		log.info(list + " list 값 확인");
-		List<Map<String, Object>> response = list.stream().map(holiday -> {
-	        Map<String, Object> row = new HashMap<>();
-
-	        // 키를 소문자로 변환하여 새로운 맵에 저장
-	        for (Entry<String, Object> entry : holiday.entrySet()) {
-	            String key = entry.getKey().toLowerCase();
-	            Object value = entry.getValue();
-
-	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
-	            if (value instanceof oracle.sql.TIMESTAMP) {
-	                try {
-	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
-	                } catch (SQLException e) {
-//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
-	                    value = null; // 변환 실패 시 null 처리
-	                }
-	            }
-
-	            // row에 변환된 값 추가
-	            row.put(key, value);
-	        }
-
-	        return row;
-	        
-	    }).collect(Collectors.toList());
-
-	    // 최종 응답 반환
-	    return ResponseEntity.ok(response);
+	public ResponseEntity<Map<String, Object>> select_period_HOLIDAY(@RequestBody Map<String, Object> params) {
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
+			
+			response.put("result", true);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 	
 	@ResponseBody

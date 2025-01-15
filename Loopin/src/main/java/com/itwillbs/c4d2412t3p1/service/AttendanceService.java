@@ -60,8 +60,8 @@ public class AttendanceService {
 		return holidayRepository.findAll();
 	}
 
-	public List<Map<String, Object>> select_period_HOLIDAY(String holiday_dt1, String holiday_dt2) {
-		return holidayMapper.select_period_HOLIDAY(holiday_dt1, holiday_dt2);
+	public List<Map<String, Object>> select_period_HOLIDAY(Map<String, Object> params) {
+		return holidayMapper.select_period_HOLIDAY(params);
 	}
 	
 	public void insert_HOLIDAY(List<Map<String, String>> holidays) throws Exception {
@@ -146,5 +146,10 @@ public class AttendanceService {
 	public List<Map<String, Object>> select_APPROVAL_ANNUAL() {
 		return attendanceMapper.select_APPROVAL_ANNUAL();
 	}
+
+	public List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params) {
+		return attendanceMapper.select_calendar_ANNUAL(params);
+	}
+
 
 }

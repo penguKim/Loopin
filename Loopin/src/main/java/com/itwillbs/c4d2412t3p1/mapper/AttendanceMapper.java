@@ -24,6 +24,8 @@ public interface AttendanceMapper {
 	List<Map<String, Object>> select_filer_ANNUAL(AttendanceDTO attendanceDTO);
 	
 	List<Map<String, Object>> select_APPROVAL_ANNUAL();
+
+	List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params);
     
    
 }
