@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -33,14 +34,14 @@ public class PRService {
 	private final PRCodeRepository prcRep;
 //	private final EmployeeRepository empRep;
 	
-	public List<Map<String, Object>> selectpr(Long employee_cd) {
+	public List<Map<String, Object>> selectpr(String employee_cd) {
 		
 		List<Map<String, Object>> list = prM.selectpr(employee_cd);
 		
 		return list;
 	}
 	
-	public List<Map<String, Object>> selectprmodal(Long pr_id, Long employee_cd) {
+	public List<Map<String, Object>> selectprmodal(Long pr_id, String employee_cd) {
 		
 		List<Map<String, Object>> list = prM.checkprmodal(pr_id, employee_cd);
 		
@@ -87,14 +88,16 @@ public class PRService {
 		BigDecimal nightworkingtime = new BigDecimal(nightworkingtime2);
 		BigDecimal weekendworkingtime = new BigDecimal(weekendworkingtime2);
 		BigDecimal holydayworkingtime =new BigDecimal(holydayworkingtime2);
-		BigDecimal leastannual = new BigDecimal(leastannual2);
-		BigDecimal bonus = new BigDecimal(bonus2);
+		BigDecimal leastannual = (leastannual2 == null)?BigDecimal.ZERO:new BigDecimal(leastannual2);
+		BigDecimal bonus = (bonus2 == null)?BigDecimal.ZERO:new BigDecimal(bonus2);
 		BigDecimal workingtime = new BigDecimal(209);
+		BigDecimal D_GG = BigDecimal.ZERO;
 		BigDecimal totalSalary = BigDecimal.ZERO; //총지급액 
 		BigDecimal totalDeduction = BigDecimal.ZERO; //총공제액
 		BigDecimal totalNonTax = BigDecimal.ZERO; //총비과세
 		log.info("======================================================================BS====================="+BS);
 		
+		// 전체계산
 		for (PRCode formula : formulas) {
 			log.info("계산확인"+formula);
 			BigDecimal calculatedAmount = calculateSalaryWithSpEL(formula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
@@ -115,29 +118,32 @@ public class PRService {
 		}
 		
 		//수당계산
-//		for (PRCode Bformula : Bformulas) {
-//			log.info("계산확인"+Bformula);
+		for (PRCode Bformula : Bformulas) {
+			log.info("계산확인"+Bformula);
 //			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), data, workingtime );
-//			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
-//			
-//			calculated.add(new PRCalDTO(Bformula.getPrcode_id(),calculatedAmount));
-//			
-//			totalSalary = totalSalary.add(calculatedAmount);
-//			if(Bformula.isPrcode_nt()) {
-//				totalNonTax = totalNonTax.add(calculatedAmount);
-//			}
-//		}
+			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
+			
+			calculated.add(new PRCalDTO(Bformula.getPrcode_id(),calculatedAmount));
+			
+			totalSalary = totalSalary.add(calculatedAmount);
+			if(Bformula.isPrcode_nt()) {
+				totalNonTax = totalNonTax.add(calculatedAmount);
+			}
+		}
 		
 		log.info("======================================================================totalSalary====================="+totalSalary);
 		log.info("======================================================================totalDeduction====================="+totalDeduction);
 		
-//		//공제계산
-//		for (PRCode Dformula : Dformulas) {
-//			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Dformula.getPrcode_fl(), totalSalary, totalNonTax );
-//			
-//			calculated.add(new PRCalDTO(Dformula.getPrcode_id(),calculatedAmount));
-//			totalDeduction =totalDeduction.add(calculatedAmount);
-//		}
+		//공제계산
+		for (PRCode Dformula : Dformulas) {
+			BigDecimal calculatedD = calculateSalaryWithSpEL(Dformula.getPrcode_fl(), totalSalary, totalNonTax );
+			
+			calculated.add(new PRCalDTO(Dformula.getPrcode_id(),calculatedD));
+			if(Dformula.getPrcode_id().contains("D_GG")) {
+				D_GG = D_GG.add(calculatedD);
+			}
+			totalDeduction =totalDeduction.add(calculatedD);
+		}
 		
 		BigDecimal netSalary = totalSalary.subtract(totalDeduction);
 		
@@ -220,16 +226,11 @@ public class PRService {
 		log.info("context variables: " + context.lookupVariable("totalNonTax"));
 		
 		try {
-//	        if ("BS".equals(prcode_fl)) {
-//	            log.info("Returning BS directly: " + BS);
-//	            return BS;  // BS 값을 직접 반환
-//	        }
 	        
 			// 변수명이 정확히 치환되도록 정규 표현식으로 처리
 	        prcode_fl = prcode_fl.replaceAll("\\btotalSalary\\b", "#totalSalary");
 	        prcode_fl = prcode_fl.replaceAll("\\btotalNonTax\\b", "#totalNonTax");
 
-			
 	        BigDecimal result = parser.parseExpression(prcode_fl).getValue(context, BigDecimal.class);
 	        log.info("SpEL evaluated result: " + result);
 //		return parser.parseExpression(prcode_fl).getValue(context, BigDecimal.class);
@@ -241,12 +242,21 @@ public class PRService {
 	    }
 	}
 
-//	public List<Map<String, Object>> selectpr() {
-//
-//		List<Map<String, Object>> list = prM.selectpr(null);
-//		
-//		return list;
-//	}
-	
+	public List<Employee> select_empworklastmth() {
+		List<Employee> list = prM.select_empworklastmth();
+
+		return list;
+	}
+
+	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist) {
+		Map<String, Object> employee_cdList = new HashMap<>();
+		employee_cdList.put("employee_cd", emp_cdlist);
+		System.out.println("====================================employee_cdLsit: "+employee_cdList);
+//		List<Map<String, Object>> list = prM.select_wokringtimeformth(employee_cdList);
+		List<Map<String, Object>> listA = prM.select_wokringtimeformth(emp_cdlist);
+
+		return listA;
+//		return prM.select_wokringtimeformth(employee_cdList);
+	}
 
 }

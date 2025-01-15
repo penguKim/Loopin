@@ -4,6 +4,21 @@
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PRMapper">
 
+	<select id="selectpr" resultType="map">
+		SELECT PR.pr_gm, PR.pr_wm, PRDETAIL.prdetail_rs, PR.pr_id
+		FROM PR
+		JOIN PRDETAIL ON PR.pr_id = PRDETAIL.pr_id
+		WHERE PRDETAIL.employee_cd = #{employee_cd}
+		ORDER BY PR.pr_gm desc
+	</select>
+
+	<select id="checkprmodal" resultType="map">
+		SELECT PRDETAIL.prdetail_rs, PRDETAIL.prdetail_ta, PRDETAIL.prdetail_bs, PRDETAIL.prdetail_mt, PRDETAIL.prdetail_ot, PRDETAIL.prdetail_na, PRDETAIL.prdetail_wa, PRDETAIL.prdetail_ha, PRDETAIL.prdetail_aa,
+		PRDETAIL.prdetail_bn, PRDETAIL.prdetail_td, PRDETAIL.prdetail_gm, PRDETAIL.prdetail_gy, PRDETAIL.prdetail_gg , PRDETAIL.prdetail_lg
+		FROM PRDETAIL
+		WHERE pr_id = #{pr_id} AND employee_cd = #{employee_cd}
+	</select>
+
 	<select id="selectpradmin" resultType="map">
 		SELECT PR.pr_id, PR.pr_gm,
 		PR.pr_wm, PR.pr_td, PR.pr_ta
@@ -27,22 +42,7 @@
 		WHERE PRDETAIL.prdetail_id = #{prdetail_id}
 	</select>
 	
-	<select id="selectpr" resultType="map">
-		SELECT PR.pr_gm, PR.pr_wm, PRDETAIL.prdetail_rs, PR.pr_id
-		FROM PR
-		JOIN PRDETAIL ON PR.pr_id = PRDETAIL.pr_id
-		WHERE PRDETAIL.employee_cd = #{employee_cd}
-		ORDER BY PR.pr_gm desc
-	</select>
-
-	<select id="checkprmodal" resultType="map">
-		SELECT PRDETAIL.prdetail_rs, PRDETAIL.prdetail_ta, PRDETAIL.prdetail_bs, PRDETAIL.prdetail_mt, PRDETAIL.prdetail_ot, PRDETAIL.prdetail_na, PRDETAIL.prdetail_wa, PRDETAIL.prdetail_ha, PRDETAIL.prdetail_aa,
-		PRDETAIL.prdetail_bn, PRDETAIL.prdetail_td, PRDETAIL.prdetail_gm, PRDETAIL.prdetail_gy, PRDETAIL.prdetail_gg , PRDETAIL.prdetail_lg
-		FROM PRDETAIL
-		WHERE pr_id = #{pr_id} AND employee_cd = #{employee_cd}
-	</select>
-	
-	    <select id="select_empworklastmth" resultType="map">
+    <select id="select_empworklastmth" resultType="map">
         <![CDATA[
 	        SELECT EMPLOYEE_CD,EMPLOYEE_NM, EMPLOYEE_BS as BS
 	        FROM EMPLOYEE
@@ -52,24 +52,25 @@
         ]]>
     </select>
 
-	<select id="select_wokringtimeformth" resultType="map">
-		<![CDATA[
-			<foreach item="employee_cd" collection="employee_cdList" open="" separator=";" close="">
-				SELECT 
-					employee_cd, 
-					TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')),'YYYY-MM') AS pr_wm, 
-					SUM(NVL(commute_ig,0)) AS workingtime, 
-					SUM(NVL(commute_eg,0)) AS overworkingtime, 
-					SUM(NVL(commute_yg,0)) AS nightworkingtime, 
-					SUM(NVL(commute_jg,0)) AS weekendworkingtime, 
-					SUM(NVL(commute_hg,0)) AS holydayworkingtime
-				FROM COMMUTE
-				WHERE TO_DATE(COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
-									AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
-									AND EMPLOYEE_CD = #{employee_cd}
-				GROUP BY EMPLOYEE_CD
-			</foreach>
-		]]>
+	<select id="select_wokringtimeformth" parameterType="list" resultType="map">
+	     <![CDATA[
+	        SELECT 
+	            employee_cd, 
+	            TO_CHAR(MIN(TO_DATE(commute_wd, 'YYYY-MM-DD')), 'YYYY-MM') AS pr_wm, 
+	            SUM(NVL(commute_ig, 0)) AS workingtime, 
+	            SUM(NVL(commute_eg, 0)) AS overworkingtime, 
+	            SUM(NVL(commute_yg, 0)) AS nightworkingtime, 
+	            SUM(NVL(commute_jg, 0)) AS weekendworkingtime, 
+	            SUM(NVL(commute_hg, 0)) AS holydayworkingtime
+	        FROM COMMUTE
+	        WHERE TO_DATE(COMMUTE_WD, 'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+	                                                  AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+	          AND EMPLOYEE_CD IN 
+	          <foreach item="employee_cd" collection="list" open="(" separator="," close=")" jdbcType="VARCHAR">
+	              #{employee_cd}
+	          </foreach>
+	        GROUP BY EMPLOYEE_CD
+	    ]]>
 	</select>
 	
 </mapper>
