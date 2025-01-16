@@ -1,18 +1,12 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.time.LocalDate;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,17 +20,12 @@ import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
-import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
-import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
-import com.itwillbs.c4d2412t3p1.mapper.CommuteMapper;
-import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
-import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -126,6 +115,7 @@ public class CommuteController {
 	}
 	
 	// 출근 일정 조회의 등록모달
+	@LogActivity(value = "등록", action = "출퇴근등록")
 	@ResponseBody
 	@PostMapping("/insert_COMMUTE_modal")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_modal(@RequestBody CommuteRequestDTO commuteRequest) {
@@ -179,6 +169,7 @@ public class CommuteController {
 	}
 	
 	// 출근 일정 조회의 등록(그리드)
+	@LogActivity(value = "등록", action = "출퇴근등록")
 	@ResponseBody
 	@PostMapping("/insert_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
@@ -273,6 +264,7 @@ public class CommuteController {
 	}
 	
 	// 근로관리 항목 등록
+	@LogActivity(value = "등록", action = "근로관리")
 	@ResponseBody
 	@PostMapping("/insert_WORKINGHOUR")
 	public ResponseEntity<Map<String, Object>> insert_WORKINGHOUR(@RequestBody WorkinghourDTO workinghourDTO) {
@@ -314,6 +306,7 @@ public class CommuteController {
 	}
 	
 	// 미등록 사원 근로 등록
+	@LogActivity(value = "등록", action = "사원 근로 등록")
 	@ResponseBody
 	@PostMapping("/update_EMPLOYEE_WK")
 	public ResponseEntity<Map<String, Object>> update_EMPLOYEE_WK(@RequestBody CommuteRequestDTO commuteRequest) {

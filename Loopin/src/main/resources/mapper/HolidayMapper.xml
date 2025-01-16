@@ -71,5 +71,12 @@
 	        HOLIDAY_WD = #{holiday_wd}
 	    WHERE HOLIDAY_DT = #{holiday_dt}
 	</update>
+	
+	<select id="isHoliday" resultType="boolean">
+		SELECT CASE WHEN COUNT(CASE WHEN HOLIDAY_AA = 'O' THEN 1 END) > 0 
+        THEN 1  ELSE 0 END isHoliday
+		FROM HOLIDAY 
+		WHERE HOLIDAY_DT = #{date}
+	</select>
     
 </mapper>
