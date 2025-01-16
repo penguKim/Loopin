@@ -51,73 +51,73 @@ public class Employee {
 	        this.employee_cd = "EM" + currentYear + "-" + formattedSequence;
 	    }
 	}
-    @Column(name = "employee_id", unique = true)
+    @Column(name = "employee_id", unique = true, length = 16)
     private String employee_id;
     
-    @Column(name = "employee_pw")
+    @Column(name = "employee_pw", length = 16)
     private String employee_pw;
 
-    @Column(name = "employee_dp")
+    @Column(name = "employee_dp", length = 10)
     private String employee_dp;
 
-    @Column(name = "employee_gd")
+    @Column(name = "employee_gd", length = 10)
     private String employee_gd;
 
-    @Column(name = "employee_hd")
+    @Column(name = "employee_hd", length = 10)
     private String employee_hd;
 
-    @Column(name = "employee_rd")
+    @Column(name = "employee_rd", length = 10)
     private String employee_rd;
 
-    @Column(name = "employee_rr")
+    @Column(name = "employee_rr", length = 200)
     private String employee_rr;
 
-    @Column(name = "employee_cg")
+    @Column(name = "employee_cg", length = 2)
     private String employee_cg;
 
-    @Column(name = "employee_nt")
+    @Column(name = "employee_nt", length = 200)
     private String employee_nt;
 
-    @Column(name = "employee_nm")
+    @Column(name = "employee_nm", length = 20)
     private String employee_nm;
 
-    @Column(name = "employee_bd")
+    @Column(name = "employee_bd", length = 8)
     private String employee_bd;
 
-    @Column(name = "employee_ad")
+    @Column(name = "employee_ad", length = 100)
     private String employee_ad;
 
-    @Column(name = "employee_sb")
+    @Column(name = "employee_sb", length = 2)
     private String employee_sb;
 
-    @Column(name = "employee_ph")
+    @Column(name = "employee_ph", length = 20)
     private String employee_ph;
 
-    @Column(name = "employee_em")
+    @Column(name = "employee_em", length = 50)
     private String employee_em;
 
-    @Column(name = "employee_pi")
+    @Column(name = "employee_pi", length = 100)
     private String employee_pi;
 
-    @Column(name = "employee_bs")
+    @Column(name = "employee_bs", length = 20)
     private BigDecimal employee_bs;
 
-    @Column(name = "employee_bk")
+    @Column(name = "employee_bk", length = 10)
     private String employee_bk;
 
-    @Column(name = "employee_an")
+    @Column(name = "employee_an", length = 20)
     private String employee_an;
     
-    @Column(name = "employee_dt")
+    @Column(name = "employee_dt", length = 10)
     private String employee_dt;
 
-    @Column(name = "employee_wr")
+    @Column(name = "employee_wr", length = 10)
     private String employee_wr;
 
     @Column(name = "employee_wd")
     private Timestamp employee_wd;
 
-    @Column(name = "employee_mf")
+    @Column(name = "employee_mf", length = 10)
     private String employee_mf;
 
     @Column(name = "employee_md")
@@ -126,10 +126,10 @@ public class Employee {
     @Column(name = "employee_mg")
     private Boolean employee_mg;
     
-    @Column(name = "employee_rl")
+    @Column(name = "employee_rl", length = 10)
     private String employee_rl;
 	
-    @Column(name = "employee_us")
+    @Column(name = "employee_us", length = 10)
     private Boolean employee_us;
     
     @Column(name = "workinghour_id")
