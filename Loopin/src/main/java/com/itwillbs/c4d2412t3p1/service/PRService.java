@@ -2,6 +2,9 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,9 +22,13 @@ import com.itwillbs.c4d2412t3p1.domain.PRCalDTO;
 import com.itwillbs.c4d2412t3p1.domain.PRDTO;
 import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.entity.PR;
 import com.itwillbs.c4d2412t3p1.entity.PRCode;
+import com.itwillbs.c4d2412t3p1.entity.PRDetail;
 import com.itwillbs.c4d2412t3p1.mapper.PRMapper;
 import com.itwillbs.c4d2412t3p1.repository.PRCodeRepository;
+import com.itwillbs.c4d2412t3p1.repository.PRDetailRepository;
+import com.itwillbs.c4d2412t3p1.repository.PRRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -33,6 +40,8 @@ public class PRService {
 	
 	private final PRMapper prM;
 	private final PRCodeRepository prcRep;
+	private final PRRepository prRep;
+	private final PRDetailRepository prdRep;
 //	private final EmployeeRepository empRep;
 	
 	public List<Map<String, Object>> selectpr(String employee_cd) {
@@ -250,42 +259,48 @@ public class PRService {
 	}
 
 	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist, String premth) {
-		String[] presep = premth.split("-");
-		String year = presep[0];
 		
-		if(premth.contains("-12") ) {
-			Map<String, Object> premth_cds = new HashMap<>();
-			premth_cds.put("year", year);
-			premth_cds.put("employee_cdList", emp_cdlist);
-			
-			List<Map<String, Object>> wtlist = prM.select_wokringtimeformth(emp_cdlist);
-			System.out.println("!!!!!!!!!!!!!!!!!!!wtlist: "+wtlist);
-			List<Map<String,Object>> rllist = prM.select_remainleave(premth_cds);
-			
-			Map<String, Map<String,Object>> list = new HashMap<>();
-			
-			for(Map<String, Object> wt : wtlist) {
-				String empcd = (String) wt.get("EMPLOYEE_CD");
-				System.out.println("!!!!!!!!!!!!!!!!!!!empcd1: "+empcd);
-				list.put(empcd, new HashMap<>(wt));
-			}
-			
-			for(Map<String,Object> rl : rllist) {
-				String empcd = (String) rl.get("EMPLOYEE_CD");
-				System.out.println("!!!!!!!!!!!!!!!!!!!empcd2: "+empcd);
-				Map<String,Object> isexist = list.get(empcd);
-				if(isexist != null) {
-					isexist.putAll(rl);
-				}else {
-					list.put(empcd, new HashMap<>(rl));
-				}
-			}
-			
-			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!list: "+list.values());
-			
-			return new ArrayList<>(list.values());
+		String iscal = prM.isCal(premth);
+		if(iscal.equals(premth)) {
+			return prM.select_spes(premth);
 		}else {
-			return prM.select_wokringtimeformth(emp_cdlist);
+			String[] presep = premth.split("-");
+			String year = presep[0];
+			
+			if(premth.contains("-12") ) {
+				Map<String, Object> premth_cds = new HashMap<>();
+				premth_cds.put("year", year);
+				premth_cds.put("employee_cdList", emp_cdlist);
+				
+				List<Map<String, Object>> wtlist = prM.select_wokringtimeformth(emp_cdlist);
+				System.out.println("!!!!!!!!!!!!!!!!!!!wtlist: "+wtlist);
+				List<Map<String,Object>> rllist = prM.select_remainleave(premth_cds);
+				
+				Map<String, Map<String,Object>> list = new HashMap<>();
+				
+				for(Map<String, Object> wt : wtlist) {
+					String empcd = (String) wt.get("EMPLOYEE_CD");
+					System.out.println("!!!!!!!!!!!!!!!!!!!empcd1: "+empcd);
+					list.put(empcd, new HashMap<>(wt));
+				}
+				
+				for(Map<String,Object> rl : rllist) {
+					String empcd = (String) rl.get("EMPLOYEE_CD");
+					System.out.println("!!!!!!!!!!!!!!!!!!!empcd2: "+empcd);
+					Map<String,Object> isexist = list.get(empcd);
+					if(isexist != null) {
+						isexist.putAll(rl);
+					}else {
+						list.put(empcd, new HashMap<>(rl));
+					}
+				}
+				
+				System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!list: "+list.values());
+				
+				return new ArrayList<>(list.values());
+			}else {
+				return prM.select_wokringtimeformth(emp_cdlist);
+			}
 		}
 		
 	}
@@ -309,6 +324,14 @@ public class PRService {
 		BigDecimal Allempns = BigDecimal.ZERO;
 		BigDecimal Allemptp = BigDecimal.ZERO;
 		
+		PR pr = new PR();
+		pr.setPr_gm(LocalDate.now().getYear() + "-" + String.format("%02d", LocalDate.now().getMonthValue()));
+		pr.setPr_wd(Timestamp.valueOf(LocalDateTime.now()));
+		prRep.save(pr);
+		Long prid = pr.getPr_id();
+		String wm = null;
+		String wr = null;
+		
 		for (PR_calculationMDTO emp : wtdata) {
 			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 확인 : "+ emp.getBonus());
 			String employee_cd = emp.getEmployee_cd();
@@ -321,6 +344,8 @@ public class PRService {
 			String holydayworkingtime = emp.getHolydayworkingtime();
 			String remainleave = emp.getRemainleave();
 			String bonus = emp.getBonus();
+			wm = emp.getWm();
+			wr = emp.getWr();
 			
 	        List<PRDTO> calculatedSalary = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
 	        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 확인 : "+calculatedSalary.get(0).getRS());
@@ -329,6 +354,58 @@ public class PRService {
 	        Allempns = Allempns.add(calculatedSalary.get(0).getRS());
 	        Allemptp = Allemptp.add(BigDecimal.ONE);
 	        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 확인 : "+Allemptp);
+	        
+	        PRDetail prdetail = new PRDetail();
+	        prdetail.setEmployee_cd(employee_cd);
+	        prdetail.setEmployee_nm(employee_nm);
+	        prdetail.setPr_id(prid);
+	        prdetail.setPredetail_ch(false);
+	        prdetail.setPredetail_ta(calculatedSalary.get(0).getTA());
+	        prdetail.setPredetail_td(calculatedSalary.get(0).getTD());
+	        prdetail.setPredetail_rs(calculatedSalary.get(0).getRS());
+	        
+	        for(PRCalDTO pd : calculatedSalary.get(0).getCalculated()) {
+	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getPrdetail_nm());
+	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getAmount());
+	        	if(pd.getPrdetail_nm().equals("BS")) {
+	        		prdetail.setPredetail_bs(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_BN")) {
+	        		prdetail.setPredetail_bn(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_HA")) {
+	        		prdetail.setPredetail_ha(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_MT")) {
+	        		prdetail.setPredetail_mt(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_NA")) {
+	        		prdetail.setPredetail_na(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_OT")) {
+	        		prdetail.setPredetail_ot(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_RL")) {
+	        		prdetail.setPredetail_rl(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("B_WA")) {
+	        		prdetail.setPredetail_wa(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("D_GG")) {
+	        		prdetail.setPredetail_gg(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("D_GM")) {
+	        		prdetail.setPredetail_gm(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("D_GY")) {
+	        		prdetail.setPredetail_gy(pd.getAmount());
+	        	}
+	        	if(pd.getPrdetail_nm().equals("D_LG")) {
+	        		prdetail.setPredetail_lg(pd.getAmount());
+	        	}
+	        }
+	        
+	        prdRep.save(prdetail);
 	        
 	        Map<String, Object> calculatedMap = new HashMap<>();
 	        calculatedMap.put("employee_cd", employee_cd);
@@ -341,12 +418,20 @@ public class PRService {
 	        result.add(calculatedMap);
 	    }
 		
-		Map<String, Object> total = new HashMap<>();
-		total.put("TA", Allempta);
-		total.put("TD", Allemptd);
-		total.put("NS", Allempns);
-		total.put("TP", Allemptp);
-		result.add(total);
+		pr.setPr_ns(Allempns);
+		pr.setPr_ta(Allempta);
+		pr.setPr_td(Allemptd);
+		pr.setPr_tp(Allemptp);
+		pr.setPr_wm(wm);
+		pr.setPr_wr(wr);
+		prRep.save(pr);
+		
+//		Map<String, Object> total = new HashMap<>();
+//		total.put("TA", Allempta);
+//		total.put("TD", Allemptd);
+//		total.put("NS", Allempns);
+//		total.put("TP", Allemptp);
+//		result.add(total);
 		
 		return result;
 	}
