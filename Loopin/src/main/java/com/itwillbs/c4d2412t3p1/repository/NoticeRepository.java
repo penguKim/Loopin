@@ -16,12 +16,12 @@ public interface NoticeRepository extends JpaRepository<Notice, String>{
 	Long getNextSequenceValue();
 
 	
-    @Query(value = "SELECT * FROM notice n " +
-            "WHERE (:#{#filterRequest.noticeWr} IS NULL OR n.notice_wr = :#{#filterRequest.noticeWr}) " +
-            "AND (:#{#filterRequest.noticeTt} IS NULL OR n.notice_tt = :#{#filterRequest.noticeTt}) " +
-            "AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL " +
-            "     OR n.notice_wd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) ",
-    nativeQuery = true)
+	@Query(value = "SELECT * FROM notice n " +
+	        "WHERE (:#{#filterRequest.noticeWr} IS NULL OR n.notice_wr LIKE %:#{#filterRequest.noticeWr}%) " +
+	        "AND (:#{#filterRequest.noticeTt} IS NULL OR n.notice_tt LIKE %:#{#filterRequest.noticeTt}%) " +
+	        "AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL " +
+	        "     OR n.notice_wd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) ",
+	    nativeQuery = true)
     List<Notice> select_FILTERED_NOTICE(@Param("filterRequest") NoticeFilterRequest filterRequest);
 	
 	
