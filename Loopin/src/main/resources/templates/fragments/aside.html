@@ -19,10 +19,9 @@
 			</div>
 			
 			<div sec:authorize="hasAnyRole('SYS_ADMIN','HR_ADMIN')">
-				<li class="nav-heading">인사관리</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" data-bs-target="#forms-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-person-vcard"></i><span>인사카드</span><i class="bi bi-chevron-down ms-auto"></i>
+						<i class="bi bi-person-vcard"></i><span>인사관리</span><i class="bi bi-chevron-down ms-auto"></i>
 					</a>
 					<ul id="forms-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
@@ -35,13 +34,6 @@
 								<i class="bi bi-circle"></i><span>인사현황</span>
 							</a>
 						</li>
-					</ul>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" data-bs-target="#formss-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-arrow-left-right"></i><span>인사발령</span><i class="bi bi-chevron-down ms-auto"></i>
-					</a>
-					<ul id="formss-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
 							<a href="transfer_list">
 								<i class="bi bi-circle"></i><span>인사발령 등록</span>
@@ -51,7 +43,6 @@
 				</li>
 			</div>
 			<div sec:authorize="hasAnyRole('SYS_ADMIN','AT_ADMIN')">
-				<li class="nav-heading">근태관리</li>
 				<li class="nav-item">
 				    <a class="nav-link collapsed" data-bs-target="#components-nav" data-bs-toggle="collapse" href="#">
 				        <i class="bi bi-calendar2-plus"></i><span>휴가관리</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -93,25 +84,6 @@
 				</li>
 			</div>
 			<div sec:authorize="hasAnyRole('SYS_ADMIN','PR_ADMIN')">
-				<li class="nav-heading">급여관리</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-database-check"></i><span>급여현황</span><i class="bi bi-chevron-down ms-auto"></i>
-					</a>
-					<ul id="charts-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-						<li>
-							<a href="check_salary">
-								<i class="bi bi-circle"></i><span>급여조회</span>
-							</a>
-						</li>
-						<li>
-							<a href="prcal">
-								<i class="bi bi-circle"></i><span>급여계산기</span>
-							</a>
-						</li>
-					</ul>
-				</li>
-				
 				<li class="nav-item">
 					<a class="nav-link collapsed" data-bs-target="#icons-nav" data-bs-toggle="collapse" href="#">
 						<i class="bi bi-calculator"></i><span>급여관리</span><i class="bi bi-chevron-down ms-auto"></i>
@@ -135,13 +107,20 @@
 					</ul>
 				</li>
 			</div>
-				<li class="nav-heading">사원목록</li>
+				<li class="nav-heading">인사</li>
 				<li class="nav-item">
-					<a class="nav-link collapsed" href="approval_list">
+					<a class="nav-link collapsed" href="transfer_list">
 						<i class="bi bi-person"></i>
 						<span>인사</span>
 					</a>
 				</li>
+				<li class="nav-item">
+					<a class="nav-link collapsed" href="transfer_list">
+						<i class="bi bi-person"></i>
+						<span>인사</span>
+					</a>
+				</li>
+				<li class="nav-heading">근태</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="attendance_list">
 						<i class="bi bi-calendar-date"></i>
@@ -150,14 +129,21 @@
 				</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="commute">
-						<i class="bi bi-calendar-date"></i>
+						<i class="bi bi-calendar"></i>
 						<span>출퇴근</span>
+					</a>
+				</li>
+				<li class="nav-heading">급여</li>
+				<li class="nav-item">
+					<a class="nav-link collapsed" href="approval_list">
+						<i class="bi bi-calculator"></i>
+						<span>급여계산기</span>
 					</a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="approval_list">
-						<i class="bi bi-calculator"></i>
-						<span>급여</span>
+						<i class="bi bi-cash"></i>
+						<span>급여조회</span>
 					</a>
 				</li>
 				<li class="nav-item">
