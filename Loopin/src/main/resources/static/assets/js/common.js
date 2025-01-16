@@ -11,11 +11,11 @@ function showAlert(element, icon, title, msg) {
 	    icon: icon,
 	    title: title,
 	    html: msg,
+	}).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
 	});
-	
-	if(element != '') {
-		element.focus();
-	}
 	
 }
 
@@ -35,11 +35,11 @@ function showToast(element, icon, title, msg) {
         html: msg,
         showConfirmButton: false,
         timer: 1500,
-    });
-	
-	if(element != '') {
-		element.focus();
-	}
+    }).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
+	});
 }
 
 /**
