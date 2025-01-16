@@ -9,18 +9,21 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.ApprovalService;
 
 import lombok.RequiredArgsConstructor;
@@ -196,6 +199,38 @@ public class ApprovalController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	
+	@GetMapping("/first_approvers")
+	public ResponseEntity<Map<String, Object>> getFirstApprovers(
+	    @AuthenticationPrincipal EmployeeDetails employeeDetails
+	) {
+	    String employee_gd = employeeDetails.getEmployee_gd();
+	    log.info("현재 사원코드 : " + employee_gd);
+	    List<Employee> firstApprovers = approvalService.getFirstApproverList(employee_gd);
+	    log.info("현재 1차결재권자리스트 : " + firstApprovers.toString());
+
+	    // Grid에서 요구하는 형식으로 응답 변환
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("result", true);
+	    response.put("data", Map.of("contents", firstApprovers));
+	    return ResponseEntity.ok(response);
+	}
+
+
+    @GetMapping("/second_approvers")
+    public ResponseEntity<List<Employee>> getSecondApprovers(
+        @RequestParam("approval_fa") String approval_fa // 1차 결재권자 ID
+    ) {
+        List<Employee> approval_sa = approvalService.getSecondApproverList(approval_fa);
+        return ResponseEntity.ok(approval_sa);
+    }
+	
+	
+	
+	
+	
+	
 	
 //    // 필터 데이터 가져오기
 //	@PostMapping("/select_FILTERED_APPROVAL")

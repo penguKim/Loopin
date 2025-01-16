@@ -57,13 +57,14 @@ public class Approval {
     @Column(name = "approval_sa", length = 20)
     private String approval_sa; // 2차 결재권자 (employee_cd)
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approval_fa", referencedColumnName = "employee_cd", insertable = false, updatable = false)
     private Employee firstApprover; // 1차 결재권자 (Employee 엔티티와 연관)
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approval_sa", referencedColumnName = "employee_cd", insertable = false, updatable = false)
     private Employee secondApprover; // 2차 결재권자 (Employee 엔티티와 연관)
+
 
 	@Column(name = "approval_wr")
 	private String approval_wr; // 작성자

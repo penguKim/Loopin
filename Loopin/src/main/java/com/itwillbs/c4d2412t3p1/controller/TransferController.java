@@ -3,7 +3,6 @@ package com.itwillbs.c4d2412t3p1.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
-import com.itwillbs.c4d2412t3p1.entity.Transfer;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.service.TransferService;
@@ -33,7 +30,6 @@ import lombok.extern.java.Log;
 public class TransferController {
 
 	private final TransferService transferService;
-	private final EmployeeService employeeService;
 
 	@GetMapping("/transfer_list")
 	public String transfer_list(Model model) {
@@ -50,7 +46,6 @@ public class TransferController {
 	}
 
 //	인사발령 조회
-	@LogActivity(value = "조회", action = "인사발령")
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {

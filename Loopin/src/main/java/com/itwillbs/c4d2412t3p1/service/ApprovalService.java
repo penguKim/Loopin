@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.repository.ApprovalRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 
@@ -85,6 +86,18 @@ public class ApprovalService {
 	public List<Approval> findByApprovalCd(String currentCd) {
 		return approvalRepository.findByApprovalCd(currentCd);
 	}
+	
+	
+	public List<Employee> getFirstApproverList(String employee_gd) {
+        return approvalRepository.findFirstApprovers(employee_gd);
+    }
+
+    public List<Employee> getSecondApproverList(String approval_fa) {
+        return approvalRepository.findSecondApprovers(approval_fa);
+    }
+	
+	
+	
 	
 	
 //    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {
