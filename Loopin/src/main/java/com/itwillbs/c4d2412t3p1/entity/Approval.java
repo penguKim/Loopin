@@ -9,6 +9,8 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 
 @Entity
@@ -104,12 +106,21 @@ public class Approval {
 
 	// DTO를 기반으로 Approval 엔티티를 설정하는 메서드
 	public static Approval setEmployeeEntity(Approval approval, ApprovalDTO approvalDto) {
+	    ObjectMapper objectMapper = new ObjectMapper();
+
 	    approval.setApproval_cd(approvalDto.getApproval_cd());
 	    approval.setApproval_sd(approvalDto.getApproval_sd());
 	    approval.setApproval_ed(approvalDto.getApproval_ed());
 	    approval.setApproval_dv(approvalDto.getApproval_dv());
 	    approval.setApproval_tt(approvalDto.getApproval_tt());
-	    approval.setApproval_ct(approvalDto.getApproval_ct());
+
+	    // Map을 JSON 문자열로 변환하여 저장
+	    try {
+	        approval.setApproval_ct(objectMapper.writeValueAsString(approvalDto.getApproval_ct()));
+	    } catch (JsonProcessingException e) {
+	        throw new RuntimeException("Failed to serialize approval_ct", e);
+	    }
+
 	    approval.setApproval_fa(approvalDto.getApproval_fa());
 	    approval.setApproval_sa(approvalDto.getApproval_sa());
 	    approval.setApproval_wr(approvalDto.getApproval_wr());
@@ -119,14 +130,25 @@ public class Approval {
 	    return approval;
 	}
 
+
 	// ApprovalDTO와 시퀀스 값을 기반으로 Approval 엔티티 생성
 	public static Approval createApproval(ApprovalDTO approvalDto, Long sequenceValue) {
-		System.out.println("createApproval sequenceValue: " + sequenceValue);
+	    ObjectMapper objectMapper = new ObjectMapper();
 
-		return new Approval(null, // 결재코드는 prePersist로 자동 생성
-				approvalDto.getApproval_sd(), approvalDto.getApproval_ed(), approvalDto.getApproval_dv(),
-				approvalDto.getApproval_tt(), approvalDto.getApproval_ct(), approvalDto.getApproval_fa(),
-				approvalDto.getApproval_sa(), approvalDto.getApproval_wr(), approvalDto.getApproval_wd(),
-				approvalDto.getApproval_mf(), approvalDto.getApproval_md(), sequenceValue);
+	    System.out.println("createApproval sequenceValue: " + sequenceValue);
+
+	    String approvalCtJson;
+	    try {
+	        approvalCtJson = objectMapper.writeValueAsString(approvalDto.getApproval_ct());
+	    } catch (JsonProcessingException e) {
+	        throw new RuntimeException("Failed to serialize approval_ct", e);
+	    }
+
+	    return new Approval(null, // 결재코드는 prePersist로 자동 생성
+	            approvalDto.getApproval_sd(), approvalDto.getApproval_ed(), approvalDto.getApproval_dv(),
+	            approvalDto.getApproval_tt(), approvalCtJson, approvalDto.getApproval_fa(),
+	            approvalDto.getApproval_sa(), approvalDto.getApproval_wr(), approvalDto.getApproval_wd(),
+	            approvalDto.getApproval_mf(), approvalDto.getApproval_md(), sequenceValue);
 	}
+
 }

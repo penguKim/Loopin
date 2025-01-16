@@ -73,156 +73,219 @@
 
 <!-- 필터 모듈 JS File -->
 <script th:inline="javascript">
-	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-	
-	let grid;
-	
-        document.addEventListener('DOMContentLoaded', function () {
-        	
-        
-        	$(window).resize(function() {
-    		    setElementHeight('#div_card', -230);
-    			if(grid != null) {
-    				setGridHeight(grid, -600);
-    			}
-    		});
-        	
-        	const filterConfig = [
-        	    {
-        	        key: 'startDate',
-        	        label: '열람 시간 설정',
-        	        type: 'daterangepicker',
-        	        format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
-        	        value: '2025-01-01 00:00' // 기본값 (예시)
-        	    },
-        	    {
-        	        key: 'endDate',
-        	        label: '',
-        	        type: 'daterangepicker',
-        	        format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
-        	        value: '2025-01-31 23:59' // 기본값 (예시)
-        	    },
-        	    { key: 'employee_id', label: '직원 ID', type: 'text', placeholder: '사용자 ID 입력', col: 'col-md-3' },
-        	    { key: 'log_sj', label: '수행한 작업', type: 'text', placeholder: '작업명 입력', col: 'col-md-3' },
-        	    { key: 'log_ju', label: '정보 유형', type: 'text', placeholder: '유형 입력', col: 'col-md-3' },
-        	    { key: 'log_oi', label: 'IP 주소', type: 'text', placeholder: 'IP 입력', col: 'col-md-3' },
-        	    { key: 'log_bj', label: '클라이언트 정보', type: 'text', placeholder: '클라이언트 정보 입력', col: 'col-md-3' },
-        	];
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+let grid;
+
+document.addEventListener('DOMContentLoaded', function() {
 
 
-            // 초기 로그 데이터를 가져와 Grid 초기화
-            fetch('/select_LOG', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('네트워크 응답이 실패했습니다.');
-                    }
-                    return response.json();
-                })
-                .then(logData => {
-                    console.log('서버 응답 데이터:', logData);
+    $(window).resize(function() {
+        setElementHeight('#div_card', -230);
+        if (grid != null) {
+            setGridHeight(grid, -600);
+        }
+    });
 
-                    // Grid 초기화
-                    grid = new tui.Grid({
-                        el: document.getElementById('grid'),
-                        data: logData.map(row => ({
-                            log_cd: row.log_cd,
-                            employee_id: row.employee_id || '', // null 값 처리
-                            log_sj: row.log_sj,
-                            log_ju: row.log_ju,
-                            parsedLogDetails: row.parsedLogDetails || 'No details available', // 파싱된 데이터 표시
-                            log_od: row.log_od,
-                            log_oi: row.log_oi,
-                            log_bj: row.log_bj,
-                        })),
-                        columns: [
-                            { header: '로그 코드', name: 'log_cd', sortable: true },
-                            { header: '직원 ID', name: 'employee_id', sortable: true },
-                            { header: '수행한 작업', name: 'log_sj', align: 'center', sortable: true },
-                            { header: '정보 유형', name: 'log_ju', sortable: true },
-                            { header: '접근 데이터', name: 'parsedLogDetails', sortable: true },
-                            { header: '열람 시간', name: 'log_od', align: 'center', sortable: true },
-                            { header: 'IP 주소', name: 'log_oi', sortable: true },
-                            { header: '브라우저 정보', name: 'log_bj', sortable: true }
-                        ],
-                        bodyHeight : 400,
-                        scrollX: false,
-                        scrollY: true,
-                        zIndex: 100,
-            			summary: {
-            			    height: 40,
-            			    position: 'bottom', // or 'top'
-            			    columnContent: {
-            			    	log_bj: {
-            			            template: (valueMap) => {
-            			                return `총  ${valueMap.cnt} 건`
-            			            }
-            			        }
-            			    }
-            			}
-                    });
-					
-                    if (grid) {
-                        setElementHeight('#div_card', -230);
-                        setGridHeight(grid, -500);
-                    } else {
-                        console.warn('Grid가 초기화되지 않았습니다.');
-                    }
-                    
-                    // Cell 클릭 이벤트 등록
-                    grid.on('click', (event) => {
-                        if (event.columnName === 'parsedLogDetails') {
-                            // rowKey를 사용해 해당 행의 데이터를 가져옴
-                            const rowData = grid.getRow(event.rowKey);
-                            console.log('Row data from rowKey:', rowData); // 디버깅용
+    const filterConfig = [{
+            key: 'startDate',
+            label: '열람 시간 설정',
+            type: 'daterangepicker',
+            format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+            value: '2025-01-01 00:00' // 기본값 (예시)
+        },
+        {
+            key: 'endDate',
+            label: '',
+            type: 'daterangepicker',
+            format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+            value: '2025-01-31 23:59' // 기본값 (예시)
+        },
+        {
+            key: 'employee_id',
+            label: '직원 ID',
+            type: 'text',
+            placeholder: '사용자 ID 입력',
+            col: 'col-md-3'
+        },
+        {
+            key: 'log_sj',
+            label: '수행한 작업',
+            type: 'text',
+            placeholder: '작업명 입력',
+            col: 'col-md-3'
+        },
+        {
+            key: 'log_ju',
+            label: '정보 유형',
+            type: 'text',
+            placeholder: '유형 입력',
+            col: 'col-md-3'
+        },
+        {
+            key: 'log_oi',
+            label: 'IP 주소',
+            type: 'text',
+            placeholder: 'IP 입력',
+            col: 'col-md-3'
+        },
+        {
+            key: 'log_bj',
+            label: '클라이언트 정보',
+            type: 'text',
+            placeholder: '클라이언트 정보 입력',
+            col: 'col-md-3'
+        },
+    ];
 
-                            const logDetails = rowData.parsedLogDetails || 'No details available'; // log_jd 값 확인
-                            document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
-                            const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
-                            modal.show();
-                        }
-                        
-                        if (event.columnName === 'log_bj') {
-                            // rowKey를 사용해 해당 행의 데이터를 가져옴
-                            const rowData = grid.getRow(event.rowKey);
-                            console.log('Row data from rowKey:', rowData); // 디버깅용
 
-                            const logDetails = rowData.log_bj || 'No details available'; // log_bj 값 확인
-                            document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
-                            const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
-                            modal.show();
-                        }
-                    });
-                })
-                .catch(error => console.error('오류 발생:', error));
-            
-            // 필터 모듈 초기화
-            initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-                console.log('적용된 필터:', filterValues);
+    // 초기 로그 데이터를 가져와 Grid 초기화
+    fetch('/select_LOG', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('네트워크 응답이 실패했습니다.');
+            }
+            return response.json();
+        })
+        .then(logData => {
+            console.log('서버 응답 데이터:', logData);
 
-                // 필터 적용 후 서버 요청 및 Grid 갱신
-                fetch('/select_FILTERED_LOG', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json',
-                    			[csrfHeader]: csrfToken
+            // Grid 초기화
+            grid = new tui.Grid({
+                el: document.getElementById('grid'),
+                data: logData.map(row => ({
+                    log_cd: row.log_cd,
+                    employee_id: row.employee_id || '', // null 값 처리
+                    log_sj: row.log_sj,
+                    log_ju: row.log_ju,
+                    parsedLogDetails: row.parsedLogDetails || 'No details available', // 파싱된 데이터 표시
+                    log_od: row.log_od,
+                    log_oi: row.log_oi,
+                    log_bj: row.log_bj,
+                })),
+                columns: [{
+                        header: '로그 코드',
+                        name: 'log_cd',
+                        sortable: true
                     },
-                    body: JSON.stringify(filterValues)
-                })
-                .then(response => response.json())
-                .then(filteredData => {
-                    console.log('필터링된 데이터:', filteredData);
-
-                    // Grid 데이터 갱신
-                    grid.resetData(filteredData);
-                })
-                .catch(error => console.error('필터 적용 오류:', error));
+                    {
+                        header: '직원 ID',
+                        name: 'employee_id',
+                        sortable: true
+                    },
+                    {
+                        header: '수행한 작업',
+                        name: 'log_sj',
+                        align: 'center',
+                        sortable: true
+                    },
+                    {
+                        header: '정보 유형',
+                        name: 'log_ju',
+                        sortable: true
+                    },
+                    {
+                        header: '접근 데이터',
+                        name: 'parsedLogDetails',
+                        sortable: true
+                    },
+                    {
+                        header: '열람 시간',
+                        name: 'log_od',
+                        align: 'center',
+                        sortable: true
+                    },
+                    {
+                        header: 'IP 주소',
+                        name: 'log_oi',
+                        sortable: true
+                    },
+                    {
+                        header: '브라우저 정보',
+                        name: 'log_bj',
+                        sortable: true
+                    }
+                ],
+                bodyHeight: 400,
+                scrollX: false,
+                scrollY: true,
+                zIndex: 100,
+                summary: {
+                    height: 40,
+                    position: 'bottom', // or 'top'
+                    columnContent: {
+                        log_bj: {
+                            template: (valueMap) => {
+                                return `총  ${valueMap.cnt} 건`
+                            }
+                        }
+                    }
+                }
             });
-        });
+
+            if (grid) {
+                setElementHeight('#div_card', -230);
+                setGridHeight(grid, -500);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
+
+            // Cell 클릭 이벤트 등록
+            grid.on('click', (event) => {
+                if (event.columnName === 'parsedLogDetails') {
+                    // rowKey를 사용해 해당 행의 데이터를 가져옴
+                    const rowData = grid.getRow(event.rowKey);
+                    console.log('Row data from rowKey:', rowData); // 디버깅용
+
+                    const logDetails = rowData.parsedLogDetails || 'No details available'; // log_jd 값 확인
+                    document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+                    const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                    modal.show();
+                }
+
+                if (event.columnName === 'log_bj') {
+                    // rowKey를 사용해 해당 행의 데이터를 가져옴
+                    const rowData = grid.getRow(event.rowKey);
+                    console.log('Row data from rowKey:', rowData); // 디버깅용
+
+                    const logDetails = rowData.log_bj || 'No details available'; // log_bj 값 확인
+                    document.getElementById('modalLogDetails').innerText = logDetails; // 모달 업데이트
+                    const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+                    modal.show();
+                }
+            });
+        })
+        .catch(error => console.error('오류 발생:', error));
+
+    // 필터 모듈 초기화
+    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+        console.log('적용된 필터:', filterValues);
+
+        // 필터 적용 후 서버 요청 및 Grid 갱신
+        fetch('/select_FILTERED_LOG', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(filterValues)
+            })
+            .then(response => response.json())
+            .then(filteredData => {
+                console.log('필터링된 데이터:', filteredData);
+
+                // Grid 데이터 갱신
+                grid.resetData(filteredData);
+            })
+            .catch(error => console.error('필터 적용 오류:', error));
+    });
+});
     </script>
 
 
