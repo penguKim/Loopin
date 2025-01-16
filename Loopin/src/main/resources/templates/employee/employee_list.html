@@ -1272,7 +1272,7 @@
 		// 폼 제출 시 필수값 체크
 		$('#modal_submit_button').click(function(event) {
 		    if (!validateForm()) {
-		        event.preventDefault();  // 폼 제출을 막음
+		        event.preventDefault(); // 폼 제출을 막음
 		    }
 		});
 
@@ -1298,16 +1298,31 @@
 		                text: field.message,
 		                confirmButtonText: '확인'
 		            });
-		            inputElement.focus();  // 해당 필드에 포커스 설정
+		            inputElement.focus(); // 해당 필드에 포커스 설정
 		            isValid = false;
-		            return false;  // 첫 번째 오류 발견 시 반복문 종료
+		            return false; // $.each 반복문 중단
 		        }
 		    });
 
+		    // 비밀번호 필드가 활성화된 경우 검증
+		    const passwordField = $('#employee_pw');
+		    if (!passwordField.prop('disabled') && passwordField.val().trim() === '') {
+		        Swal.fire({
+		            icon: 'error',
+		            title: '오류 발생!',
+		            text: '비밀번호를 입력해주세요.',
+		            confirmButtonText: '확인'
+		        });
+		        passwordField.focus(); // 비밀번호 필드에 포커스 설정
+		        isValid = false;
+		    }
+
 		    return isValid;
 		}
-		
+
     });
+	
+	
 	
 	
 	
