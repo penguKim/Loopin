@@ -91,7 +91,7 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">사원명<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="4" maxlength="16">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="3" maxlength="16">
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">채용구분</label>
 								<div class="col-sm-4">
@@ -881,7 +881,6 @@
 						$(field).prop("disabled", true); // #employee_id 비활성화
 					} else if (field === "#employee_pw") {
 						$(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
-				
 						// 버튼이 이미 생성되지 않았다면 동적으로 생성
 						if (!$('#reset-password-btn').length) {
 							$('<button>', {
@@ -889,7 +888,6 @@
 								text: 'Reset Password',
 								class: 'btn btn-primary', // 원하는 스타일 클래스 추가
 							}).insertAfter(field); // #employee_pw 뒤에 버튼 삽입
-							
 							
 							// Reset Password 버튼 클릭 이벤트
 							$('#reset-password-btn').off('click').on('click', function(event) {
@@ -901,9 +899,7 @@
 
 								// #employee_pw 필드 활성화 및 보이기
 								$('#employee_pw').prop("disabled", false).show().focus();
-
 						    });
-							
 						}
 					} else {
 							$(field).prop("disabled", false); // 나머지 필드 활성화
@@ -916,7 +912,7 @@
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", false); // 모든 필드 활성화
 			  });
-			} else if (userRole === 'EMPLOYEE') {
+			} else if (userRole === 'EMPLOYEE' || userRole === 'PR_ADMIN' || userRole === 'AT_ADMIN') {
 			  // EMPLOYEE는 모든 필드 비활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", true);
