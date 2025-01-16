@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
@@ -34,30 +35,98 @@ public class ApprovalService {
 
 	private final CommonRepository commonRepository;
 
-	// 결재 현황 조회
+	// 모든 결재 정보 조회
 	public List<Approval> findAll() {
 
 		return approvalRepository.findAll();
 	}
 
+	// 특정 사용자(employee_cd)에 맞는 결재 정보 조회
+	public List<Approval> findApprovalsByEmployee(String employee_cd) {
+		return approvalRepository.findByApprovalCd(employee_cd);
+	}
+
+	// 결재 현황 데이터를 맵으로 변환
+	public List<Map<String, Object>> getApprovalData(EmployeeDetails employeeDetails) {
+		String currentCd = employeeDetails.getEmployee_cd();
+		String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+
+		List<Approval> approvals;
+
+		if (currentRole.contains("SYS_ADMIN")) {
+			approvals = findAll(); // 모든 결재 정보를 가져옴
+		} else {
+			approvals = findApprovalsByEmployee(currentCd); // 특정 사용자 결재 정보만 가져옴
+		}
+
+		// Approval 데이터를 Map으로 변환
+		return approvals.stream().map(approval -> {
+			Map<String, Object> row = new HashMap<>();
+			row.put("approval_cd", approval.getApproval_cd());
+			row.put("approval_sd", approval.getApproval_sd());
+			row.put("approval_ed", approval.getApproval_ed());
+			row.put("approval_dv", approval.getApproval_dv());
+			row.put("approval_tt", approval.getApproval_tt());
+			row.put("approval_ct", approval.getApproval_ct());
+			row.put("approval_wr", approval.getApproval_wr());
+			row.put("approval_wd", approval.getApproval_wd());
+			row.put("approval_mf", approval.getApproval_mf());
+			row.put("approval_md", approval.getApproval_md());
+			return row;
+		}).collect(Collectors.toList());
+	}
+	
+	public List<Map<String, Object>> getApprovalDataByUser(EmployeeDetails employeeDetails) {
+	    String currentCd = employeeDetails.getEmployee_cd();
+	    String currentRole = employeeDetails.getEmployee_rl();
+
+	    List<Approval> approvals;
+
+	    if (currentRole.contains("SYS_ADMIN")) {
+	        // 관리자는 모든 요청 조회
+	        approvals = approvalRepository.findAll();
+	    } else {
+	        // 작성자나 결재권자 기준으로 데이터 조회
+	        approvals = approvalRepository.findByApprover(currentCd);
+	    }
+
+	    // Approval 데이터를 Map으로 변환
+	    return approvals.stream().map(approval -> {
+	        Map<String, Object> row = new HashMap<>();
+	        row.put("approval_cd", approval.getApproval_cd());
+	        row.put("approval_sd", approval.getApproval_sd());
+	        row.put("approval_ed", approval.getApproval_ed());
+	        row.put("approval_dv", approval.getApproval_dv());
+	        row.put("approval_tt", approval.getApproval_tt());
+	        row.put("approval_ct", approval.getApproval_ct());
+	        row.put("approval_wr", approval.getApproval_wr());
+	        row.put("approval_wd", approval.getApproval_wd());
+	        row.put("approval_mf", approval.getApproval_mf());
+	        row.put("approval_md", approval.getApproval_md());
+	        row.put("approval_av", approval.getApproval_av());
+	        return row;
+	    }).collect(Collectors.toList());
+	}
+
+	
 	@Transactional
 	public void handleApprovalInsert(ApprovalDTO approvalDTO) {
-		 // 1. 휴가 신청서 삽입
-	    insert_APPROVAL(approvalDTO);
+		// 1. 휴가 신청서 삽입
+		insert_APPROVAL(approvalDTO);
 
-	    // 2. 상태 처리
-	    processApprovalStatus(approvalDTO);
-	    log.info("processApprovalStatus 이후 av 값 : " + approvalDTO.getApproval_av());
-	    // 3. 변경된 상태를 데이터베이스에 저장
-	    Approval approval = approvalRepository.findById(approvalDTO.getApproval_cd())
-	            .orElseThrow(() -> new IllegalArgumentException("Approval not found: " + approvalDTO.getApproval_cd()));
-	    log.info("1111111");
-	    // DTO 값을 엔티티에 반영
-	    Approval.setEmployeeEntity(approval, approvalDTO);
-	    
-	    log.info("222222222");
-	    // 상태가 반영된 엔티티 저장
-	    approvalRepository.save(approval);
+		// 2. 상태 처리
+		processApprovalStatus(approvalDTO);
+		log.info("processApprovalStatus 이후 av 값 : " + approvalDTO.getApproval_av());
+		// 3. 변경된 상태를 데이터베이스에 저장
+		Approval approval = approvalRepository.findById(approvalDTO.getApproval_cd())
+				.orElseThrow(() -> new IllegalArgumentException("Approval not found: " + approvalDTO.getApproval_cd()));
+		log.info("1111111");
+		// DTO 값을 엔티티에 반영
+		Approval.setEmployeeEntity(approval, approvalDTO);
+
+		log.info("222222222");
+		// 상태가 반영된 엔티티 저장
+		approvalRepository.save(approval);
 	}
 
 	// 직원 등록
@@ -84,9 +153,9 @@ public class ApprovalService {
 		Approval approval = Approval.createApproval(approvalDTO, sequenceValue);
 
 		approvalRepository.save(approval);
-		
+
 		approvalDTO.setApproval_cd(approval.getApproval_cd());
-		
+
 		System.out.println("@@@@@@@@@" + approval);
 	}
 
@@ -136,13 +205,6 @@ public class ApprovalService {
 
 		// 데이터베이스 저장
 		approvalRepository.save(approval);
-	}
-
-	// ID로 Approval 조회
-	public Approval findEmployeeById(String approval_cd) {
-		// Repository를 사용하여 데이터 조회
-		return approvalRepository.findById(approval_cd)
-				.orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
 	}
 
 	// 결재 삭제
@@ -223,27 +285,27 @@ public class ApprovalService {
 
 	@Transactional
 	public void updateApprovalStatuses() {
-	    // 오늘 날짜
-	    String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		// 오늘 날짜
+		String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-	    // 오늘 날짜가 시작일(`approval_sd`)인 데이터 조회
-	    List<Approval> pendingApprovals = approvalRepository.findByApprovalSd(today);
+		// 오늘 날짜가 시작일(`approval_sd`)인 데이터 조회
+		List<Approval> pendingApprovals = approvalRepository.findByApprovalSd(today);
 
-	    if (pendingApprovals.isEmpty()) {
-	        log.info("오늘 변경할 상태의 APPROVAL 데이터가 없습니다.");
-	        return;
-	    }
+		if (pendingApprovals.isEmpty()) {
+			log.info("오늘 변경할 상태의 APPROVAL 데이터가 없습니다.");
+			return;
+		}
 
-	    log.info("오늘 업데이트할 결재 데이터 수: " + pendingApprovals.size());
+		log.info("오늘 업데이트할 결재 데이터 수: " + pendingApprovals.size());
 
-	    // 상태 업데이트
-	    for (Approval approval : pendingApprovals) {
-	        approval.setApproval_av("20"); // "1차 결재중" 상태로 변경
-	        approvalRepository.save(approval); // 업데이트
-	        log.info("Approval 상태 업데이트: " + approval.getApproval_cd());
-	    }
+		// 상태 업데이트
+		for (Approval approval : pendingApprovals) {
+			approval.setApproval_av("20"); // "1차 결재중" 상태로 변경
+			approvalRepository.save(approval); // 업데이트
+			log.info("Approval 상태 업데이트: " + approval.getApproval_cd());
+		}
 
-	    log.info("상태 업데이트 완료");
+		log.info("상태 업데이트 완료");
 	}
 
 //    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {

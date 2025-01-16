@@ -15,8 +15,8 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 	Long getNextSequenceValue();
 
 	// 인사코드 값으로 찾기
-	@Query(value = "SELECT * FROM APPROVAL a WHERE a.employee_cd = :currentCd", nativeQuery = true)
-	List<Approval> findByApprovalCd(@Param("currentCd") String currentCd);
+	@Query("SELECT a FROM Approval a WHERE a.approval_wr = :employee_cd")
+    List<Approval> findByApprovalCd(@Param("employee_cd") String employee_cd);
 
 //     1차 결재권자 목록 조회
 	@Query("SELECT e FROM Employee e " + "JOIN COMMON_CODE c ON e.employee_gd = c.common_cc "
@@ -33,9 +33,19 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 			+ "ORDER BY TO_NUMBER(e.employee_gd) ASC")
 	List<Employee> findSecondApprovers(@Param("approval_fa") String approval_fa);
 	
+//	오늘이 결재 시작일인 목록 조회
 	@Query("SELECT a FROM Approval a WHERE a.approval_sd = :today AND a.approval_av = '10'")
 	List<Approval> findByApprovalSd(@Param("today") String today);
 
+//	작성자, 결재권자 기준 조회
+	@Query("""
+		    SELECT a FROM Approval a 
+		    WHERE (a.approval_av = '20' AND a.approval_fa = :currentCd) 
+		       OR (a.approval_av = '30' AND a.approval_sa = :currentCd)
+		""")
+		List<Approval> findByApprover(@Param("currentCd") String currentCd);
+
+	
 	
 //    @Query(value = "SELECT * FROM approval a " +
 //            "WHERE (:#{#filterRequest.approvalCd} IS NULL OR a.approval_cd = :#{#filterRequest.approvalCd}) " +
