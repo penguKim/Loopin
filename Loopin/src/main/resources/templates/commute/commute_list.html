@@ -169,6 +169,9 @@
 
 		
 		// 달력 ----------------------
+		btn_calendar_tab.on('click', function() {
+			getCalendarList();
+		});
 		// 이전 달 보기 이벤트
 		btn_calendar_prev.on('click', function(){ 
 			calendar.prev();
@@ -183,7 +186,6 @@
 			updateCalendarTitle();
 			getCalendarList();
 		});
-	
 		
 		// 그리드 ----------------------
 		// 그리드탭 클릭
@@ -580,7 +582,6 @@
 			});
 			
 			setTimeout(() => {
-		        	console.log(modal_grid.getData());
 				// 그리드 행 클래스 추가
 		        modal_grid.getData().forEach((row, index) => {
 		            if (row.commute_pr) {
