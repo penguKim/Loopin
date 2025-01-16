@@ -43,6 +43,28 @@ function showToast(element, icon, title, msg) {
 }
 
 /**
+ * 컨펌 띄움(await / async)
+ * @param {String} title 제목
+ * @param {String} msg 내용
+ */
+async function showConfirm(title, msg) {
+    const result = await Swal.fire({
+        title: title,
+        html: msg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+		reverseButtons: true, 
+    });
+    
+    return result.isConfirmed;
+}
+
+
+/**
  * 년월일 -> 문자열 리턴
  * @param {date} date 객체
  * @returns {String} 년월일
@@ -74,6 +96,14 @@ function getNextDate(num) {
     const date = new Date();
     date.setDate(date.getDate() + num);
     return getDate(date);
+}
+
+function getFirstDayOfMonth(date) {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const year = firstDay.getFullYear();
+    const month = String(firstDay.getMonth() + 1).padStart(2, '0');
+    const day = String(firstDay.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 
@@ -210,6 +240,10 @@ function validateTime(timeStr) {
  */
 function setRadioValue(radioName, value) {
     $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
+}
+
+function getRadioValue(radioName) {
+	return radioName.filter(':checked').val();
 }
 
 /**

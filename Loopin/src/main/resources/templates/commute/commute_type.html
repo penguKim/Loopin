@@ -11,12 +11,12 @@
 		<section class="section">
 			<div class="row">
 				<div class="col-lg-12">
-					<div class="card"  style="height:800px;">
+					<div class="card" id="div_card">
 						<div class="card-body">
 							<div class="d-flex align-items-center justify-content-between">
 								<h5 class="card-title">근로관리</h5>
 								<div>
-									<input type="button" id="btn_employee_modal" class="btn btn-primary" value="사원추가">
+									<input type="button" id="btn_employee_modal" class="btn btn-primary" value="사원지정">
 								</div>
 							</div>
 							<div id="grid"></div>
@@ -28,6 +28,15 @@
 		</section>
 	</main>
 </body>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
 <script th:inline="javascript">
 	// 변수 지정
 	let grid, commute_grid_row; // 근로관리 그리드
@@ -40,6 +49,7 @@
 	let btn_workinghour_save;
 	// 화면 변수
 	let btn_employee_modal = $('#btn_employee_modal');
+	let btn_workinghour_modal = $('#btn_workinghour_modal');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	
@@ -54,8 +64,27 @@
 		
 		make_grid();
 		
+		// 신규등록 버튼
+		btn_workinghour_modal.on('click', function() {
+			
+		});
+		
+		// 사원지정 버튼
 		btn_employee_modal.on('click', function (){
-			make_employee_modal(commute_grid_row);
+			console.log(commute_grid_row);
+			if(commute_grid_row['workinghour_us'] != 'false') {
+				make_employee_modal(commute_grid_row);				
+			} else {
+				showAlert('', 'warning', '사원 지정 불가', '미사용중인 근로 형태에는<br>적용이 불가능합니다.');
+			}
+		});
+		
+		// 창크기
+		setElementHeight('#div_card', -105);
+		
+		$(window).resize(function() {
+			setElementHeight('#div_card', -105);
+			setGridHeight(grid, -270);;
 		});
 		
 	});
@@ -69,6 +98,7 @@
 		workinghour_wt.val(data['workinghour_wt']);
 		workinghour_lt.val(data['workinghour_lt']);
 		workinghour_rm.val(data['workinghour_rm']);
+		workinghour_hs.val(data['workinghour_hs']);
 		setRadioValue('workinghour_us', data['workinghour_us']);
 		setRadioValue('workinghour_tt', data['workinghour_tt']);
 	    $('input[name="workinghour_dw"]').prop('checked', false);
@@ -98,7 +128,7 @@
 			el : document.getElementById('grid'),
 			data : dataSource,
 			scrollX : false,
-			scrollY : false,
+			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
 				{type : 'checkbox',}, 
@@ -114,7 +144,18 @@
 				}, 
 				{header : '등록인원', name :'employee_cnt'}, 
 				{header : '비고', name : 'workinghour_rm', sortable : true}, 
-			]
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	workinghour_rm: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 		
 		grid.on('click', function(ev) {
@@ -126,6 +167,8 @@
 			
 			modal_detail(commute_grid_row);
 		});
+		
+		setGridHeight(grid, -270);
 	}
 	
 	// 근로관리 모달 생성
@@ -169,11 +212,11 @@
 					                    </div>
 									</div>
 									<legend class="col-form-label col-sm-2">기준시간</legend>
-									<div class="col-sm-1 me-4">
-										<input type="text" id="workinghour_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="5" placeholder="00:00" style="width: 70px;"/>
+									<div class="col-sm-2 me-3">
+										<input type="text" id="workinghour_wt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;"/>
 									</div>
 									<div class="col-sm-1">
-										<input type="text" id="workinghour_lt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="5" placeholder="00:00" style="width: 70px;"/>
+										<input type="text" id="workinghour_lt" class="form-control text-center" oninput="inputTimeFormat(this);" maxlength="8" placeholder="00:00:00" style="width: 90px;"/>
 									</div>
 							</div>
 					        <div class="row mb-3">
@@ -259,61 +302,86 @@
 		
 		commute_modal.show();
 		
-		btn_workinghour_save.on('click', function() {
+		btn_workinghour_save.on('click', async function() {
+			
 			let week = [];
 			$('input[name="workinghour_dw"]:not(#check_all):checked').each(function() {
 			    week.push($(this).val());
 			});
+			if(workinghour_tt.val().trim() == '') {
+				showAlert(workinghour_tt, 'warning', '', '근무유형을 선택해주세요.');
+				return;
+			}
+			if(workinghour_wt.val().trim() == '' || workinghour_lt.val().trim() == '') {
+				showAlert(workinghour_wt, 'warning', '', '기준시간을 입력해주세요.');
+				return;
+			}
+			if(workinghour_hs.val() == '') {
+				showAlert(workinghour_hs, 'warning', '', '주휴요일을 선택해주세요.');
+				return;
+			}
+			if(week.length == 0) {
+		        showAlert('', 'warning', '입력 오류', '근로요일을 선택해주세요.');
+		        return;
+			}
 			if(week.includes(workinghour_hs.val())) {
 		        showAlert('', 'warning', '입력 오류', '주휴요일은 근로요일과 중복될 수 없습니다.');
 		        return;
 			}
-			let data = {
-				workinghour_id: workinghour_id.val(),
-				workinghour_nm: workinghour_nm.val(),
-				workinghour_tt: workinghour_tt.val(),
-				workinghour_wt: workinghour_wt.val(),
-				workinghour_lt: workinghour_lt.val(),
-				workinghour_hs: workinghour_hs.val(),
-				workinghour_rm: workinghour_rm.val(),
-				workinghour_us: workinghour_us.val(),
-				week: week
+			if(workinghour_us.val() == '') {
+				showAlert(commute_lt, 'warning', '', '사용여부를해주세요.');
+				return;
 			}
-			let jsonData = JSON.stringify(data);
+			const isConfirmed = await showConfirm(`근로 설정`, `근로 형태를 등록하시겠습니까?`);
 			
-			$.ajax({
-				type: 'post',
-				url: '/insert_WORKINGHOUR',
-				contentType: 'application/json',
-				data: jsonData,
-				beforeSend : function(xhr) {
-				    xhr.setRequestHeader(header, token);
-				},
-				success: function(data) {
-					let icon = 'success';
-					let title = '등록 성공';
-					let msg = '등록에 성공했습니다.';
-					if(data['result']) {
-						grid.resetData(data['list']);
-						inputWork(data['workinghour']);
-					} else {
-						icon = 'error';
-						title = '등록 실패';
-						msg = '등록에 실패했습니다.';
-					}
-					Swal.fire({
-					    icon: icon,
-					    title: title,
-					    html: msg
-					}).then(() => {
-					    commute_modal.hide();
-					});
-					
-				},
-				error : function(xhr, textStatus, errorThrown) {
-					console.log('조회 실패');
+			if(isConfirmed) {
+				let data = {
+					workinghour_id: workinghour_id.val().trim(),
+					workinghour_nm: workinghour_nm.val().trim(),
+					workinghour_tt: getRadioValue(workinghour_tt),
+					workinghour_wt: workinghour_wt.val().trim(),
+					workinghour_lt: workinghour_lt.val().trim(),
+					workinghour_hs: workinghour_hs.val(),
+					workinghour_rm: workinghour_rm.val().trim(),
+					workinghour_us: getRadioValue(workinghour_us),
+					week: week
 				}
-			});
+				let jsonData = JSON.stringify(data);
+				
+				$.ajax({
+					type: 'post',
+					url: '/insert_WORKINGHOUR',
+					contentType: 'application/json',
+					data: jsonData,
+					beforeSend : function(xhr) {
+					    xhr.setRequestHeader(header, token);
+					},
+					success: function(data) {
+						let icon = 'success';
+						let title = '등록 성공';
+						let msg = '등록에 성공했습니다.';
+						if(data['result']) {
+							grid.resetData(data['list']);
+							inputWork(data['workinghour']);
+						} else {
+							icon = 'error';
+							title = '등록 실패';
+							msg = '등록에 실패했습니다.';
+						}
+						Swal.fire({
+						    icon: icon,
+						    title: title,
+						    html: msg
+						}).then(() => {
+						    commute_modal.hide();
+						});
+						
+					},
+					error : function(xhr, textStatus, errorThrown) {
+						console.log('조회 실패');
+					}
+				});
+			}
 		});
 	}
 	
@@ -330,7 +398,7 @@
 				if(data['result']) {
 					week = data['WEEK'];
 					setCheckBox(week);
-					createSelectBox(workinghour_hs, week);
+					createSelectBox(workinghour_hs, week, '미선택');
 					inputWork(data['workinghour']);
 				} else {
 					Swal.fire({
@@ -368,8 +436,8 @@
 		            		<h5 class="modal-title">${title}</h5>
 		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
-						<div class="modal-body">
-						    <div class="row justify-content-center">
+						<div class="modal-body px-0">
+						    <div class="row d-flex flex-row justify-content-center">
 						        <div class="col-5">
 						            <div class="card">
 						                <div class="card-body">
@@ -429,10 +497,14 @@
 		
 		employee_modal.show();
 		
+		$(window).resize(function() {
+			setGridHeight(employee_grid, -400);
+			setGridHeight(insert_grid, -400);
+		});
+		
 		// 추가 버튼 이벤트
 		btn_employee_insert.on('click', function() {
 		    const checkedRow = employee_grid.getCheckedRows();
-		    // 컨펌 추가
 		    update_EMPLOYEE_WK(employee_grid, checkedRow, row['workinghour_id'], '미지정 사원');
 		});
 
@@ -451,7 +523,7 @@
 			el : document.getElementById('employee_grid'),
 			data : [],
 			scrollX : false,
-			scrollY : false,
+			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
 				{type : 'checkbox',}, 
@@ -459,11 +531,22 @@
 			bodyHeight : 500,
 			columns : [
 				{header : '근로번호', name : 'workinghour_id', hidden : true},
-				{header : '사원번호', name : 'employee_cd', sortable : true},
-				{header : '사원명', name : 'employee_nm', sortable : true}, 
-				{header : '부서명', name : 'employee_dp', sortable : true}, 
-				{header : '직위명', name : 'employee_gd', sortable : true}, 
-			]
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'},
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	employee_gd: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 		
 		employee_grid.on('click', function(ev) {
@@ -472,7 +555,6 @@
 	            employee_grid[row._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
 		    }
 		});
-		
 	}
 	
 	// 사원추가 모달의 지정 그리드
@@ -481,7 +563,7 @@
 			el : document.getElementById('insert_grid'),
 			data : [],
 			scrollX : false,
-			scrollY : false,
+			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
 				{type : 'checkbox',}, 
@@ -489,11 +571,22 @@
 			bodyHeight : 500,
 			columns : [
 				{header : '근로번호', name : 'workinghour_id', hidden : true},
-				{header : '사원번호', name : 'employee_cd', sortable : true},
-				{header : '사원명', name : 'employee_nm', sortable : true}, 
-				{header : '부서명', name : 'employee_dp', sortable : true}, 
-				{header : '직위명', name : 'employee_gd', sortable : true}, 
-			]
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	employee_gd: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 		
 		insert_grid.on('click', function(ev) {
@@ -518,7 +611,6 @@
 			success: function(data) {
 				employee_grid.resetData(data['EMPLOYEE_LIST']);
 				insert_grid.resetData(data['CHK_LSIT']);
-				
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
@@ -527,7 +619,8 @@
 	}
 	
 	// 사원추가 모달의 업데이트
-	function update_EMPLOYEE_WK(grid, checkedRow, workinghour_id, warningTitle) {
+	async function update_EMPLOYEE_WK(grid, checkedRow, workinghour_id, warningTitle) {
+		const isConfirmed = await showConfirm(`사원 지정`, `선택한 사원을<br>등록하시겠습니까?`);
 	    if(checkedRow.length == 0) {
 	        showAlert('' ,'warning', warningTitle,  warningTitle + '을 선택해주세요.');
 	        return;
