@@ -1,6 +1,6 @@
 package com.itwillbs.c4d2412t3p1.entity;
 import java.math.BigDecimal;
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import groovy.transform.ToString;
 import jakarta.persistence.Column;

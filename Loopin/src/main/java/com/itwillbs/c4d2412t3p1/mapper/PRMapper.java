@@ -31,4 +31,8 @@ public interface PRMapper {
 	
 	int update_commutepr();
 
+	String isCal(String premth);
+
+	List<Map<String, Object>> select_spes(String premth);
+
 }

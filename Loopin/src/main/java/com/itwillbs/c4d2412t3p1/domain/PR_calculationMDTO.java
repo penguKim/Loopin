@@ -39,4 +39,9 @@ public class PR_calculationMDTO {
 
     @JsonProperty("bonus")
     private String bonus;	
+
+    @JsonProperty("wm")
+    private String wm;	
+    @JsonProperty("wr")
+    private String wr;	
 }

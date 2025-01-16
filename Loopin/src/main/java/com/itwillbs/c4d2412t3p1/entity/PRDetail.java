@@ -29,6 +29,9 @@ public class PRDetail {
 	
 	@Column(name="employee_cd")
 	private String employee_cd;
+
+	@Column(name="employee_nm")
+	private String employee_nm;
 	
 	@Column(name="prdetail_bs")
 	private BigDecimal predetail_bs;
@@ -48,8 +51,8 @@ public class PRDetail {
 	@Column(name="prdetail_ha")
 	private BigDecimal predetail_ha;
 	
-	@Column(name="prdetail_aa")
-	private BigDecimal predetail_aa;
+	@Column(name="prdetail_rl")
+	private BigDecimal predetail_rl;
 	
 	@Column(name="prdetail_bn")
 	private BigDecimal predetail_bn;

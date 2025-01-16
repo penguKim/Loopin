@@ -111,6 +111,19 @@
         ]]>
     </select>
 
+	<select id="isCal" resultType="map">
+		SELECT pr_wm
+		FROM PR
+		WHERE pr_wm = #{premth}
+	</select>
+	
+	<select id="select_spes" resultType="map">
+		SELECT pd.*
+		FROM PRDETAIL pd
+		JOIN PR p ON pd.pr_id = p.pr_id
+		WHERE p.pr_wd = #{premth}
+	</select>
+	
 	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
 	    SELECT 
 	        c.employee_cd,
