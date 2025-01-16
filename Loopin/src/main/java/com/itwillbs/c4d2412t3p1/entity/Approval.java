@@ -67,7 +67,9 @@ public class Approval {
     @JoinColumn(name = "approval_sa", referencedColumnName = "employee_cd", insertable = false, updatable = false)
     private Employee secondApprover; // 2차 결재권자 (Employee 엔티티와 연관)
 
-
+    @Column(name = "approval_av")
+    private String approval_av; // 결재구분
+    
 	@Column(name = "approval_wr")
 	private String approval_wr; // 작성자
 
@@ -86,7 +88,7 @@ public class Approval {
 
 	// 매개변수 있는 생성자
 	public Approval(String approval_cd, String approval_sd, String approval_ed, String approval_dv, String approval_tt,
-	        String approval_ct, String approval_fa, String approval_sa, String approval_wr, Timestamp approval_wd,
+	        String approval_ct, String approval_fa, String approval_sa, String approval_av, String approval_wr, Timestamp approval_wd,
 	        String approval_mf, Timestamp approval_md, Long sequenceValue // 추가된 매개변수
 	) {
 	    this.approval_cd = approval_cd;
@@ -97,6 +99,7 @@ public class Approval {
 	    this.approval_ct = approval_ct;
 	    this.approval_fa = approval_fa;
 	    this.approval_sa = approval_sa;
+	    this.approval_av = approval_av;
 	    this.approval_wr = approval_wr;
 	    this.approval_wd = approval_wd;
 	    this.approval_mf = approval_mf;
@@ -123,6 +126,7 @@ public class Approval {
 
 	    approval.setApproval_fa(approvalDto.getApproval_fa());
 	    approval.setApproval_sa(approvalDto.getApproval_sa());
+	    approval.setApproval_av(approvalDto.getApproval_av());
 	    approval.setApproval_wr(approvalDto.getApproval_wr());
 	    approval.setApproval_wd(approvalDto.getApproval_wd());
 	    approval.setApproval_mf(approvalDto.getApproval_mf());
@@ -147,7 +151,7 @@ public class Approval {
 	    return new Approval(null, // 결재코드는 prePersist로 자동 생성
 	            approvalDto.getApproval_sd(), approvalDto.getApproval_ed(), approvalDto.getApproval_dv(),
 	            approvalDto.getApproval_tt(), approvalCtJson, approvalDto.getApproval_fa(),
-	            approvalDto.getApproval_sa(), approvalDto.getApproval_wr(), approvalDto.getApproval_wd(),
+	            approvalDto.getApproval_sa(), approvalDto.getApproval_av(), approvalDto.getApproval_wr(), approvalDto.getApproval_wd(),
 	            approvalDto.getApproval_mf(), approvalDto.getApproval_md(), sequenceValue);
 	}
 

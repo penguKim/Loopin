@@ -32,7 +32,11 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 			"AND TO_NUMBER(c.common_cc) > (SELECT TO_NUMBER(e2.employee_gd) FROM Employee e2 WHERE e2.employee_cd = :approval_fa) "
 			+ "ORDER BY TO_NUMBER(e.employee_gd) ASC")
 	List<Employee> findSecondApprovers(@Param("approval_fa") String approval_fa);
+	
+	@Query("SELECT a FROM Approval a WHERE a.approval_sd = :today AND a.approval_av = '10'")
+	List<Approval> findByApprovalSd(@Param("today") String today);
 
+	
 //    @Query(value = "SELECT * FROM approval a " +
 //            "WHERE (:#{#filterRequest.approvalCd} IS NULL OR a.approval_cd = :#{#filterRequest.approvalCd}) " +
 //            "AND (:#{#filterRequest.approvalDv} IS NULL OR a.approval_dv = :#{#filterRequest.approvalDv}) " +

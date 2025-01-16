@@ -23,6 +23,7 @@ public class ApprovalDTO {
     
     private String approval_fa;   // 1차 결재권자 (employee_cd)
     private String approval_sa;   // 2차 결재권자 (employee_cd)
+    private String approval_av;   // 작성자
     private String approval_wr;   // 작성자
     private Timestamp approval_wd; // 작성일
     private String approval_mf;   // 수정자

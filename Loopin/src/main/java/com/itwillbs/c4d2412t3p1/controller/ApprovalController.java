@@ -101,17 +101,10 @@ public class ApprovalController {
 	) {
 		Map<String, String> response = new HashMap<>();
 
-		// 시큐리티 세션 값 가져오기
-		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
 
 		try {
-			// 작성자 처리
-			approvalDTO.setApproval_mf(employee_id);
-
-			// 작성일 처리
-			approvalDTO.setApproval_wd(new Timestamp(System.currentTimeMillis()));
 			// 데이터 저장 처리
-			approvalService.insert_APPROVAL(approvalDTO);
+			approvalService.handleApprovalInsert(approvalDTO);
 
 			response.put("message", "데이터가 성공적으로 저장되었습니다.");
 			return ResponseEntity.ok(response); // JSON 형식으로 반환
