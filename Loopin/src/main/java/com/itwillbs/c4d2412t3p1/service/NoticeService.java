@@ -6,8 +6,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Notice;
 import com.itwillbs.c4d2412t3p1.repository.NoticeRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.NoticeFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -68,5 +70,11 @@ public class NoticeService {
 	public void delete_NOTICE(List<String> cds) {
 		noticeRepository.deleteAllById(cds);
 	}
+	
+	
+    public List<Notice> select_FILTERED_NOTICE(NoticeFilterRequest filterRequest) {
+    	return noticeRepository.select_FILTERED_NOTICE(filterRequest);
+    }
+	
 	
 }

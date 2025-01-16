@@ -6,6 +6,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +28,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Notice;
 import com.itwillbs.c4d2412t3p1.service.NoticeService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.NoticeFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -62,7 +67,6 @@ public class NoticeController {
 		
 		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
-		String currentCd = employeeDetails.getEmployee_cd();
 		String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 		
 		List<Notice> notices;
@@ -75,11 +79,19 @@ public class NoticeController {
 	        row.put("notice_tt", notice.getNotice_tt());
 	        row.put("notice_ct", notice.getNotice_ct());
 	        row.put("notice_wr", notice.getNotice_wr());
-	        row.put("notice_wd", notice.getNotice_wd());
+	        // notice_wd 값을 timestamp에서 Date로 변환 후 포맷팅
+	        String formattedDate = null;
+	        if (notice.getNotice_wd() != null) {
+	            long timestamp = notice.getNotice_wd().getTime(); // timestamp 값을 얻기
+	            formattedDate = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date(timestamp)); // Date 객체로 변환 후 포맷팅
+	        }
+	        
+	        row.put("notice_wd", formattedDate);
 	        row.put("notice_mf", notice.getNotice_mf());
 	        row.put("notice_md", notice.getNotice_md());
 
 	        return row;
+	        
 	    }).collect(Collectors.toList());
 
 	    return ResponseEntity.ok(response);
@@ -193,6 +205,47 @@ public class NoticeController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	
+	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_NOTICE")
+    public ResponseEntity<List<Notice>> select_FILTERED_NOTICE(@RequestBody NoticeFilterRequest filterRequest) {
+		log.info("@@@@@@@@@@@@@@@@@");
+		
+		System.out.println("@@@@@@@@@" + filterRequest);
+		System.out.println("@@@@@@@@@" + filterRequest.getStartDate());
+		System.out.println("@@@@@@@@@" + filterRequest.getEndDate());
+		
+        try {
+            // 필터 조건이 비어 있으면 전체 인사정보 반환
+            if (filterRequest.isEmpty()) {
+            	List<Notice> notices = noticeService.findAll();
+                return ResponseEntity.ok(notices);
+            }
+            
+            log.info(filterRequest.toString()); // 전체 필드 출력
+            log.info(filterRequest.getStartDate()); // 시작일
+            log.info(filterRequest.getEndDate()); // 종료일
+            log.info(filterRequest.getNoticeWr());// 작성자
+            log.info(filterRequest.getNoticeTt());// 제목            
+            
+            
+            
+            // 필터 조건에 따른 필터링된 인사정보 반환
+            List<Notice> filteredNoticeList = noticeService.select_FILTERED_NOTICE(filterRequest);
+            
+            System.out.println("@@@@@@@@" + filteredNoticeList);
+            
+            
+            
+            return ResponseEntity.ok(filteredNoticeList);
+
+        } catch (Exception e) {
+        	e.printStackTrace();
+            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 	
 	
 	
