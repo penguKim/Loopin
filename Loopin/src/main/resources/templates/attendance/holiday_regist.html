@@ -11,6 +11,13 @@
 	        z-index: 9999 !important;
 	        overflow: visible !important;
 			margin-left: 100px; 
+	}	
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
 	}
 </style>
 <script src="/assets/js/filterModule.js"></script>
@@ -385,7 +392,7 @@
 				{type : 'checkbox',}, 
 			],
 			selectionUnit : 'row', // 행 선택
-			bodyHeight : 600,
+			bodyHeight : 550,
 			columns : [ 
 				{header : '날짜', name : 'holiday_dt', sortable : true, editor: 'text', align: 'center', sortingType: 'desc',
 					validation: {
@@ -431,10 +438,17 @@
 					}
 				},
 			],
-			sortOptions: {
-		        column: 'holiday_dt', // 초기 정렬할 컬럼
-		        ascending: false // 내림차순 정렬
-		    }
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	holiday_ma: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 		grid.on('beforeChange', ev => {
 			if (changeFlag) {

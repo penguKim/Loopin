@@ -144,37 +144,6 @@ public class AttendanceController {
 	    return ResponseEntity.ok(list);
 	}
 	
-	// 캘린더 형식 조회(출퇴근 기록부 첫화면)
-	@ResponseBody
-	@PostMapping("/select_calendar_ANNUAL")
-	public ResponseEntity<Map<String, Object>> select_calendar_ANNUAL(@RequestBody Map<String, Object> params) {
-		
-		EmployeeDetails employee = commuteService.getEmployee();
-		// List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY(params);
-		//log.info("홀리데이리스트" + holidayList);
-		
-		
-		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
-		params.put("employee", employee.getEmployee_cd());		
-		
-		Map<String, Object> response = new HashMap<>(); 
-		try {
-			log.info("파람" + params);
-			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
-			
-			response.put("result", true);
-			//response.put("holidayList", holidayList);
-			response.put("data", data);
-			return ResponseEntity.ok(response);
-			
-		} catch (Exception e) {
-			
-			response.put("result", false);
-			response.put("msg", e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
-	}
-	
 
 	@ResponseBody
 	@GetMapping("/select_period_HOLIDAY")
@@ -240,6 +209,8 @@ public class AttendanceController {
 	@ResponseBody
 	@PostMapping("/insert_ANNUAL")
 	public ResponseEntity<Map<String, Object>> insert_ANNUAL(@RequestBody String annual_yr) {
+		
+		log.info("날짜"+annual_yr);
 		
 		List<Map<String, Object>> annuals = attendanceService.select_ATTENDANCE();
 		
@@ -347,6 +318,8 @@ public class AttendanceController {
 		Map<String, Object> params = new HashMap<>(); 
 		
 		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		log.info("요청 데이터: {}" + commuteService.getEmployee());
+		params.put("employee_cd", commuteService.getEmployee());
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
@@ -362,4 +335,37 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	@ResponseBody
+	@PostMapping("/select_calendar_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_calendar_ANNUAL(@RequestBody Map<String, Object> params) {
+		
+		EmployeeDetails employee = commuteService.getEmployee();
+		List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY((String)params.get("holiday_dt1"),(String)params.get("holiday_dt2"));
+		log.info("홀리데이리스트" + holidayList);
+		
+		
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		params.put("employee_cd", employee.getEmployee_cd());		
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			log.info("파람" + params);
+			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
+			
+			response.put("result", true);
+			response.put("holidayList", holidayList);
+			response.put("data", data);
+			//response.put("holidayList", holidayList);
+			log.info("리스트" + response);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 }

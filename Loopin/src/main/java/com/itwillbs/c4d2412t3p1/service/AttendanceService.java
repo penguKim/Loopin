@@ -143,10 +143,9 @@ public class AttendanceService {
 	}
 
 	public List<Map<String, Object>> select_APPROVAL_ANNUAL(Map<String, Object> params) {
-		log.info(params.get("isAdmin")+"안들어냐");
 		return attendanceMapper.select_APPROVAL_ANNUAL(params);
 	}
-
+	
 	public List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params) {
 		return attendanceMapper.select_calendar_ANNUAL(params);
 	}

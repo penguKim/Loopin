@@ -95,7 +95,7 @@
 						    , ANNUAL_UD
 							)
 					VALUES (#{EMPLOYEE_CD}
-				        	, #{ANNUAL_YR} 
+				        	, #{ANNUAL_YR} + 1
 							, 0 
 							, #{EXPECT_ANNUAL} 
 							, #{EXPECT_ANNUAL} 
@@ -136,7 +136,48 @@
 		 WHERE 1=1
 		   AND a.APPROVAL_DV = '10'
 		   AND a.APPROVAL_AV = '5'
-<!--		   <if test="isAdmin == false">AND e.EMPLOYEE_CD = 'EM25-0014'</if>  사원이라면 동적추가(employee_rl != 'sys, at')-->
+		   <if test="isAdmin == false">AND e.EMPLOYEE_CD = ${employee_cd}</if>  <!--		   사원이라면 동적추가(employee_rl != 'sys, at')-->
     </select>
+    
+    <select id="select_calendar_ANNUAL" resultType="map">
+		WITH DATE_RANGE AS (
+		    SELECT 
+		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') AS STARTDAY,
+		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') AS ENDDAY,
+		        a.APPROVAL_CT,
+		        a.APPROVAL_DV,
+		        JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS ANNUAL_TYPE
+		    FROM APPROVAL a
+		    WHERE a.APPROVAL_DV = '10'
+		      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
+		      AND JSON_VALUE(a.APPROVAL_CT, '$.endday') IS NOT NULL
+		      AND (
+		          JSON_VALUE(a.APPROVAL_CT, '$.startday') &lt;&gt; JSON_VALUE(a.APPROVAL_CT, '$.endday')
+		          OR JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN'
+		      )
+		),
+		DATES AS (
+		    SELECT 
+		        DR.STARTDAY,
+		        DR.ENDDAY,
+		        DR.APPROVAL_CT,
+		        DR.APPROVAL_DV,
+		        DR.ANNUAL_TYPE,
+		        DR.STARTDAY + (LEVEL - 1) AS GENERATED_DATE
+		    FROM DATE_RANGE DR
+		    CONNECT BY LEVEL &lt;= (CASE WHEN DR.STARTDAY &lt;&gt; DR.ENDDAY THEN (DR.ENDDAY - DR.STARTDAY) + 1 ELSE 1 END)
+		      AND PRIOR DR.STARTDAY = DR.STARTDAY
+		      AND PRIOR SYS_GUID() IS NOT NULL
+		)
+		SELECT 
+		    TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD') AS GENERATED_DATE,
+		    COUNT(*) AS RECORD_COUNT,
+		    LISTAGG(JSON_VALUE(D.APPROVAL_CT, '$.reason'), ', ') WITHIN GROUP (ORDER BY D.GENERATED_DATE) AS REASONS,
+		    JSON_VALUE(D.APPROVAL_CT, '$.annualtype') AS ANNUALTYPE
+		FROM DATES D
+		WHERE D.GENERATED_DATE BETWEEN TO_DATE('2024-12-29', 'YYYY-MM-DD') AND TO_DATE('2025-02-01', 'YYYY-MM-DD')
+		GROUP BY TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD'), JSON_VALUE(D.APPROVAL_CT, '$.annualtype')
+		ORDER BY GENERATED_DATE
+	</select>
 	
 </mapper>

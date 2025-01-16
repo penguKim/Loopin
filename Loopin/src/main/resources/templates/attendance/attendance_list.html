@@ -290,7 +290,7 @@
 		calendarEndDate = getDate(calendar.getDateRangeEnd().toDate());
 		$.ajax({
 			type: 'post',
-			url: '/select_COMMUTE_calendar',
+			url: '/select_calendar_ANNUAL',
 			contentType: 'application/json',
 			beforeSend : function(xhr) {
 			    xhr.setRequestHeader(header, token);
@@ -309,14 +309,14 @@
 							monthGridHeader: function(model) {
 								const date = model.date;
 								const dayNum = date.split('-')[2];
-								const holiday = data.holidayList.find(h => h.holiday_dt == date);
+								const holiday = data.holidayList.find(h => h.HOLIDAY_DT == date);
 								const isToday = date == getDate(new Date());
 								if(holiday) {
 									return `
 									<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
 										${dayNum}
 										<span class="holiday-name" style="font-size: 12px;">
-											${holiday.holiday_nm}
+											${holiday.HOLIDAY_NM}
 										</span>
 									</span>`;
 								}
@@ -341,38 +341,41 @@
 					// calendar.render();
 					calendar.clear();
 									
-					let list = data['list'];
-					const event = list.map(commute => {
+					let list = data['data'];
+					const event = list.map(annual => {
 					    if (isAdmin) {
 					        return {
-					            id: `${commute.commute_wd}`,
-					            title: `${commute.total} ()`,
-					            start: commute.commute_wd,
-					            end: commute.commute_wd,
+					            id: `${annual.GENERATED_DATE}`,
+					            title: `휴가자: ${annual.RECORD_COUNT}`,
+					            start: annual.GENERATED_DATE,
+					            end: annual.GENERATED_DATE,
 					            isAllday: true,
 					            category: 'allday',
 					            backgroundColor: '#fff'
 					        };
-					    } else {
+					    } 
+						/*
+						else {
 					        let title = '';
-					        if (commute.commute_wt) {
+					        if (annual.commute_wt) {
 					            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
-					            const startTime = commute.commute_wt;
-					            title = commute.commute_lt 
-					                ? `${startTime} ~ ${commute.commute_lt}` 
+					            const startTime = annual.commute_wt;
+					            title = annual.commute_lt 
+					                ? `${startTime} ~ ${annual.commute_lt}` 
 					                : `${startTime} ~`;
 					        }
 					        
 					        return {
-					            id: `${commute.commute_wd}`,
+					            id: `${annual.commute_wd}`,
 					            title: title,
-					            start: commute.commute_wd,
-					            end: commute.commute_wd,
+					            start: annual.commute_wd,
+					            end: annual.commute_wd,
 					            isAllday: true,
 					            category: 'allday',
 					            backgroundColor: '#fff'
 					        };
 					    }
+						*/
 					});
 					calendar.createEvents(event);
 				}
@@ -693,7 +696,7 @@
 			}
 			
 			let jsonData = JSON.stringify(data);
-			
+			/*
 			$.ajax({
 				type: 'post',
 				url: process != 'grid' ? '/insert_COMMUTE_modal' : '/insert_COMMUTE_grid',
@@ -707,11 +710,11 @@
 						showAlert('', 'error', '등록 실패', '등록에 실패했습니다.');
 					} else {
 						if(process != 'grid') {
-							modal_grid.resetData(data['gridList']);
+							modal_grid.resetData(data['data']);
 							
 							calendar.clear();
 							
-							const event = data['calendarList'].map(commute => ({
+							const event = data['data'].map(commute => ({
 							    id: `${commute.commute_wd}`,
 							    title: `${commute.total} ()`,
 							    start: commute.commute_wd,
@@ -732,7 +735,7 @@
 					console.log('조회 실패');
 				}
 			});
-			
+			*/
 		});
 		
 		
