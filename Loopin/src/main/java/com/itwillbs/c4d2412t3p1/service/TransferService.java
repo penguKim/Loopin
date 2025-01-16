@@ -1,12 +1,14 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
@@ -32,7 +34,7 @@ public class TransferService {
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
 
-		if ("admin".equals(role) || "developer".equals(role)) {
+		if ("SYS_ADMIN".equals(role) || "HR_ADMIN".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
 		} else if ("employee".equals(role)) {
@@ -60,19 +62,27 @@ public class TransferService {
 	}
 
 	public void insert_TRANSFER(TransferDTO transferDTO) {
+		// 인증된 사용자 아이디 가져오기
+		String currentUserId = SecurityContextHolder.getContext().getAuthentication().getName();
 
+		// 현재 시간 가져오기 (초 단위까지)
+		String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+		// DTO -> Entity 변환
 		Transfer transfer = Transfer.setTransferEntity(transferDTO);
 
+		// 기본값 설정
 		transfer.setTransfer_aw(false);
-		transfer.setTransfer_wd("1");
-		transfer.setTransfer_wr("1");
-		transfer.setTransfer_md("1");
-		transfer.setTransfer_mf("1");
+		transfer.setTransfer_wd(currentTime); // 작성일
+		transfer.setTransfer_wr(currentUserId); // 작성자
+		transfer.setTransfer_md(currentTime); // 수정일 초기화
+		transfer.setTransfer_mf(currentUserId); // 수정자 초기화
 
+		// 저장
 		Transfer savedTransfer = transferRepository.save(transfer);
 
+		// 저장된 Transfer의 ID를 DTO에 설정
 		transferDTO.setTransfer_id(savedTransfer.getTransfer_id());
-
 	}
 
 	public void delete_TRANSFER(List<Long> ids) {
@@ -140,16 +150,20 @@ public class TransferService {
 		existingData.put("transfer_adp", row[8]);
 		existingData.put("transfer_aw", row[9]); // 수정하지 않을 필드 그대로 유지
 
-		// 3. 기존 데이터와 DTO 데이터 병합
+		// 3. DTO 데이터 병합
 		Transfer transfer = Transfer.setTransferEntity(transferDTO);
-		transfer.setTransfer_id((Long) existingData.get("transfer_id"));
-		// transfer_aw 값은 수정하지 않고 기존 값을 그대로 둠
+		transfer.setTransfer_id((Long) existingData.get("transfer_id")); // 기존 ID 유지
 
-		// 추가 속성 설정
-		transfer.setTransfer_wd("1");
-		transfer.setTransfer_wr("1");
-		transfer.setTransfer_md("1");
-		transfer.setTransfer_mf("1");
+		// 작성일과 작성자 그대로 유지
+		transfer.setTransfer_wd((String) existingData.get("transfer_wd")); // 기존 작성일 유지
+		transfer.setTransfer_wr((String) existingData.get("transfer_wr")); // 기존 작성자 유지
+
+		// 수정일과 수정자 설정
+		String currentUserId = SecurityContextHolder.getContext().getAuthentication().getName();
+		String currentTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+		transfer.setTransfer_md(currentTime); // 현재 시간으로 수정일 설정
+		transfer.setTransfer_mf(currentUserId); // 현재 사용자 아이디로 수정자 설정
 
 		// 4. 데이터 저장
 		Transfer savedTransfer = transferRepository.save(transfer);

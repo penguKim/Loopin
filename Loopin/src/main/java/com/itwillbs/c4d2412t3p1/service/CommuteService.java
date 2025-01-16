@@ -108,6 +108,17 @@ public class CommuteService {
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
 	    Commute com = commuteRepository.findById(new CommutePK(commuteDTO.getEmployee_cd(), 
 	    		commuteDTO.getWorkinghour_id(), commuteDTO.getCommute_wd())).orElse(null);
+	    // 출퇴근 시간 비교
+	    if (!commuteDTO.getCommute_lt().isEmpty()) {
+	        String workTime = commuteDTO.getCommute_wt().replace(":", "");
+	        String leaveTime = commuteDTO.getCommute_lt().replace(":", "");
+	        if (Integer.parseInt(leaveTime) < Integer.parseInt(workTime)) {
+	            LocalDate workDate = LocalDate.parse(commuteDTO.getCommute_wd());
+	            commuteDTO.setCommute_ld(workDate.plusDays(1).toString());
+	        } else {
+	            commuteDTO.setCommute_ld(commuteDTO.getCommute_wd());
+	        }
+	    }
 	    
 	    if (com != null) { // 업데이트
 	    	com.setCommute_wd(commuteDTO.getCommute_wd());
@@ -125,7 +136,7 @@ public class CommuteService {
 	    	} else {
 	    		com.setCommute_ld(commuteDTO.getCommute_ld());
 	    		com.setCommute_lt(commuteDTO.getCommute_lt());
-	    		setCOMMUTE_hour(com);
+	    		setCOMMUTE_hour(com, true);
 	    	}
 	    	
 	    	commuteRepository.save(com);
@@ -133,16 +144,13 @@ public class CommuteService {
 	    	commuteDTO.setCommute_ru(regUser);
 	    	commuteDTO.setCommute_rd(time);
 	    	
-	    	Commute commute = Commute.setCommute(commuteDTO);
-	    	
-	    	commuteRepository.save(commute);
+	    	commuteRepository.save(Commute.setCommute(commuteDTO));
 	    }
 	}
 
+
 	// 공휴일 조회
 	public List<Holiday> select_HOLIDAY_month(String calendarStartDate, String calendarEndDate) {
-	    System.out.println("------------------- calendarStartDate : " + calendarStartDate);
-	    System.out.println("------------------- calendarEndDate : " + calendarEndDate);
 	    return holidayRepository.findHolidaysInMonth(calendarStartDate, calendarEndDate);
 	}
 	
@@ -236,7 +244,7 @@ public class CommuteService {
 			commuteEntity.setCommute_ud(regDate);
 			
             // 근로시간 계산 및 설정
-            setCOMMUTE_hour(commuteEntity);
+            setCOMMUTE_hour(commuteEntity, false);
             
             return commuteRepository.save(commuteEntity);
             
@@ -263,12 +271,19 @@ public class CommuteService {
 	// 주 40시간보다 이상이면 연장근무, 남아서 야근하면 야근수당
 	// 야간근무 -> 오후 10시 ~ 오전 6시
 	// 사원 근무 기록 등록
-	private void setCOMMUTE_hour(Commute commute) {
+	private void setCOMMUTE_hour(Commute commute, boolean isUpdate) {
 		String workinghour_id = commute.getWorkinghour_id();
 		String commute_wd = commute.getCommute_wd();
 		String commute_wt = commute.getCommute_wt();
 		String commute_ld = commute.getCommute_ld();
 		String commute_lt = commute.getCommute_lt();
+		if(isUpdate) {
+			commute.setCommute_ig("0");
+			commute.setCommute_eg("0");
+			commute.setCommute_yg("0");
+			commute.setCommute_jg("0");
+			commute.setCommute_hg("0");
+		}
 	    // 변수 계산 -------------------------------------------------------------------
 		DateTimeFormatter yMdFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 	    LocalDate workDate = LocalDate.parse(commute.getCommute_wd()); // 출근일자
@@ -297,10 +312,6 @@ public class CommuteService {
 	    if(isWorkingDay && !isHoliday) { // 근로요일이며 공휴일이 아닐 경우 경우
 	        LocalDateTime companyEndDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.parse(workinghour.getWorkinghour_lt())); // 근로형태 퇴근일시
 	        LocalDateTime nightWorkStartDateTime = LocalDateTime.of(LocalDate.parse(commute_wd), LocalTime.of(22, 0)); // 야간근무 시간
-	        
-	        String regularHours = "0.00"; // 일반근로
-	        String overtimeHours = "0.00"; // 연장근로
-	        String nightHours = "0.00"; // 야간근로
 	        
 	        // 점심시간
 	        LocalDateTime lunchStartDateTime = LocalDateTime.of(workDate, LocalTime.of(12, 0));
@@ -370,6 +381,7 @@ public class CommuteService {
 	        double weekendMinutes = Duration.between(startDateTime, endDateTime).toMinutes();
 	        commute.setCommute_jg(String.format("%.2f", weekendMinutes / 60.0));
 	    }
+	    
 	}
 
 
@@ -406,6 +418,11 @@ public class CommuteService {
 	        }
 	    }
 	    return true;
+	}
+
+	// 근로시간 조회
+	public CommuteDTO selcet_COMMUTE_time(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
+		return commuteMapper.selcet_COMMUTE_time(filter, employee_cd, isAdmin);
 	}
 
 
