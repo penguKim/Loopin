@@ -134,7 +134,6 @@ public class PRService {
 		
 		log.info("======================================================================totalSalary====================="+totalSalary);
 		log.info("======================================================================totalDeduction====================="+totalDeduction);
-		log.info("======================================================================calculated====================="+calculated.toString());
 		
 		//공제계산
 //		for (PRCode Dformula : Dformulas) {
