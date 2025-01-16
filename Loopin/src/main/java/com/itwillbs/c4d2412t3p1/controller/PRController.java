@@ -5,6 +5,7 @@ import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -135,16 +136,20 @@ public class PRController {
 	
 	@GetMapping("/getworkingtimeformth")
 	@ResponseBody
-	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList) {
+	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList, @RequestParam("premth") String premth) {
 		
-//		ObjectMapper objMapper = new ObjectMapper();
-//		List<String> employee_cdList = null;
-		
-//		List<String> employee_cdList = Arrays.asList(employee_cd.split(","));
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!employee_list :"+employee_cdList);
-		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
+		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList, premth);
 		
 		return list;
+	}
+	
+	@PostMapping("/update_commutepr")
+	@ResponseBody
+	public int update_commutepr() {
+		int response = prS.update_commutepr();
+		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!response: "+response);
+		return response;
 	}
 	
 }
