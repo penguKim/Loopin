@@ -135,14 +135,15 @@ const grid = new tui.Grid({
 	scrollY: true,
 	columns: [
 		{header: '기본급', name: 'BS', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '근무시간', name: 'workingtime', resizable: true, hidden: true},
 		{header: '연장시간', name: 'overworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 		{header: '야근시간', name: 'nightworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 		{header: '주말근무시간', name: 'weekendworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 		{header: '휴일근무시간', name: 'holydayworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
-		{header: '남은연차', name: 'leastannual', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '남은연차', name: 'remainleave', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 		{header: '상여', name: 'bonus', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 	],
-	data:[{BS:0,overworkingtime:"0",nightworkingtime:"0",weekendworkingtime:"0",holydayworkingtime:"0",leastannual:"0",bonus:"0"}],
+	data:[{BS:0,workingtime:209,overworkingtime:"0",nightworkingtime:"0",weekendworkingtime:"0",holydayworkingtime:"0",remainleave:"0",bonus:"0"}],
 	columnOptions:{
 		resizable:true,
 	 },

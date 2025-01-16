@@ -10,10 +10,18 @@ import lombok.Setter;
 @ToString
 public class PR_calculationMDTO {
 
-//	private BigDecimal workingtime;
+	@JsonProperty("employee_cd")
+	private String employee_cd;
+	
+	@JsonProperty("employee_nm")
+	private String employee_nm;
+	
 	@JsonProperty("BS")
     private String BS;
     
+	@JsonProperty("workingtime")
+	private String workingtime;
+	
     @JsonProperty("overworkingtime")
     private String overworkingtime;
     
@@ -26,8 +34,8 @@ public class PR_calculationMDTO {
     @JsonProperty("holydayworkingtime")
     private String holydayworkingtime;
     
-    @JsonProperty("leastannual")
-    private String leastannual;	
+    @JsonProperty("remainleave")
+    private String remainleave;	
 
     @JsonProperty("bonus")
     private String bonus;	

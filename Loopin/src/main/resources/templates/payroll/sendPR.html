@@ -1,30 +1,31 @@
 <html lang="ko" xmlns:th="http://www.thymeleaf.org"
-				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-				layout:decorate="~{layout}" 
-				layout:fragment="content">
-<meta name="_csrf" th:content="${_csrf.token}"/>
-<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+	layout:decorate="~{layout}" layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
 <!-- Toast UI grid CSS File-->
-<link rel="stylesheet"	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<link rel="stylesheet"
+	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
 <body>
 	<main id="main" class="main">
-	<div class="pagetitle">
-		</div>
+		<div class="pagetitle"></div>
 		<div class="col-lg-12">
 			<div class="card">
 				<div class="d-flex items-align-center justify-content-">
 					<div class="card-title d-flex">
-					<h5 id="premth"></h5>
-					<h5>급여이체</h5>
+						<h5 id="premth"></h5>
+						<h5>급여이체</h5>
 					</div>
 				</div>
 				<div class="card-body">
 					<div class="d-flex justify-content-space align-items-end">
-						<input type="button" id="btn_wt" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#wtmodal" value="근태확정">
+						<input type="button" id="btn_wt" class="btn btn-primary ml-3"
+							data-bs-toggle="modal" data-bs-target="#wtmodal" value="근태마감">
 					</div>
 					<div id="grid"></div>
-					<input type="button" id="btn_send" class="btn btn-primary ml-3" value="이체하기">
+					<input type="button" id="btn_send" class="btn btn-primary ml-3"
+						value="이체하기">
 				</div>
 			</div>
 		</div>
@@ -187,9 +188,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				};
 			})
 			grid.resetData(firstdata);
-			const BS = empdata.map(item=>item.BS);
+			const BSwempcd = empdata.map(item=> {return{employee_cd: item.EMPLOYEE_CD, BS:item.BS}});
 			const employee_cd = empdata.map(item=>item.EMPLOYEE_CD);
-			window.BS = BS;
+			window.BSwempcd = BSwempcd;
 			window.employee_cd = employee_cd;
 		},
 		error: function(xhr,status,error){
@@ -202,135 +203,166 @@ document.addEventListener('DOMContentLoaded', function() {
 	/////////////
 	
 	//근태확인 버튼
-	$('#btn_wt').on('click', function(){
-		const currentday = new Date();
-		console.log('근태cday',currentday);
-		const day = currentday.getDate();
-	    
-		const modalid='wtmodal';
-		let modalEl = document.getElementById(modalid);
-		
-		if(!modalEl){
-			const modalHtml = `
-				<div class="modal fade" id="${modalid}" tabindex="-1">
-					<div class="modal-dialog modal-dialog-centered modal-xl">
-						<div class="modal-content">
-							<div class="modal-header">
-								<h5 class="modal-title">근태확인</h5>
-								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-							</div>
-							<div class="modal-body">
-								<div id="grid_wt"></div>
-							</div>
-							<div class="modal-footer">
-								<button type="button" class="btn btn-primary" id="btn_ct">확정하기</button>
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							</div>
-						</div>
-					</div>
-				</div>`;
-			document.body.insertAdjacentHTML('beforeend', modalHtml);
-			modalEl= document.getElementById(modalid);
-		}
-		
-		modalEl.addEventListener('hidden.bs.modal', function () {
-			modalEl.remove();
-			console.log('근태 확인 모달이 닫히고 삭제되었습니다.');
-		});
-		
-		const modal = new bootstrap.Modal(modalEl);
-        modal.show();
+	$('#btn_wt').on('click', function() {
+    const currentday = new Date();
+    console.log('근태cday', currentday);
+    const day = currentday.getDate();
+    
+    const modalid = 'wtmodal';
+    let modalEl = document.getElementById(modalid);
+    
+    if (!modalEl) {
+        const modalHtml = `
+            <div class="modal fade" id="${modalid}" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">근태마감</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="grid_wt"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="btn_ct">마감</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modalEl = document.getElementById(modalid);
+    }
+    
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        modalEl.remove();
+        console.log('근태 확인 모달이 닫히고 삭제되었습니다.');
+    });
+    
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
+    
+    modalEl.addEventListener('shown.bs.modal', function() {
+        const gridContainer = document.getElementById('grid_wt');
+        console.log('gridcon', gridContainer);
         
-        modalEl.addEventListener('shown.bs.modal',function(){
-        	const gridContainer = document.getElementById('grid_wt');
-			console.log('grodcon',gridContainer);
+        if (gridContainer) {
+            console.log('day', day);
+            console.log('empCD', employee_cd);
+            
+            if (day >= 1 && day <= 20) {
+                $.ajax({
+                    url: "/getworkingtimeformth",
+                    method: "GET",
+                    dataType: "JSON",
+                    data: { employee_cds: employee_cd, premth: premth },
+                    success: function(data) {
+                        console.log("근태 데이터", data);
+                        const wtdata = data.map(item => {
+                            return {
+                                employee_cd: item.EMPLOYEE_CD !== undefined ? item.EMPLOYEE_CD : null,
+                                employee_nm: item.EMPLOYEE_NM !== undefined ? item.EMPLOYEE_NM : "없음",
+                                workingtime: item.WORKINGTIME !== undefined ? item.WORKINGTIME : 0,
+                                overworkingtime: item.OVERWORKINGTIME !== undefined ? item.OVERWORKINGTIME : 0,
+                                nightworkingtime: item.NIGHTWORKINGTIME !== undefined ? item.NIGHTWORKINGTIME : 0,
+                                weekendworkingtime: item.WEEKENDWORKINGTIME !== undefined ? item.WEEKENDWORKINGTIME : 0,
+                                holydayworkingtime: item.HOLYDAYWORKINGTIME !== undefined ? item.HOLYDAYWORKINGTIME : 0,
+                                remainleave: item.ANNUAL_RA !== undefined ? item.ANNUAL_RA : 0,
+                            };
+                        });
+                        console.log('데이터확인', wtdata);
+                        const grid_wt = new tui.Grid({
+                            el: gridContainer,
+                            responsive: true,
+                            scrollX: false,
+                            scrollY: true,
+                            bodyHeight: 330,
+                            columns: [
+                                { header: '사원코드', name: 'employee_cd' },
+                                { header: '사원명', name: 'employee_nm' },
+                                { header: '일반근무', name: 'workingtime' },
+                                { header: '연장근무', name: 'overworkingtime' },
+                                { header: '야간근무', name: 'nightworkingtime' },
+                                { header: '주말근무', name: 'weekendworkingtime' },
+                                { header: '휴일근무', name: 'holydayworkingtime' },
+                                { header: '남은연차', name: 'remainleave' },
+                            ],
+                            columnOptions: {
+                                resizable: true,
+                            },
+                        });
+                        grid_wt.resetData(wtdata);
+                        
+                        /* 근태확정버튼 */
+                        $(document).on('click', '#btn_ct', function() {
+                            console.log('확정버튼누름!!!!!!!!');
+                            const wdata = wtdata.map(item =>{
+                            	let bsdata = BSwempcd.find(i => i.employee_cd === item.employee_cd);
+                            		
+                            	return {
+                            		...item,
+                            		BS: bsdata.BS,
+                            	}
+                            });
+                            console.log('가져와', wdata);
+                            swal.fire({
+                                title: "정말 마감하시겠습니까?",
+                                text: "마감하시면 더이상 수정은 불가능합니다.",
+                                icon: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#774df1",
+                                cancelButtonColor: "",
+                                confirmButtonText: "마감"
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        url: "/update_commuteprandcalpr",
+                                        method: "POST",
+                                        contentType: "application/json",
+                                        data: JSON.stringify(wdata),
+                                        beforeSend: function(xhr) {
+                                            xhr.setRequestHeader(header, token);
+                                        },
+                                        success: function(data) {
+                                            console.log('근태확정', data);
+                                            Swal.fire({
+                                                title: "마감되었습니다.",
+                                                icon: "success"
+                                            });
+                                        },
+                                        error: function(xhr, status, error) {
+                                            console.log('근태확정 데이터 전송에 실패했습니다.', error);
+                                            Swal.fire({
+                                                title: "마감 실패",
+                                                icon: "error",
+                                                text: "데이터 전송에 실패했습니다. 다시 시도해주세요."
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                        console.log("근태 확정 데이터 조회에 실패했습니다.", error);
+                        Swal.fire({
+                            title: "오류",
+                            icon: "error",
+                            text: "근태 데이터를 불러오는 데 실패했습니다."
+                        });
+                    }
+                });
+            } else {
+                swal.fire({
+                    icon: 'error',
+                    title: '사용불가',
+                    text: '1일부터 7일 사이에만 조회 가능합니다.'
+                });
+            }
+        }
+    });
+});
         	
-        	if(gridContainer){
-				console.log('day',day);
-				console.log('empCD',employee_cd);
-				//debugger;
-				if(day >= 1 && day <=20) {
-				$.ajax({
-					url: "/getworkingtimeformth",
-					method: "GET",
-					dataType: "JSON",
-					data: {employee_cds: employee_cd, premth: premth},
-					success: function(data){
-						console.log("근태 데이터",data);
-						const wtdata = data.map(item =>{
-							return {
-								employee_cd: item.EMPLOYEE_CD !== undefined ? item.EMPLOYEE_CD : null,
-						        employee_nm: item.EMPLOYEE_NM !== undefined ? item.EMPLOYEE_NM : "없음",
-						        workingtime: item.WORKINGTIME !== undefined ? item.WORKINGTIME : 0,
-						        overworkingtime: item.OVERWORKINGTIME !== undefined ? item.OVERWORKINGTIME : 0,
-						        nightworkingtime: item.NIGHTWORKINGTIME !== undefined ? item.NIGHTWORKINGTIME : 0,
-						        weekendworkingtime: item.WEEKENDWORKINGTIME !== undefined ? item.WEEKENDWORKINGTIME : 0,
-						        holydayworkingtime: item.HOLYDAYWORKINGTIME !== undefined ? item.HOLYDAYWORKINGTIME : 0,
-						        leastannual: item.ANNUAL_RA !== undefined ? item.ANNUAL_RA : 0,
-							}
-						});
-						console.log('데이터확인',wtdata);
-						//debugger;
-						const grid_wt = new tui.Grid({
-							el: gridContainer,
-							responsive: true,
-							scrollX: false,
-							scrollY: true,
-							bodyHeight : 330,
-							columns: [
-								{header:'사원코드',name:'employee_cd'},
-								{header:'사원명',name:'employee_nm'},
-								{header:'일반근무',name:'workingtime'},
-								{header:'연장근무',name:'overworkingtime'},
-								{header:'야간근무',name:'nightworkingtime'},
-								{header:'주말근무',name:'weekendworkingtime'},
-								{header:'휴일근무',name:'holydayworkingtime'},
-								{header:'남은연차',name:'leastannual'},
-							],
-							columnOptions:{
-								resizable:true,
-							},
-						});
-						grid_wt.resetData(wtdata);
-					},
-					error:function(xhr,status,error){
-						console.log("근태 확정 데이터 조회에 실패했습니다.",error);	
-					}
-				});
-				}else{
-					swal.fire({
-						icon:'error',
-						title:'사용불가',
-						text:'1일부터 7일사이에만 조회가능합니다.'
-					})
-				}
-        	}
-        })
-	});
-	  
-	const wtgriddata = grid_wt.getData();
-	console.log('가져와',wtgriddata);
-	/* 근태확정버튼 */
-	$(document).on('click', '#btn_ct', function(){
-		console.log('확정버튼누름!!!!!!!!');
-		debugger;
-		$.ajax({
-			url:"/update_commutepr",
-			method:"POST",
-			contentType: "application/json",
-			//data: JSON.stringify(),
-			beforeSend: function(xhr){
-				xhr.setRequestHeader(header,token);
-			},
-			success: function(data){
-				console.log('근태확정',data);
-			},
-			error: function(xhr,status,error){
-				console.log('근태확정 데이터 전송에 실패했습니다.',error);
-			}
-		});
-	});
-	
 	  ////////////////
 	 // 상여 업데이트 //
 	////////////////

@@ -11,7 +11,7 @@ import lombok.Setter;
 @ToString
 public class PRDTO {
 
-	private Long employee_id;
+	private String employee_cd;
 	private String employee_nm;
 	private BigDecimal employee_bs;
 	private BigDecimal RS;
