@@ -17,6 +17,8 @@ public interface CommuteMapper {
 	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("startDate") String startDate, @Param("endDate") String endDate);
 	// 출퇴근 그리드 탭 조회
 	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
+	// 근로시간 조회
+	CommuteDTO selcet_COMMUTE_time(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
 	// 일자별 출퇴근 기록 조회
 	List<CommuteDTO> select_COMMUTE_detail(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("commute_wd") String commute_wd);
 	// 미출근 사원 조회

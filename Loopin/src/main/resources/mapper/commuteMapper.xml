@@ -25,8 +25,7 @@
 	    <if test="filter.employee_gd != null and filter.employee_gd != ''">AND CC2.COMMON_NM LIKE '%${filter.employee_gd}%'</if>
 	    <if test="filter.commute_wt != null and filter.commute_wt != ''">AND CM.COMMUTE_WT<![CDATA[ >= ]]>#{filter.commute_wt}</if>
 	    <if test="filter.commute_lt != null and filter.commute_lt != ''">AND CM.COMMUTE_LT<![CDATA[ <= ]]>#{filter.commute_lt}</if>
-	    AND CM.COMMUTE_WD<![CDATA[ >= ]]>TO_DATE(#{filter.startDate}, 'YYYY-MM-DD')
-	    AND CM.COMMUTE_LD<![CDATA[ <= ]]>TO_DATE(#{filter.endDate}, 'YYYY-MM-DD')
+	    AND COMMUTE_WD BETWEEN TO_DATE(#{filter.startDate}, 'YYYY-MM-DD') AND TO_DATE(#{filter.endDate}, 'YYYY-MM-DD')
 	    ORDER BY CM.COMMUTE_WD DESC
 	</select>
 	
@@ -74,11 +73,24 @@
 			</choose>
 		FROM COMMUTE CM
 		<if test="isAdmin == true">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
-		WHERE COMMUTE_WD BETWEEN #{startDate} AND #{endDate}
+		WHERE COMMUTE_WD BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
 	    <if test="isAdmin == false">AND EMPLOYEE_CD = #{employee_cd}</if>
 		<if test="isAdmin == true">GROUP BY CM.COMMUTE_WD</if>
 	</select>	
 	
+	<!-- 근로시간 조회 -->
+	<select id="selcet_COMMUTE_time" resultType="Commute">
+		SELECT NVL(SUM(COMMUTE_IG),0) COMMUTE_IG, NVL(SUM(COMMUTE_EG),0) COMMUTE_EG, 
+			NVL(SUM(COMMUTE_YG),0) COMMUTE_YG, NVL(SUM(COMMUTE_JG),0) COMMUTE_JG, NVL(SUM(COMMUTE_HG),0) COMMUTE_HG,
+			NVL(SUM(COMMUTE_IG),0) + NVL(SUM(COMMUTE_EG),0) + NVL(SUM(COMMUTE_YG),0) + 
+			NVL(SUM(COMMUTE_JG),0) + NVL(SUM(COMMUTE_HG),0) TOTAL
+		FROM COMMUTE
+		WHERE 1 = 1
+		<if test="isAdmin == false">AND EMPLOYEE_CD = #{employee_cd}</if>
+		AND COMMUTE_WD BETWEEN TO_DATE(#{filter.startDate}, 'YYYY-MM-DD') AND TO_DATE(#{filter.endDate}, 'YYYY-MM-DD')
+	</select>
+	
+		
 <!-- //////////////////////////////////////////////////////////// 근로 관리 //////////////////////////////////////////////////////////// -->
 
 	<select id="select_WORKINGHOUR" resultType="Workinghour">

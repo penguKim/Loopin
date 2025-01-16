@@ -49,6 +49,7 @@
 	let btn_workinghour_save;
 	// 화면 변수
 	let btn_employee_modal = $('#btn_employee_modal');
+	let btn_workinghour_modal = $('#btn_workinghour_modal');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	
@@ -62,6 +63,11 @@
 		tui.Grid.applyTheme('striped');
 		
 		make_grid();
+		
+		// 신규등록 버튼
+		btn_workinghour_modal.on('click', function() {
+			
+		});
 		
 		// 사원지정 버튼
 		btn_employee_modal.on('click', function (){
@@ -430,8 +436,8 @@
 		            		<h5 class="modal-title">${title}</h5>
 		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 						</div>
-						<div class="modal-body">
-						    <div class="row justify-content-center">
+						<div class="modal-body px-0">
+						    <div class="row d-flex flex-row justify-content-center">
 						        <div class="col-5">
 						            <div class="card">
 						                <div class="card-body">
@@ -525,10 +531,10 @@
 			bodyHeight : 500,
 			columns : [
 				{header : '근로번호', name : 'workinghour_id', hidden : true},
-				{header : '사원번호', name : 'employee_cd', sortable : true},
-				{header : '사원명', name : 'employee_nm', sortable : true}, 
-				{header : '부서명', name : 'employee_dp', sortable : true}, 
-				{header : '직위명', name : 'employee_gd', sortable : true}, 
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'},
 			],
 			summary: {
 			    height: 40,
@@ -549,7 +555,6 @@
 	            employee_grid[row._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
 		    }
 		});
-		
 	}
 	
 	// 사원추가 모달의 지정 그리드
@@ -566,10 +571,10 @@
 			bodyHeight : 500,
 			columns : [
 				{header : '근로번호', name : 'workinghour_id', hidden : true},
-				{header : '사원번호', name : 'employee_cd', sortable : true},
-				{header : '사원명', name : 'employee_nm', sortable : true}, 
-				{header : '부서명', name : 'employee_dp', sortable : true}, 
-				{header : '직위명', name : 'employee_gd', sortable : true}, 
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'}, 
 			],
 			summary: {
 			    height: 40,
@@ -606,7 +611,6 @@
 			success: function(data) {
 				employee_grid.resetData(data['EMPLOYEE_LIST']);
 				insert_grid.resetData(data['CHK_LSIT']);
-				
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');

@@ -98,6 +98,14 @@ function getNextDate(num) {
     return getDate(date);
 }
 
+function getFirstDayOfMonth(date) {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const year = firstDay.getFullYear();
+    const month = String(firstDay.getMonth() + 1).padStart(2, '0');
+    const day = String(firstDay.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 
 /**
  * 시분초 -> 문자열 리턴
