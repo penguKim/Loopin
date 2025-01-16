@@ -55,18 +55,15 @@ public class ApprovalController {
 		return "/approval/approval_list";
 	}
 
-	// 결재 현황 조회
-	@GetMapping("/select_APPROVAL")
+	@GetMapping("/approval_data")
 	@ResponseBody
-	public ResponseEntity<List<Map<String, Object>>> select_APPROVAL() {
-		// 현재 사용자 정보 가져오기
-		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication()
-				.getPrincipal();
-
-		// 서비스 호출로 데이터 조회
-		List<Map<String, Object>> response = approvalService.getApprovalData(employeeDetails);
-
-		return ResponseEntity.ok(response);
+	public ResponseEntity<List<Map<String, Object>>> getApprovalData(@RequestParam("tabType") String tabType) {
+		try {
+			List<Map<String, Object>> response = approvalService.getApprovalsForTab(tabType);
+			return ResponseEntity.ok(response);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
 	}
 
 	@PostMapping("/insert_APPROVAL")
@@ -86,6 +83,57 @@ public class ApprovalController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+
+	@GetMapping("/get_employee_details")
+	public ResponseEntity<Map<String, Object>> getEmployeeDetails(
+			@RequestParam("firstApproverCd") String firstApproverCd,
+			@RequestParam("secondApproverCd") String secondApproverCd) {
+
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			// Service에서 결재권자 정보 가져오기
+			Employee firstApprover = approvalService.getEmployeeByCd(firstApproverCd);
+			Employee secondApprover = approvalService.getEmployeeByCd(secondApproverCd);
+
+			response.put("firstApprover", firstApprover);
+			response.put("secondApprover", secondApprover);
+
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("error", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+
+	@PostMapping("/update_approval_process")
+	public ResponseEntity<String> update_approval_process(@RequestBody Map<String, String> request) {
+		System.out.println("요청 데이터: " + request);
+		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication()
+				.getPrincipal();
+
+		String currentUserCd = employeeDetails.getEmployee_cd();
+		String approvalCd = request.get("approvalCd");
+        String actionType = request.get("actionType");
+
+        if (approvalCd == null || actionType == null || currentUserCd == null) {
+            return ResponseEntity.badRequest().body("결재 코드, 동작 유형 및 사용자 ID는 필수입니다.");
+        }
+
+        try {
+            if ("approve".equalsIgnoreCase(actionType)) {
+                approvalService.processApproval(approvalCd, currentUserCd, true); // 승인 처리
+            } else if ("reject".equalsIgnoreCase(actionType)) {
+                approvalService.processApproval(approvalCd, currentUserCd, false); // 반려 처리
+            } else {
+                return ResponseEntity.badRequest().body("올바르지 않은 동작 유형입니다.");
+            }
+
+            return ResponseEntity.ok("결재가 " + ("approve".equalsIgnoreCase(actionType) ? "승인" : "반려") + "되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생: " + e.getMessage());
+        }
+    }
 
 //	@PostMapping("/update_APPROVAL")
 //	public ResponseEntity<Map<String, String>> update_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO// DTO

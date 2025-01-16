@@ -1,8 +1,10 @@
 package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,8 +17,8 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 	Long getNextSequenceValue();
 
 	// 인사코드 값으로 찾기
-	@Query("SELECT a FROM Approval a WHERE a.approval_wr = :employee_cd")
-    List<Approval> findByApprovalCd(@Param("employee_cd") String employee_cd);
+	@Query("SELECT a FROM Approval a WHERE a.approval_wr = :currentId")
+    List<Approval> findByApprovalCd(@Param("currentId") String currentId);
 
 //     1차 결재권자 목록 조회
 	@Query("SELECT e FROM Employee e " + "JOIN COMMON_CODE c ON e.employee_gd = c.common_cc "
@@ -44,7 +46,9 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 		       OR (a.approval_av = '30' AND a.approval_sa = :currentCd)
 		""")
 		List<Approval> findByApprover(@Param("currentCd") String currentCd);
-
+	
+	@Query("SELECT e FROM Employee e WHERE e.employee_cd = :employeeCd")
+    Optional<Employee> findByEmployeeCd(@Param("employeeCd") String employeeCd);
 	
 	
 //    @Query(value = "SELECT * FROM approval a " +
