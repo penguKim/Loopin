@@ -615,6 +615,7 @@
 	
 	// 달력 상세 모달의 그리드
 	async function make_modal_grid(date) {
+		debugger;
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
 			data : {api: {readData: {url: '/select_COMMUTE_detail', method: 'GET', initParams: {commute_wd: date} }}},
