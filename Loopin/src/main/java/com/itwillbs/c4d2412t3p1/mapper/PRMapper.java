@@ -14,10 +14,8 @@ public interface PRMapper {
 
 	List<Employee>select_empworklastmth();
 	
-	List<Map<String, Object>>select_wokringtimeformth(List<String> employee_cdList);
+	List<Map<String, Object>>select_wokringtimeformth(@Param("employee_cdList") List<String> employee_cdList);
 	
-
-
 	List<Map<String, Object>> selectpradmin();
 
 	List<Map<String, Object>> selectpradminfirstmodal(Long pr_id);
@@ -25,8 +23,10 @@ public interface PRMapper {
 	List<Map<String, Object>> selectpradminfirstmodal2(@Param("prdetail_id") Long prdetail_id);
 
 	
-	List<Map<String,Object>> selectpr(Long employee_cd);
+	List<Map<String,Object>> selectpr(String employee_cd);
 
-	List<Map<String, Object>> checkprmodal(@Param("pr_id") Long pr_id, @Param("employee_cd") Long employee_cd);
+	List<Map<String, Object>> checkprmodal(@Param("pr_id") Long pr_id, @Param("employee_cd") String employee_cd);
+
+	List<Map<String, Object>> select_wokringtimeformth(Map<String, Object> employee_cdList);
 
 }

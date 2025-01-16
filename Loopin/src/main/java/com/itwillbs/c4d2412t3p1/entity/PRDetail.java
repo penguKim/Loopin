@@ -26,7 +26,7 @@ public class PRDetail {
 	private long pr_id;
 	
 	@Column(name="employee_cd")
-	private long employee_cd;
+	private String employee_cd;
 	
 	@Column(name="prdetail_bs")
 	private BigDecimal predetail_bs;

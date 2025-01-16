@@ -43,30 +43,80 @@ public class FilterRequest {
 					&& (log_oi == null || log_oi.isEmpty()) && (log_bj == null || log_bj.isEmpty());
 		}
 
-		@Getter
-		@Setter
-		@ToString
-		// 인사 전용 필터 클래스
-		public static class EmployeeFilterRequest extends FilterRequest {
-			
-			private String employeeHd;
-			private String employeeCd;
-			private String employeeNm;
-			private String employeeDp;
-			private String employeeGd;
-			
-			public EmployeeFilterRequest() {
-				super();
-			}
-			// 로그 필터 조건이 비어 있는지 확인
-			@Override
-			public boolean isEmpty() {
-				return super.isEmpty() && (employeeHd == null || employeeHd.isEmpty())
-						&& (employeeCd == null || employeeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty())
-						&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
-				}
-			}
+		
+	}
+	
+	
+	@Getter
+	@Setter
+	@ToString
+	// 인사 전용 필터 클래스
+	public static class EmployeeFilterRequest extends FilterRequest {
+		
+		private String employeeHd;
+		private String employeeCd;
+		private String employeeNm;
+		private String employeeDp;
+		private String employeeGd;
+		
+		public EmployeeFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (employeeHd == null || employeeHd.isEmpty())
+					&& (employeeCd == null || employeeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty())
+					&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
+		}
+	}
 
+	
+	@Getter
+	@Setter
+	@ToString
+	// 공지사항 전용 필터 클래스
+	public static class NoticeFilterRequest extends FilterRequest {
+		
+		private String noticeWr;
+		private String noticeTt;
+		
+		public NoticeFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (noticeWr == null || noticeWr.isEmpty())
+					&& (noticeTt == null || noticeTt.isEmpty());
+		}
+	}
+	
+	
+	// 출퇴근 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class CommuteFilterRequest extends FilterRequest {
+		
+		private String employee_cd;
+		private String employee_nm;
+		private String employee_dp;
+		private String employee_gd;
+		private String commute_wt;
+		private String commute_lt;
+		
+		public CommuteFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (employee_cd == null || employee_cd.isEmpty())
+					&& (employee_nm == null || employee_nm.isEmpty()) && (employee_dp == null || employee_dp.isEmpty())
+					&& (employee_gd == null || employee_gd.isEmpty()) && (commute_wt == null || commute_wt.isEmpty())
+					&& (commute_lt == null || commute_lt.isEmpty());
+		}
 	}
 }
 

@@ -27,14 +27,17 @@ public class CommuteDTO {
 	private String commute_yg;
 	private String commute_jg;
 	private String commute_hg;
+	private boolean commute_pr;
 	private String commute_ru;
 	private Timestamp commute_rd;
 	private String commute_uu;
 	private Timestamp commute_ud;
 	
-	private BigDecimal total;
-	private BigDecimal inside;
-	private BigDecimal outside;
+	private BigDecimal total_emp; // 총 사원
+	private BigDecimal total; // 출근 인원
+	private BigDecimal late; // 지각
+	private BigDecimal working; // 근무중
+	private BigDecimal leave; // 퇴근
 	private String employee_nm;
 	private String employee_dp;
 	private String employee_gd;
