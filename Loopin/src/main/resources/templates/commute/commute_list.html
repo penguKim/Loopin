@@ -53,6 +53,7 @@
 									</ul>
 								</div>
 								<div id="div_commute_time"></div>
+								<input type="button" id="btn_excel_download" class="btn btn-primary" value="엑셀 다운로드">
 							</div>
 							<!-- 탭 바디 -->
 							<div class="tab-content pt-2" id="myTabContent">
@@ -165,7 +166,55 @@
 		    getGridList(filterValues);
 		});
 
-
+		// 엑셀 다운로드
+		$('#btn_excel_download').on('click', function() {
+			const headers = grid.getColumns();
+			const row = grid.getData();
+			
+			let data = {
+					headers: headers,
+					rows: row,
+					title: '출퇴근기록~'
+			}
+			const jsonData = JSON.stringify(data);
+			
+			$.ajax({
+				type: 'post',
+				url: '/excelDownload',
+				contentType: 'application/json',
+				data: jsonData,
+		        xhrFields: {
+		            responseType: 'blob'  // 응답 타입을 blob으로 설정
+		        },
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(blob) {
+		            // blob 타입 확인 및 설정
+		            const file = new Blob([blob], {
+		                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+		            });
+					
+		            const url = window.URL.createObjectURL(file);
+		            const a = document.createElement('a');
+		            a.href = url;
+		            a.download = data.title + '.xlsx';
+		            
+		            // 다운로드 링크 클릭
+		            document.body.appendChild(a);
+		            a.click();
+		            
+		            // cleanup
+		            setTimeout(function() {
+		                document.body.removeChild(a);
+		                window.URL.revokeObjectURL(url);
+		            }, 100);
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
 
 		
 		// 달력 ----------------------
