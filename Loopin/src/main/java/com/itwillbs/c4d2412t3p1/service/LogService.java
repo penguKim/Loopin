@@ -57,15 +57,26 @@ public class LogService {
 	}
 
 	public List<LogDTO> select_FILTERED_LOG(LogFilterRequest filterRequest) {
-		
-		log.info(filterRequest.toString());
-		List<Log> logs = logRepository.findLogsByFilter(filterRequest);
-		
-		log.info("#############################");
-		
-		return logs.stream()
-		        .map(log -> logConverter.setLogDTO(log, false)) // log_jd 처리 제외
-		        .collect(Collectors.toList());
+	    log.info(filterRequest.toString());
+
+	    // 필터 조건에 따라 로그 데이터 조회
+	    List<Log> logs = logRepository.findLogsByFilter(filterRequest);
+
+	    log.info("#############################");
+
+	    // 로그 데이터를 DTO로 변환하며 log_jd를 파싱
+	    return logs.stream()
+	        .map(log -> {
+	            // log_jd 파싱 및 변환
+	            String parsedLogDetails = logParser.parseLogDetails(log.getLog_jd());
+
+	            // DTO 변환 및 파싱 데이터 추가
+	            LogDTO dto = logConverter.setLogDTO(log, true); // log_jd 포함
+	            dto.setParsedLogDetails(parsedLogDetails); // 파싱된 접근 데이터 추가
+
+	            return dto;
+	        })
+	        .collect(Collectors.toList());
 	}
 
 }

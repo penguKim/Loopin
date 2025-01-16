@@ -1,31 +1,29 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.service.ApprovalService;
 
 import lombok.RequiredArgsConstructor;
@@ -50,7 +48,9 @@ public class ApprovalController {
 		String role = employeeDetails.getEmployee_rl();
 
 		// 기안서 구분 가져오기
-		model.addAttribute("DRAFT_list", approvalService.selectDRAFTList("DRAFT"));
+		model.addAttribute("DRAFT_list", approvalService.selectCommonList("DRAFT"));
+		
+		model.addAttribute("ANNUAL_list", approvalService.selectCommonList("ANNUAL"));
 		
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
@@ -70,10 +70,11 @@ public class ApprovalController {
 		
 		List<Approval> approvals;
 		
-		if(currentRole.contains("admin") || currentRole.contains("developer")) {
+		if(currentRole.contains("SYS_ADMIN")) {
 			approvals = approvalService.findAll(); // 모든 결재 정보를 가져옵니다.
 		} else {
-			approvals = approvalService.findByApprovalCd(currentCd); // 모든 결재 정보를 가져옵니다.
+			System.out.println("@@@@@@@@@@" + currentCd);
+			approvals = approvalService.findByApprovalCd(currentCd); // empolyee_cd에 맞는 결재 정보를 가져옵니다.
 		}
 		
 		
@@ -90,6 +91,7 @@ public class ApprovalController {
 	        row.put("approval_wd", approval.getApproval_wd());
 	        row.put("approval_mf", approval.getApproval_mf());
 	        row.put("approval_md", approval.getApproval_md());
+//	        row.put("employee_cd", approval.getEmployee().getEmployee_cd());
 
 	        return row;
 	    }).collect(Collectors.toList());
@@ -177,7 +179,7 @@ public class ApprovalController {
 
 	
 	
-//	인사발령 삭제
+//	결재 삭제
 	@PostMapping("/delete_APPROVAL")
 	public ResponseEntity<Map<String, Object>> delete_APPROVAL(@RequestBody Map<String, List<String>> request) {
 		
@@ -199,5 +201,73 @@ public class ApprovalController {
 	}
 	
 	
+	@GetMapping("/first_approvers")
+	public ResponseEntity<Map<String, Object>> getFirstApprovers(
+	    @AuthenticationPrincipal EmployeeDetails employeeDetails
+	) {
+	    String employee_gd = employeeDetails.getEmployee_gd();
+	    log.info("현재 사원코드 : " + employee_gd);
+	    List<Employee> firstApprovers = approvalService.getFirstApproverList(employee_gd);
+	    log.info("현재 1차결재권자리스트 : " + firstApprovers.toString());
+
+	    // Grid에서 요구하는 형식으로 응답 변환
+	    Map<String, Object> response = new HashMap<>();
+	    response.put("result", true);
+	    response.put("data", Map.of("contents", firstApprovers));
+	    return ResponseEntity.ok(response);
+	}
+
+
+    @GetMapping("/second_approvers")
+    public ResponseEntity<List<Employee>> getSecondApprovers(
+        @RequestParam("approval_fa") String approval_fa // 1차 결재권자 ID
+    ) {
+        List<Employee> approval_sa = approvalService.getSecondApproverList(approval_fa);
+        return ResponseEntity.ok(approval_sa);
+    }
+	
+	
+	
+	
+	
+	
+	
+//    // 필터 데이터 가져오기
+//	@PostMapping("/select_FILTERED_APPROVAL")
+//    public ResponseEntity<List<Approval>> select_FILTERED_APPROVAL(@RequestBody APPROVALFilterRequest filterRequest) {
+//		log.info("@@@@@@@@@@@@@@@@@");
+//		
+//		System.out.println("@@@@@@@@@" + filterRequest);
+//		System.out.println("@@@@@@@@@" + filterRequest.getStartDate());
+//		System.out.println("@@@@@@@@@" + filterRequest.getEndDate());
+//		
+//        try {
+//            // 필터 조건이 비어 있으면 전체 인사정보 반환
+//            if (filterRequest.isEmpty()) {
+//            	List<Approval> approvals = approvalService.findAll();
+//                return ResponseEntity.ok(approvals);
+//            }
+//            
+//            log.info(filterRequest.toString()); // 전체 필드 출력
+//            log.info(filterRequest.getStartDate()); // 시작일
+//            log.info(filterRequest.getEndDate()); // 종료일
+//            
+//            
+//            
+//            
+//            // 필터 조건에 따른 필터링된 인사정보 반환
+//            List<Approval> filteredEmployeeList = approvalService.select_FILTERED_APPROVAL(filterRequest);
+//            
+//            System.out.println("@@@@@@@@" + filteredEmployeeList);
+//            
+//            
+//            
+//            return ResponseEntity.ok(filteredEmployeeList);
+//
+//        } catch (Exception e) {
+//        	e.printStackTrace();
+//            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+//        }
+//    }
 	
 }

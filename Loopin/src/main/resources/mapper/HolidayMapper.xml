@@ -13,63 +13,68 @@
 	</select>
 	
  	<!-- 공휴일 삽입 -->
-    <insert id="insertHoliday">
+    <insert id="insert_HOLIDAY">
 	 	INSERT INTO HOLIDAY (
-	        HOLIDAY_DT, 
-	        HOLIDAY_NM, 
-	        HOLIDAY_WA, 
-	        HOLIDAY_AA, 
-	        HOLIDAY_WR, 
-	        HOLIDAY_WD, 
-	        HOLIDAY_MF, 
-	        HOLIDAY_MD
-	    )
-	    SELECT 
-	        #{holiday_dt}, 
-	        #{holiday_nm}, 
-	        CASE 
-	            WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '1'
-	            ELSE '0'
-	        END, 
-	        'O', 
-	        #{holiday_wr}, 
-	        #{holiday_wd}, 
-	        NULL, 
-	        NULL
-	    FROM DUAL
+					          HOLIDAY_DT, 
+					          HOLIDAY_NM, 
+					          HOLIDAY_WA, 
+					          HOLIDAY_AA, 
+					          HOLIDAY_MA, 
+					          HOLIDAY_WR, 
+					          HOLIDAY_WD, 
+					          HOLIDAY_MF, 
+					          HOLIDAY_MD
+							)
+							 SELECT 
+								    #{holiday_dt}, 
+								    #{holiday_nm}, 
+								    CASE 
+									    WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '1'
+								  	    ELSE '0'
+								 	    END, 
+								    'O', 
+								    'X', 
+								    #{holiday_wr}, 
+								    #{holiday_wd}, 
+								    NULL, 
+								    NULL
+							   FROM DUAL
     </insert>
     
     <insert id="insert_company_HOLIDAY">
 	 	INSERT INTO HOLIDAY (
-	        HOLIDAY_DT, 
-	        HOLIDAY_NM, 
-	        HOLIDAY_WA, 
-	        HOLIDAY_AA, 
-	        HOLIDAY_WR, 
-	        HOLIDAY_WD, 
-	        HOLIDAY_MF, 
-	        HOLIDAY_MD
-	    )
+							   HOLIDAY_DT, 
+							   HOLIDAY_NM, 
+							   HOLIDAY_WA, 
+							   HOLIDAY_AA, 
+							   HOLIDAY_MA, 
+							   HOLIDAY_WR, 
+							   HOLIDAY_WD, 
+							   HOLIDAY_MF, 
+							   HOLIDAY_MD
+							)
 	    SELECT 
-	        #{holiday_dt}, 
-	        #{holiday_nm}, 
-	        CASE 
-	            WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '1'
-	            ELSE '0'
-	        END, 
-	        #{holiday_aa}, 
-	        #{holiday_wr}, 
-	        #{holiday_wd}, 
-	        NULL, 
-	        NULL
-	    FROM DUAL
+		       #{holiday_dt}, 
+		       #{holiday_nm}, 
+		       CASE 
+		            WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '1'
+		            ELSE '0'
+		       END, 
+		       #{holiday_aa}, 
+		       #{holiday_ma}, 
+		       #{holiday_wr}, 
+		       #{holiday_wd}, 
+		       NULL, 
+		       NULL
+	      FROM DUAL
     </insert>
+    
     <update id="update_company_HOLIDAY">
 	    UPDATE HOLIDAY
-	    SET HOLIDAY_NM = #{holiday_nm},
-	        HOLIDAY_WR = #{holiday_wr},
-	        HOLIDAY_WD = #{holiday_wd}
-	    WHERE HOLIDAY_DT = #{holiday_dt}
+	       SET HOLIDAY_NM = #{holiday_nm},
+			   HOLIDAY_WR = #{holiday_wr},
+			   HOLIDAY_WD = #{holiday_wd}
+	     WHERE HOLIDAY_DT = #{holiday_dt}
 	</update>
 	
 	<select id="isHoliday" resultType="boolean">

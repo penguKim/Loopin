@@ -70,6 +70,27 @@ public class FilterRequest {
 					&& (employeeDp == null || employeeDp.isEmpty()) && (employeeGd == null || employeeGd.isEmpty());
 		}
 	}
+
+	
+	@Getter
+	@Setter
+	@ToString
+	// 공지사항 전용 필터 클래스
+	public static class NoticeFilterRequest extends FilterRequest {
+		
+		private String noticeWr;
+		private String noticeTt;
+		
+		public NoticeFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (noticeWr == null || noticeWr.isEmpty())
+					&& (noticeTt == null || noticeTt.isEmpty());
+		}
+	}
 	
 	
 	// 출퇴근 필터 클래스

@@ -94,6 +94,7 @@ public class PRService {
 		BigDecimal D_GG = BigDecimal.ZERO;
 		BigDecimal totalSalary = BigDecimal.ZERO; //총지급액 
 		BigDecimal totalDeduction = BigDecimal.ZERO; //총공제액
+//		BigDecimal totalNetsalary = BigDecimal.ZERO; //실지급액
 		BigDecimal totalNonTax = BigDecimal.ZERO; //총비과세
 		log.info("======================================================================BS====================="+BS);
 		
@@ -118,32 +119,32 @@ public class PRService {
 		}
 		
 		//수당계산
-		for (PRCode Bformula : Bformulas) {
-			log.info("계산확인"+Bformula);
-//			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), data, workingtime );
-			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
-			
-			calculated.add(new PRCalDTO(Bformula.getPrcode_id(),calculatedAmount));
-			
-			totalSalary = totalSalary.add(calculatedAmount);
-			if(Bformula.isPrcode_nt()) {
-				totalNonTax = totalNonTax.add(calculatedAmount);
-			}
-		}
+//		for (PRCode Bformula : Bformulas) {
+//			log.info("계산확인"+Bformula);
+////			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), data, workingtime );
+//			BigDecimal calculatedAmount = calculateSalaryWithSpEL(Bformula.getPrcode_fl(), BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus,workingtime );
+//			
+//			calculated.add(new PRCalDTO(Bformula.getPrcode_id(),calculatedAmount));
+//			
+//			totalSalary = totalSalary.add(calculatedAmount);
+//			if(Bformula.isPrcode_nt()) {
+//				totalNonTax = totalNonTax.add(calculatedAmount);
+//			}
+//		}
 		
 		log.info("======================================================================totalSalary====================="+totalSalary);
 		log.info("======================================================================totalDeduction====================="+totalDeduction);
 		
 		//공제계산
-		for (PRCode Dformula : Dformulas) {
-			BigDecimal calculatedD = calculateSalaryWithSpEL(Dformula.getPrcode_fl(), totalSalary, totalNonTax );
-			
-			calculated.add(new PRCalDTO(Dformula.getPrcode_id(),calculatedD));
-			if(Dformula.getPrcode_id().contains("D_GG")) {
-				D_GG = D_GG.add(calculatedD);
-			}
-			totalDeduction =totalDeduction.add(calculatedD);
-		}
+//		for (PRCode Dformula : Dformulas) {
+//			BigDecimal calculatedD = calculateSalaryWithSpEL(Dformula.getPrcode_fl(), totalSalary, totalNonTax );
+//			
+//			calculated.add(new PRCalDTO(Dformula.getPrcode_id(),calculatedD));
+//			if(Dformula.getPrcode_id().contains("D_GG")) {
+//				D_GG = D_GG.add(calculatedD);
+//			}
+//			totalDeduction =totalDeduction.add(calculatedD);
+//		}
 		
 		BigDecimal netSalary = totalSalary.subtract(totalDeduction);
 		
@@ -248,15 +249,49 @@ public class PRService {
 		return list;
 	}
 
-	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist) {
-		Map<String, Object> employee_cdList = new HashMap<>();
-		employee_cdList.put("employee_cd", emp_cdlist);
-		System.out.println("====================================employee_cdLsit: "+employee_cdList);
-//		List<Map<String, Object>> list = prM.select_wokringtimeformth(employee_cdList);
-		List<Map<String, Object>> listA = prM.select_wokringtimeformth(emp_cdlist);
+	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist, String premth) {
+		String[] presep = premth.split("-");
+		String year = presep[0];
+		
+		if(premth.contains("-12") ) {
+			Map<String, Object> premth_cds = new HashMap<>();
+			premth_cds.put("year", year);
+			premth_cds.put("employee_cdList", emp_cdlist);
+			
+			List<Map<String, Object>> wtlist = prM.select_wokringtimeformth(emp_cdlist);
+			System.out.println("!!!!!!!!!!!!!!!!!!!wtlist: "+wtlist);
+			List<Map<String,Object>> rllist = prM.select_remainleave(premth_cds);
+			
+			Map<String, Map<String,Object>> list = new HashMap<>();
+			
+			for(Map<String, Object> wt : wtlist) {
+				String empcd = (String) wt.get("EMPLOYEE_CD");
+				System.out.println("!!!!!!!!!!!!!!!!!!!empcd1: "+empcd);
+				list.put(empcd, new HashMap<>(wt));
+			}
+			
+			for(Map<String,Object> rl : rllist) {
+				String empcd = (String) rl.get("EMPLOYEE_CD");
+				System.out.println("!!!!!!!!!!!!!!!!!!!empcd2: "+empcd);
+				Map<String,Object> isexist = list.get(empcd);
+				if(isexist != null) {
+					isexist.putAll(rl);
+				}else {
+					list.put(empcd, new HashMap<>(rl));
+				}
+			}
+			
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!list: "+list.values());
+			
+			return new ArrayList<>(list.values());
+		}else {
+			return prM.select_wokringtimeformth(emp_cdlist);
+		}
+		
+	}
 
-		return listA;
-//		return prM.select_wokringtimeformth(employee_cdList);
+	public int update_commutepr() {
+		return prM.update_commutepr();
 	}
 
 }

@@ -16,8 +16,9 @@ import com.itwillbs.c4d2412t3p1.entity.Holiday;
 @Mapper
 public interface HolidayMapper {
 
-	List<Map<String, Object>> select_period_HOLIDAY(@Param("holiday_dt1") String holiday_dt1, @Param("holiday_dt2")String holiday_dt2);
-	
+	@Mapper
+    List<Map<String, Object>> select_period_HOLIDAY(@Param("holiday_dt1") String holiday_dt1, 
+	                                                @Param("holiday_dt2") String holiday_dt2);
 	 // 공휴일 삽입
 	void insert_HOLIDAY(Map<String, String> holiday);
 

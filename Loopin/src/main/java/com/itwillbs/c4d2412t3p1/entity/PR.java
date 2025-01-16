@@ -2,15 +2,10 @@ package com.itwillbs.c4d2412t3p1.entity;
 import java.math.BigDecimal;
 import java.security.Timestamp;
 
-import org.hibernate.annotations.DialectOverride.GeneratedColumn;
-
 import groovy.transform.ToString;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +34,12 @@ public class PR {
 	@Column(name="pr_ta")
 	private BigDecimal pr_ta;
 	
+	@Column(name="pr_ns")
+	private BigDecimal pr_ns;
+	
+	@Column(name="pr_tp")
+	private BigDecimal pr_tp;
+
 	@Column(name="pr_wr")
 	private String pr_wr;
 	
