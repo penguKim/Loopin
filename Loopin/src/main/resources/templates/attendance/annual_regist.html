@@ -6,6 +6,15 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -14,11 +23,11 @@
 					<div class="card"  style="height:800px;">
 						<div class="card-body">
 							<div class="d-flex align-items-center justify-content-between">
-								<h5 class="card-title">휴가 등록</h5>
+								<h5 class="card-title" id="current_year"></h5>
 								<div>
 									<input type="button" id="btn_annual_modal" class="btn btn-primary" value="연차등록" data-bs-toggle="modal" data-bs-target="#modal_appointment_save">
-									<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" aria-hidden="true" data-bs-backdrop="false" data-bs-keyboard="false" >
-										<div class="modal-dialog modal-dialog-centered modal-md">
+									<div class="modal fade" id="modal_appointment_save" tabindex="-1" aria-labelledby="modal_appointment_save_label" data-bs-backdrop="false" data-bs-keyboard="false" >
+										<div class="modal-dialog modal-dialog-centered modal-lg">
 											<div class="modal-content">
 												<div class="modal-header">
 													<h5 class="modal-title" id="modal_appointment_save_label">연차 등록</h5>
@@ -105,10 +114,35 @@
 	let grid = null;
 	const modal_appointment_save = new bootstrap.Modal(document.getElementById('modal_appointment_save'));
 	
+	const { year, month, day, hours, minutes, seconds } = formatDate(); // 함수가 반환한 값 사용
 	
-	window.onload = function(){
+	$(function () {
+
 		grid_function();
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		$("#current_year").text(`${year}년 연차 등록`);
 		
+	});
+
+	
+	function formatDate() {
+		const originalDate = new Date(); // 기존 날짜 가져오기
+	    const year = originalDate.getFullYear();
+	    const month = String(originalDate.getMonth() + 1).padStart(2, '0'); // 2자리로 포맷
+	    const day = String(originalDate.getDate()).padStart(2, '0'); // 2자리로 포맷
+	    const hours = String(originalDate.getHours()).padStart(2, '0'); // 2자리로 포맷
+	    const minutes = String(originalDate.getMinutes()).padStart(2, '0'); // 2자리로 포맷
+	    const seconds = String(originalDate.getSeconds()).padStart(2, '0'); // 2자리로 포맷
+		
+		return {
+		        year,
+		        month,
+		        day,
+		        hours,
+		        minutes,
+		        seconds
+		    };
 	}
 	
 	// grid_function에서 grid 초기화 및 설정
@@ -118,33 +152,63 @@
 	    $.ajax({
 	        type: "get",
 	        url: "/select_ATTENDANCE",
-	        success: function (result) {
-	            grid.resetData(result);
+	        success: function (respose) {
+				if(!respose['result']) {
+					Swal.fire({
+					    icon: "error",
+					    title: "연차 조회 실패",
+					    html: "연차 조회에 실패하였습니다.",
+					});
+				} else {
+					grid.resetData(respose['data']);
+					console.log(respose['data']);
+				}
 	        },
 			error : function(xhr, textStatus, errorThrown) {
+				Swal.fire({
+				    icon: "error",
+				    title: "연차 조회 실패",
+				    html: "연차 조회에 실패하였습니다.",
+				});
 				console.log('조회 실패', xhr.responseText);
 			}
 	    });
 
-	    // 그리드 객체 생성 + 초기 세팅
-	    grid = new tui.Grid({
-	        el: grid_container,
-	        scrollX: true,
-	        scrollY: true,
-	        columns: [
-	            { header: '사용년도', name: 'annual_yr', align: 'center', sortable: true },
-	            { header: '이름', name: 'employee_nm', align: 'center', sortable: true },
-	            { header: '부서명', name: 'common_nm', align: 'center', sortable: true },
-	            { header: '근속연수', name: 'service_years', align: 'center', sortable: true },
-	            { header: '사용연차', name: 'annual_ua', align: 'center', sortable: true },
-	            { header: '잔여연차', name: 'annual_ra', align: 'center', sortable: true },
-	            { header: '예상 총연차', name: 'expect_annual', align: 'center', sortable: true },
+		grid = new tui.Grid({
+			el : grid_container,
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{ header: '사용년도', name: 'ANNUAL_YR', align: 'center', sortable: true, filter: 'text'},
+	            { header: '이름', name: 'EMPLOYEE_NM', align: 'center', sortable: true , filter: 'select'},
+	            { header: '부서명', name: 'COMMON_NM', align: 'center', sortable: true },
+	            { header: '근속연수', name: 'SERVICE_YEARS', align: 'center', sortable: true },
+	            { header: '사용연차', name: 'ANNUAL_UA', align: 'center', sortable: true },
+	            { header: '잔여연차', name: 'ANNUAL_RA', align: 'center', sortable: true },
+	            { header: '예상 총연차', name: 'EXPECT_ANNUAL', align: 'center', sortable: true },
 	        ],
-	    });
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	EXPECT_ANNUAL: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+		});
 	}
 	
 	$('#btn_insert_ANNUAL').on("click", function () {
-		let annual_yr = new Date().getFullYear(); // 현재 연도 가져오기
+		let annual_yr = new Date().getFullYear();
+
 		
 		$.ajax({
 			type: 'post',
@@ -155,22 +219,32 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function (result) {
+				if(!result['result']) {
+					Swal.fire({
+					    icon: "error",
+					    title: "연차 등록 실패",
+					    html: "연차 등록에 실패하였습니다.",
+					});
+				} else {
+					Swal.fire({
+					    icon: "success",
+					    title: "연차 등록 성공",
+					    html: "연차 등록에 성공하였습니다.",
+					});
+					grid.resetData(result['data']);
+				}
 				modal_appointment_save.hide();
-				location.reload();
 	        },
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패', xhr.responseText);
 				Swal.fire({
 				    icon: "error",
-				    title: "입력할 연차가 없습니다",
-				    text: `이미 완료되었거나 아직 등록할 수 없습니다.`,
+				    title: "입력할 연차가 없습니다.",
+				    text: "이미 완료되었거나 아직 등록할 수 없습니다.",
 				});
+				modal_appointment_save.hide();
 			}
 		});
-	});
-	
-	$('.modal').on('hidden.bs.modal', function (e) {
-	    $(this).find('form')[0].reset();
 	});
 	
 </script>

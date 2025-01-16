@@ -26,26 +26,26 @@
 		            LEAST(15 + FLOOR((FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) - 3) / 2), 25) + NVL(a.ANNUAL_RA, 0)
 		    END AS EXPECT_ANNUAL
 	    FROM ANNUAL a
-	   INNER JOIN EMPLOYEE e 
+		LEFT JOIN EMPLOYEE e 
 	       	   ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
 	    LEFT JOIN COMMON_CODE c
 	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
-	   WHERE c.COMMON_GC = 'DEPARTMENT' 
+	   WHERE 1=1
+	   		 AND c.COMMON_GC = 'DEPARTMENT'
+			 AND EMPLOYEE_US = '1'
 	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
 	</select>
     
     <select id="select_EMPLOYEE_ANNUAL" resultType="map">
         SELECT e.*, c.*
           FROM EMPLOYEE e
-          LEFT JOIN COMMON_CODE c
-	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
+	 LEFT JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC AND c.COMMON_GC = 'DEPARTMENT'
          WHERE 1=1
-	        	AND e.EMPLOYEE_NM LIKE '%' || #{employee_nm} || '%'
-	        	AND c.COMMON_GC = 'DEPARTMENT'
-         ORDER BY e.EMPLOYEE_CD DESC
+			   AND e.EMPLOYEE_NM LIKE '%' || #{employee_nm} || '%'
+	  ORDER BY e.EMPLOYEE_CD DESC
     </select>
     
-    <select id="select_ANNUAL" resultType="map">
+    <select id="select_filer_ANNUAL" resultType="map">
 	    SELECT 
 	        a.*,
 	        e.EMPLOYEE_NM,
@@ -57,7 +57,7 @@
 		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년'
 		    END AS service_years
 	    FROM ANNUAL a
-	   INNER JOIN EMPLOYEE e 
+		LEFT JOIN EMPLOYEE e 
 	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
         LEFT JOIN COMMON_CODE c
        	    ON e.EMPLOYEE_DP = c.COMMON_CC
@@ -67,7 +67,7 @@
 	            AND a.EMPLOYEE_CD = #{employee_cd}
 	        </if>
 	        <if test="employee_nm != null and employee_nm != ''">
-	            AND e.employee_nm = #{employee_nm}
+	            AND e.EMPLOYEE_NM = #{employee_nm}
 	        </if>
 	        <if test="employee_dp != null and employee_dp != ''">
 	            AND e.EMPLOYEE_DP = #{employee_dp}
@@ -94,14 +94,90 @@
 						    , ANNUAL_UU
 						    , ANNUAL_UD
 							)
-		VALUES( #{EMPLOYEE_CD}
-				, #{ANNUAL_YR}
-				, 0 
-				, #{EXPECT_ANNUAL} 
-				, #{EXPECT_ANNUAL} 
-				, #{ANNUAL_RU} 
-				, #{ANNUAL_RD} 
-				, NULL
-				, NULL)
+					VALUES (#{EMPLOYEE_CD}
+				        	, #{ANNUAL_YR} + 1
+							, 0 
+							, #{EXPECT_ANNUAL} 
+							, #{EXPECT_ANNUAL} 
+							, #{ANNUAL_RU} 
+							, #{ANNUAL_RD} 
+							, NULL
+							, NULL)
 	</insert>
+	
+	<select id="select_APPROVAL_ANNUAL" resultType="map">
+		SELECT e.EMPLOYEE_NM
+			   , a.APPROVAL_CD
+			   , c.COMMON_NM EMPLOYEE_DP
+			   , cc.COMMON_NM EMPLOYEE_GD
+			   , a.APPROVAL_WR  
+			   , a.APPROVAL_DV
+			   , a.APPROVAL_AV
+			   , JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS annualtype
+		       , JSON_VALUE(a.APPROVAL_CT, '$.startday') AS startday
+		       , JSON_VALUE(a.APPROVAL_CT, '$.endday') AS endday
+		       , CASE 
+		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1
+		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5
+		             ELSE 0 -- 병가
+		          END AS mapped_value
+		       , CASE
+		       		 WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN'
+		             AND JSON_VALUE(a.APPROVAL_CT, '$.startday') &lt;&gt; JSON_VALUE(a.APPROVAL_CT, '$.endday') 
+		         THEN 
+		             TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') 
+		             - TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') + 1
+		         ELSE 0
+		       END AS day_difference -- startday와 endday 간 차이 계산 (연차 갯수 계산)
+		  FROM APPROVAL a 
+	 LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_CD = a.APPROVAL_WR 
+	 LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
+	 LEFT JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = e.EMPLOYEE_GD
+		 WHERE 1=1
+		   AND a.APPROVAL_DV = '10'
+		   AND a.APPROVAL_AV = '5'
+		   <if test="isAdmin == false">AND e.EMPLOYEE_CD = ${employee_cd}</if>  <!--		   사원이라면 동적추가(employee_rl != 'sys, at')-->
+    </select>
+    
+    <select id="select_calendar_ANNUAL" resultType="map">
+		WITH DATE_RANGE AS (
+		    SELECT 
+		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') AS STARTDAY,
+		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') AS ENDDAY,
+		        a.APPROVAL_CT,
+		        a.APPROVAL_DV,
+		        JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS ANNUAL_TYPE
+		    FROM APPROVAL a
+		    WHERE a.APPROVAL_DV = '10'
+		      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
+		      AND JSON_VALUE(a.APPROVAL_CT, '$.endday') IS NOT NULL
+		      AND (
+		          JSON_VALUE(a.APPROVAL_CT, '$.startday') &lt;&gt; JSON_VALUE(a.APPROVAL_CT, '$.endday')
+		          OR JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN'
+		      )
+		),
+		DATES AS (
+		    SELECT 
+		        DR.STARTDAY,
+		        DR.ENDDAY,
+		        DR.APPROVAL_CT,
+		        DR.APPROVAL_DV,
+		        DR.ANNUAL_TYPE,
+		        DR.STARTDAY + (LEVEL - 1) AS GENERATED_DATE
+		    FROM DATE_RANGE DR
+		    CONNECT BY LEVEL &lt;= (CASE WHEN DR.STARTDAY &lt;&gt; DR.ENDDAY THEN (DR.ENDDAY - DR.STARTDAY) + 1 ELSE 1 END)
+		      AND PRIOR DR.STARTDAY = DR.STARTDAY
+		      AND PRIOR SYS_GUID() IS NOT NULL
+		)
+		SELECT 
+		    TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD') AS GENERATED_DATE,
+		    COUNT(*) AS RECORD_COUNT,
+		    LISTAGG(JSON_VALUE(D.APPROVAL_CT, '$.reason'), ', ') WITHIN GROUP (ORDER BY D.GENERATED_DATE) AS REASONS,
+		    JSON_VALUE(D.APPROVAL_CT, '$.annualtype') AS ANNUALTYPE
+		FROM DATES D
+		WHERE D.GENERATED_DATE BETWEEN TO_DATE('2024-12-29', 'YYYY-MM-DD') AND TO_DATE('2025-02-01', 'YYYY-MM-DD')
+		GROUP BY TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD'), JSON_VALUE(D.APPROVAL_CT, '$.annualtype')
+		ORDER BY GENERATED_DATE
+	</select>
+	
 </mapper>
