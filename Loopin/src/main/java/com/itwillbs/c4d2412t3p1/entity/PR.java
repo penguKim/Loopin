@@ -37,6 +37,9 @@ public class PR {
 	@Column(name="pr_ns")
 	private BigDecimal pr_ns;
 	
+	@Column(name="pr_tp")
+	private BigDecimal pr_tp;
+
 	@Column(name="pr_wr")
 	private String pr_wr;
 	
