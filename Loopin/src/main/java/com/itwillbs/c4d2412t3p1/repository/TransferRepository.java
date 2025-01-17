@@ -30,6 +30,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			+ "LEFT JOIN COMMON_CODE to_department ON t.transfer_adp = to_department.common_cc AND to_department.common_gc = 'DEPARTMENT'")
 	List<Object[]> findAllWithDetails();
 
+	
 	// 특정 employee_cd 데이터 조회
 	@Query("SELECT " + "t.transfer_id, " + "t.employee_cd, " + "e.employee_nm, " + "t.transfer_ad, "
 			+ "transfer_type.common_nm AS transfer_ac, " + "from_position.common_nm AS transfer_og, "
