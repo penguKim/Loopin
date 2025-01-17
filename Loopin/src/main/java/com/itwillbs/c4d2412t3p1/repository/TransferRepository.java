@@ -85,6 +85,8 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			""", nativeQuery = true)
 	void updateTransfer_aw(@Param("transfer_id") Long transfer_id);
 
+	
+	
 	@Query(value = """
 			    SELECT *
 			    FROM TRANSFER
