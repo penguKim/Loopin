@@ -258,6 +258,9 @@
 					saturday: {
 					    color: 'rgba(64, 64, 255)', // 토요일 텍스트 색상
 					},
+					today: {
+					      color: '#000' // 오늘 날짜 텍스트 색상
+				    }
 				},
 			},
 			calendars: [
@@ -361,9 +364,9 @@
 									</span>`;
 								}
 								if(isToday) {
-					                return `<span class="toastui-calendar-weekday-grid-date 
-									toastui-calendar-weekday-grid-date-decorator 
-									toastui-calendar-template-monthGridHeader" style="color: #fff">${dayNum}</span>`;
+									 return `<span class="toastui-calendar-weekday-grid-date 
+										toastui-calendar-weekday-grid-date-decorator 
+										toastui-calendar-template-monthGridHeader">${dayNum}</span>`;
 					            }
 					            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
 							},
@@ -864,6 +867,16 @@
 								
 							} else {
 								grid.resetData(data['gridList']);
+								// 그리드 행 클래스 추가
+						        grid.getData().forEach((row, index) => {
+						            if (row.commute_pr) {
+						            	grid.addRowClassName(index, 'bg-dark');
+						            	grid.addRowClassName(index, 'bg-opacity-50');
+						            	grid.addRowClassName(index, 'text-white');
+						            } else if (row.commute_st == '지각' || row.commute_st == '결근') {
+						            	grid.addRowClassName(index, 'bg-danger-subtle');
+						            }
+						        });
 							}
 							let commute = data['commute'];
 							// div_commute_time.html(`총 근로 : ${commute.total} | 일반 : ${commute.commute_ig} | 연장 : ${commute.commute_eg} | 야간 : ${commute.commute_yg} | 주말 : ${commute.commute_jg} | 휴일 : ${commute.commute_hg}`);			
