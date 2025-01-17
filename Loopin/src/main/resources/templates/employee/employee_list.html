@@ -21,19 +21,12 @@
 	z-index: 9999 !important;
 	overflow: visible !important;
 }
-
-.tui-grid-cell-summary {
-    background-color: #ddd;
-    border-color: #fff;
-    border-left-width: 1px;
-    border-right-width: 1px;
-    color: #333;
-}
 </style>
 
 <body>
 	<main id="main" class="main">
-
+			<span sec:authentication="principal.employee_cd"></span><br>
+			<span sec:authentication="principal.employee_rl"></span>
 
 
 		<!-- 인사카드 등록 모달 -->
@@ -91,7 +84,7 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">사원명<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="3" maxlength="16">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="4" maxlength="16">
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">채용구분</label>
 								<div class="col-sm-4">
@@ -291,6 +284,7 @@
 								<div class="col-sm-12">
 									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
+<!--									<div class="tui-pagination" id="pagination"></div>-->
 								</div>
 								<div class="col-sm-12">
 									<div th:if="${#authentication.principal.employee_rl == 'HR_ADMIN' or #authentication.principal.employee_rl == 'SYS_ADMIN'}">
@@ -475,6 +469,7 @@
 </script>
 
 <!-- 필터 모듈 JS File -->
+<script src="/assets/js/filterModule.js"></script>	
 <script th:inline="javascript">
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
@@ -482,96 +477,8 @@
 
 		var userRole = /*[[${role}]]*/ 'default';
 		
-		const filterConfig = [
-			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
-			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
-            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력',  col: 'col-3' },
-            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력',  col: 'col-3' },
-            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력',  col: 'col-3' },
-            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력',  col: 'col-3' },
-        ];
-		
-	    
-		setElementHeight('.card', -105);
-		
-		$(window).resize(function() {
-			setElementHeight('.card', -105);
-			if(grid != null) {
-				setGridHeight(grid, -430);
-			}
-		});
-
-		 $(document).on('filterToggled', function(e) {
-			 console.log(grid);
-			    if(e.detail.isVisible) {
-			        setGridHeight(grid, -460);
-			    } else {
-			        setGridHeight(grid, -390);
-			    }
-			});
-	    
-	    
-	    
-	    // 필터 모듈 초기화
-		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-		    console.log('적용된 필터:', filterValues);
-		
-		    // 필터 적용 후 서버 요청 및 Grid 갱신
-		    fetch('/select_FILTERED_EMPLOYEE', {
-		        method: 'POST',
-		        headers: { 'Content-Type': 'application/json',
-		        			[csrfHeader]: csrfToken
-		        },
-		        body: JSON.stringify(filterValues)
-		    })
-		    .then(response => response.json())
-		    .then(filteredData => {
-		        console.log('필터링된 데이터:', filteredData);
-		
-		        // Grid 데이터 갱신
-		        grid.resetData(filteredData);
-		    })
-		    .catch(error => console.error('필터 적용 오류:', error));
-		});
-	    
-	    // 필터 엔터키 검색 이벤트
-	    $('#filterModule').on('keypress', function (e) {
-	        if (e.keyCode !== 13) return;
-	        const filterValues = {};
-	
-	        for (const config of filterConfig) {
-	            const input = $(`#${config.key}`);
-	            const value = input.val();
-	
-	            filterValues[config.key] = value;
-	        }
-	
-	        // 서버 요청 및 그리드 갱신
-	        fetch('/select_FILTERED_EMPLOYEE', {
-	            method: 'POST',
-	            headers: {
-	                'Content-Type': 'application/json',
-	                [csrfHeader]: csrfToken,
-	            },
-	            body: JSON.stringify(filterValues),
-	        })
-	            .then(response => response.json())
-	            .then(filteredData => {
-	                console.log('엔터키로 필터링된 데이터:', filteredData);
-	
-// 	                if (grid) {
-						console.log('리셋전 : ', grid.getData());
-	                    grid.resetData(filteredData);
-						console.log('리셋gn : ', grid);
-// 	                    console.log('그리드야', grid);
-// 	                } else {
-// 	                    initializeGrid(filteredData); // 그리드 초기화
-// 	                }
-	            })
-	            .catch(error => console.error('엔터키 필터 적용 오류:', error));
-	    });
-	    
 	    let grid;
+	   
 	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
@@ -589,22 +496,11 @@
                     bodyHeight: 'fitToParent',
 	                rowHeaders: ['checkbox'],
                     zIndex: 100,
-        			summary: {
-        			    height: 40,
-        			    position: 'bottom', // or 'top'
-        			    columnContent: {
-        			    	employee_em: {
-        			            template: (valueMap) => {
-        			                return `총  ${valueMap.cnt} 건`
-        			            }
-        			        }
-        			    }
-        			},
 	                columns: [
 						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '부서', name: 'employee_dp', align: 'center', filter: {type: 'select'}, sortable: true },
-						{ header: '직위', name: 'employee_gd', align: 'center', filter: {type: 'select'}, sortable: true },
+						{ header: '직급', name: 'employee_gd', align: 'center', filter: {type: 'select'}, sortable: true },
 						{ header: '생년월일', name: 'employee_bd', align: 'center', filter: {type: 'date', options: {format: 'yyyyMMdd'}}, sortable: true },
 						{ header: '입사일', name: 'employee_hd', align: 'center', filter: {type: 'date', options: {format: 'yyyy-MM-dd'}}, sortable: true },
 						{ header: '주소', name: 'employee_ad', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
@@ -632,7 +528,7 @@
 						{ header: '사용여부', name: 'employee_us', hidden: true  },
 	                ]
 	            });
-	            
+
 				
 				// 그리드 클릭 이벤트 등록
 				grid.on('click', (ev) => {
@@ -652,15 +548,14 @@
 				    }
 				});
 				
-				setGridHeight(grid, -476);
 				
 	        },
 	        error: function (error) {
 	            console.error('데이터 로드 실패:', error);
 	        }
 	    });
-	    
-	    
+
+
 
 	    // 삭제 버튼 클릭 이벤트
 	    $('#btn_employee_delete').on('click', function () {
@@ -859,7 +754,6 @@
 		function openEditModal(data) {
 		    // 모달 제목 및 버튼 텍스트 설정
 		    $('#employee_bd_check').text('');
-		    $('#employee_id_check').text('');
 		    
 			$('#modalTitle').text('인사카드 수정');
 			$('#modal_submit_button').text('수정');
@@ -881,6 +775,7 @@
 						$(field).prop("disabled", true); // #employee_id 비활성화
 					} else if (field === "#employee_pw") {
 						$(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
+				
 						// 버튼이 이미 생성되지 않았다면 동적으로 생성
 						if (!$('#reset-password-btn').length) {
 							$('<button>', {
@@ -888,6 +783,7 @@
 								text: 'Reset Password',
 								class: 'btn btn-primary', // 원하는 스타일 클래스 추가
 							}).insertAfter(field); // #employee_pw 뒤에 버튼 삽입
+							
 							
 							// Reset Password 버튼 클릭 이벤트
 							$('#reset-password-btn').off('click').on('click', function(event) {
@@ -899,7 +795,9 @@
 
 								// #employee_pw 필드 활성화 및 보이기
 								$('#employee_pw').prop("disabled", false).show().focus();
+
 						    });
+							
 						}
 					} else {
 							$(field).prop("disabled", false); // 나머지 필드 활성화
@@ -912,7 +810,7 @@
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", false); // 모든 필드 활성화
 			  });
-			} else if (userRole === 'EMPLOYEE' || userRole === 'PR_ADMIN' || userRole === 'AT_ADMIN') {
+			} else if (userRole === 'EMPLOYEE') {
 			  // EMPLOYEE는 모든 필드 비활성화
 			  fieldsToDisable.forEach(function(field) {
 			    $(field).prop("disabled", true);
@@ -1217,38 +1115,36 @@
 		});
 		
 		
-
+		const filterConfig = [
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: 'employeeCd', label: '사원코드', type: 'text', placeholder: '사원 CD 입력',  col: 'col-3' },
+            { key: 'employeeNm', label: '사원명', type: 'text', placeholder: '사원이름 입력',  col: 'col-3' },
+            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서명 입력',  col: 'col-3' },
+            { key: 'employeeGd', label: '직위', type: 'text', placeholder: '직위 입력',  col: 'col-3' },
+        ];
 		
+            initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+                console.log('적용된 필터:', filterValues);
 
+                // 필터 적용 후 서버 요청 및 Grid 갱신
+                fetch('/select_FILTERED_EMPLOYEE', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json',
+                    			[csrfHeader]: csrfToken
+                    },
+                    body: JSON.stringify(filterValues)
+                })
+                .then(response => response.json())
+                .then(filteredData => {
+                    console.log('필터링된 데이터:', filteredData);
+
+                    // Grid 데이터 갱신
+                    grid.resetData(filteredData);
+                })
+                .catch(error => console.error('필터 적용 오류:', error));
+            });
         });
-	
-	
-	
-    // 필터 모듈 초기화
-//     initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-//         console.log('적용된 필터:', filterValues);
-
-//         // 필터 적용 후 서버 요청 및 그리드 갱신
-//         fetch('/select_FILTERED_EMPLOYEE', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//                 [csrfHeader]: csrfToken,
-//             },
-//             body: JSON.stringify(filterValues),
-//         })
-//             .then(response => response.json())
-//             .then(filteredData => {
-//                 console.log('필터링된 데이터:', filteredData);
-
-//                 if (grid) {
-//                     grid.resetData(filteredData);
-//                 } else {
-//                     initializeGrid(filteredData); // 그리드 초기화
-//                 }
-//             })
-//             .catch(error => console.error('필터 적용 오류:', error));
-//     });
 		
 </script>
 </html>

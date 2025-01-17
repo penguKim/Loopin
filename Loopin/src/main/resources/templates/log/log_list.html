@@ -9,6 +9,13 @@
     overflow: visible !important; 
 }
 
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
 </style>
 
 <body>
@@ -82,22 +89,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     $(window).resize(function() {
-        setElementHeight('#div_card', -230);
+        setElementHeight('#div_card', -105);
         if (grid != null) {
-            setGridHeight(grid, -600);
+            setGridHeight(grid, -430);
         }
     });
-
+    
+	 $(document).on('filterToggled', function(e) {
+		 console.log(grid);
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -570);
+		    } else {
+		        setGridHeight(grid, -430);
+		    }
+		});
     const filterConfig = [{
             key: 'startDate',
-            label: '열람 시간 설정',
+            label: '열람 시간 시작일',
             type: 'daterangepicker',
             format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
             value: '2025-01-01 00:00' // 기본값 (예시)
         },
         {
             key: 'endDate',
-            label: '',
+            label: '열람 시간 종료일',
             type: 'daterangepicker',
             format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
             value: '2025-01-31 23:59' // 기본값 (예시)
@@ -230,8 +245,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (grid) {
-                setElementHeight('#div_card', -230);
-                setGridHeight(grid, -500);
+                setElementHeight('#div_card', -105);
+                setGridHeight(grid, -430);
             } else {
                 console.warn('Grid가 초기화되지 않았습니다.');
             }

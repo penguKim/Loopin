@@ -29,6 +29,14 @@
 		z-index: 9999 !important;
 		overflow: visible !important;
 	}
+	
+		.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
 </style>
 
 <body>
@@ -44,7 +52,7 @@
 			<div class="row">
 				<div class="col-lg-12">
 
-					<div class="card">
+					<div class="card" id="div_card">
 						<div class="card-body">
 							<h5 class="card-title">결재 현황</h5>
 
@@ -68,17 +76,12 @@
 								</div>
 							</div>
 
-
-							<div class="row mb-3">
-								<div class="col-sm-12">
+									
 									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
-								</div>
-								<div class="col-sm-12">
+									<br>
 									<button type="button" class="btn btn-primary" id="openApprovalModal">등록</button>
 									<button type="button" id="btn_approval_delete" class="btn btn-primary">삭제</button>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>
@@ -251,12 +254,103 @@
 		let select_APPROVAL_grid, approvalDatePicker, leaveDatePicker, employeeGrid, currentApproverField;
 		let grid;
 		const gridElement = document.getElementById('grid');
-
+		
+		$(window).resize(function() {
+		        setElementHeight('#div_card', -105);
+		        if (grid != null) {
+		            setGridHeight(grid, -480);
+		        }
+		    });
+		    
+			 $(document).on('filterToggled', function(e) {
+				 console.log(grid);
+				    if(e.detail.isVisible) {
+				        setGridHeight(grid, -620);
+				    } else {
+				        setGridHeight(grid, -480);
+				    }
+				});
+		
+		
 		// 데이터 가져오기 및 그리드 초기화
 		// 탭 버튼 클릭 시 데이터 로드
 		// 초기화: 마지막 활성 탭 또는 기본값 'receive'
 		const activeTab = localStorage.getItem('activeTab') || 'receive';
+		
+		    const filterConfig = [{
+		            key: 'startDate',
+		            label: '열람 시간 시작일',
+		            type: 'daterangepicker',
+		            format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+		            value: '2025-01-01 00:00' // 기본값 (예시)
+		        },
+		        {
+		            key: 'endDate',
+		            label: '열람 시간 종료일',
+		            type: 'daterangepicker',
+		            format: 'YYYY-MM-dd HH:mm', // 날짜-시간 포맷
+		            value: '2025-01-31 23:59' // 기본값 (예시)
+		        },
+		        {
+		            key: 'employee_id',
+		            label: '직원 ID',
+		            type: 'text',
+		            placeholder: '사용자 ID 입력',
+		            col: 'col-md-3'
+		        },
+		        {
+		            key: 'log_sj',
+		            label: '수행한 작업',
+		            type: 'text',
+		            placeholder: '작업명 입력',
+		            col: 'col-md-3'
+		        },
+		        {
+		            key: 'log_ju',
+		            label: '정보 유형',
+		            type: 'text',
+		            placeholder: '유형 입력',
+		            col: 'col-md-3'
+		        },
+		        {
+		            key: 'log_oi',
+		            label: 'IP 주소',
+		            type: 'text',
+		            placeholder: 'IP 입력',
+		            col: 'col-md-3'
+		        },
+		        {
+		            key: 'log_bj',
+		            label: '클라이언트 정보',
+		            type: 'text',
+		            placeholder: '클라이언트 정보 입력',
+		            col: 'col-md-3'
+		        },
+		    ];
+		
+		    // 필터 모듈 초기화
+		    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		        console.log('적용된 필터:', filterValues);
 
+		        // 필터 적용 후 서버 요청 및 Grid 갱신
+		        fetch('/select_FILTERED_LOG', {
+		                method: 'POST',
+		                headers: {
+		                    'Content-Type': 'application/json',
+		                    [csrfHeader]: csrfToken
+		                },
+		                body: JSON.stringify(filterValues)
+		            })
+		            .then(response => response.json())
+		            .then(filteredData => {
+		                console.log('필터링된 데이터:', filteredData);
+
+		                // Grid 데이터 갱신
+		                grid.resetData(filteredData);
+		            })
+		            .catch(error => console.error('필터 적용 오류:', error));
+		    });
+		
 		// 탭 버튼 이벤트 등록
 		$('#btn_approval_receive_tab').on('click', function () {
 			setActiveTab('receive');
@@ -300,6 +394,17 @@
 							scrollX: false,
 							scrollY: true,
 							rowHeaders: ['checkbox'],
+							summary: {
+							    height: 40,
+							    position: 'bottom', // or 'top'
+							    columnContent: {
+							        approval_av: {
+							            template: (valueMap) => {
+							                return `총  ${valueMap.cnt} 건`
+							            }
+							        }
+							    }
+							},
 							columns: [
 								{
 									header: '결재코드',
@@ -383,7 +488,13 @@
 								},
 							],
 						});
-
+						
+						if (grid) {
+					                setElementHeight('#div_card', -105);
+					                setGridHeight(grid, -480);
+					            } else {
+					                console.warn('Grid가 초기화되지 않았습니다.');
+					            }
 						// 탭별 클릭 이벤트 설정
 						if (tabType === 'send') {
 							// 발신함에서 수정 가능한 모달 열기
