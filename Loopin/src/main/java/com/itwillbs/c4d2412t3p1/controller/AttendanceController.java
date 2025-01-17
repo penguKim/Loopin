@@ -387,8 +387,9 @@ public class AttendanceController {
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			log.info("파람" + params);
-			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
-			
+			List<Map<String, Object>> list = attendanceService.select_calendar_ANNUAL(params);
+			Map<String, Object> data = new HashMap<>();
+			data.put("contents", list);
 			response.put("result", true);
 			response.put("data", data);
 			//response.put("holidayList", holidayList);

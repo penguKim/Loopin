@@ -42,7 +42,7 @@
 								    <span id="title_calendar" class="d-inline-block text-center mx-4 fs-4 fw-bold" style="min-width: 140px;"></span>
 								    <button type="button" class="btn btn-outline-secondary" id="btn_calendar_next">다음</button>
 								</div>
-								<div id="div_calendar" style="height: 700px;"></div>
+								<div id="div_calendar"></div>
 							</div>
 	
 							<!-- 왼쪽 2번째 중간 -->
@@ -187,12 +187,14 @@
 			getCalendarList();
 		});
 		
-		/*
-		setElementHeight('#div_card', -105);
+		
+		setElementHeight('.col-lg-8', -140);
+		setElementHeight('.col-lg-4', -140);
 		setElementHeight('#div_calendar', -320);
 		
 		$(window).resize(function() {
-			setElementHeight('#div_card', -105);
+			setElementHeight('.col-lg-8', -140);
+			setElementHeight('.col-lg-4', -140);
 			setElementHeight('#div_calendar', -320);
 			if(grid != null) {
 				setGridHeight(grid, -430);
@@ -206,7 +208,7 @@
 		        setGridHeight(grid, -430);
 		    }
 		});
-		*/ 
+		
 		
 	});
 	
