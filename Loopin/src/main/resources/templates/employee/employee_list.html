@@ -109,7 +109,7 @@
 									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
 										<option value="" disabled selected>부서장구분</option>
 										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
-								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+								                th:text="${dptype.common_cc == '0' ? '부서장' : '부서직원'}">
 										</option>
 									</select>
 								</div>
@@ -177,7 +177,7 @@
 									<select class="form-select" id="employee_us" name="employee_us" aria-label="부서장구분">
 									    <option value="" disabled selected>사용여부 구분</option>
 									    <option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
-									            th:text="${useyn.common_nm == 'true' ? '사용중' : '사용중지'}">
+									            th:text="${useyn.common_cc == '0' ? '사용중' : '사용중지'}">
 									    </option>
 									</select>
 
