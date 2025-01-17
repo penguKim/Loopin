@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
+
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,20 +30,26 @@ public interface LogRepository extends JpaRepository<Log, String> {
 	Long getNextSequenceValue();
 
 	@Query("""
-		    SELECT lo 
-		    FROM LOG lo 
-		    LEFT JOIN FETCH lo.employee em
-		""")
-		List<Log> findAllLogsWithEmployee();
+			    SELECT lo
+			    FROM LOG lo
+			    LEFT JOIN FETCH lo.employee em
+			    ORDER BY lo.log_od DESC
+			""")
+	List<Log> findAllLogsWithEmployee();
 
-	@Query("SELECT LO FROM LOG LO " + "LEFT JOIN FETCH LO.employee EM " + // EMPLOYEE 테이블과 조인
-			"WHERE " + "(:#{#filterRequest.startDate} IS NULL OR LO.log_od >= :#{#filterRequest.startDate}) AND "
-			+ "(:#{#filterRequest.endDate} IS NULL OR LO.log_od <= :#{#filterRequest.endDate}) AND "
-			+ "(:#{#filterRequest.employee_id} IS NULL OR EM.employee_id = :#{#filterRequest.employee_id}) AND "
-			+ "(:#{#filterRequest.log_sj} IS NULL OR LO.log_sj LIKE CONCAT('%', :#{#filterRequest.log_sj}, '%')) AND "
-			+ "(:#{#filterRequest.log_ju} IS NULL OR LO.log_ju = :#{#filterRequest.log_ju}) AND "
-			+ "(:#{#filterRequest.log_oi} IS NULL OR LO.log_oi = :#{#filterRequest.log_oi}) AND "
-			+ "(:#{#filterRequest.log_bj} IS NULL OR LO.log_bj = :#{#filterRequest.log_bj})")
+	@Query("""
+			    SELECT LO
+			    FROM LOG LO
+			    LEFT JOIN FETCH LO.employee EM
+			    WHERE (:#{#filterRequest.startDate} IS NULL OR LO.log_od >= :#{#filterRequest.startDate}) AND
+			          (:#{#filterRequest.endDate} IS NULL OR LO.log_od <= :#{#filterRequest.endDate}) AND
+			          (:#{#filterRequest.employee_id} IS NULL OR EM.employee_id = :#{#filterRequest.employee_id}) AND
+			          (:#{#filterRequest.log_sj} IS NULL OR LO.log_sj LIKE CONCAT('%', :#{#filterRequest.log_sj}, '%')) AND
+			          (:#{#filterRequest.log_ju} IS NULL OR LO.log_ju = :#{#filterRequest.log_ju}) AND
+			          (:#{#filterRequest.log_oi} IS NULL OR LO.log_oi = :#{#filterRequest.log_oi}) AND
+			          (:#{#filterRequest.log_bj} IS NULL OR LO.log_bj = :#{#filterRequest.log_bj})
+			    ORDER BY LO.log_od DESC
+			""")
 	List<Log> findLogsByFilter(@Param("filterRequest") FilterRequest.LogFilterRequest filterRequest);
 
 	@Query(value = "SELECT e.employee_id FROM EMPLOYEE e WHERE e.employee_cd = :employee_cd", nativeQuery = true)

@@ -1,18 +1,12 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+
 import java.util.List;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
-import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
@@ -76,15 +70,15 @@ public class ApprovalService {
     }
 	
     
-    // 직원 삭제
+    // 결재 삭제
 	public void delete_APPROVAL(List<String> cds) {
 		approvalRepository.deleteAllById(cds);
 		
 	}
 
 	// 기안서 구분 데이터 조회
-	public List<Common_code> selectDRAFTList(String string) {
-		return commonRepository.selectDRAFTList("00", string);
+	public List<Common_code> selectCommonList(String string) {
+		return commonRepository.selectCommonList("00", string);
 	}
 	
 	
@@ -92,5 +86,23 @@ public class ApprovalService {
 	public List<Approval> findByApprovalCd(String currentCd) {
 		return approvalRepository.findByApprovalCd(currentCd);
 	}
+	
+	
+	public List<Employee> getFirstApproverList(String employee_gd) {
+        return approvalRepository.findFirstApprovers(employee_gd);
+    }
+
+    public List<Employee> getSecondApproverList(String approval_fa) {
+        return approvalRepository.findSecondApprovers(approval_fa);
+    }
+	
+	
+	
+	
+	
+//    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {
+//    	return approvalRepository.select_FILTERED_APPROVAL(filterRequest);
+//    }
+	
 	
 }
