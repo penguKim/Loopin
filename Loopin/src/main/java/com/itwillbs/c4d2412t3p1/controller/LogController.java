@@ -33,6 +33,7 @@ public class LogController {
 	public String log_list() {
 		
 		
+		
 		return "/log/log_list";
 	}
 	
