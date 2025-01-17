@@ -62,7 +62,7 @@ public class EmployeeService {
         // 파일 저장 처리
         if (employee_pi != null && !employee_pi.isEmpty()) {
             fileName = employee_pi.getOriginalFilename();
-            Path uploadPath = Paths.get("uploads/" + fileName);
+            Path uploadPath = Paths.get("upload/" + fileName);
         
              // 디렉토리 생성 (존재하지 않을 경우)
 	        if (!Files.exists(uploadPath.getParent())) {

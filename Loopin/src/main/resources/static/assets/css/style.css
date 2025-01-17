@@ -6,6 +6,10 @@
 * License: https://bootstrapmade.com/license/
 */
 
+* {
+  font-family: "Noto Sans KR", serif !important;
+}
+
 #gridOnespe {
     height: 400px; /* 그리드 높이 설정 */
     width: 100%; /* 부모 요소 크기에 맞게 너비 조정 */
