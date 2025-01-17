@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -88,7 +89,10 @@ public class CommuteService {
 		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin);
 	}
 	
-	
+	// 근로시간 조회
+	public CommuteDTO selcet_COMMUTE_time(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
+		return commuteMapper.selcet_COMMUTE_time(filter, employee_cd, isAdmin);
+	}
 
 	// 근로관리 그리드 조회
 	public List<WorkinghourDTO> select_WORKINGHOUR() {
@@ -261,13 +265,22 @@ public class CommuteService {
 		}
 	}
 	
+	
+	// 출퇴근 현황 --------------------------------------------
+
+	// 현황 그리드 조회
+	public List<CommuteDTO> select_COMMUTE_timeList(CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_timeList(filter);
+	}
+	
+	
 	// 서비스에서 사용 -----------------------------------------------------
 	
 	// 근로 요일은 일반근무, 연장근무, 야간근무
 	// 주휴요일은 휴일근무
 	// 근로, 주휴가 아니면 주말근무
 	// 공휴일은 휴일근무
-	// 연장근무 하루 8시간 5일이면 40시간
+	// 일반근무 하루 8시간 5일이면 40시간
 	// 주 40시간보다 이상이면 연장근무, 남아서 야근하면 야근수당
 	// 야간근무 -> 오후 10시 ~ 오전 6시
 	// 사원 근무 기록 등록
@@ -386,7 +399,15 @@ public class CommuteService {
 
 
 
-
+	
+	
+	
+	
+	
+	
+	
+	// ------------------ 공통으로 뺄것들 -------------------
+	
 	public EmployeeDetails getEmployee() {
 		return (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	}
@@ -420,10 +441,22 @@ public class CommuteService {
 	    return true;
 	}
 
-	// 근로시간 조회
-	public CommuteDTO selcet_COMMUTE_time(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
-		return commuteMapper.selcet_COMMUTE_time(filter, employee_cd, isAdmin);
+	// 출퇴근 차트
+	public List<CommuteDTO> select_COMMUTE_commuteChart(CommuteFilterRequest filter) {
+		System.out.println("---------------------서비스");
+
+		return commuteMapper.select_COMMUTE_commuteChart(filter);
 	}
+	
+	public Map<String, Object> createSeriesData(String name, Function<CommuteDTO, Object> mapper, List<CommuteDTO> data) {
+	    Map<String, Object> series = new HashMap<>();
+	    series.put("name", name);
+	    series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
+	    return series;
+	}
+
+
+
 
 
 

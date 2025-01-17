@@ -195,6 +195,16 @@
 				setGridHeight(grid, -430);
 			}
 			getGridList();
+			
+		    if($('#btn_excel_download').length === 0) {
+		        $('#resetFilter').before(
+		        		'<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀">'
+		        		);
+		        
+		        $('#btn_excel_download').on('click', function() {
+		        	gridExcelDownload(grid, '출퇴근기록');
+		        });
+		    }
 		});
 		
 		

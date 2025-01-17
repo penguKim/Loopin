@@ -11,11 +11,11 @@ function showAlert(element, icon, title, msg) {
 	    icon: icon,
 	    title: title,
 	    html: msg,
+	}).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
 	});
-	
-	if(element != '') {
-		element.focus();
-	}
 	
 }
 
@@ -35,11 +35,11 @@ function showToast(element, icon, title, msg) {
         html: msg,
         showConfirmButton: false,
         timer: 1500,
-    });
-	
-	if(element != '') {
-		element.focus();
-	}
+    }).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
+	});
 }
 
 /**
@@ -263,6 +263,58 @@ function createSelectBox(el, list, title) {
 
     list.forEach(data => {
         selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+    });
+}
+
+/**
+ * 그리드 -> 엑셀 다운로드
+ * @param {*} grid 그리드 겍체
+ * @param {String} title 엑셀 파일명
+ */
+function gridExcelDownload(grid, title) {
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+    const headers = grid.getColumns();
+    const rows = grid.getData();
+    
+    const data = {
+        headers: headers,
+        rows: rows,
+        title: title
+    };
+    
+    $.ajax({
+        type: 'post',
+        url: '/excelDownload',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        xhrFields: {
+            responseType: 'blob'
+        },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader(header, token);
+        },
+        success: function(blob) {
+            const file = new Blob([blob], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            
+            const url = window.URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = title + '.xlsx';
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            console.error('엑셀 다운로드 실패:', errorThrown);
+        }
     });
 }
 
