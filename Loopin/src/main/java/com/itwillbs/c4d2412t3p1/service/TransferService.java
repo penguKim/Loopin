@@ -37,11 +37,9 @@ public class TransferService {
 		if ("SYS_ADMIN".equals(role) || "HR_ADMIN".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
-		} else if ("employee".equals(role)) {
+		} else {
 			// 본인 데이터만 조회
 			result = transferRepository.findAllWithDetailsByEmployeeCd(employee_cd);
-		} else {
-			throw new IllegalArgumentException("Invalid role: " + role);
 		}
 
 		return result.stream().map(row -> {
@@ -111,21 +109,39 @@ public class TransferService {
 	}
 
 	@Transactional
-	public void handleTransferInsert(TransferDTO transferDTO) {
+	public Map<String, Object> handleTransferInsert(TransferDTO transferDTO) {
 		// TRANSFER INSERT 작업
 		insert_TRANSFER(transferDTO);
 
 		// 오늘 날짜 확인 및 추가 작업
 		processTransferIfToday(transferDTO);
+
+		Map<String, Object> updatedData = transferRepository.selectTransferById(transferDTO.getTransfer_id());
+
+		if (updatedData == null) {
+			throw new RuntimeException("변경된 데이터를 조회할 수 없습니다.");
+		}
+
+		// 4. 조회된 데이터 반환
+		return updatedData;
 	}
 
 	@Transactional
-	public void handleTransferUpdate(TransferDTO transferDTO) {
+	public Map<String, Object> handleTransferUpdate(TransferDTO transferDTO) {
 		// 1. 데이터 업데이트 처리
 		update_TRANSFER(transferDTO);
 
 		// 2. 오늘 날짜 확인 및 추가 작업
 		processTransferIfToday(transferDTO);
+		
+	    // 3. 업데이트된 데이터 조회
+	    Map<String, Object> updatedData = transferRepository.selectTransferById(transferDTO.getTransfer_id());
+
+	    if (updatedData == null) {
+	        throw new RuntimeException("변경된 데이터를 조회할 수 없습니다.");
+	    }
+
+	    return updatedData;
 	}
 
 	@Transactional
