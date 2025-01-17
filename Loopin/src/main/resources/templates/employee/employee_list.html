@@ -109,7 +109,7 @@
 									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
 										<option value="" disabled selected>부서장구분</option>
 										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
-								                th:text="${dptype.common_cc == '0' ? '부서장' : '부서직원'}">
+								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
 										</option>
 									</select>
 								</div>
@@ -1175,7 +1175,7 @@
 			
 			//  employee_mg 값 처리 (부서장/부서직원)
 			let employeeMgValue = $('#employee_mg').val();
-			const finalEmployeeMgValue = (employeeMgValue === "부서장" || employeeMgValue === "1") ? true : false;
+			const finalEmployeeMgValue = (employeeMgValue === "부서장" || employeeMgValue === "true") ? true : false;
 
 			//  employee_us 값 처리 (사용중/사용중지)
 			let employeeUsValue = $('#employee_us').val();
