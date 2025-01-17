@@ -61,18 +61,20 @@ public class EmployeeService {
         
         // 파일 저장 처리
         if (employee_pi != null && !employee_pi.isEmpty()) {
-            fileName = employee_pi.getOriginalFilename();
-            Path uploadPath = Paths.get("uploads/" + fileName);
+        	fileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
+            Path path = Paths.get(uploadDir, fileName);
         
-             // 디렉토리 생성 (존재하지 않을 경우)
-	        if (!Files.exists(uploadPath.getParent())) {
-	            Files.createDirectories(uploadPath.getParent());
+	        // 업로드 디렉터리 생성
+	        if (!Files.exists(path.getParent())) {
+	        	Files.createDirectories(path.getParent());
 	        }
 	        
 	        // 파일 저장
-	        Files.copy(employee_pi.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
+	        Files.copy(employee_pi.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 	        
         }
+        
+        
         
         // 시퀀스 값 가져오기
         Long sequenceValue = EmployeeRepository.getNextSequenceValue();
