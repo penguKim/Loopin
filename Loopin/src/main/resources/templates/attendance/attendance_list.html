@@ -37,7 +37,7 @@
 				<div class="col-lg-12">
 					<div class="card" id="div_card" style="min-height: 400px;">
 						<div class="card-body">
-							<h1 class="card-title">휴가조회</h1>
+							<h1 class="card-title">휴가현황</h1>
 							<!-- 탭 헤드 -->
 							<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
 								<li class="nav-item" role="presentation">
@@ -323,7 +323,7 @@
 					    if (isAdmin) {
 					        return {
 					            id: `${annual.GENERATED_DATE}`,
-					            title: `휴가인원 ${annual.RECORD_COUNT}명`,
+					            title: `${annual.EMPLOYEE_NM} ${annual.ANNUALTYPE}`,
 					            start: annual.GENERATED_DATE,
 					            end: annual.GENERATED_DATE,
 					            isAllday: true,
@@ -397,7 +397,6 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 400,
 			columns : [
@@ -405,7 +404,7 @@
 				{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text'}, 
 				{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'select'}, 
 				{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'select'}, 
-				{header : '사용연차', name : 'USED_ANNUAL', sortable : true, align: 'center'},
+				{header : '사용연차', name : 'ANNUAL_UA', sortable : true, align: 'center'},
 				{header : '잔여연차', name : 'REMAINING_ANNUAL', sortable : true, align: 'center'},
 				{header : '총연차', name : 'TOTAL_ANNUAL', sortable : true, filter: 'select'},
 			],
@@ -422,10 +421,6 @@
 			},
 		});
 		
-		grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			make_insert_COMMUTE_modal(row['commute_wd'], row, 'grid');
-		});
 	}
 
 	// 달력 상세 모달
@@ -487,7 +482,6 @@
 	
 	// 달력 상세 모달의 그리드
 	function make_modal_grid(date) {
-		debugger;
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
 			data : {api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {date: date} }}},
