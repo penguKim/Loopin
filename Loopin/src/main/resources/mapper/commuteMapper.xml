@@ -26,7 +26,7 @@
 	    <if test="filter.commute_wt != null and filter.commute_wt != ''">AND CM.COMMUTE_WT<![CDATA[ >= ]]>#{filter.commute_wt}</if>
 	    <if test="filter.commute_lt != null and filter.commute_lt != ''">AND CM.COMMUTE_LT<![CDATA[ <= ]]>#{filter.commute_lt}</if>
 	    AND COMMUTE_WD BETWEEN TO_DATE(#{filter.startDate}, 'YYYY-MM-DD') AND TO_DATE(#{filter.endDate}, 'YYYY-MM-DD')
-	    ORDER BY CM.COMMUTE_WD DESC
+	    ORDER BY CM.COMMUTE_WD DESC, CM.COMMUTE_WT ASC
 	</select>
 	
 	<!-- 출퇴근 상세 조회 -->
@@ -57,6 +57,7 @@
 		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
 		WHERE CM.EMPLOYEE_CD IS NULL
 		AND EM.WORKINGHOUR_ID IS NOT NULL
+		ORDER BY EM.EMPLOYEE_NM
 	</select>
 	
 	<!-- 출퇴근 캘린더 조회 -->
@@ -130,7 +131,47 @@
 		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
 	</update>
 	
+<!-- //////////////////////////////////////////////////////////// 출퇴근 현황 //////////////////////////////////////////////////////////// -->
 	
+	<select id="select_COMMUTE_timeList" resultType="Commute">
+		SELECT CM.EMPLOYEE_CD, CM.WORKINGHOUR_ID, CM.COMMUTE_WD, CM.COMMUTE_WT, CM.COMMUTE_LD, 
+			CM.COMMUTE_LT, CM.COMMUTE_RU, CM.COMMUTE_RD, CM.COMMUTE_UU, CM.COMMUTE_UD, CM.COMMUTE_PR,
+			EM.EMPLOYEE_NM, CC.COMMON_NM EMPLOYEE_DP, CC2.COMMON_NM EMPLOYEE_GD,
+		   (SELECT CC.COMMON_NM FROM COMMON_CODE CC 
+		     WHERE CC.COMMON_GC = 'ATDC' AND CC.COMMON_CC = 
+		      CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 'LATE'
+		           ELSE 'NORMAL' END) AS COMMUTE_ST,
+		    NVL(CM.COMMUTE_EG, 0) AS COMMUTE_EG,
+		    NVL(CM.COMMUTE_HG, 0) AS COMMUTE_HG,
+		    NVL(CM.COMMUTE_IG, 0) AS COMMUTE_IG,
+		    NVL(CM.COMMUTE_JG, 0) AS COMMUTE_JG,
+		    NVL(CM.COMMUTE_YG, 0) AS COMMUTE_YG
+		FROM COMMUTE CM
+		LEFT OUTER JOIN EMPLOYEE EM ON EM.EMPLOYEE_CD = CM.EMPLOYEE_CD
+		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
+		LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'DEPARTMENT' AND CC.COMMON_CC = EM.EMPLOYEE_DP
+		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
+		WHERE COMMUTE_WD BETWEEN #{filter.startDate} AND #{filter.endDate}
+		ORDER BY CM.COMMUTE_WD DESC, CM.COMMUTE_WT ASC
+	</select>
 	
+	<!-- 일자별 근로시간 차트 -->
+	<select id="select_COMMUTE_commuteChart" resultType="Commute">
+		WITH DATEDABLE AS (
+		  SELECT TO_CHAR(TO_DATE(#{filter.startDate}) + LEVEL - 1, 'YYYY-MM-DD') COMMUTE_WD
+		  FROM dual 
+		  CONNECT BY LEVEL &lt;= (TO_DATE(#{filter.endDate}, 'YYYY-MM-DD') - TO_DATE(#{filter.startDate}, 'YYYY-MM-DD') + 1)
+		)
+		SELECT DT.COMMUTE_WD,
+		  NVL(SUM(CM.COMMUTE_IG), 0) AS COMMUTE_IG,
+		  NVL(SUM(CM.COMMUTE_EG), 0) AS COMMUTE_EG,
+		  NVL(SUM(CM.COMMUTE_YG), 0) AS COMMUTE_YG,
+		  NVL(SUM(CM.COMMUTE_JG), 0) AS COMMUTE_JG,
+		  NVL(SUM(CM.COMMUTE_HG), 0) AS COMMUTE_HG
+		FROM DATEDABLE DT
+		LEFT JOIN COMMUTE CM ON DT.COMMUTE_WD = CM.COMMUTE_WD
+		GROUP BY DT.COMMUTE_WD
+		ORDER BY DT.COMMUTE_WD
+	</select>
 	
 </mapper>

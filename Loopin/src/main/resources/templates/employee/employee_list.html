@@ -78,7 +78,7 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">아이디<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_id" name="employee_id" minlength="4" maxlength="16" placeholder="4자 이상, 16자 이하 입력">
+									<input type="text" class="form-control" id="employee_id" name="employee_id" minlength="4" maxlength="16" oninput="validateId(this)" placeholder="4자 이상, 16자 이하 입력">
 									<span id="employee_id_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">비밀번호<span class="text-danger"> *</span></label>
@@ -91,7 +91,8 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">사원명<span class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="employee_nm" name="employee_nm"  minlength="3" maxlength="16">
+									<input type="text" class="form-control" id="employee_nm" name="employee_nm" oninput="validateEmployeeName(this)" minlength="3" maxlength="16">
+									<span id="employee_nm_check"></span> <!-- 피드백 메시지 표시 -->
 								</div>
 								<label for="inputText" class="col-sm-2 col-form-label">채용구분</label>
 								<div class="col-sm-4">
@@ -108,7 +109,7 @@
 									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
 										<option value="" disabled selected>부서장구분</option>
 										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
-								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+								                th:text="${dptype.common_cc == '0' ? '부서장' : '부서직원'}">
 										</option>
 									</select>
 								</div>
@@ -174,11 +175,12 @@
 							    <label for="inputText" class="col-sm-2 col-form-label">사용여부</label>
 								<div class="col-sm-4">
 									<select class="form-select" id="employee_us" name="employee_us" aria-label="부서장구분">
-										<option value="" disabled selected>사용여부 구분</option>
-										<option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
-								                th:text="${useyn.common_nm == 'true' ? '사용중' : '사용중지'}">
-										</option>
+									    <option value="" disabled selected>사용여부 구분</option>
+									    <option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
+									            th:text="${useyn.common_cc == '0' ? '사용중' : '사용중지'}">
+									    </option>
 									</select>
+
 								</div>
 							</div>
 							<div class="row mb-3">
@@ -471,6 +473,46 @@
 	$('#custom_domain').on('input', updateFullEmail);
 	
 	
+	// 한글입력불가 
+	function validateId(input) {
+	    // 한글을 감지하는 정규식: 한글 범위에 해당하는 문자
+	    const koreanRegex = /[ㄱ-ㅎㅏ-ㅣ가-힣]/g;
+
+	    // 입력값에서 한글이 포함되었는지 확인
+	    if (koreanRegex.test(input.value)) {
+	        // 한글 제거
+	        input.value = input.value.replace(koreanRegex, '');
+	        
+	        // 피드백 메시지 표시
+	        const feedback = document.getElementById('employee_id_check');
+	        feedback.textContent = "아이디에는 한글을 입력할 수 없습니다.";
+	        feedback.style.color = "red";
+	    } else {
+	        // 피드백 메시지 제거
+	        document.getElementById('employee_id_check').textContent = '';
+	    }
+	}
+	
+	function validateEmployeeName(input) {
+	    // 영문을 감지하는 정규식: 영문 범위에 해당하는 문자
+	    const englishRegex = /[a-zA-Z]/g;
+
+	    // 입력값에서 영문이 포함되었는지 확인
+	    if (englishRegex.test(input.value)) {
+	        // 영문 제거
+	        input.value = input.value.replace(englishRegex, '');
+	        
+	        // 피드백 메시지 표시
+	        const feedback = document.getElementById('employee_nm_check');
+	        feedback.textContent = "사원명에는 영문을 입력할 수 없습니다.";
+	        feedback.style.color = "red";
+	    } else {
+	        // 피드백 메시지 제거
+	        document.getElementById('employee_nm_check').textContent = '';
+	    }
+	}
+	
+	
 	
 </script>
 
@@ -603,6 +645,7 @@
         			},
 	                columns: [
 						{ header: '사원코드', name: 'employee_cd', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
+						{ header: '사원아이디', name: 'employee_id',  align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '사원명', name: 'employee_nm', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						{ header: '부서', name: 'employee_dp', align: 'center', filter: {type: 'select'}, sortable: true },
 						{ header: '직위', name: 'employee_gd', align: 'center', filter: {type: 'select'}, sortable: true },
@@ -613,7 +656,6 @@
 						{ header: '이메일', name: 'employee_em', align: 'center', filter: {type: 'text', showApplyBtn: true}, sortable: true },
 						
 						// 숨김 컬럼
-						{ header: '사원아이디', name: 'employee_id', hidden: true },
 						{ header: '패스워드', name: 'employee_pw', hidden: true },
 						{ header: '성별', name: 'employee_sb', hidden: true },
 						{ header: '채용구분', name: 'employee_cg', hidden: true },
@@ -648,9 +690,7 @@
 					}
 					
 
-				    if (columnName === 'employee_cd' || columnName === 'employee_nm') {
-				        openEditModal(rowData); // 수정 모드로 모달 열기
-				    }
+			        openEditModal(rowData); // 수정 모드로 모달 열기
 				});
 				
 				setGridHeight(grid, -476);
@@ -1133,6 +1173,17 @@
 		$('#appointment_form').off('submit').on('submit', function (event) {
 		    event.preventDefault();
 
+			
+			//  employee_mg 값 처리 (부서장/부서직원)
+			let employeeMgValue = $('#employee_mg').val();
+			const finalEmployeeMgValue = (employeeMgValue === "부서장" || employeeMgValue === "1") ? true : false;
+
+			//  employee_us 값 처리 (사용중/사용중지)
+			let employeeUsValue = $('#employee_us').val();
+			const finalEmployeeUsValue = (employeeUsValue === "사용중" || employeeUsValue === "1") ? false : true;
+
+
+			
 		    let employee_pw = $('#employee_pw').val().trim(); // 패스워드 필드 값 가져오기
 
 		    // 패스워드가 비어있으면 employee_pw를 빈 문자열로 설정
@@ -1171,8 +1222,8 @@
 		        employee_mf: $('#employee_mf').val(),
 		        employee_md: $('#employee_md').val(),
 		        employee_rl: $('#employee_rl').val(),
-		        employee_mg: $('#employee_mg').val(),
-		        employee_us: $('#employee_us').val(),
+		        employee_mg: finalEmployeeMgValue,
+		        employee_us: finalEmployeeUsValue,
 		        photoDeleted: $('#photoDeleted').val() // 사진 삭제 여부 추가
 		    };
 
@@ -1219,37 +1270,62 @@
 		
 		
 
-		
+		// 폼 제출 시 필수값 체크
+		$('#modal_submit_button').click(function(event) {
+		    if (!validateForm()) {
+		        event.preventDefault(); // 폼 제출을 막음
+		    }
+		});
 
-        });
+		// 필수값 검증 함수
+		function validateForm() {
+		    let isValid = true;
+
+		    // 필수값 필드 목록
+		    const requiredFields = [
+		        { id: '#employee_id', message: '아이디를 입력해주세요.' },
+		        { id: '#employee_nm', message: '사원명을 입력해주세요.' },
+		        { id: '#employee_hd', message: '입사일을 입력해주세요.' }
+		    ];
+
+		    // 각 필드가 비어있는지 체크
+		    $.each(requiredFields, function(index, field) {
+		        const inputElement = $(field.id);
+		        if (inputElement.val().trim() === '') {
+		            // Swal.fire로 오류 메시지 표시
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: field.message,
+		                confirmButtonText: '확인'
+		            });
+		            inputElement.focus(); // 해당 필드에 포커스 설정
+		            isValid = false;
+		            return false; // $.each 반복문 중단
+		        }
+		    });
+
+		    // 비밀번호 필드가 활성화된 경우 검증
+		    const passwordField = $('#employee_pw');
+		    if (!passwordField.prop('disabled') && passwordField.val().trim() === '') {
+		        Swal.fire({
+		            icon: 'error',
+		            title: '오류 발생!',
+		            text: '비밀번호를 입력해주세요.',
+		            confirmButtonText: '확인'
+		        });
+		        passwordField.focus(); // 비밀번호 필드에 포커스 설정
+		        isValid = false;
+		    }
+
+		    return isValid;
+		}
+
+    });
 	
 	
 	
-    // 필터 모듈 초기화
-//     initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-//         console.log('적용된 필터:', filterValues);
-
-//         // 필터 적용 후 서버 요청 및 그리드 갱신
-//         fetch('/select_FILTERED_EMPLOYEE', {
-//             method: 'POST',
-//             headers: {
-//                 'Content-Type': 'application/json',
-//                 [csrfHeader]: csrfToken,
-//             },
-//             body: JSON.stringify(filterValues),
-//         })
-//             .then(response => response.json())
-//             .then(filteredData => {
-//                 console.log('필터링된 데이터:', filteredData);
-
-//                 if (grid) {
-//                     grid.resetData(filteredData);
-//                 } else {
-//                     initializeGrid(filteredData); // 그리드 초기화
-//                 }
-//             })
-//             .catch(error => console.error('필터 적용 오류:', error));
-//     });
-		
+	
+	
 </script>
 </html>
