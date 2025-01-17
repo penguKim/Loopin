@@ -33,6 +33,6 @@ public interface PRMapper {
 
 	String isCal(String premth);
 
-	List<Map<String, Object>> select_spes(String premth);
+	List<Employee> select_spes(String premth);
 
 }

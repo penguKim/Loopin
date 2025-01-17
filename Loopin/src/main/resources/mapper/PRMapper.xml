@@ -26,7 +26,7 @@
 			PRDETAIL.prdetail_na, 
 			PRDETAIL.prdetail_wa, 
 			PRDETAIL.prdetail_ha, 
-			PRDETAIL.prdetail_aa,
+			PRDETAIL.prdetail_rl,
 			PRDETAIL.prdetail_bn, 
 			PRDETAIL.prdetail_td, 
 			PRDETAIL.prdetail_gm, 
@@ -51,6 +51,7 @@
 	<select id="selectpradminfirstmodal" resultType="map">
 		SELECT
 			PRDETAIL.employee_cd, 
+			PRDETAIL.employee_nm, 
 			PRDETAIL.prdetail_bs, 
 			PRDETAIL.prdetail_ta,
 			PRDETAIL.prdetail_td, 
@@ -63,6 +64,7 @@
 
 	<select id="selectpradminfirstmodal2" resultType="map">
 		SELECT 
+			PRDETAIL.employee_nm,
 			PRDETAIL.prdetail_rs, 
 			PRDETAIL.prdetail_ta, 
 			PRDETAIL.prdetail_bs, 
@@ -71,7 +73,7 @@
 			PRDETAIL.prdetail_na,
 			PRDETAIL.prdetail_wa, 
 			PRDETAIL.prdetail_ha, 
-			PRDETAIL.prdetail_aa,
+			PRDETAIL.prdetail_rl,
 			PRDETAIL.prdetail_bn, 
 			PRDETAIL.prdetail_td, 
 			PRDETAIL.prdetail_gm, 
@@ -111,17 +113,17 @@
         ]]>
     </select>
 
-	<select id="isCal" resultType="map">
+	<select id="isCal" resultType="String">
 		SELECT pr_wm
 		FROM PR
 		WHERE pr_wm = #{premth}
 	</select>
 	
 	<select id="select_spes" resultType="map">
-		SELECT pd.*
-		FROM PRDETAIL pd
-		JOIN PR p ON pd.pr_id = p.pr_id
-		WHERE p.pr_wd = #{premth}
+		SELECT pd.* 
+		FROM PRDETAIL pd 
+		JOIN PR p ON pd.pr_id = p.pr_id 
+		WHERE p.pr_wm LIKE #{premth}
 	</select>
 	
 	<select id="select_wokringtimeformth" parameterType="map" resultType="map">

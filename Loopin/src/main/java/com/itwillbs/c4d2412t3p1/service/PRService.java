@@ -252,18 +252,20 @@ public class PRService {
 	    }
 	}
 
-	public List<Employee> select_empworklastmth() {
-		List<Employee> list = prM.select_empworklastmth();
-
-		return list;
+	public List<Employee> select_empworklastmth(String premth) {
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@premth: "+premth);
+		String iscal = prM.isCal(premth);
+		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@iscal: "+iscal);
+		if(iscal != null && iscal.equals(premth)) {
+			return prM.select_spes(premth);
+		}else {
+			List<Employee> list = prM.select_empworklastmth();
+			return list;
+		}
 	}
 
 	public List<Map<String, Object>> select_worktimelastmth(List<String> emp_cdlist, String premth) {
 		
-		String iscal = prM.isCal(premth);
-		if(iscal.equals(premth)) {
-			return prM.select_spes(premth);
-		}else {
 			String[] presep = premth.split("-");
 			String year = presep[0];
 			
@@ -301,8 +303,6 @@ public class PRService {
 			}else {
 				return prM.select_wokringtimeformth(emp_cdlist);
 			}
-		}
-		
 	}
 
 	public int update_commutepr() {

@@ -7,6 +7,7 @@
 <main id="main" class="main">
 	<div class="card">
 		<div class="card-body">
+			<div class="card-title"> 급여 이력 조회</div>
 			<div id="gridbase"></div>
 		</div>
 	</div>
@@ -14,7 +15,18 @@
 <!-- Toast UI grid JS File -->
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
-
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped');
+	
+	function formatCurrency(value) {
+		  if (value && typeof value === 'object' && value.amount !== undefined) {
+		    return value.amount.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });  // 객체의 'amount' 속성에 쉼표 추가
+		  } else if (typeof value === 'number') {
+		    return value.toLocaleString('ko-KR',{ style: 'currency', currency: 'KRW' });  // 숫자에 대해서도 쉼표 추가
+		  }
+		  return value;  // 객체나 숫자가 아니면 원래 값 그대로 반환
+		}
+	
 	  ///////////////
 	 // 그리드 AJAX //
 	////////////////
@@ -29,6 +41,8 @@
 			const basedata = data.map((item, index) => ({
 				...item,
 				NUM : data.length - index,
+				PR_TA : formatCurrency(item.PR_TA),
+				PR_TD : formatCurrency(item.PR_TD),
 			}));
 			gridbase.resetData(basedata);
 		},
@@ -49,11 +63,11 @@
 		scrollY: true,
 		bodyHeight : 665,
 		columns: [
-			{header: 'NO.', name: 'NUM'},
-			{header: '지급년월', name: 'PR_GM'},
-			{header: '귀속년월', name: 'PR_WM'},
-			{header: '지급총액', name: 'PR_TA'},
-			{header: '공제총액', name: 'PR_TD'},
+			{header: 'NO.', name: 'NUM', align: 'center'},
+			{header: '지급년월', name: 'PR_GM', align: 'center'},
+			{header: '귀속년월', name: 'PR_WM', align: 'center'},
+			{header: '지급총액', name: 'PR_TA', align: 'right'},
+			{header: '공제총액', name: 'PR_TD', align: 'right'},
 			{
 				header: '명세서',
 				name: 'details',
@@ -81,7 +95,7 @@
     				{
     					header : '지급액',
     					name : 'PAY',
-    					childNames: ['PRDETAIL_BS','PRDETAIL_MT','PRDETAIL_OT','PRDETAIL_NA','PRDETAIL_WA','PRDETAIL_HA','PRDETAIL_AA','PRDETAIL_BN']
+    					childNames: ['PRDETAIL_BS','PRDETAIL_MT','PRDETAIL_OT','PRDETAIL_NA','PRDETAIL_WA','PRDETAIL_HA','PRDETAIL_RL','PRDETAIL_BN']
     				}, 
     				{
     					header : '공제액',
@@ -99,73 +113,93 @@
             columns: [
             	{
 					header : '사원번호',
-					name : 'EMPLOYEE_CD'
+					name : 'EMPLOYEE_CD',
+					align: 'center',
 				}, 
 				{
 					header : '사원명',
-					name : 'EMPLOYEE_NM'
+					name : 'EMPLOYEE_NM',
+					align: 'center',
 				}, 
 				{
 					header : '실지급액',
-					name : 'PRDETAIL_RS'
+					name : 'PRDETAIL_RS',
+					align: 'right',
 				}, 
 				{
 					header : '총지급액',
-					name : 'PRDETAIL_TA'
+					name : 'PRDETAIL_TA',
+					align: 'right',
 				}, 
 				{
 					header : '기본급',
-					name : 'PRDETAIL_BS'
+					name : 'PRDETAIL_BS',
+					align: 'right',
 				}, 
 				{
 					header : '식대',
-					name : 'PRDETAIL_MT'
+					name : 'PRDETAIL_MT',
+					align: 'right',
 				}, 
 				{
 					header : '연장수당',
-					name : 'PRDETAIL_OT'
+					name : 'PRDETAIL_OT',
+					align: 'right',
 				}, 
 				{
 					header : '야근수당',
-					name : 'PRDETAIL_NA'
+					name : 'PRDETAIL_NA',
+					align: 'right',
 				}, 
 				{
 					header : '주말근무수당',
-					name : 'PRDETAIL_WA'
+					name : 'PRDETAIL_WA',
+					align: 'right',
 				}, 
 				{
 					header : '휴일수당',
-					name : 'PRDETAIL_HA'
+					name : 'PRDETAIL_HA',
+					align: 'right',
 				}, 
 				{
 					header : '연차수당',
-					name : 'PRDETAIL_AA'
+					name : 'PRDETAIL_RL',
+					align: 'right',
 				}, 
 				{
 					header : '상여',
-					name : 'PRDETAIL_BN'
+					name : 'PRDETAIL_BN',
+					align: 'right',
 				}, 
 				{
 					header : '총공제액',
-					name : 'PRDETAIL_TD'
+					name : 'PRDETAIL_TD',
+					align: 'right',
 				}, 
 				{
 					header : '국민연금',
-					name : 'PRDETAIL_GM'
+					name : 'PRDETAIL_GM',
+					align: 'right',
 				}, 
 				{
 					header : '고용보험',
-					name : 'PRDETAIL_GY'
+					name : 'PRDETAIL_GY',
+					align: 'right',
 				}, 
 				{
 					header : '건강보험',
-					name : 'PRDETAIL_GG'
+					name : 'PRDETAIL_GG',
+					align: 'right',
 				}, 
 				{
 					header : '장기요양',
-					name : 'PRDETAIL_LG'
+					name : 'PRDETAIL_LG',
+					align: 'right',
 				}, 
             ],
+            columnOptions: {
+    			resizable: true,
+    		},
 	    });
 	}
 	
@@ -193,7 +227,7 @@
 		
 		if(!modalEl){
 			const modalHtml = `
-				<div class="modal fade" id="${modalid}" tabindex="-1">
+				<div class="modal" id="${modalid}" tabindex="-1">
 					<div class="modal-dialog modal-dialog-centered modal-xl">
 						<div class="modal-content">
 							<div class="modal-header">
@@ -204,8 +238,8 @@
 								<div id="gridspes"></div>
 							</div>
 							<div class="modal-footer">
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-								<button type="button" class="btn btn-primary">Save changes</button>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="button" class="btn btn-primary">메일보내기</button>
 							</div>
 						</div>
 					</div>
@@ -220,7 +254,6 @@
 		});
 	     
 	 	const modal = new bootstrap.Modal(modalEl);
-        modal.show();
         
 		modalEl.addEventListener('shown.bs.modal', function () {
 			 // 그리드 컨테이너가 DOM에 생성된 후
@@ -243,6 +276,10 @@
 						const spesdata = data.map((item, index) => ({
 							...item,
 							num : data.length - index,
+							PRDETAIL_BS : formatCurrency(item.PRDETAIL_BS),
+							PRDETAIL_RS : formatCurrency(item.PRDETAIL_RS),
+							PRDETAIL_TA : formatCurrency(item.PRDETAIL_TA),
+							PRDETAIL_TD : formatCurrency(item.PRDETAIL_TD),
 						}));
 						
 						const gridspes = new tui.Grid({
@@ -252,13 +289,13 @@
 		                    scrollY: true,
 		                    bodyHeight: 400,
 		                    columns: [
-		                        {header: 'NO.', name: 'num'},
-		                        {header: '사원코드', name: 'EMPLOYEE_CD'},
-		                        {header: '사원명', name: 'PRDETAIL_NM'},
-		                        {header: '기본급', name: 'PRDETAIL_BS'},
-		                        {header: '총지급액', name: 'PRDETAIL_TA'},
-		                        {header: '총공제액', name: 'PRDETAIL_TD'},
-		                        {header: '실지급액', name: 'PRDETAIL_RS'},
+		                        {header: 'NO.', name: 'num', align:'center'},
+		                        {header: '사원코드', name: 'EMPLOYEE_CD', align:'center'},
+		                        {header: '사원명', name: 'EMPLOYEE_NM', align:'center'},
+		                        {header: '기본급', name: 'PRDETAIL_BS', align: 'right'},
+		                        {header: '총지급액', name: 'PRDETAIL_TA', align: 'right'},
+		                        {header: '총공제액', name: 'PRDETAIL_TD', align: 'right'},
+		                        {header: '실지급액', name: 'PRDETAIL_RS', align: 'right'},
 		                    ]
 		                });
 						
@@ -281,7 +318,7 @@
 				    		
 				    		if(!modalEl){
 				    			const modalHtml = `
-				    				<div class="modal fade" id="${modalid}" tabindex="-1">
+				    				<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false" >
 				    					<div class="modal-dialog modal-dialog-centered modal-xl">
 				    						<div class="modal-content">
 				    							<div class="modal-header">
@@ -292,8 +329,7 @@
 				    								<div id="gridspe"></div>
 				    							</div>
 				    							<div class="modal-footer">
-				    								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-				    								<button type="button" class="btn btn-primary">Save changes</button>
+				    								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
 				    							</div>
 				    						</div>
 				    					</div>
@@ -308,7 +344,6 @@
 				    		});
 				    	     
 				    	 	const modal = new bootstrap.Modal(modalEl);
-				            modal.show();
 				            
 				    		modalEl.addEventListener('shown.bs.modal', function () {
 				    			console.log('두번째 모달이 열렸습니다.');
@@ -328,8 +363,26 @@
 										},
 										success : function (data){
 											console.log('모달2 데이터',data);
+											const m2data = data.map(item => ({
+													...item,
+													PRDETAIL_RS : formatCurrency(item.PRDETAIL_RS),
+					            					PRDETAIL_BN : formatCurrency(item.PRDETAIL_BN),
+					            					PRDETAIL_BS : formatCurrency(item.PRDETAIL_BS),
+					            					PRDETAIL_GG : formatCurrency(item.PRDETAIL_GG),
+					            					PRDETAIL_GM : formatCurrency(item.PRDETAIL_GM),
+					            					PRDETAIL_GY : formatCurrency(item.PRDETAIL_GY),
+					            					PRDETAIL_HA : formatCurrency(item.PRDETAIL_HA),
+					            					PRDETAIL_LG : formatCurrency(item.PRDETAIL_LG),
+					            					PRDETAIL_MT : formatCurrency(item.PRDETAIL_MT),
+					            					PRDETAIL_NA : formatCurrency(item.PRDETAIL_NA),
+					            					PRDETAIL_OT : formatCurrency(item.PRDETAIL_OT),
+					            					PRDETAIL_TA : formatCurrency(item.PRDETAIL_TA),
+					            					PRDETAIL_TD : formatCurrency(item.PRDETAIL_TD),
+					            					PRDETAIL_WA : formatCurrency(item.PRDETAIL_WA),
+					            					PRDETAIL_RL : formatCurrency(item.PRDETAIL_RL),
+											}));
 											const gridspe = make_gridspe(gridContainer2);
-											gridspe.resetData(data); // 사원명 join할건지 테이블에 포함시킬건지 정해야함.
+											gridspe.resetData(m2data); // 사원명 join할건지 테이블에 포함시킬건지 정해야함.
 										},
 										error : function(xhr, status, error){
 											console.log("관리자 급여 모달2 데이터를 불러오는데 실패했습니다.",error);
@@ -337,6 +390,7 @@
 									});
 				    			}
 				    		});
+				    		modal.show()
 				            
 				        })
 				        
@@ -347,13 +401,10 @@
 				});
 			}
 		});
+		modal.show()
 		
 	}); 
 
-        
-        
-        
-        
         
         
         

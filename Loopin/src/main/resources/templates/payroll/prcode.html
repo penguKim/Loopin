@@ -52,7 +52,8 @@
 <!-- Toast UI grid JS File -->
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
-
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped');
   ///////////////
  // 그리드 AJAX //
 ///////////////
@@ -67,16 +68,21 @@ $.ajax({
 			if (item.prcode_fl) {
 				let prcode_fl = item.prcode_fl;
 
+				prcode_fl = prcode_fl.replace(/\(totalSalary-totalNonTax\)/g, '소득금액');
 				prcode_fl = prcode_fl.replace(/\(BS\/workingtime\)/g, '통상시급');
 				prcode_fl = prcode_fl.replace(/(통상시급\*8)/g, '통상일급');
 				prcode_fl = prcode_fl.replace(/overworkingtime/g, '연장근무시간');
 				prcode_fl = prcode_fl.replace(/nightworkingtime/g, '야간근무시간');
 				prcode_fl = prcode_fl.replace(/weekendworkingtime/g, '주말근무시간');
-				prcode_fl = prcode_fl.replace(/leastannual/g, '남은연차');
-				prcode_fl = prcode_fl.replace(/BS+B_MT+B_OT+B_NA+B_WA+B_HA+B_AA+B_BN-B_OT-B_NA-B_HA-B_AA/g, '소득금액');
+				prcode_fl = prcode_fl.replace(/remainleave/g, '남은연차');
+				prcode_fl = prcode_fl.replace(/holydayworkingtime/g, '휴일근무시간');
 				prcode_fl = prcode_fl.replace(/D_GG/g, '건강보험');
-				prcode_fl = prcode_fl.replace(/\(holydayworkingtime<=8\)\?\통상시급\*holydayworkingtime\*1\.5\:통상시급\*holydayworkingtime\*2/g,
-					'8시간 이내 : 통상시급 * 휴일근무시간 * 1.5,                                         8시간 초과 : 통상시급 * 휴일근무시간 * 2');
+				prcode_fl = prcode_fl.replace(
+						/\(휴일근무시간\ <= 8\)\?통상시급\*휴일근무시간\*1\.5\:통상시급\*휴일근무시간\*2/g, 
+								'8시간 이내 : 통상시급*휴일근무*1.5                                                  8시간 이상 : 통상시급*휴일근무*2'
+						);
+				prcode_fl = prcode_fl.replace(/BS/g, '기본급');
+				prcode_fl = prcode_fl.replace(/BN/g, '상여');
 	
 				item.prcode_fl = prcode_fl;
 			}
@@ -106,11 +112,11 @@ const allowance_grid = new tui.Grid({
 	scrollY: true,
 	bodyHeight : 590,
 	columns: [
-		{header: '수당코드', name: 'prcode_id'},
-		{header: '수당항목명', name: 'prcode_nm'},
-		{header: '비과세유형', name: 'prcode_nt'},
-		{header: '지급유형', name: 'prcode_gy'},
-		{header: '계산식', name: 'prcode_fl', whiteSpace: 'pre-wrap'},
+		{header: '수당코드', name: 'prcode_id', align: 'center'},
+		{header: '수당항목명', name: 'prcode_nm', align: 'center'},
+		{header: '비과세유형', name: 'prcode_nt', align: 'center'},
+		{header: '지급유형', name: 'prcode_gy', align: 'center'},
+		{header: '계산식', name: 'prcode_fl', whiteSpace: 'pre-wrap', align: 'center'},
 	],
 });
 
@@ -122,9 +128,9 @@ const deduction_grid = new tui.Grid({
 	scrollY: true,
 	bodyHeight : 590,
 	columns: [
-		{header: '수당코드', name: 'prcode_id'},
-		{header: '수당항목명', name: 'prcode_nm'},
-		{header: '계산식', name: 'prcode_fl'},
+		{header: '수당코드', name: 'prcode_id', align: 'center'},
+		{header: '수당항목명', name: 'prcode_nm', align: 'center'},
+		{header: '계산식', name: 'prcode_fl', whiteSpace: 'pre-wrap', align: 'center'},
 	],
 });
 </script>

@@ -132,9 +132,9 @@ public class PRController {
 
 	@GetMapping("/getempandbs")
 	@ResponseBody
-	public List<Employee> getempandbs() {
+	public List<Employee> getempandbs(@RequestParam("premth") String premth) {
 		
-		List<Employee> list = prS.select_empworklastmth();
+		List<Employee> list = prS.select_empworklastmth(premth);
 		
 		return list;
 	}
