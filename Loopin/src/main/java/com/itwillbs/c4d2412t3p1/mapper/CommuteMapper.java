@@ -35,5 +35,9 @@ public interface CommuteMapper {
 	int insert_COMMUTE();
 	// 공휴일 판별
 	boolean isHoliday(String formattedDate);
+	// 현황 그리드 조회
+	List<CommuteDTO> select_COMMUTE_timeList(@Param("filter") CommuteFilterRequest filter);
+	// 일자별 근로시간 차트
+	List<CommuteDTO> select_COMMUTE_commuteChart(@Param("filter") CommuteFilterRequest filter);
     
 }
