@@ -133,61 +133,28 @@ public class EmployeeController {
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
 		
 		
-		
-		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		
-	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
-	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+		try {
+			EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			
+		    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
+		    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+	
+		    
+		 // 서비스 호출 후 결과 반환
+		    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
+		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL();
+		    	return ResponseEntity.ok(response);
+		    } else {
+		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL_CD(currentCd);
+		    	return ResponseEntity.ok(response);
+		    }
 
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
 	    
-	    List<Employee> employees;
-
-	    // 시스템 관리자나 인사관리자일 경우 모든 직원 정보 조회
-	    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
-	        employees = employeeService.findAll(); // 모든 직원 정보 조회
-	    } else {
-	        // 일반 사용자일 경우 본인 정보만 조회
-	        employees = employeeService.findByEmployeeCd(currentCd); // 본인 정보 조회
-	    }
-
-	    // 공통 응답 생성
-	    List<Map<String, Object>> response = employees.stream().map(employee -> {
-	        Map<String, Object> row = new HashMap<>();
-	        Boolean employee_mg = employee.getEmployee_mg();
-	        
-	        row.put("employee_cd", employee.getEmployee_cd());
-	        row.put("employee_id", employee.getEmployee_id());
-	        row.put("employee_pw", employee.getEmployee_pw());
-	        row.put("employee_dp", employee.getEmployee_dp());
-	        row.put("employee_gd", employee.getEmployee_gd());
-	        row.put("employee_hd", employee.getEmployee_hd());
-	        row.put("employee_rd", employee.getEmployee_rd());
-	        row.put("employee_rr", employee.getEmployee_rr());
-	        row.put("employee_cg", employee.getEmployee_cg());
-	        row.put("employee_nt", employee.getEmployee_nt());
-	        row.put("employee_nm", employee.getEmployee_nm());
-	        row.put("employee_bd", employee.getEmployee_bd());
-	        row.put("employee_ad", employee.getEmployee_ad());
-	        row.put("employee_sb", employee.getEmployee_sb());
-	        row.put("employee_ph", employee.getEmployee_ph());
-	        row.put("employee_em", employee.getEmployee_em());
-	        row.put("employee_pi", employee.getEmployee_pi());
-	        row.put("employee_bs", employee.getEmployee_bs());
-	        row.put("employee_bk", employee.getEmployee_bk());
-	        row.put("employee_an", employee.getEmployee_an());
-	        row.put("employee_dt", employee.getEmployee_dt());
-	        row.put("employee_wr", employee.getEmployee_wr());
-	        row.put("employee_wd", employee.getEmployee_wd());
-	        row.put("employee_mf", employee.getEmployee_mf());
-	        row.put("employee_md", employee.getEmployee_md());
-	        row.put("employee_mg", employee_mg != null && employee_mg);
-	        row.put("employee_rl", employee.getEmployee_rl());
-	        row.put("employee_us", employee.getEmployee_us());
-	        
-	        return row;
-	    }).collect(Collectors.toList());
-
-	    return ResponseEntity.ok(response);
+	    
 	}
 	
 	@PostMapping("/insert_EMPLOYEE")

@@ -128,6 +128,83 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
     nativeQuery = true)
     List<Employee> select_FILTERED_EMPLOYEE(@Param("filterRequest") EmployeeFilterRequest filterRequest);
 
+    @Query(value = "SELECT e.employee_cd AS employee_cd, \n"
+            + "       e.employee_id AS employee_id, \n"
+            + "       e.employee_pw AS employee_pw, \n"
+            + "       d.common_nm AS employee_dp, \n"
+            + "       p.common_nm AS employee_gd, \n"
+            + "       e.employee_hd AS employee_hd, \n"
+            + "       e.employee_rd AS employee_rd, \n"
+            + "       e.employee_rr AS employee_rr, \n"
+            + "       e.employee_cg AS employee_cg, \n"
+            + "       e.employee_nt AS employee_nt, \n"
+            + "       e.employee_nm AS employee_nm, \n"
+            + "       e.employee_bd AS employee_bd, \n"
+            + "       e.employee_ad AS employee_ad, \n"
+            + "       e.employee_sb AS employee_sb, \n"
+            + "       e.employee_ph AS employee_ph, \n"
+            + "       e.employee_em AS employee_em, \n"
+            + "       e.employee_pi AS employee_pi, \n"
+            + "       e.employee_bs AS employee_bs, \n"
+            + "       e.employee_bk AS employee_bk, \n"
+            + "       e.employee_an AS employee_an, \n"
+            + "       e.employee_dt AS employee_dt, \n"
+            + "       e.employee_wr AS employee_wr, \n"
+            + "       e.employee_wd AS employee_wd, \n"
+            + "       e.employee_mf AS employee_mf, \n"
+            + "       e.employee_md AS employee_md, \n"
+            + "       q.common_nm AS employee_mg, \n"
+            + "       m.common_nm AS employee_rl, \n"
+            + "       a.common_nm AS employee_us \n"
+            + "FROM employee e \n"
+            + "LEFT JOIN common_code d ON e.employee_dp = d.common_cc AND d.common_gc = 'DEPARTMENT' \n"
+            + "LEFT JOIN common_code p ON e.employee_gd = p.common_cc AND p.common_gc = 'POSITION' \n"
+            + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
+            + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
+            + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION' \n"
+            , nativeQuery = true)
+	List<Object[]> findAllWithDetails();
+
+	
+	
+	
+    @Query(value = "SELECT e.employee_cd AS employee_cd, \n"
+            + "       e.employee_id AS employee_id, \n"
+            + "       e.employee_pw AS employee_pw, \n"
+            + "       d.common_nm AS employee_dp, \n"
+            + "       p.common_nm AS employee_gd, \n"
+            + "       e.employee_hd AS employee_hd, \n"
+            + "       e.employee_rd AS employee_rd, \n"
+            + "       e.employee_rr AS employee_rr, \n"
+            + "       e.employee_cg AS employee_cg, \n"
+            + "       e.employee_nt AS employee_nt, \n"
+            + "       e.employee_nm AS employee_nm, \n"
+            + "       e.employee_bd AS employee_bd, \n"
+            + "       e.employee_ad AS employee_ad, \n"
+            + "       e.employee_sb AS employee_sb, \n"
+            + "       e.employee_ph AS employee_ph, \n"
+            + "       e.employee_em AS employee_em, \n"
+            + "       e.employee_pi AS employee_pi, \n"
+            + "       e.employee_bs AS employee_bs, \n"
+            + "       e.employee_bk AS employee_bk, \n"
+            + "       e.employee_an AS employee_an, \n"
+            + "       e.employee_dt AS employee_dt, \n"
+            + "       e.employee_wr AS employee_wr, \n"
+            + "       e.employee_wd AS employee_wd, \n"
+            + "       e.employee_mf AS employee_mf, \n"
+            + "       e.employee_md AS employee_md, \n"
+            + "       q.common_nm AS employee_mg, \n"
+            + "       m.common_nm AS employee_rl, \n"
+            + "       a.common_nm AS employee_us \n"
+            + "FROM employee e \n"
+            + "LEFT JOIN common_code d ON e.employee_dp = d.common_cc AND d.common_gc = 'DEPARTMENT' \n"
+            + "LEFT JOIN common_code p ON e.employee_gd = p.common_cc AND p.common_gc = 'POSITION' \n"
+            + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
+            + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
+            + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION' \n"
+			+ "WHERE e.employee_cd = :employeeCd", nativeQuery = true)
+	List<Object[]> findAllWithDetailsCd(@Param("employeeCd") String currentCd);
+
     
 	
 }

@@ -106,12 +106,12 @@
 							<div class="row mb-3">
 							    <label for="inputText" class="col-sm-2 col-form-label">부서장구분</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
-										<option value="" disabled selected>부서장구분</option>
-										<option th:each="dptype : ${DPType_list}" th:value="${dptype.common_nm}"
-								                th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
-										</option>
-									</select>
+								<select class="form-select" id="employee_mg" name="employee_mg" aria-label="부서장구분">
+									<option value="" disabled selected>부서구분을 선택하세요</option>
+									<option th:each="dptype : ${DPType_list}"
+										th:value="${dptype.common_nm}"
+										th:text="${dptype.common_nm == 'true' ? '부서장' : '부서직원'}">
+								</select>
 								</div>
 							    <label for="inputText" class="col-sm-2 col-form-label">직원 권한</label>
 								<div class="col-sm-4">
@@ -177,7 +177,7 @@
 									<select class="form-select" id="employee_us" name="employee_us" aria-label="부서장구분">
 									    <option value="" disabled selected>사용여부 구분</option>
 									    <option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
-									            th:text="${useyn.common_cc == '0' ? '사용중' : '사용중지'}">
+									            th:text="${useyn.common_nm == '사용중' ? '사용중' : '사용중지'}">
 									    </option>
 									</select>
 
@@ -613,24 +613,58 @@
 	            .catch(error => console.error('엔터키 필터 적용 오류:', error));
 	    });
 	    
+	    let employeeList = []; // 전체 발령 데이터
+
 	    let grid;
+
 	    // 데이터 가져오기 및 초기화
 	    $.ajax({
 	        url: '/select_EMPLOYEE',
 	        method: 'GET',
-	        success: function (data) {
+	        success: function (response) {
+	            // 서버에서 가져온 데이터를 employeeList에 저장
+	            employeeList = response;
 
 	            // Grid 초기화
 	            grid = new tui.Grid({
 	                el: document.getElementById('grid'),
-	                data: data, // 첫 페이지 데이터 로드
+	                data: employeeList.map(row => ({
+	                	employee_cd: row.employee_cd,
+	                	employee_id: row.employee_id,
+	                	employee_pw: row.employee_pw,
+	                	employee_dp: row.employee_dp,
+	                	employee_gd: row.employee_gd,
+	                	employee_hd: row.employee_hd,
+	                	employee_rd: row.employee_rd,
+	                	employee_rr: row.employee_rr,
+	                	employee_cg: row.employee_cg,
+	                	employee_nt: row.employee_nt,
+	                	employee_nm: row.employee_nm,
+	                	employee_bd: row.employee_bd,
+	                	employee_ad: row.employee_ad,
+	                	employee_sb: row.employee_sb,
+	                	employee_ph: row.employee_ph,
+	                	employee_em: row.employee_em,
+	                	employee_pi: row.employee_pi,
+	                	employee_bs: row.employee_bs,
+	                	employee_bk: row.employee_bk,
+	                	employee_an: row.employee_an,
+	                	employee_dt: row.employee_dt,
+	                	employee_wr: row.employee_wr,
+	                	employee_wd: row.employee_wd,
+	                	employee_mf: row.employee_mf,
+	                	employee_md: row.employee_md,
+	                	employee_mg: row.employee_mg,
+	                	employee_rl: row.employee_rl,
+	                	employee_us: row.employee_us
+	                })), // 가져온 데이터 설정
 	                scrollX: true,
 	                scrollY: true,
-                    autoWidth: true,
-                    rowHeight: 'auto',
-                    bodyHeight: 'fitToParent',
-	                rowHeaders: ['checkbox'],
-                    zIndex: 100,
+	                autoWidth: true,
+	                rowHeight: 'auto',
+	                bodyHeight: 'fitToParent',
+	                rowHeaders: ['checkbox'], // 체크박스 행
+	                zIndex: 100,
         			summary: {
         			    height: 40,
         			    position: 'bottom', // or 'top'
@@ -661,6 +695,7 @@
 						{ header: '퇴사일', name: 'employee_rd', hidden: true  },
 						{ header: '퇴사사유', name: 'employee_rr', hidden: true  },
 						{ header: '비고', name: 'employee_nt', hidden: true  },
+						{ header: '권한설정', name: 'employee_rl', hidden: true  },
 						{ header: '사진', name: 'employee_pi', hidden: true  },
 						{ header: '기본급', name: 'employee_bs', hidden: true  },
 						{ header: '은행', name: 'employee_bk', hidden: true  },
@@ -681,6 +716,7 @@
 				    const columnName = ev.columnName;
 				    const rowKey = ev.rowKey;
 				    const rowData = grid.getRow(rowKey);
+				    console.log("rowData : " + rowData);
 
 					// 헤더 클릭인지 확인
 					if (rowKey === null || rowKey === undefined) {
@@ -688,8 +724,10 @@
 					    return;
 					}
 					
-
-			        openEditModal(rowData); // 수정 모드로 모달 열기
+					if (columnName === 'employee_cd' || columnName === 'employee_id' || columnName === 'employee_nm') {
+						console.log("모달에 표시할 데이터:", rowData);
+						openEditModal(rowData);
+					}
 				});
 				
 				setGridHeight(grid, -476);
@@ -894,133 +932,160 @@
 		
 	    
 	    
-	    
+		let originalPassword = '';  // 초기 비밀번호 저장
+		let isPasswordChanged = false;  // 비밀번호 변경 여부
+		
+		
 		// 수정 모달 열기 함수
-		function openEditModal(data) {
+		function openEditModal(rowData) {
+		
+		    console.log("수정 모달 열기 데이터:", rowData);
+
+			
+			// 기존 비밀번호 저장 및 변경 여부 초기화
+			originalPassword = rowData['employee_pw'] || '';
+			isPasswordChanged = false;
+			
+			
+			$('#employee_pw').prop("disabled", true).hide();
+			
+			
 		    // 모달 제목 및 버튼 텍스트 설정
 		    $('#employee_bd_check').text('');
 		    $('#employee_id_check').text('');
-		    
-			$('#modalTitle').text('인사카드 수정');
-			$('#modal_submit_button').text('수정');
-			$('#resetFormBtn').hide();
-			
-			// 여러 필드를 비활성화/활성화할 때 선택자 수정
-			const fieldsToDisable = [
-			  "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt", 
-			  "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm", 
-			  "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr", 
-			  "#employee_mg", "#employee_rl", "#employee_pw", "#employee_us"
-			];
-			
-			// 필드 활성화/비활성화 처리
-			if (userRole === 'HR_ADMIN' || userRole === 'SYS_ADMIN') {
-				// Admin은 #employee_id는 비활성화, #employee_pw는 숨기고 비활성화, 나머지는 활성화
-				fieldsToDisable.forEach(function(field) {
-					if (field === "#employee_id") {
-						$(field).prop("disabled", true); // #employee_id 비활성화
-					} else if (field === "#employee_pw") {
-						$(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
-						// 버튼이 이미 생성되지 않았다면 동적으로 생성
-						if (!$('#reset-password-btn').length) {
-							$('<button>', {
-								id: 'reset-password-btn',
-								text: 'Reset Password',
-								class: 'btn btn-primary', // 원하는 스타일 클래스 추가
-							}).insertAfter(field); // #employee_pw 뒤에 버튼 삽입
-							
-							// Reset Password 버튼 클릭 이벤트
-							$('#reset-password-btn').off('click').on('click', function(event) {
-								// 기본 폼 제출 동작 방지
-								event.preventDefault();
+		    $('#modalTitle').text('인사카드 수정');
+		    $('#modal_submit_button').text('수정');
+		    $('#resetFormBtn').hide();
+		
+		    const selectFields = {
+		        // 필드 이름과 매칭 기준 지정
+		        employee_gd: 'text', // 발령구분 (텍스트 매칭)
+		        employee_dp: 'text',  // 기존직위 (텍스트 매칭)
+		        employee_rl: 'text',  // 기존직위 (텍스트 매칭)
+		        employee_us: 'value',  // 기존직위 (텍스트 매칭)
+		        employee_mg: 'value'  // 기존직위 (텍스트 매칭)
+		    };
+		
+		    Object.keys(selectFields).forEach(field => {
+		        const $select = $(`#${field}`);
+		        if ($select.length) {
+		            const textToMatch = rowData[field]; // 예: "승진", true, false
+		            const matchType = selectFields[field]; // 매칭 기준: 'text' 또는 'value'
+		            const matchingOption = $select.find('option').filter((_, option) => {
+		                if (matchType === 'text') {
+		                    return $(option).text() === textToMatch; // 텍스트 매칭
+		                } else {
+		                    return $(option).val() === String(textToMatch); // 값 매칭
+		                }
+		            });
 
-								// 버튼 숨기기
-								$(this).hide();
+		            if (matchingOption.length) {
+		                $select.val(matchingOption.val()).prop('selected', true); // 매칭된 value 선택
+		            } else {
+		                console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
+		            }
+		        }
+		    });
 
-								// #employee_pw 필드 활성화 및 보이기
-								$('#employee_pw').prop("disabled", false).show().focus();
-						    });
-						}
-					} else {
-							$(field).prop("disabled", false); // 나머지 필드 활성화
-					}
-				});
-
-				
-			} else if (userRole === 'SYS_ADMIN') {
-			  // SYS_ADMIN는 모든 필드 활성화
-			  fieldsToDisable.forEach(function(field) {
-			    $(field).prop("disabled", false); // 모든 필드 활성화
-			  });
-			} else if (userRole === 'EMPLOYEE' || userRole === 'PR_ADMIN' || userRole === 'AT_ADMIN') {
-			  // EMPLOYEE는 모든 필드 비활성화
-			  fieldsToDisable.forEach(function(field) {
-			    $(field).prop("disabled", true);
-			    $('#employee_pw').prop("disabled", false)
-			  });
-			}
-
-
-			
-			// 제외할 필드 목록
 			const excludeKeys = ['employee_pw', 'secretField'];
-
-			Object.keys(data).forEach(key => {
-			    // 제외할 키는 건너뛴다
+			
+			
+			Object.keys(rowData).forEach(key => {
 			    if (!excludeKeys.includes(key)) {
 			        const $field = $(`#${key}`);
-			        if ($field.length && $field.attr('type') !== 'file') {
-			            $field.val(data[key] || '');
+			        if ($field.length && $field.is('input, textarea') && $field.attr('type') !== 'file') {
+			            $field.val(rowData[key] || '');
 			        }
 			    }
 			});
-			
-			
-			// 부서장 관련 처리
-			if (data.employee_mg === true) {
-			    $('#employee_mg option').filter(function() {
-			        return $(this).text() === "부서장";  // '부서장' 텍스트가 있는 옵션을 찾음
-			    }).prop("selected", true);  // '부서장' 옵션을 선택 상태로 설정
-			} else if (data.employee_mg === false) {
-			    $('#employee_mg option').filter(function() {
-			        return $(this).text() === "부서직원";  // '부서직원' 텍스트가 있는 옵션을 찾음
-			    }).prop("selected", true);  // '부서직원' 옵션을 선택 상태로 설정
-			} else {
-			    $('#employee_mg').val("");  // 기본값으로 선택을 초기화
-			}
+		    
+		    
+		    
+		
+		    // 여러 필드를 비활성화/활성화할 때 선택자 수정
+ 		    const fieldsToDisable = [
+ 		        "#employee_id", "#employee_hd", "#employee_dp", "#employee_nt",
+ 		        "#employee_gd", "#employee_rd", "#employee_cg", "#employee_nm",
+ 		        "#employee_bd", "#employee_sb", "#employee_bs", "#employee_rr",
+ 		        "#employee_mg", "#employee_rl", "#employee_pw", "#employee_us"
+ 		    ];
+		
+ 		    // 필드 활성화/비활성화 처리
+ 		    if (userRole === 'HR_ADMIN' || userRole === 'SYS_ADMIN') {
+ 		        fieldsToDisable.forEach(function (field) {
+ 		            if (field === "#employee_id") {
+ 		                $(field).prop("disabled", true); // #employee_id 비활성화
+ 		            } else if (field === "#employee_pw") {
+ 		                $(field).prop("disabled", true).hide(); // #employee_pw 숨기고 비활성화
+ 		                if (!$('#reset-password-btn').length) {
+ 		                    $('<button>', {
+ 		                        id: 'reset-password-btn',
+ 		                        text: 'Reset Password',
+ 		                        class: 'btn btn-primary',
+ 		                    }).insertAfter(field);
+		
+ 		                    $('#reset-password-btn').off('click').on('click', function (event) {
+ 		                        event.preventDefault();
+ 		                        $(this).hide();
+ 		                        $('#employee_pw').prop("disabled", false).show().focus();
+								isPasswordChanged = true;  // 비밀번호 변경 플래그 설정
+ 		                    });
+ 		                }
+ 		            } else {
+ 		                $(field).prop("disabled", false); // 나머지 필드 활성화
+ 		            }
+ 		        });
+ 		    } else if (userRole === 'SYS_ADMIN') {
+ 		        fieldsToDisable.forEach(function (field) {
+ 		            $(field).prop("disabled", false); // 모든 필드 활성화
+ 		        });
+ 		    } else if (userRole === 'EMPLOYEE' || userRole === 'PR_ADMIN' || userRole === 'AT_ADMIN') {
+				fieldsToDisable.forEach(function (field) {
+				     $(field).prop("disabled", true);
+				 });
+				 $('#employee_pw').val('').prop("disabled", true).hide();
 
-			// 사용 관련 처리
-			if (data.employee_us === true) {
-			    $('#employee_us option').filter(function() {
-			        return $(this).text() === "사용중";  // '사용중' 텍스트가 있는 옵션을 찾음
-			    }).prop("selected", true);  // '사용중' 옵션을 선택 상태로 설정
-			} else if (data.employee_us === false) {
-			    $('#employee_us option').filter(function() {
-			        return $(this).text() === "사용중지";  // '사용중지' 텍스트가 있는 옵션을 찾음
-			    }).prop("selected", true);  // '사용중지' 옵션을 선택 상태로 설정
-			} else {
-			    $('#employee_us').val("");  // 기본값으로 선택을 초기화
-			}
+				 if (!$('#change-password-btn').length) {
+				     $('<button>', {
+				         id: 'change-password-btn',
+				         text: 'Change Password',
+				         class: 'btn btn-primary',
+				     }).insertAfter('#employee_pw');
 
-
-
-			
-		    // 주소 처리
-		    if (data.employee_ad) {
+				     $('#change-password-btn').off('click').on('click', function (event) {
+				         event.preventDefault();
+				         $(this).hide();
+				         $('#employee_pw').prop("disabled", false).show().focus();
+				     });
+				 }
+ 		    }
+		
+		    
+		    // 일반 입력 필드 처리
+// 		    Object.keys(rowData).forEach(key => {
+// 		        const $field = $(`#${key}`);
+// 		        if ($field.length && $field.is('input, textarea')) {
+// 		            $field.val(rowData[key] || '');
+// 		        }
+// 		    });
+		    
+// 		    const excludeKeys = ['employee_pw', 'secretField'];-->
+		
+		
+		    if (rowData.employee_ad) {
 		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
-		        const match = data.employee_ad.match(regex);
+		        const match = rowData.employee_ad.match(regex); // 수정된 부분
 		        if (match) {
 		            $("#employee_zc").val(match[1]); // 우편번호
 		            $("#employee_sa").val(match[2]); // 기본주소
 		            $("#employee_da").val(match[3].trim()); // 상세주소
 		        } else {
-		            console.warn('주소 형식이 잘못되었습니다:', data.employee_ad);
+		            console.warn('주소 형식이 잘못되었습니다:', rowData.employee_ad);
 		        }
 		    }
-
-		    // 이메일 처리
-		    if (data.employee_em) {
-		        const [email_id, domain] = data.employee_em.split('@');
+		
+		    if (rowData.employee_em) {
+		        const [email_id, domain] = rowData.employee_em.split('@');
 		        if (email_id && domain) {
 		            $('#email_id').val(email_id);
 		            if (domain === 'custom') {
@@ -1031,29 +1096,27 @@
 		                $('#custom_domain').val('').prop('disabled', true);
 		            }
 		        } else {
-		            console.warn('이메일 형식이 잘못되었습니다:', data.employee_em);
+		            console.warn('이메일 형식이 잘못되었습니다:', rowData.employee_em);
 		        }
 		    }
-
-		    // 사진 미리보기 처리
-		    if (data.employee_pi) {
-		        const imagePath = `/upload/${data.employee_pi}`;
+		
+		    if (rowData.employee_pi) {
+		        const imagePath = `/upload/${rowData.employee_pi}`; // 수정된 부분
 		        $('#photoPreview').attr('src', imagePath).show();
 		        $('#uploadText').hide();
 		        $('#removePhotoBtn').show();
 		    } else {
 		        resetPhoto();
 		    }
-
-		    // 파일 입력 초기화
+		
 		    $('#employee_pi').val('');
-
-		    // 모달 열기
+		
 		    $('#modal_appointment_save').modal('show');
-
-		    console.log("수정 모달 열림", data);
+		
+		    console.log("수정 모달 열림", rowData); // 수정된 부분
 		}
 
+		
 		// 사진 초기화 함수
 		function resetPhoto() {
 		    $('#photoPreview').hide().attr('src', '');
@@ -1179,7 +1242,7 @@
 
 			//  employee_us 값 처리 (사용중/사용중지)
 			let employeeUsValue = $('#employee_us').val();
-			const finalEmployeeUsValue = (employeeUsValue === "사용중" || employeeUsValue === "1") ? false : true;
+			const finalEmployeeUsValue = (employeeUsValue === "사용중" || employeeUsValue === "1") ? true : false;
 
 
 			
