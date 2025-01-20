@@ -133,61 +133,28 @@ public class EmployeeController {
 	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
 		
 		
-		
-		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		
-	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
-	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+		try {
+			EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+			
+		    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
+		    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
+	
+		    
+		 // 서비스 호출 후 결과 반환
+		    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
+		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL();
+		    	return ResponseEntity.ok(response);
+		    } else {
+		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL_CD(currentCd);
+		    	return ResponseEntity.ok(response);
+		    }
 
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
 	    
-	    List<Employee> employees;
-
-	    // 시스템 관리자나 인사관리자일 경우 모든 직원 정보 조회
-	    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
-	        employees = employeeService.findAll(); // 모든 직원 정보 조회
-	    } else {
-	        // 일반 사용자일 경우 본인 정보만 조회
-	        employees = employeeService.findByEmployeeCd(currentCd); // 본인 정보 조회
-	    }
-
-	    // 공통 응답 생성
-	    List<Map<String, Object>> response = employees.stream().map(employee -> {
-	        Map<String, Object> row = new HashMap<>();
-	        Boolean employee_mg = employee.getEmployee_mg();
-	        
-	        row.put("employee_cd", employee.getEmployee_cd());
-	        row.put("employee_id", employee.getEmployee_id());
-	        row.put("employee_pw", employee.getEmployee_pw());
-	        row.put("employee_dp", employee.getEmployee_dp());
-	        row.put("employee_gd", employee.getEmployee_gd());
-	        row.put("employee_hd", employee.getEmployee_hd());
-	        row.put("employee_rd", employee.getEmployee_rd());
-	        row.put("employee_rr", employee.getEmployee_rr());
-	        row.put("employee_cg", employee.getEmployee_cg());
-	        row.put("employee_nt", employee.getEmployee_nt());
-	        row.put("employee_nm", employee.getEmployee_nm());
-	        row.put("employee_bd", employee.getEmployee_bd());
-	        row.put("employee_ad", employee.getEmployee_ad());
-	        row.put("employee_sb", employee.getEmployee_sb());
-	        row.put("employee_ph", employee.getEmployee_ph());
-	        row.put("employee_em", employee.getEmployee_em());
-	        row.put("employee_pi", employee.getEmployee_pi());
-	        row.put("employee_bs", employee.getEmployee_bs());
-	        row.put("employee_bk", employee.getEmployee_bk());
-	        row.put("employee_an", employee.getEmployee_an());
-	        row.put("employee_dt", employee.getEmployee_dt());
-	        row.put("employee_wr", employee.getEmployee_wr());
-	        row.put("employee_wd", employee.getEmployee_wd());
-	        row.put("employee_mf", employee.getEmployee_mf());
-	        row.put("employee_md", employee.getEmployee_md());
-	        row.put("employee_mg", employee_mg != null && employee_mg);
-	        row.put("employee_rl", employee.getEmployee_rl());
-	        row.put("employee_us", employee.getEmployee_us());
-	        
-	        return row;
-	    }).collect(Collectors.toList());
-
-	    return ResponseEntity.ok(response);
+	    
 	}
 	
 	@PostMapping("/insert_EMPLOYEE")
@@ -473,45 +440,45 @@ public class EmployeeController {
 
     // 필터 데이터 가져오기
 	@PostMapping("/select_FILTERED_EMPLOYEE")
-    public ResponseEntity<List<Employee>> select_FILTERED_EMPLOYEE(@RequestBody EmployeeFilterRequest filterRequest) {
-		log.info("@@@@@@@@@@@@@@@@@");
-		
-		System.out.println("@@@@@@@@@" + filterRequest);
-		System.out.println("@@@@@@@@@" + filterRequest.getStartDate());
-		System.out.println("@@@@@@@@@" + filterRequest.getEndDate());
-		
-        try {
-            // 필터 조건이 비어 있으면 전체 인사정보 반환
-            if (filterRequest.isEmpty()) {
-            	List<Employee> employees = employeeService.findAll();
-                return ResponseEntity.ok(employees);
-            }
-            
-            log.info(filterRequest.toString()); // 전체 필드 출력
-            log.info(filterRequest.getStartDate()); // 시작일
-            log.info(filterRequest.getEndDate()); // 종료일
-            log.info(filterRequest.getEmployeeCd());// 사원코드
-            log.info(filterRequest.getEmployeeDp()); // 부서
-            log.info(filterRequest.getEmployeeGd()); // 직급
-            log.info(filterRequest.getEmployeeHd()); // 입사일
-            log.info(filterRequest.getEmployeeNm()); // 사원명 
-            
-            
-            
-            
-            // 필터 조건에 따른 필터링된 인사정보 반환
-            List<Employee> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest);
-            
-            System.out.println("@@@@@@@@" + filteredEmployeeList);
-            
-            
-            
-            return ResponseEntity.ok(filteredEmployeeList);
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_EMPLOYEE(@RequestBody EmployeeFilterRequest filterRequest) {
+	    EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	    
+	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
+	    String currentRole = employeeDetails.getEmployee_rl(); // 현재 사용자의 권한
 
-        } catch (Exception e) {
-        	e.printStackTrace();
-            return  ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
+	    try {
+	        // HR_ADMIN 또는 SYS_ADMIN 권한일 경우
+	        if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
+	            // 필터 조건이 비어 있으면 전체 인사정보 반환
+	            if (filterRequest.isEmpty()) {
+	                List<Map<String, Object>> employees = employeeService.select_EMPLOYEE_ALL();
+	                log.info("employees@@@@@"+ employees);
+	                return ResponseEntity.ok(employees);
+	            }
+
+
+	            // 필터 조건에 따른 필터링된 인사정보 반환
+	            List<Map<String, Object>> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest, null);
+	            log.info("filteredEmployeeList@@@@@1"+ filteredEmployeeList);
+	            return ResponseEntity.ok(filteredEmployeeList);
+	        } else {
+	            // HR_ADMIN 또는 SYS_ADMIN이 아닌 경우, currentCd로 필터링된 정보만 반환
+
+	            // 필터 조건이 비어 있으면 본인 정보 반환
+	            if (filterRequest.isEmpty()) {
+	                List<Map<String, Object>> selfInfo = employeeService.select_EMPLOYEE_ALL_CD(currentCd);
+	                log.info("selfInfo@@@@"+ selfInfo);
+	                return ResponseEntity.ok(selfInfo);
+	            }
+
+	            // 필터 조건에 따른 본인 정보 반환
+	            List<Map<String, Object>> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest, currentCd);
+	            log.info("filteredEmployeeList@@@@2"+ filteredEmployeeList);
+	            return ResponseEntity.ok(filteredEmployeeList);
+	        }
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
     }
 
     
