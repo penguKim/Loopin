@@ -54,7 +54,7 @@ public class SecurityConfig {
 					.loginProcessingUrl("/loginPro")
 					.usernameParameter("id")
 					.passwordParameter("pass") 
-					.defaultSuccessUrl("/")
+					.defaultSuccessUrl("/", true)
 					.failureHandler((request, response, exception) -> { // 로그인 실패 시 처리
 				        String errorMessage;
 				        if (exception instanceof BadCredentialsException) {

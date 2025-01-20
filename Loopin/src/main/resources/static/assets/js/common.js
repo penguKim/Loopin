@@ -11,11 +11,11 @@ function showAlert(element, icon, title, msg) {
 	    icon: icon,
 	    title: title,
 	    html: msg,
+	}).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
 	});
-	
-	if(element != '') {
-		element.focus();
-	}
 	
 }
 
@@ -35,12 +35,34 @@ function showToast(element, icon, title, msg) {
         html: msg,
         showConfirmButton: false,
         timer: 1500,
-    });
-	
-	if(element != '') {
-		element.focus();
-	}
+    }).then(() => {
+	    if(element) {
+	        element.focus();
+	    }
+	});
 }
+
+/**
+ * 컨펌 띄움(await / async)
+ * @param {String} title 제목
+ * @param {String} msg 내용
+ */
+async function showConfirm(title, msg) {
+    const result = await Swal.fire({
+        title: title,
+        html: msg,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#0d6efd',
+        cancelButtonColor: '#d33',
+        confirmButtonText: '확인',
+        cancelButtonText: '취소',
+		reverseButtons: true, 
+    });
+    
+    return result.isConfirmed;
+}
+
 
 /**
  * 년월일 -> 문자열 리턴
@@ -74,6 +96,14 @@ function getNextDate(num) {
     const date = new Date();
     date.setDate(date.getDate() + num);
     return getDate(date);
+}
+
+function getFirstDayOfMonth(date) {
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+    const year = firstDay.getFullYear();
+    const month = String(firstDay.getMonth() + 1).padStart(2, '0');
+    const day = String(firstDay.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 
@@ -212,6 +242,10 @@ function setRadioValue(radioName, value) {
     $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
 }
 
+function getRadioValue(radioName) {
+	return radioName.filter(':checked').val();
+}
+
 /**
  * 셀렉트박스 생성
  * @param {String} el 셀렉트박스 선택자
@@ -229,6 +263,58 @@ function createSelectBox(el, list, title) {
 
     list.forEach(data => {
         selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+    });
+}
+
+/**
+ * 그리드 -> 엑셀 다운로드
+ * @param {*} grid 그리드 겍체
+ * @param {String} title 엑셀 파일명
+ */
+function gridExcelDownload(grid, title) {
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+    const headers = grid.getColumns();
+    const rows = grid.getData();
+    
+    const data = {
+        headers: headers,
+        rows: rows,
+        title: title
+    };
+    
+    $.ajax({
+        type: 'post',
+        url: '/excelDownload',
+        contentType: 'application/json',
+        data: JSON.stringify(data),
+        xhrFields: {
+            responseType: 'blob'
+        },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader(header, token);
+        },
+        success: function(blob) {
+            const file = new Blob([blob], {
+                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            });
+            
+            const url = window.URL.createObjectURL(file);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = title + '.xlsx';
+            
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(function() {
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            }, 100);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            console.error('엑셀 다운로드 실패:', errorThrown);
+        }
     });
 }
 

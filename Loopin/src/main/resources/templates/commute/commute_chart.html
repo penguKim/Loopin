@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card" id="div_card" style="min-height: 400px;">
+						<div class="card-body">
+							<h5 class="card-title">출퇴근 현황</h5>
+							<!-- 탭 헤드 -->
+							<div class="d-flex justify-content-between">
+								<div>
+									<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
+										<li class="nav-item" role="presentation">
+											<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+											type="button" role="tab" aria-controls="tab_grid" aria-selected="false">그리드</button>
+										</li>
+										<li class="nav-item" role="presentation">
+											<button class="nav-link" id="btn_chart_tab" data-bs-toggle="pill" data-bs-target="#tab_chart" 
+											type="button" role="tab" aria-controls="tab_chart" aria-selected="true">차트</button>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="row align-items-center g-0">
+							    <div class="col-auto me-5">
+							        <label for="mainDateRangeStartInput" class="form-label">조회기간 시작일</label>
+							        <input type="text" id="mainDateRangeStartInput" class="form-control" style="width: 153.5px;">
+							        <div id="mainDateRangeStartContainer"></div>
+							    </div>
+							    <div class="col-auto me-5">
+							        <label for="mainDateRangeEndInput" class="form-label">조회기간 종료일</label>
+							        <input type="text" id="mainDateRangeEndInput" class="form-control" style="width: 153.5px;">
+							        <div id="mainDateRangeEndContainer"></div>
+							    </div>
+							    <div class="col d-flex justify-content-end align-items-center mt-3">
+									<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀">
+							        <button id="resetFilter" class="btn btn-secondary me-2">초기화</button>
+							        <button id="applyFilter" class="btn btn-primary me-2">검색</button>
+							    </div>
+							</div>
+							<!-- 탭 바디 -->
+							<div class="tab-content pt-2" id="myTabContent">
+								<!-- 그리드 탭 -->
+								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
+									<div id="filterModule" class="mb-3"></div>
+									<div id="grid"></div>
+								</div>
+								<!-- 차트 탭 -->
+								<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
+									<div class="row mb-3">
+										<div class="col-sm-6">
+											<div id="commute_line"></div>
+										</div>
+										<div class="col-sm-6">
+											<div id="chart-dept"></div>
+										</div>
+									</div>
+									<div class="row mb-3">
+										<div class="col-sm-6">
+											<div id="chart-posi"></div>
+										</div>
+										<div class="col-sm-6">
+											<div id="chart-hdrd"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+	
+	.tui-datepicker, .tui-rangepicker {
+		z-index: 9999 !important;
+		overflow: visible !important;
+	}
+</style>
+<script th:inline="javascript">
+    // CSRF 토큰 및 헤더 설정
+    const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+	let grid, lineChart;
+	
+	let date = new Date();
+	const oneMonthAgo = new Date();
+	oneMonthAgo.setMonth(date.getMonth() - 1); // 1달 전 날짜 계산
+	
+	const btn_chart_tab = $('#btn_chart_tab');
+	const btn_grid_tab = $('#btn_grid_tab');
+	const rangeStart = $('#mainDateRangeStartInput');
+	const rangeEnd = $('#mainDateRangeEndInput');
+	const startContainer = document.querySelector(`#mainDateRangeStartContainer`);
+	const endContainer = document.querySelector(`#mainDateRangeEndContainer`);
+	
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		
+		
+		// 엑셀 다운로드
+		$('#btn_excel_download').on('click', function() {
+			gridExcelDownload(grid, '출퇴근현황');
+		});
+		
+		// 범위 선택기 초기화
+		const rangePicker = tui.DatePicker.createRangePicker({
+		    startpicker: {
+		        date: oneMonthAgo,
+		        input: '#mainDateRangeStartInput',
+		        container: '#mainDateRangeStartContainer'
+		    },
+		    endpicker: {
+		        date: date,
+		        input: '#mainDateRangeEndInput',
+		        container: '#mainDateRangeEndContainer',
+		        disabled: false
+		    },
+		    format: 'yyyy-MM-dd',
+		    language: 'ko',
+		});
+		
+		rangePicker.on('change:start', function(event) {
+		    if (event && event.date) {
+		        rangePicker.setEndDate(event.date);
+		        rangePicker.enableEndPicker();
+		    }
+		});
+
+		// 초기화
+		$('#resetFilter').on('click', function() {
+			rangePicker.setStartDate(oneMonthAgo);
+			rangePicker.setEndDate(date);
+		});
+		// 검색
+		$('#applyFilter').on('click', function() {
+			const dateCheck = [
+			    { value: rangeStart, element: $('#mainDateRangeStartInput'), msg: '시작일' },
+			    { value: rangeEnd, element: $('#mainDateRangeEndInput'), msg: '종료일' }
+			].find(item => !item.value);
+
+			if (dateCheck) {
+			    showAlert(dateCheck.element, 'warning', '조회 기간 선택', `${dateCheck.msg}을 입력해주세요.`);
+			    return;
+			}
+			getGridList();
+		});
+
+		make_grid();
+		
+		
+		// 그리드 ----------------------
+		// 그리드탭 클릭
+		btn_grid_tab.on('click', function() {
+			getGridList();
+		});
+		
+		// 차트 -------------------------
+		// 차트탭 클릭
+		btn_chart_tab.on('click', function() {
+			getChartList();
+		});
+		
+
+		// 창크기 -------------------------
+		setElementHeight('#div_card', -105);
+		setGridHeight(grid, -430);
+
+		$(window).resize(function() {
+			setElementHeight('#div_card', -105);
+			setGridHeight(grid, -430);
+		});
+			
+	});
+
+
+
+	// 그리드 탭 그리드
+	function make_grid() {
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 400,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', hidden : true},
+				{header : '마감여부', name : 'commute_pr', hidden : true},
+				{header : '출근일자', name : 'commute_wd', sortable : true, align: 'center', filter: 'date'},
+				{header : '사원코드', name : 'employee_cd', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', sortable : true, filter: 'select'}, 
+				{header : '출근시간', name : 'commute_wt', sortable : true, align: 'center'}, 
+				{header : '퇴근일자', name : 'commute_ld', sortable : true, align: 'center', filter: 'date'},
+				{header : '퇴근시간', name : 'commute_lt', sortable : true, align: 'center'},
+				{header : '출근상태', name : 'commute_st', sortable : true, filter: 'select'},
+				{header : '일반근무', name : 'commute_ig', sortable : true, filter: 'number'},
+				{header : '연장근무', name : 'commute_eg', sortable : true, filter: 'number'},
+				{header : '야간근무', name : 'commute_yg', sortable : true, filter: 'number'},
+				{header : '주말근무', name : 'commute_jg', sortable : true, filter: 'number'},
+				{header : '휴일근무', name : 'commute_hg', sortable : true, filter: 'number'},
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	commute_st: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        },
+					commute_ig: {
+					    template: (valueMap) => {
+					        return `총  ${valueMap.sum} 시간`
+					    }
+					},
+					commute_eg: {
+					    template: (valueMap) => {
+					        return `총  ${valueMap.sum} 시간`
+					    }
+					},
+					commute_yg: {
+					    template: (valueMap) => {
+					        return `총  ${valueMap.sum} 시간`
+					    }
+					},
+					commute_jg: {
+					    template: (valueMap) => {
+					        return `총  ${valueMap.sum} 시간`
+					    }
+					},
+					commute_hg: {
+					    template: (valueMap) => {
+					        return `총  ${valueMap.sum} 시간`
+					    }
+					},
+			    }
+			},
+		});
+		getGridList();
+	}
+
+	// 그리드 데이터 조회
+	function getGridList(filter) {
+		const data = {
+		        commuteFilter: filter || 
+		        {
+		        	startDate: rangeStart.val(),
+	        	 	endDate: rangeEnd.val() 
+	        	 }
+		    };
+		
+		$.ajax({
+			type: 'post',
+			url: '/select_COMMUTE_timeList',
+			contentType: 'application/json',
+			data: JSON.stringify(data),
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				let commuteList = data['commuteList'];
+				grid.resetData(commuteList);
+				// 그리드 행 클래스 추가
+		        grid.getData().forEach((row, index) => {
+		            if (row.commute_pr) {
+		            	grid.addRowClassName(index, 'bg-dark');
+		            	grid.addRowClassName(index, 'bg-opacity-50');
+		            	grid.addRowClassName(index, 'text-white');
+		            } else if (row.commute_st == '지각' || row.commute_st == '결근') {
+		            	grid.addRowClassName(index, 'bg-danger-subtle');
+		            }
+		        });
+
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				showAlert('', 'error', '현황 조회 실패' , '현황 조회에 실패하였습니다.<br>다시 접속해주세요.');
+			}
+		});
+	}
+
+	// 차트 데이터 조회
+	function getChartList(filter) {
+		const data = {
+		        commuteFilter: filter || 
+		        {
+		        	startDate: rangeStart.val(),
+		    	 	endDate: rangeEnd.val() 
+		    	 }
+		    };
+
+		$.ajax({
+			type: 'post',
+			url: '/select_COMMUTE_chartList',
+			contentType: 'application/json',
+			data: JSON.stringify(data),
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(response) {
+				if(!lineChart) {
+					commuteLineChart(response);
+				}
+				
+				
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				showAlert('', 'error', '차트 조회 실패' , '차트 조회에 실패하였습니다.<br>다시 접속해주세요.');
+			}
+		});
+	}
+	
+	function commuteLineChart(response) {
+	    const el = document.getElementById('commute_line');
+		const parentElement = el.parentElement;
+	    let chart;
+	    
+	    const data = {
+	        categories: response.chartData.categories,
+	        series: response.chartData.series.map(series => ({
+	            name: series.name,
+	            data: series.data.map(value => parseFloat(value) || 0)
+	        }))
+	    };
+	    
+	    // 차트 크기를 계산하는 함수
+	    function getChartSize() {
+	        return {
+	            // width: window.innerWidth - 1200,
+				width: parentElement.clientWidth-100,
+	            height: window.innerHeight - 630
+				// height: parentElement.clientHeight
+	        };
+	    }
+	    
+	    const options = {
+	        chart: { 
+	            title: '출퇴근 현황',
+	            ...getChartSize()
+	        },
+	        xAxis: {
+	            title: '날짜'
+	        },
+	        yAxis: {
+	            title: '시간'
+	        },
+	        tooltip: {
+	            formatted: (value) => `${value}시간`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        },
+	        series: {
+	            spline: true,
+	            showDot: true
+	        },
+	        theme: {
+	            series: {
+	                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96c93d', '#7950f2']
+	            }
+	        }
+	    };
+
+	    chart = toastui.Chart.lineChart({ el, data, options });
+	    
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize();
+	        chart.resize({ width, height });
+	    });
+	}
+
+
+
+
+
+
+</script>
+
+</html>

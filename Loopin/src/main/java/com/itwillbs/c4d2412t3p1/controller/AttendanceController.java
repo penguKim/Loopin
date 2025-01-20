@@ -18,12 +18,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.AttendanceDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.HolidayDTO;
 import com.itwillbs.c4d2412t3p1.entity.Attendance;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.AttendanceService;
+import com.itwillbs.c4d2412t3p1.service.CommuteService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -34,6 +40,7 @@ import lombok.extern.java.Log;
 public class AttendanceController {
 	
 	private final AttendanceService attendanceService;
+	private final CommuteService commuteService;
 	
 	@GetMapping("/attendance_list")
 	public String attendance_list() {
@@ -43,37 +50,20 @@ public class AttendanceController {
 	
 	@ResponseBody
 	@GetMapping("/select_ATTENDANCE")
-	public ResponseEntity<List<Map<String, Object>>> select_ATTENDANCE() {
-		log.info("조회 시도");
-		List<Map<String, Object>> attendances = attendanceService.select_ATTENDANCE();
+	public ResponseEntity<Map<String, Object>> select_ATTENDANCE() {
 		
-		List<Map<String, Object>> response = attendances.stream().map(attendance -> {
-	        Map<String, Object> row = new HashMap<>();
-
-	        // 키를 소문자로 변환하여 새로운 맵에 저장
-	        for (Entry<String, Object> entry : attendance.entrySet()) {
-	            String key = entry.getKey().toLowerCase();
-	            Object value = entry.getValue();
-
-	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
-	            if (value instanceof oracle.sql.TIMESTAMP) {
-	                try {
-	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
-	                } catch (SQLException e) {
-//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
-	                    value = null; // 변환 실패 시 null 처리
-	                }
-	            }
-
-	            // row에 변환된 값 추가
-	            row.put(key, value);
-	        }
-
-	        return row;
-	        
-	    }).collect(Collectors.toList());
-		
-		return ResponseEntity.ok(response);
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> annuals = attendanceService.select_ATTENDANCE();
+			response.put("result", true);
+			response.put("data", annuals);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 	
 	@GetMapping("/annual_regist")
@@ -89,7 +79,6 @@ public class AttendanceController {
 
 	    // 서비스 호출로 데이터를 가져옴
 	    List<Map<String, Object>> employees = attendanceService.select_EMPLOYEE_ANNUAL(employee_nm);
-	    log.info(employees.toString() + " employees 조회 시도");
 
 	    // 데이터 가공
 	    List<Map<String, Object>> response = employees.stream().map(employee -> {
@@ -122,40 +111,25 @@ public class AttendanceController {
 	}
 
 	@ResponseBody
-	@GetMapping("/select_ANNUAL")
-	public ResponseEntity<List<Map<String, Object>>> select_ANNUAL(AttendanceDTO attendanceDTO) {
+	@GetMapping("/select_filer_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_filer_ANNUAL(AttendanceDTO attendanceDTO) {
 	    System.out.println("받은 데이터: " + attendanceDTO); // 디버깅용
 	    
-	    List<Map<String, Object>> attendances = attendanceService.select_ANNUAL(attendanceDTO);
 	    // 로직 처리 후 성공 응답
-	    List<Map<String, Object>> response = attendances.stream().map(attendance -> {
-	        Map<String, Object> row = new HashMap<>();
-
-	        // 키를 소문자로 변환하여 새로운 맵에 저장
-	        for (Entry<String, Object> entry : attendance.entrySet()) {
-	            String key = entry.getKey().toLowerCase();
-	            Object value = entry.getValue();
-
-	            // Oracle TIMESTAMP -> java.sql.Timestamp 변환
-	            if (value instanceof oracle.sql.TIMESTAMP) {
-	                try {
-	                    value = ((oracle.sql.TIMESTAMP) value).timestampValue(); // Oracle TIMESTAMP를 java.sql.Timestamp로 변환
-	                } catch (SQLException e) {
-//	                    log.error("Failed to convert Oracle TIMESTAMP to java.sql.Timestamp", e);
-	                    value = null; // 변환 실패 시 null 처리
-	                }
-	            }
-
-	            // row에 변환된 값 추가
-	            row.put(key, value);
-	            row.get("service_years");
-	        }
-
-	        return row;
-	        
-	    }).collect(Collectors.toList());
+	    Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> annuals = attendanceService.select_filer_ANNUAL(attendanceDTO);
+			
+			response.put("result", true);
+			response.put("data", annuals);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	    
-	    return ResponseEntity.ok(response);
 	}
 	
 	@GetMapping("/holiday_regist")
@@ -170,6 +144,7 @@ public class AttendanceController {
 
 	    return ResponseEntity.ok(list);
 	}
+	
 
 	@ResponseBody
 	@GetMapping("/select_period_HOLIDAY")
@@ -208,34 +183,60 @@ public class AttendanceController {
 	    return ResponseEntity.ok(response);
 	}
 	
+	@LogActivity(value = "입력", action = "공휴일등록")
+	@ResponseBody
 	@PostMapping("/insert_HOLIDAY")
-    public ResponseEntity<String> insert_HOLIDAY(@RequestBody List<Map<String, String>> holidays) {
-        try {
-        	attendanceService.insert_HOLIDAY(holidays);
-            return ResponseEntity.ok("공휴일 데이터가 성공적으로 저장되었습니다.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("데이터 저장 중 오류가 발생했습니다.");
-        }
+    public ResponseEntity<Map<String, Object>> insert_HOLIDAY(@RequestBody List<Map<String, String>> holidays) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		
+		try {
+			attendanceService.insert_HOLIDAY(holidays);
+			
+			List<Holiday> data = attendanceService.select_HOLIDAY();
+			
+			response.put("result", true);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+				
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
     }
 	
+	// 휴가 등록
+	@LogActivity(value = "입력", action = "연차등록")
+	@ResponseBody
 	@PostMapping("/insert_ANNUAL")
 	public ResponseEntity<Map<String, Object>> insert_ANNUAL(@RequestBody String annual_yr) {
 		
+		log.info("날짜"+annual_yr);
+		
 		List<Map<String, Object>> annuals = attendanceService.select_ATTENDANCE();
 		
-		Map<String, Object> data = new HashMap<>();
 		
-		Map<String, Object> response = new HashMap<>();
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			attendanceService.insert_ANNUAL(annuals);
+			
+			List<Map<String, Object>> data = attendanceService.select_ATTENDANCE();
+			
+			response.put("result", true);
+			response.put("data", data);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 		
-		List<Map<String, Object>> codeList = attendanceService.select_ATTENDANCE();
-		
-		attendanceService.insert_ANNUAL(annuals);
-		data.put("contents", codeList);
-		response.put("data", data);
-		return ResponseEntity.ok(response);
 	}
 	
+	@LogActivity(value = "입력", action = "회사휴일등록")
 	@ResponseBody
 	@PostMapping("/insert_company_HOLIDAY")
 	public Map<String, Object> insert_company_HOLIDAY(@RequestBody Map<String, Object> requestData) {
@@ -280,7 +281,8 @@ public class AttendanceController {
 
 	    return response;
 	}
-
+	
+	@LogActivity(value = "삭제", action = "회사휴일삭제")
 	@ResponseBody
 	@PostMapping("/delete_company_HOLIDAY")
 	public Map<String, Object> delete_company_HOLIDAY(@RequestBody List<Map<String, Object>> requestData) {
@@ -311,4 +313,95 @@ public class AttendanceController {
 
 	    return response;
 	}
+	
+	@ResponseBody
+	@GetMapping("/select_APPROVAL_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL() {
+		
+		log.info("요청 데이터: {}"+commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		
+		Map<String, Object> params = new HashMap<>(); 
+		
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		log.info("요청 데이터: {}" + commuteService.getEmployee());
+		params.put("employee_cd", commuteService.getEmployee());
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
+			log.info("요청 데이터: {}" + annuals);
+			response.put("result", true);
+			response.put("data", annuals);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	@ResponseBody
+	@PostMapping("/select_calendar_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_calendar_ANNUAL(@RequestBody Map<String, Object> params) {
+		
+		EmployeeDetails employee = commuteService.getEmployee();
+		List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY((String)params.get("holiday_dt1"),(String)params.get("holiday_dt2"));
+		log.info("홀리데이리스트" + holidayList);
+		
+		
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		params.put("employee_cd", employee.getEmployee_cd());		
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			log.info("파람" + params);
+			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
+			
+			response.put("result", true);
+			response.put("holidayList", holidayList);
+			response.put("data", data);
+			//response.put("holidayList", holidayList);
+			log.info("리스트" + response);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	@ResponseBody
+	@GetMapping("/select_detail_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_detail_ANNUAL(@RequestParam("date") String date) {
+		
+		EmployeeDetails employee = commuteService.getEmployee();
+		Map<String, Object> params = new HashMap<>();
+		
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		params.put("employee_cd", employee.getEmployee_cd());		
+		params.put("date", date);		
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			log.info("파람" + params);
+			List<Map<String, Object>> list = attendanceService.select_calendar_ANNUAL(params);
+			Map<String, Object> data = new HashMap<>();
+			data.put("contents", list);
+			response.put("result", true);
+			response.put("data", data);
+			//response.put("holidayList", holidayList);
+			log.info("리스트" + response);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 }

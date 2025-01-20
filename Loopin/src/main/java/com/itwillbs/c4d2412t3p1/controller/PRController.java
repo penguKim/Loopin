@@ -1,10 +1,13 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
+import org.apache.catalina.connector.Response;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -108,13 +111,16 @@ public class PRController {
 		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
 		String BS = data.getBS();
 		log.info("BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+BS);
+		String employee_cd = data.getEmployee_cd();
+		String employee_nm = data.getEmployee_nm();
+		String workingtime = data.getWorkingtime();
 		String overworkingtime = data.getOverworkingtime();
 		String nightworkingtime = data.getNightworkingtime();
 		String weekendworkingtime = data.getWeekendworkingtime();
 		String holydayworkingtime = data.getHolydayworkingtime();
-		String leastannual = data.getLeastannual();
+		String remainleave = data.getRemainleave();
 		String bonus = data.getBonus();
-		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus);
+		List<PRDTO> list = prS.calculatingMachine(employee_cd, employee_nm, BS,workingtime,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,remainleave,bonus);
 		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
 		return list;
 	}
@@ -126,23 +132,29 @@ public class PRController {
 
 	@GetMapping("/getempandbs")
 	@ResponseBody
-	public List<Employee> getempandbs() {
+	public List<Employee> getempandbs(@RequestParam("premth") String premth) {
 		
-		List<Employee> list = prS.select_empworklastmth();
+		List<Employee> list = prS.select_empworklastmth(premth);
 		
 		return list;
 	}
 	
 	@GetMapping("/getworkingtimeformth")
 	@ResponseBody
-	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList) {
+	public List<Map<String, Object>> getworkingtimeformth(@RequestParam("employee_cds") List<String> employee_cdList, @RequestParam("premth") String premth) {
 		
-//		ObjectMapper objMapper = new ObjectMapper();
-//		List<String> employee_cdList = null;
-		
-//		List<String> employee_cdList = Arrays.asList(employee_cd.split(","));
 		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!employee_list :"+employee_cdList);
-		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList);
+		List<Map<String, Object>> list = prS.select_worktimelastmth(employee_cdList, premth);
+		
+		return list;
+	}
+	
+	@PostMapping("/update_commuteprandcalpr")
+	@ResponseBody
+	public List<Map<String,Object>> update_commutepr(@RequestBody List<PR_calculationMDTO> wtdata) throws ScriptException {
+		prS.update_commutepr();
+
+		List<Map<String, Object>> list = prS.calculatesalAllemp(wtdata);
 		
 		return list;
 	}

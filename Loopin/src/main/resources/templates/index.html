@@ -3,62 +3,100 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
+<script src="/assets/js/common.js"></script>
+<style>
+	.card {
+	    margin-bottom: 32px;
+	    border: none;
+	    border-radius: 5px;
+	    box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+	}
+	.row {
+        color: #012970;
+	}
+	#tab_calendar {
+		padding: 30px 30px 30px 50px !important;
+	}
+	.toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
+	    font-size: 11px !important;
+	    font-weight: normal !important;
+	}
+</style>
+				
 <body>
 	
 	<main id="main" class="main">
-		<div class="pagetitle">
-			<h1></h1>
-		</div>
 		<section class="section dashboard">
 			<div class="row">
 				<!--왼쪽 시작 -->
-				<div class="col-lg-8">
-					<div class="row">
-						
-						<!-- 왼쪽 1번째 위 -->
-						<div id="calendar" style="height: 800px; margin-bottom: 30px;">
-						</div>
-
-						<!-- 왼쪽 2번째 중간 -->
-<!--						<div class="col-12">-->
-<!--							<div class="card top-selling overflow-auto">-->
-<!--								<div class="card-body pb-0">-->
-<!--									<h5 class="card-title">남은 휴가</h5>-->
-<!--									<table class="table table-borderless">-->
-<!--										<thead>-->
-<!--											<tr>-->
-<!--												<th scope="col">총 휴가 일수</th>-->
-<!--												<th scope="col">사용한 휴가 일수</th>-->
-<!--												<th scope="col">남은 휴가 일수</th>-->
-<!--											</tr>-->
-<!--										</thead>-->
-<!--										<tbody>-->
-<!--											<tr>-->
-<!--												<td th:text="${['ANNUAL_AA']}"></td>-->
-<!--												<td th:text="${['ANNUAL_UA']}"></td>-->
-<!--												<td th:text="${['ANNUAL_RA']}"></td>-->
-<!--											</tr>-->
-<!--										</tbody>-->
-<!--									</table>-->
-<!--								</div>-->
-<!--							</div>-->
+				<div class="col-lg-8 ">
+					<div class="card" id="div_card" style="min-height: 400px;">
+<!--						<div class="pagetitle">-->
+<!--							<h3>나의 출퇴근 정보</h3>-->
 <!--						</div>-->
+						<div class="row">
+							<!-- 왼쪽 1번째 위 -->
+							<div class="tab-pane fade show active" id="tab_calendar" role="tabpanel" aria-labelledby="calendar-tab">
+								<div class="d-flex justify-content-center align-items-center mb-2">
+								    <button type="button" class="btn btn-outline-secondary" id="btn_calendar_prev">이전</button>
+								    <span id="title_calendar" class="d-inline-block text-center mx-4 fs-4 fw-bold" style="min-width: 140px;"></span>
+								    <button type="button" class="btn btn-outline-secondary" id="btn_calendar_next">다음</button>
+								</div>
+								<div id="div_calendar"></div>
+							</div>
+	
+							<!-- 왼쪽 2번째 중간 -->
+	<!--						<div class="col-12">-->
+	<!--							<div class="card top-selling overflow-auto">-->
+	<!--								<div class="card-body pb-0">-->
+	<!--									<h5 class="card-title">남은 휴가</h5>-->
+	<!--									<table class="table table-borderless">-->
+	<!--										<thead>-->
+	<!--											<tr>-->
+	<!--												<th scope="col">총 휴가 일수</th>-->
+	<!--												<th scope="col">사용한 휴가 일수</th>-->
+	<!--												<th scope="col">남은 휴가 일수</th>-->
+	<!--											</tr>-->
+	<!--										</thead>-->
+	<!--										<tbody>-->
+	<!--											<tr>-->
+	<!--												<td th:text="${['ANNUAL_AA']}"></td>-->
+	<!--												<td th:text="${['ANNUAL_UA']}"></td>-->
+	<!--												<td th:text="${['ANNUAL_RA']}"></td>-->
+	<!--											</tr>-->
+	<!--										</tbody>-->
+	<!--									</table>-->
+	<!--								</div>-->
+	<!--							</div>-->
+	<!--						</div>-->
+						</div>
 					</div>
 				</div>
-
 				<!-- 오른쪽 시작 -->
 				<div class="col-lg-4">
 
 					<!-- 오른쪽 1번째 위 -->
 					<div class="card">
-						<div class="card-body">
+						<div class="card-body justify-content-center align-items-center">
 							<!-- Card with titles, buttons, and links -->
-							<h5 class="card-title">오늘 근무</h5>
-							<h6 class="card-subtitle mt-3" th:text="${['EMPLOYEE_NM']}"></h6>
-							<h6 class="card-subtitle mt-3" th:text="|${['COMMON_NM']}팀|"></h6>
-							<h6 class="card-subtitle mt-3" id="current_day"></h6>
-							<h6 class="card-subtitle mt-3" th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|근무일정 : ${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></h6>
-							<div class="d-flex justify-content-between">
+							<h5 class="card-title">근무 정보</h5>
+							<div class="row  ">
+								<h6 class="col-lg-5 col-md-4 label ">이름</h6>
+								<p class="col-lg-5 col-md-4 label " th:text="${['EMPLOYEE_NM']}"></p>
+							</div>
+							<div class="row  ">
+								<h6 class="col-lg-5 col-md-4 label ">부서</h6>
+								<p class="col-lg-5 col-md-4 label " th:text="|${['COMMON_NM']}팀|"></p>
+							</div>
+							<div class="row  ">
+								<h6 class="col-lg-5 col-md-4 label ">오늘날짜</h6>
+								<p class="col-lg-5 col-md-4 label " id="current_day"></p>
+							</div>
+							<div class="row  ">
+								<h6 class="col-lg-5 col-md-4 label ">근무일정</h6>
+								<p class="col-lg-5 col-md-4 label " th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></p>
+							</div>
+							<div class="d-flex justify-content-between mt-3">
 								<input type="button" id="btn_attendance" class="btn btn-primary flex-fill mx-4" value="출근하기" th:disabled="${isAttendance}">
 								<input type="button" id="btn_leave_work" class="btn btn-primary flex-fill mx-4" value="퇴근하기" th:disabled="${isLeaveWork}">
 							</div>
@@ -101,11 +139,11 @@
 						<div class="card-body">
 							<h5 class="card-title">나의 결재현황</h5>
 							<ul class="list-group list-group-flush"> <!-- 나중에 긴급공지면 빨간색 css-->
-								<li class="list-group-item"><a href="/log">[공지] 결재 요청 가이드라인</a></li>
-								<li class="list-group-item"><a href="/log">발주서 품의</a></li>
-								<li class="list-group-item"><a href="/log">출장보고서</a></li>
-								<li class="list-group-item"><a href="/log">[긴급] 비품신청서</a></li>
-								<li class="list-group-item"><a href="/log" style="float: right;">전체보기 (10) ></a></li>
+								<li class="list-group-item"><a href="/approval_list">[공지] 결재 요청 가이드라인</a></li>
+								<li class="list-group-item"><a href="/approval_list">발주서 품의</a></li>
+								<li class="list-group-item"><a href="/approval_list">출장보고서</a></li>
+								<li class="list-group-item"><a href="/approval_list">[긴급] 비품신청서</a></li>
+								<li class="list-group-item"><a href="/approval_list" style="float: right;">전체보기 (10) ></a></li>
 							</ul><!-- End Clean list group -->
 						</div>
 					</div>
@@ -118,8 +156,11 @@
 	// 변수
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
-
-
+	const div_calendar = document.getElementById('div_calendar');
+	const btn_calendar_prev = $('#btn_calendar_prev');
+	const btn_calendar_next = $('#btn_calendar_next');
+	const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
+	
 	//const {year, month, day} = formatDate();
 	$(function () {
 		const { year, month, day, hours, minutes, seconds } = formatDate(); // 함수가 반환한 값 사용
@@ -128,6 +169,46 @@
 		$(".pagetitle h1").text(`${year}년 ${month}월`);
 		$("#current_day").text(`${year}년 ${month}월 ${day}일`);
 		$("#current_time").text(`${year}-${month}-${day} ${hours}:${minutes}:${seconds} `);
+		
+		make_calendar();
+		
+		// 이전 달 보기 이벤트
+		btn_calendar_prev.on('click', function(){ 
+			calendar.prev();
+			updateCalendarTitle();
+			getCalendarList();
+		}); 
+
+
+		// 다음 달 보기 이벤트
+		btn_calendar_next.on('click', function(){ 
+			calendar.next();
+			updateCalendarTitle();
+			getCalendarList();
+		});
+		
+		
+		setElementHeight('.col-lg-8', -140);
+		setElementHeight('.col-lg-4', -140);
+		setElementHeight('#div_calendar', -320);
+		
+		$(window).resize(function() {
+			setElementHeight('.col-lg-8', -140);
+			setElementHeight('.col-lg-4', -140);
+			setElementHeight('#div_calendar', -320);
+			if(grid != null) {
+				setGridHeight(grid, -430);
+			}
+		});
+
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -500);
+		    } else {
+		        setGridHeight(grid, -430);
+		    }
+		});
+		
 		
 	});
 	
@@ -142,93 +223,33 @@
 	    const seconds = String(originalDate.getSeconds()).padStart(2, '0'); // 2자리로 포맷
 
 	    // 리턴값 확장
-	    return {
-	        year,
-	        month,
-	        day,
-	        hours,
-	        minutes,
-	        seconds
-	    };
+	    return { year, month, day, hours, minutes, seconds };
 	}
 	
-	const calendar = new tui.Calendar('#calendar', {
-			defaultView: 'month',
-			template: {
-				time(event) {
-					const { start, end, title } = event;
-
-					return `<span style="color: white;">${formatTime(start)}~${formatTime(end)} ${title}</span>`;
-			},
-				allday(event) {
-					return `<span style="color: gray;">${event.title}</span>`;
-				},
-			},
-			calendars: [
-				{
-					id: 'cal1',
-					name: 'Personal',
-					backgroundColor: '#03bd9e',
-				},
-				{
-					id: 'cal2',
-					name: 'Work',
-					backgroundColor: '#00a9ff',
-				},
-			],
-			
-			
-			
-		});
-		
-		calendar.createEvents([
-			  {
-			    id: '1',
-			    calendarId: '1',
-			    title: 'my event',
-			    category: 'time',
-			    dueDateClass: '',
-			    start: '2024-12-18T22:30:00+09:00',
-			    end: '2024-12-19T02:30:00+09:00',
-			  },
-			  {
-			    id: '2',
-			    calendarId: '1',
-			    title: 'second event',
-			    category: 'time',
-			    dueDateClass: '',
-			    start: '2018-01-18T17:30:00+09:00',
-			    end: '2018-01-19T17:31:00+09:00',
-			  },
-			]);
-		
-		const timedEvent = calendar.getEvent('1', '1'); // EventObject
-		calendar.on('clickEvent', ({ event }) => {
-		console.log(event); // EventObject
-	});
+	
 	
 		// 출근하기
-		$('#btn_attendance, #btn_leave_work').on('click', function() {
-			console.log('asdasd');
-			let isAttendance = $(this).attr('id') == 'btn_attendance';
-			let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
-			let timeInterval;
-			Swal.fire({
-				icon: 'question',
-				title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
-				html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
-				didOpen: () => {
-					// 1초마다 시간 업데이트
-					timeInterval = setInterval(() => {
-						$('#currentTime').text(getDateTime(new Date));
-					}, 1000);
-				},
-				showCancelButton: true,
-				confirmButtonColor: '#0d6efd',
-				cancelButtonColor: '#6c757d',
-				confirmButtonText: '확인',
-				cancelButtonText: '취소',
-				reverseButtons: true, 
+	$('#btn_attendance, #btn_leave_work').on('click', function() {
+		console.log('asdasd');
+		let isAttendance = $(this).attr('id') == 'btn_attendance';
+		let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
+		let timeInterval;
+		Swal.fire({
+			icon: 'question',
+			title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
+			html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
+			didOpen: () => {
+				// 1초마다 시간 업데이트
+				timeInterval = setInterval(() => {
+					$('#currentTime').text(getDateTime(new Date));
+				}, 1000);
+			},
+			showCancelButton: true,
+			confirmButtonColor: '#0d6efd',
+			cancelButtonColor: '#6c757d',
+			confirmButtonText: '확인',
+			cancelButtonText: '취소',
+			reverseButtons: true, 
 			}).then(result => {
 				clearInterval(timeInterval);
 				if (result.isConfirmed) { 
@@ -301,6 +322,180 @@
 			if(element != '') {
 				element.focus();
 			}
+		}
+		// 달력 만들기
+		function make_calendar(){ 
+			calendar = new tui.Calendar(div_calendar, {
+				usageStatistics: false,
+				defaultView: 'month',
+				isReadOnly: true,
+				month: {
+					isAlways6Weeks: false, // 해당 달만 표시 (6주 고정 아님)
+				},
+				theme: {
+					common: {
+						holiday: {
+						    color: 'rgba(255, 64, 64)', // 공휴일 텍스트 색상
+						},
+						saturday: {
+						    color: 'rgba(64, 64, 255)', // 토요일 텍스트 색상
+						},
+					},
+				},
+				calendars: [
+					{
+						id: 'cal1',
+						name: '총결원',
+						backgroundColor: '#03bd9e',
+					},
+					{
+						id: 'cal2',
+						name: '휴가자',
+						backgroundColor: '#ffffff',
+						borderLeft: '#ffffff',
+					},
+					{
+						id: 'cal3',
+						name: '출장',
+						backgroundColor: '#ffffff',
+					},
+				]
+			});
+			
+			updateCalendarTitle(); // 년월 타이틀
+			getCalendarList(); // 출퇴근 목록 조회
+			
+			calendar.on('clickDayname', function(event) {
+			    const clickedDate = event.date; // 클릭된 날짜 정보
+			    console.log('클릭된 날짜:', clickedDate);
+			});
+		    
+		    /*calendar.on('clickEvent', ({ event }) => {
+				if(isAdmin) {
+					modal_detail(event);
+				}
+			});*/
+
+		};
+		
+		// 달력 제목 업데이트
+		function updateCalendarTitle() {
+		    const currentDate = calendar.getDate();
+		    const year = currentDate.getFullYear();
+		    const month = currentDate.getMonth() + 1;
+		    const formattedDate = `${year}년 ${month}월`;
+		    $("#title_calendar").empty().text(formattedDate);
+		}
+		
+		// 달력 데이터 조회
+		function getCalendarList() {
+			calendarStartDate = getDate(calendar.getDateRangeStart().toDate());
+			calendarEndDate = getDate(calendar.getDateRangeEnd().toDate());
+			$.ajax({
+				type: 'post',
+				url: '/select_COMMUTE_calendar',
+				contentType: 'application/json',
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				data: JSON.stringify({
+				    calendarStartDate: calendarStartDate,
+				    calendarEndDate: calendarEndDate
+				}),
+				success: function(data) {
+					if(!data['result']) {
+						showAlert('', 'error', '기록부 조회 실패', '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
+					} else {
+						// 캘린더 템플릿 업데이트
+						calendar.setOptions({
+							template: {
+								monthGridHeader: function(model) {
+									const date = model.date;
+									const dayNum = date.split('-')[2];
+									const holiday = data.holidayList.find(h => h.holiday_dt == date);
+									const work = data.list.find(w => w.commute_wd == date);
+									const isToday = date == getDate(new Date());
+									if(holiday && work) {
+										return `
+										<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
+											${dayNum}
+											<span class="holiday-name" style="font-size: 12px;">
+												${holiday.holiday_nm}
+											</span>
+										</span>
+										<span class="fw-bold" style="color: #ff4040"> | ( ${work.total} / ${work.total_emp} )</span>
+										`;
+									}
+									if(holiday) {
+										return `
+										<span class="tui-full-calendar-weekday-grid-date ms-1" style="color: #ff4040">
+											${dayNum}
+											<span class="holiday-name" style="font-size: 12px;">
+												${holiday.holiday_nm}
+											</span>
+										</span>`;
+									}
+									if(isAdmin && work) {
+										return `
+										<span class="tui-full-calendar-weekday-grid-date ms-1">
+											${dayNum}
+											<span class="fw-bold"> | ( ${work.total} / ${work.total_emp} )</span>
+										</span>`;
+									}
+									if(isToday) {
+						                return `<span class="toastui-calendar-weekday-grid-date 
+										toastui-calendar-weekday-grid-date-decorator 
+										toastui-calendar-template-monthGridHeader" style="color: #fff">${dayNum}</span>`;
+						            }
+						            return `<span class="tui-full-calendar-weekday-grid-date">${dayNum}</span>`;
+								},
+							}
+						});
+						   
+						// calendar.render();
+						calendar.clear();
+										
+						let list = data['list'];
+						const event = list.map(commute => {
+						    if (isAdmin) {
+						        return {
+						            id: `${commute.commute_wd}`,
+						            title: `지각: ${commute.late} 근무중: ${commute.working} 퇴근: ${commute.leave}`,
+						            start: commute.commute_wd,
+						            end: commute.commute_wd,
+						            isAllday: true,
+						            category: 'allday',
+						            backgroundColor: '#fff'
+						        };
+						    } else {
+						        let title = '';
+						        if (commute.commute_wt) {
+						            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
+						            const startTime = commute.commute_wt;
+						            title = commute.commute_lt 
+						                ? `${startTime} ~ ${commute.commute_lt}` 
+						                : `${startTime} ~`;
+						        }
+						        
+						        return {
+						            id: `${commute.commute_wd}`,
+						            title: title,
+						            start: commute.commute_wd,
+						            end: commute.commute_wd,
+						            isAllday: true,
+						            category: 'allday',
+						            backgroundColor: '#fff'
+						        };
+						    }
+						});
+						calendar.createEvents(event);
+						
+					}
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
 		}
 	
 </script>

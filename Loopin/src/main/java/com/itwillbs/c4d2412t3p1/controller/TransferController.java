@@ -3,7 +3,6 @@ package com.itwillbs.c4d2412t3p1.controller;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,11 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.TransferDTO;
-import com.itwillbs.c4d2412t3p1.entity.Transfer;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.service.TransferService;
@@ -33,7 +30,6 @@ import lombok.extern.java.Log;
 public class TransferController {
 
 	private final TransferService transferService;
-	private final EmployeeService employeeService;
 
 	@GetMapping("/transfer_list")
 	public String transfer_list(Model model) {
@@ -50,7 +46,6 @@ public class TransferController {
 	}
 
 //	인사발령 조회
-	@LogActivity(value = "조회", action = "인사발령")
 	@GetMapping("/select_TRANSFER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_TRANSFER() {
@@ -111,61 +106,87 @@ public class TransferController {
 //	인사발령 등록
 	@LogActivity(value = "등록", action = "인사발령")
 	@PostMapping("/insert_TRANSFER")
-	public ResponseEntity<Map<String, String>> insert_TRANSFER(@RequestBody TransferDTO transferDTO) {
-		Map<String, String> response = new HashMap<>();
-		try {
-			// 서비스 계층에 작업 위임
-			transferService.handleTransferInsert(transferDTO);
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> insert_TRANSFER(@RequestBody TransferDTO transferDTO) {
+	    Map<String, Object> response = new HashMap<>();
 
-			response.put("message", "데이터가 성공적으로 저장되었습니다.");
-			return ResponseEntity.ok(response);
-		} catch (IllegalArgumentException e) {
-			response.put("message", "데이터 저장 실패: " + e.getMessage());
-			return ResponseEntity.badRequest().body(response);
-		} catch (Exception e) {
-			response.put("message", "데이터 저장 실패: " + e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	    try {
+	        // 서비스 호출
+	        Map<String, Object> updatedData = transferService.handleTransferInsert(transferDTO);
+
+	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
+	        response.put("data", updatedData);
+
+	        log.info("인사발령 등록 성공 - 응답 데이터: " + updatedData);
+
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        log.severe("인사발령 등록 실패 - 에러 메시지: " + e.getMessage());
+	        response.put("message", "데이터 저장 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
-	
-	@PutMapping("/update_TRANSFER")
-    @ResponseBody
-    public ResponseEntity<Map<String, String>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            // 서비스 계층에 작업 위임
-            transferService.handleTransferUpdate(transferDTO);
 
-            response.put("message", "데이터가 성공적으로 수정되었습니다11.");
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            response.put("message", "데이터 수정 실패22: " + e.getMessage());
-            return ResponseEntity.badRequest().body(response);
-        } catch (Exception e) {
-            response.put("message", "데이터 수정 실패33: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
+
+	
+	@LogActivity(value = "수정", action = "인사발령")
+	@PutMapping("/update_TRANSFER")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> update_TRANSFER(@RequestBody TransferDTO transferDTO) {
+	    Map<String, Object> response = new HashMap<>();
+
+	    try {
+	        // 서비스 호출 후 변경된 데이터 반환
+	        Map<String, Object> updatedData = transferService.handleTransferUpdate(transferDTO);
+
+	        response.put("message", "데이터가 성공적으로 수정되었습니다.");
+	        response.put("data", updatedData);
+
+	        // 로깅
+	        log.info("인사발령 수정 성공 - 응답 데이터: " + updatedData);
+
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        log.severe("인사발령 수정 실패 - 에러 메시지: " + e.getMessage());
+	        response.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
 	
 //	인사발령 삭제
 	@LogActivity(value = "삭제", action = "인사발령")
 	@PostMapping("/delete_TRANSFER")
+	@ResponseBody
 	public ResponseEntity<Map<String, Object>> delete_TRANSFER(@RequestBody Map<String, List<Long>> request) {
-		List<Long> ids = request.get("ids");
-		log.info("삭제 요청 데이터: " + request.toString());
+	    Map<String, Object> response = new HashMap<>();
 
-		log.info(ids.toString());
-		Map<String, Object> response = new HashMap<>();
+	    try {
+	        // 요청 데이터에서 IDs 추출
+	        List<Long> ids = request.get("ids");
+	        if (ids == null || ids.isEmpty()) {
+	            throw new IllegalArgumentException("삭제할 ID가 없습니다.");
+	        }
 
-		try {
-			transferService.delete_TRANSFER(ids); // Service 계층에서 삭제 처리
-			response.put("success", true);
-			return ResponseEntity.ok(response);
-		} catch (Exception e) {
-			response.put("success", false);
-			response.put("message", e.getMessage());
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
+	        // 서비스 호출
+	        transferService.delete_TRANSFER(ids);
+
+	        // 응답 데이터 구성
+	        response.put("success", true);
+	        response.put("deleted_ids", ids);
+	        response.put("message", "데이터가 성공적으로 삭제되었습니다.");
+
+	        // 로깅
+	        log.info("인사발령 삭제 성공 - 삭제된 IDs: " + ids);
+
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        log.severe("인사발령 삭제 실패 - 에러 메시지: " + e.getMessage());
+	        response.put("success", false);
+	        response.put("message", "데이터 삭제 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
 	}
+
 
 }

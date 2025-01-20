@@ -21,8 +21,8 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			+ "transfer_type.common_nm AS transfer_ac, " + "from_position.common_nm AS transfer_og, "
 			+ "to_position.common_nm AS transfer_ag, " + "from_department.common_nm AS transfer_od, "
 			+ "to_department.common_nm AS transfer_adp, "
-			+ "CASE WHEN t.transfer_aw = true THEN '완료' ELSE '대기' END AS transfer_aw, " + "t.transfer_mg " +
-			"FROM TRANSFER t " + "JOIN Employee e ON t.employee_cd = e.employee_cd "
+			+ "CASE WHEN t.transfer_aw = true THEN '완료' ELSE '대기' END AS transfer_aw, " + "t.transfer_mg "
+			+ "FROM TRANSFER t " + "JOIN Employee e ON t.employee_cd = e.employee_cd "
 			+ "LEFT JOIN COMMON_CODE transfer_type ON t.transfer_ac = transfer_type.common_cc AND transfer_type.common_gc = 'TRTYPE' "
 			+ "LEFT JOIN COMMON_CODE from_position ON t.transfer_og = from_position.common_cc AND from_position.common_gc = 'POSITION' "
 			+ "LEFT JOIN COMMON_CODE to_position ON t.transfer_ag = to_position.common_cc AND to_position.common_gc = 'POSITION' "
@@ -30,6 +30,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			+ "LEFT JOIN COMMON_CODE to_department ON t.transfer_adp = to_department.common_cc AND to_department.common_gc = 'DEPARTMENT'")
 	List<Object[]> findAllWithDetails();
 
+	
 	// 특정 employee_cd 데이터 조회
 	@Query("SELECT " + "t.transfer_id, " + "t.employee_cd, " + "e.employee_nm, " + "t.transfer_ad, "
 			+ "transfer_type.common_nm AS transfer_ac, " + "from_position.common_nm AS transfer_og, "
@@ -85,13 +86,20 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			""", nativeQuery = true)
 	void updateTransfer_aw(@Param("transfer_id") Long transfer_id);
 
+	
+	
 	@Query(value = """
 			    SELECT *
 			    FROM TRANSFER
 			    WHERE transfer_ad = :today AND transfer_aw = 0
 			""", nativeQuery = true)
 	List<Transfer> findTransfersByDate(@Param("today") String today);
-	
 
+	@Query("SELECT new map(t.transfer_id as transfer_id, t.employee_cd as employee_cd, "
+			+ "t.transfer_ac as transfer_ac, t.transfer_ad as transfer_ad, t.transfer_adp as transfer_adp, "
+			+ "t.transfer_ag as transfer_ag, t.transfer_aw as transfer_aw, t.transfer_od as transfer_od, "
+			+ "t.transfer_og as transfer_og, t.transfer_mg as transfer_mg) "
+			+ "FROM TRANSFER t WHERE t.transfer_id = :transfer_id")
+	Map<String, Object> selectTransferById(@Param("transfer_id") Long transferId);
 
 }

@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,7 +19,8 @@ import lombok.Setter;
 public class PRDetail {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "prd_seq")
+	@SequenceGenerator(name = "prd_seq", sequenceName = "prd_seq", allocationSize = 1)
 	@Column(name="prdetail_id")
 	private long prdetail_id;
 	
@@ -27,10 +29,12 @@ public class PRDetail {
 	
 	@Column(name="employee_cd")
 	private String employee_cd;
+
+	@Column(name="employee_nm")
+	private String employee_nm;
 	
 	@Column(name="prdetail_bs")
 	private BigDecimal predetail_bs;
-	//.setScale(0,BigDecimal.ROUND_HALF_UP); => 반올림 함수
 	
 	@Column(name="prdetail_mt")
 	private BigDecimal predetail_mt;
@@ -47,8 +51,8 @@ public class PRDetail {
 	@Column(name="prdetail_ha")
 	private BigDecimal predetail_ha;
 	
-	@Column(name="prdetail_aa")
-	private BigDecimal predetail_aa;
+	@Column(name="prdetail_rl")
+	private BigDecimal predetail_rl;
 	
 	@Column(name="prdetail_bn")
 	private BigDecimal predetail_bn;
