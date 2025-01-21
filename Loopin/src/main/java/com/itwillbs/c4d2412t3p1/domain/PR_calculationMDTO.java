@@ -42,6 +42,7 @@ public class PR_calculationMDTO {
 
     @JsonProperty("wm")
     private String wm;	
+   
     @JsonProperty("wr")
     private String wr;	
 }

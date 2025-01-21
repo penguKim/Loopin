@@ -6,9 +6,11 @@
 	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
 <main id="main" class="main">
 	<div class="card">
-		<div class="card-body">
-			<div class="card-title"> 급여 이력 조회</div>
-			<div id="gridbase"></div>
+		<div class="card" id="div_card">
+			<div class="card-body">
+				<div class="card-title"> 급여 이력 조회</div>
+				<div id="gridbase"></div>
+			</div>
 		</div>
 	</div>
 </main>
@@ -19,13 +21,10 @@
 	tui.Grid.applyTheme('striped');
 	
 	function formatCurrency(value) {
-		  if (value && typeof value === 'object' && value.amount !== undefined) {
-		    return value.amount.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });  // 객체의 'amount' 속성에 쉼표 추가
-		  } else if (typeof value === 'number') {
-		    return value.toLocaleString('ko-KR',{ style: 'currency', currency: 'KRW' });  // 숫자에 대해서도 쉼표 추가
+		if (typeof value === 'number') {
+		    return value.toLocaleString('ko-KR') + '원';
 		  }
-		  return value;  // 객체나 숫자가 아니면 원래 값 그대로 반환
-		}
+	}
 	
 	  ///////////////
 	 // 그리드 AJAX //
@@ -61,7 +60,7 @@
 		responsive: true,
 		scrollX: true,
 		scrollY: true,
-		bodyHeight : 665,
+		//bodyHeight : 665,
 		columns: [
 			{header: 'NO.', name: 'NUM', align: 'center'},
 			{header: '지급년월', name: 'PR_GM', align: 'center'},
@@ -414,6 +413,17 @@
 	$('#gridbase').on('click', '.btn_email', function(event) {
 		console.log('이메일 버튼 클릭됨');
 		console.log('이벤트 타겟', event.target); 
+	});
+	
+	  
+	setElementHeight('#div_card', -105);
+	
+	$(window).resize(function() {
+		setElementHeight('#div_card', -105);
+		setElementHeight('#div_calendar', -320);
+		if(grid != null) {
+			setGridHeight(grid, -430);
+		}
 	});
 	
 </script>

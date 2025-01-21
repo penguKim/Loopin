@@ -129,7 +129,7 @@
 	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
 	    SELECT 
 	        c.employee_cd,
-	        e.employee_nm,  <!-- EMPLOYEE 테이블에서 employee_nm을 가져옴 -->
+	        e.employee_nm,
 	        TO_CHAR(MIN(TO_DATE(c.commute_wd, 'YYYY-MM-DD')), 'YYYY-MM') AS pr_wm, 
 	        SUM(NVL(c.commute_ig, 0)) AS workingtime,
 	        SUM(NVL(c.commute_eg, 0)) AS overworkingtime, 
@@ -137,7 +137,7 @@
 	        SUM(NVL(c.commute_jg, 0)) AS weekendworkingtime, 
 	        SUM(NVL(c.commute_hg, 0)) AS holydayworkingtime
 	    FROM COMMUTE c
-	    JOIN EMPLOYEE e ON c.employee_cd = e.employee_cd  <!-- EMPLOYEE 테이블과 JOIN -->
+	    JOIN EMPLOYEE e ON c.employee_cd = e.employee_cd
 	    WHERE TO_DATE(c.commute_wd, 'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
 	                                              AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
 	      AND c.EMPLOYEE_CD IN 
