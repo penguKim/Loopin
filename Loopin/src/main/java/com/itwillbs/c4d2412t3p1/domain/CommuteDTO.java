@@ -35,6 +35,7 @@ public class CommuteDTO {
 	
 	private BigDecimal total_emp; // 총 사원
 	private BigDecimal total; // 출근 인원
+	private BigDecimal normal; // 정상출근
 	private BigDecimal late; // 지각
 	private BigDecimal working; // 근무중
 	private BigDecimal leave; // 퇴근
