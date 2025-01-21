@@ -44,19 +44,27 @@ import lombok.extern.java.Log;
 @Log
 public class NoticeController {
 
-	
 	private final NoticeService noticeService;
 	
-	// 결재 페이지로 이동
+	// 공지사항 페이지로 이동
 	@GetMapping("/notice_list")
 	public String notice_list(Model model) {
 		
 		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		
 		String role = employeeDetails.getEmployee_rl();
+		String dept = employeeDetails.getEmployee_dp();
+		String name = employeeDetails.getEmployee_nm();
 
+		
 		// 부서코드 가져오기 
 		model.addAttribute("dept_list", noticeService.selectCommonList("DEPARTMENT"));
+		
+	    // 현재 사용자의 부서코드 추가
+	    model.addAttribute("currentDept", dept);
+
+	    // 현재 사용자의 사원명 추가
+	    model.addAttribute("currentName", name);
 		
 		// 롤값 가져오기 
 		model.addAttribute("role", role);
@@ -64,7 +72,7 @@ public class NoticeController {
 		return "/notice/notice_list";
 	}
 
-	// 결재 현황 조회
+	// 공지사항 조회
 	@GetMapping("/select_NOTICE")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_NOTICE() {

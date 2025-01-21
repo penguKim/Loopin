@@ -31,13 +31,6 @@ public class NoticeService {
 	
 	private final NoticeRepository noticeRepository;
 	
-//	// 공지사항 현황 조회
-//	public List<Notice> findAll() {
-//		
-//		return noticeRepository.findAll();
-//	}
-	
-	
 	
 	public List<Map<String, Object>> select_NOTICE_LIST() {
 	    List<Object[]> result = noticeRepository.select_NOTICE_LIST();
