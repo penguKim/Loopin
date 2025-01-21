@@ -86,7 +86,7 @@
 		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
 		{ key: 'holiday_nm', label: '휴일명', type: 'text', placeholder: '휴일명 입력', col: 'col-2' },
 		{ key: 'holiday_aa', label: '유급휴가 여부', type: 'text', placeholder: '유급휴가 여부', col: 'col-2' },
-		{ key: 'holiday_ma', label: '수정여부', type: 'text', placeholder: '수정여부 입력', col: 'col-2' },
+		{ key: 'holiday_ma', label: '수정가능 여부', type: 'text', placeholder: '수정가능 여부', col: 'col-2' },
 	];
 	
 		
@@ -426,7 +426,7 @@
 						showClearBrn: true
 					}
 				}, 
-				{header : '수정여부', name : 'holiday_ma', sortable : true, editor: 'text', align: 'center',
+				{header : '수정가능 여부', name : 'holiday_ma', sortable : true, editor: 'text', align: 'center',
 					validation: {
 						required: true,
 						regExp: /^[XO]$/,
