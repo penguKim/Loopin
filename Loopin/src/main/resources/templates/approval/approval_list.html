@@ -1,49 +1,50 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 	layout:decorate="~{layout}" layout:fragment="content">
 
 
 <style>
-	/* 드롭다운 메뉴 크기 조정 */
-	.dropdown-menu {
-		min-width: 600px;
-		/* 너비 설정 */
-		max-height: 500px;
-		/* 최대 높이 설정 */
-		overflow: visible !important;
-		/* 컨텐츠가 영역 밖으로 나옴 */
-	}
+/* 드롭다운 메뉴 크기 조정 */
+.dropdown-menu {
+	min-width: 600px;
+	/* 너비 설정 */
+	max-height: 500px;
+	/* 최대 높이 설정 */
+	overflow: visible !important;
+	/* 컨텐츠가 영역 밖으로 나옴 */
+}
 
-	.toastui-calendar-weekday-event-title {
-		/* 캘린더 이벤트 조절 */
-		font-size: 16px !important;
-		font-weight: bold !important;
-	}
+.toastui-calendar-weekday-event-title {
+	/* 캘린더 이벤트 조절 */
+	font-size: 16px !important;
+	font-weight: bold !important;
+}
 
-	.tui-datepicker {
-		z-index: 9999 !important;
-		overflow: visible !important;
-	}
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
 
-	.tui-timepicker {
-		z-index: 9999 !important;
-		overflow: visible !important;
-	}
-	
-		.tui-grid-cell-summary {
-	    background-color: #ddd;
-	    border-color: #fff;
-	    border-left-width: 1px;
-	    border-right-width: 1px;
-	    color: #333;
-	}
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-grid-cell-summary {
+	background-color: #ddd;
+	border-color: #fff;
+	border-left-width: 1px;
+	border-right-width: 1px;
+	color: #333;
+}
 </style>
 
 <body>
 	<main id="main" class="main">
 
-		<input type="hidden" id="selected_dv" value="" />
-		<input type="hidden" id="selected_dv_name" value="" />
+		<input type="hidden" id="selected_dv" value="" /> <input
+			type="hidden" id="selected_dv_name" value="" />
 
 
 
@@ -62,26 +63,29 @@
 									<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
 										<li class="nav-item" role="presentation">
 											<button class="nav-link active" id="btn_approval_send_tab"
-												data-bs-toggle="pill" data-bs-target="#tab_send_grid" type="button"
-												role="tab" aria-controls="tab_send_grid"
+												data-bs-toggle="pill" data-bs-target="#tab_send_grid"
+												type="button" role="tab" aria-controls="tab_send_grid"
 												aria-selected="true">결재발신함</button>
 										</li>
 										<li class="nav-item" role="presentation">
-											<button class="nav-link" id="btn_approval_receive_tab" data-bs-toggle="pill"
-												data-bs-target="#tab_receive_grid" type="button" role="tab"
-												aria-controls="tab_send_grid" aria-selected="false">결재수신함</button>
+											<button class="nav-link" id="btn_approval_receive_tab"
+												data-bs-toggle="pill" data-bs-target="#tab_receive_grid"
+												type="button" role="tab" aria-controls="tab_send_grid"
+												aria-selected="false">결재수신함</button>
 										</li>
 
 									</ul>
 								</div>
 							</div>
 
-									
-									<div id="filterModule" class="mb-3"></div>
-									<div id="grid"></div>
-									<br>
-									<button type="button" class="btn btn-primary" id="openApprovalModal">등록</button>
-									<button type="button" id="btn_approval_delete" class="btn btn-primary">삭제</button>
+
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+							<br>
+							<button type="button" class="btn btn-primary"
+								id="openApprovalModal">등록</button>
+							<button type="button" id="btn_approval_delete"
+								class="btn btn-primary">삭제</button>
 						</div>
 					</div>
 				</div>
@@ -90,13 +94,15 @@
 
 
 
-		<div class="modal" id="modal_approval_list" tabindex="-1" aria-labelledby="modal_approval_list_label"
-			aria-hidden="true">
+		<div class="modal" id="modal_approval_list" tabindex="-1"
+			aria-labelledby="modal_approval_list_label" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="approval-modal-title" id="modal_approval_list_label">기안서 선택</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<h5 class="approval-modal-title" id="modal_approval_list_label">기안서
+							선택</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<!-- ToastUI Grid가 렌더링될 영역 -->
@@ -108,30 +114,33 @@
 
 
 		<!-- 전자결재 등록 모달 -->
-		<div class="modal" id="modal_leave_request" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+		<div class="modal" id="modal_leave_request" tabindex="-1"
+			data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">휴가 신청서 작성</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<form id="leave_request_form" th:action="@{/insert_LeaveRequest}" method="post"
-							enctype="multipart/form-data">
+						<form id="leave_request_form" th:action="@{/insert_LeaveRequest}"
+							method="post" enctype="multipart/form-data">
 							<!-- Hidden 필드: 기안서 코드 -->
-							<input type="hidden" class="form-control" id="approval_cd" name="approval_cd">
+							<input type="hidden" class="form-control" id="approval_cd"
+								name="approval_cd">
 							<div class="row mb-3">
-								<label for="inputDate" class="col-sm-2 col-form-label">시작일<span class="text-danger">
-										*</span></label>
+								<label for="inputDate" class="col-sm-2 col-form-label">시작일<span
+									class="text-danger"> *</span></label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="approval_sd" name="approval_sd"
-										aria-label="Date">
+									<input type="text" class="form-control" id="approval_sd"
+										name="approval_sd" aria-label="Date">
 									<div id="startpicker-container" style="margin-left: -1px;"></div>
 								</div>
 								<label for="inputDate" class="col-sm-2 col-form-label">종료일</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="approval_ed" name="approval_ed"
-										aria-label="Date">
+									<input type="text" class="form-control" id="approval_ed"
+										name="approval_ed" aria-label="Date">
 									<div id="endpicker-container" style="margin-left: -1px;"></div>
 								</div>
 							</div>
@@ -139,7 +148,8 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">제목</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="approval_tt" name="approval_tt">
+									<input type="text" class="form-control" id="approval_tt"
+										name="approval_tt">
 								</div>
 							</div>
 							<!-- 기안서 구분 표시 -->
@@ -147,8 +157,8 @@
 								<label for="approval_dv" class="col-sm-2 col-form-label">기안서
 									구분</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="approval_dv" name="approval_dv"
-										readonly>
+									<input type="text" class="form-control" id="approval_dv"
+										name="approval_dv" readonly>
 								</div>
 							</div>
 
@@ -156,10 +166,11 @@
 							<div class="row mb-3">
 								<label for="inputText" class="col-sm-2 col-form-label">휴가구분</label>
 								<div class="col-sm-4">
-									<select class="form-select" id="annualtype" name="annualtype" aria-label="직원 권한">
+									<select class="form-select" id="annualtype" name="annualtype"
+										aria-label="직원 권한">
 										<option value="" disabled selected>휴가 종류를 선택하세요</option>
-										<option th:each="ANNUAL : ${ANNUAL_list}" th:value="${ANNUAL.common_cc}"
-											th:text="${ANNUAL.common_nm}">
+										<option th:each="ANNUAL : ${ANNUAL_list}"
+											th:value="${ANNUAL.common_cc}" th:text="${ANNUAL.common_nm}">
 										</option>
 									</select>
 								</div>
@@ -170,8 +181,9 @@
 								<label for="leave_reason" class="col-sm-2 col-form-label">휴가
 									사유</label>
 								<div class="col-sm-10">
-									<textarea class="form-control" id="leave_reason" name="leave_reason" rows="4"
-										placeholder="휴가 사유를 입력하세요" required></textarea>
+									<textarea class="form-control" id="leave_reason"
+										name="leave_reason" rows="4" placeholder="휴가 사유를 입력하세요"
+										required></textarea>
 								</div>
 							</div>
 
@@ -182,13 +194,14 @@
 								<div class="col-sm-4">
 									<input type="text" class="form-control" id="leave_start_date"
 										name="leave_start_date" required>
-									<div id="startpicker-container-leave" style="margin-left: -1px;"></div>
+									<div id="startpicker-container-leave"
+										style="margin-left: -1px;"></div>
 								</div>
 								<label for="leave_end_date" class="col-sm-2 col-form-label">휴가
 									종료일</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control" id="leave_end_date" name="leave_end_date"
-										required>
+									<input type="text" class="form-control" id="leave_end_date"
+										name="leave_end_date" required>
 									<div id="endpicker-container-leave" style="margin-left: -1px;"></div>
 								</div>
 							</div>
@@ -198,40 +211,45 @@
 								<label for="first_approver" class="col-sm-2 col-form-label">1차
 									결재권자</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control approver-field" id="first_approver" readonly>
+									<input type="text" class="form-control approver-field"
+										id="first_approver" readonly>
 								</div>
 								<label for="second_approver" class="col-sm-2 col-form-label">2차
 									결재권자</label>
 								<div class="col-sm-4">
-									<input type="text" class="form-control approver-field" id="second_approver"
-										readonly>
+									<input type="text" class="form-control approver-field"
+										id="second_approver" readonly>
 								</div>
 							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
 						<div id="approval_buttons"></div>
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-						<button type="submit" id="leave_submit_button" class="btn btn-primary"
-							form="leave_request_form">등록</button>
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">닫기</button>
+						<button type="submit" id="leave_submit_button"
+							class="btn btn-primary" form="leave_request_form">등록</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
 		<!-- 사원 선택 모달 -->
-		<div class="modal" id="modal_select_employee" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+		<div class="modal" id="modal_select_employee" tabindex="-1"
+			data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title">사원 선택</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<div id="employee_grid"></div>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">닫기</button>
 					</div>
 				</div>
 			</div>
@@ -381,205 +399,156 @@
 		}
 
 		function loadApprovalData(tabType) {
-			$.ajax({
-				url: '/approval_data',
-				method: 'GET',
-				data: {tabType: tabType},
-				success: function (data) {
-					if (!grid) {
-						// ToastUI Grid 초기화
-						grid = new tui.Grid({
-							el: gridElement,
-							data: data,
-							scrollX: false,
-							scrollY: true,
-							rowHeaders: ['checkbox'],
-							summary: {
-							    height: 40,
-							    position: 'bottom', // or 'top'
-							    columnContent: {
-							        approval_av: {
-							            template: (valueMap) => {
-							                return `총  ${valueMap.cnt} 건`
-							            }
-							        }
-							    }
-							},
-							columns: [
-								{
-									header: '결재코드',
-									name: 'approval_cd',
-									align: 'center',
-									filter: {
-										type: 'text',
-										showApplyBtn: true,
-									},
-									sortable: true,
-								},
-								{
-									header: '제목',
-									name: 'approval_tt',
-									align: 'center',
-									filter: {
-										type: 'text',
-										showApplyBtn: true,
-									},
-									sortable: true,
-								},
-								{
-									header: '시작일',
-									name: 'approval_sd',
-									align: 'center',
-									filter: {
-										type: 'date',
-										options: {
-											format: 'yyyy-MM-dd',
-										},
-									},
-									sortable: true,
-								},
-								{
-									header: '종료일',
-									name: 'approval_ed',
-									align: 'center',
-									filter: {
-										type: 'date',
-										options: {
-											format: 'yyyy-MM-dd',
-										},
-									},
-									sortable: true,
-								},
-								{
-									header: '기안서구분',
-									name: 'approval_dv',
-									align: 'center',
-									filter: {
-										type: 'select',
-									},
-									sortable: true,
-								},
-								{
-									header: '1차 결재권자',
-									name: 'approval_fa',
-									align: 'center',
-									filter: {
-										type: 'select',
-									},
-									sortable: true,
-								},
-								{
-									header: '2차 결재권자',
-									name: 'approval_sa',
-									align: 'center',
-									filter: {
-										type: 'select',
-									},
-									sortable: true,
-								},
-								{
-									header: '결재구분',
-									name: 'approval_av',
-									align: 'center',
-									filter: {
-										type: 'select',
-									},
-									sortable: true,
-								},
-							],
-						});
-						
-						if (grid) {
-					                setElementHeight('#div_card', -105);
-					                setGridHeight(grid, -480);
-					            } else {
-					                console.warn('Grid가 초기화되지 않았습니다.');
-					            }
-						// 탭별 클릭 이벤트 설정
-						if (tabType === 'send') {
-							// 발신함에서 수정 가능한 모달 열기
-							grid.on('click', (ev) => {
-								const columnName = ev.columnName;
-								const rowKey = ev.rowKey;
-								const rowData = grid.getRow(rowKey);
-								console.log("발신함 클릭 데이터:", rowData);
-								if (!rowData || columnName !== 'approval_cd') {
-									console.warn("잘못된 클릭입니다.");
-									return;
-								}
+		    $.ajax({
+		        url: '/approval_data',
+		        method: 'GET',
+		        data: { tabType: tabType },
+		        success: function (data) {
+		            if (!grid) {
+		                // ToastUI Grid 초기화
+		                grid = new tui.Grid({
+		                    el: gridElement,
+		                    data: data,
+		                    scrollX: false,
+		                    scrollY: true,
+		                    rowHeaders: ['checkbox'],
+		                    summary: {
+		                        height: 40,
+		                        position: 'bottom',
+		                        columnContent: {
+		                            approval_av: {
+		                                template: (valueMap) => {
+		                                    return `총 ${valueMap.cnt} 건`;
+		                                },
+		                            },
+		                        },
+		                    },
+		                    columns: [
+		                        {
+		                            header: '결재코드',
+		                            name: 'approval_cd',
+		                            align: 'center',
+		                            filter: { type: 'text', showApplyBtn: true },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '제목',
+		                            name: 'approval_tt',
+		                            align: 'center',
+		                            filter: { type: 'text', showApplyBtn: true },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '시작일',
+		                            name: 'approval_sd',
+		                            align: 'center',
+		                            filter: { type: 'date', options: { format: 'yyyy-MM-dd' } },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '종료일',
+		                            name: 'approval_ed',
+		                            align: 'center',
+		                            filter: { type: 'date', options: { format: 'yyyy-MM-dd' } },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '기안서구분',
+		                            name: 'approval_dv',
+		                            align: 'center',
+		                            filter: { type: 'select' },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '1차 결재권자',
+		                            name: 'approval_fa',
+		                            align: 'center',
+		                            filter: { type: 'select' },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '2차 결재권자',
+		                            name: 'approval_sa',
+		                            align: 'center',
+		                            filter: { type: 'select' },
+		                            sortable: true,
+		                        },
+		                        {
+		                            header: '결재구분',
+		                            name: 'approval_av',
+		                            align: 'center',
+		                            filter: { type: 'select' },
+		                            sortable: true,
+		                        },
+		                    ],
+		                });
 
-								if (rowData.approval_av_cc === '10') {
-									openEditModal(rowData, '수정', false); // 수정 가능 모달
-								} else {
-									alert("대기 상태일때만 수정이 가능합니다.");
-								}
-							});
-						} else if (tabType === 'receive') {
-							// 수신함에서 읽기 전용 모달 열기
-							grid.on('click', (ev) => {
-								const columnName = ev.columnName;
-								const rowKey = ev.rowKey;
-								const rowData = grid.getRow(rowKey);
-								console.log("수신함 클릭 데이터:", rowData);
-								if (!rowData || columnName !== 'approval_cd') {
-									console.warn("잘못된 클릭입니다.");
-									return;
-								}
+		                if (grid) {
+		                    setElementHeight('#div_card', -105);
+		                    setGridHeight(grid, -480);
+		                } else {
+		                    console.warn('Grid가 초기화되지 않았습니다.');
+		                }
+		            } else {
+		                // 기존 Grid 데이터 갱신
+		                grid.resetData(data);
+		            }
 
-								openEditModal(rowData, '읽기', true); // 읽기 전용 모달
-							});
-						}
-					} else {
-						// 기존 Grid 데이터 갱신
-						grid.resetData(data);
+		            // 기존 클릭 이벤트 제거
+		            grid.off('click');
 
-						// 탭별 클릭 이벤트 재설정
-						grid.off('click'); // 기존 클릭 이벤트 제거
-						if (tabType === 'send') {
-							// 발신함에서 수정 가능한 모달 열기
-							grid.on('click', (ev) => {
-								const columnName = ev.columnName;
-								const rowKey = ev.rowKey;
-								const rowData = grid.getRow(rowKey);
-								if (!rowData || columnName !== 'approval_cd') {
-									console.warn("잘못된 클릭입니다.");
-									return;
-								}
+		            // 탭별 클릭 이벤트 설정
+		            if (tabType === 'send') {
+		                grid.on('click', (ev) => {
+		                    const columnName = ev.columnName;
+		                    const rowKey = ev.rowKey;
+		                    const rowData = grid.getRow(rowKey);
 
-								if (rowData.approval_av_cc === '10') {
-									openEditModal(rowData, '수정', false); // 수정 가능 모달
-								} else {
-									alert("대기 상태일때만 수정이 가능합니다.");
-								}
-							});
-						} else if (tabType === 'receive') {
-							// 수신함에서 읽기 전용 모달 열기
-							grid.on('click', (ev) => {
-								const columnName = ev.columnName;
-								const rowKey = ev.rowKey;
-								const rowData = grid.getRow(rowKey);
 
-								if (!rowData || columnName !== 'approval_cd') {
-									console.warn("잘못된 클릭입니다.");
-									return;
-								}
+		                    if (!rowData || columnName !== 'approval_cd') {
+		                        return;
+		                    }
 
-								openEditModal(rowData, '읽기', true); // 읽기 전용 모달
-							});
-						}
-					}
-				},
-				error: function (error) {
-					console.error('데이터 로드 실패:', error);
-				},
-			});
+		                    if (rowData.approval_av_cc === '10') {
+		                        openEditModal(rowData, '수정', false); // 수정 가능 모달
+		                    } else {
+		                        alert("대기 상태일 때만 수정이 가능합니다.");
+		                    }
+		                });
+		            } else if (tabType === 'receive') {
+		                grid.on('click', (ev) => {
+		                    const columnName = ev.columnName;
+		                    const rowKey = ev.rowKey;
+		                    const rowData = grid.getRow(rowKey);
+
+		                    if (!rowData || columnName !== 'approval_cd') {
+		                        return;
+		                    }
+
+		                    // 1차 결재권자 조건 처리
+		                    if (rowData.is_first_approver && rowData.approval_av_cc === "20") {
+		                        openEditModal(rowData, '읽기', true);
+		                        return;
+		                    }
+
+		                    // 2차 결재권자 조건 처리
+		                    if (rowData.is_second_approver && rowData.approval_av_cc === "30") {
+		                        openEditModal(rowData, '읽기', true);
+		                        return;
+		                    }
+
+		                });
+		            }
+		        },
+		        error: function (error) {
+		            console.error('데이터 로드 실패:', error);
+		        },
+		    });
 		}
 
 
+
 		function openEditModal(rowData, mode, isReadOnly) {
-			console.log('모달 데이터:', rowData);
-			console.log('모드:', mode, '읽기 전용:', isReadOnly);
-			console.log('모드 타입:', typeof mode);
 
 			switch (mode) {
 				case '등록':
@@ -626,40 +595,40 @@
 			const modalInstance = new bootstrap.Modal($('#modal_leave_request')[0]);
 			modalInstance.show();
 
-			if (mode === '수정') {
-				// 폼 제출 이벤트 등록 (수정용)
-				$('#leave_request_form').off('submit').on('submit', function (event) {
-					event.preventDefault();
+// 			if (mode === '수정') {
+// 				// 폼 제출 이벤트 등록 (수정용)
+// 				$('#leave_request_form').off('submit').on('submit', function (event) {
+// 					event.preventDefault();
 
-					const formData = new FormData(this);
+// 					const formData = new FormData(this);
 
-					const firstApproverVal = $('#first_approver').val();
-					const firstApproverCd = firstApproverVal.match(/\(([^)]+)\)/)?.[1];
+// 					const firstApproverVal = $('#first_approver').val();
+// 					const firstApproverCd = firstApproverVal.match(/\(([^)]+)\)/)?.[1];
 
-					const secondApproverVal = $('#second_approver').val();
-					const secondApproverCd = secondApproverVal.match(/\(([^)]+)\)/)?.[1];
+// 					const secondApproverVal = $('#second_approver').val();
+// 					const secondApproverCd = secondApproverVal.match(/\(([^)]+)\)/)?.[1];
 
-					formData.append('approval_fa', firstApproverCd);
-					formData.append('approval_sa', secondApproverCd);
+// 					formData.append('approval_fa', firstApproverCd);
+// 					formData.append('approval_sa', secondApproverCd);
 
-					$.ajax({
-						url: '/update_APPROVAL', // 수정용 API 엔드포인트
-						method: 'POST',
-						data: formData,
-						processData: false,
-						contentType: false,
-						success: function () {
-							alert('수정이 완료되었습니다.');
-							modalInstance.hide();
-							grid.reloadData();
-						},
-						error: function (error) {
-							console.error('수정 중 오류 발생:', error);
-							alert('수정 중 오류가 발생했습니다.');
-						},
-					});
-				});
-			}
+// 					$.ajax({
+// 						url: '/update_APPROVAL', // 수정용 API 엔드포인트
+// 						method: 'POST',
+// 						data: formData,
+// 						processData: false,
+// 						contentType: false,
+// 						success: function () {
+// 							alert('수정이 완료되었습니다.');
+// 							modalInstance.hide();
+// 							grid.reloadData();
+// 						},
+// 						error: function (error) {
+// 							console.error('수정 중 오류 발생:', error);
+// 							alert('수정 중 오류가 발생했습니다.');
+// 						},
+// 					});
+// 				});
+// 			}
 		}
 
 		// 폼 데이터 설정 함수
@@ -729,50 +698,55 @@
 			}
 
 			$.ajax({
-				url: '/update_approval_process',
-				method: 'POST',
-				data: JSON.stringify({approvalCd, actionType}),
-				contentType: 'application/json',
-				beforeSend: function () {
-					console.log('AJAX 요청 시작: ', {approvalCd, actionType});
-				},
-				success: function () {
-					console.log('AJAX 요청 성공');
-					Swal.fire({
-						icon: 'success',
-						title: actionType === 'approve' ? '승인 완료' : '반려 완료',
-						text: `결재가 ${actionType === 'approve' ? '승인' : '반려'}되었습니다.`,
-					});
-					$('#modal_leave_request').modal('hide'); // 모달 닫기
+			        url: '/update_approval_process',
+			        method: 'POST',
+			        data: JSON.stringify({ approvalCd, actionType }),
+			        contentType: 'application/json',
+			        cache: false, // 캐싱 방지
+			        headers: {
+			            'X-CSRF-TOKEN': csrfToken // CSRF 토큰 추가
+			        },
+			        beforeSend: function () {
+			            console.log('AJAX 요청 시작: ', { approvalCd, actionType });
+			        },
+			        success: function () {
+			            console.log('AJAX 요청 성공');
+			            Swal.fire({
+			                icon: 'success',
+			                title: actionType === 'approve' ? '승인 완료' : '반려 완료',
+			                text: `결재가 ${actionType === 'approve' ? '승인' : '반려'}되었습니다.`,
+			            });
+			            $('#modal_leave_request').modal('hide'); // 모달 닫기
 
-					// 데이터 새로고침
-					if (grid.getData().length > 0) {
-						console.log('Grid 데이터 클라이언트에서 갱신');
-						$.ajax({
-							url: '/approval_data', // 서버에서 최신 데이터 가져오기
-							method: 'GET',
-							data: { tabType: activeTab },
-							success: function (data) {
-								grid.resetData(data); // 클라이언트 데이터 갱신
-							},
-							error: function (xhr) {
-								console.error('Grid 데이터 갱신 중 오류 발생:', xhr.responseText);
-							},
-						});
-					} else {
-						console.log('Grid 서버 연동 데이터 갱신');
-						grid.reloadData({ tabType: activeTab }); // 서버에서 데이터 다시 로드
-					}
-				},
-				error: function (xhr) {
-					console.error('AJAX 요청 실패:', xhr.responseText);
-					Swal.fire({
-						icon: 'error',
-						title: '오류 발생',
-						text: '작업 중 문제가 발생했습니다. 다시 시도해주세요.',
-					});
-				},
-			});
+			            // 데이터 새로고침
+			            if (grid.getData().length > 0) {
+			                console.log('Grid 데이터 클라이언트에서 갱신');
+			                $.ajax({
+			                    url: '/approval_data', // 서버에서 최신 데이터 가져오기
+			                    method: 'GET',
+			                    data: { tabType: activeTab },
+			                    success: function (data) {
+			                        grid.resetData(data); // 클라이언트 데이터 갱신
+			                    },
+			                    error: function (xhr) {
+			                        console.error('Grid 데이터 갱신 중 오류 발생:', xhr.responseText);
+			                    },
+			                });
+			            } else {
+			                console.log('Grid 서버 연동 데이터 갱신');
+			                grid.reloadData({ tabType: activeTab }); // 서버에서 데이터 다시 로드
+			            }
+			        },
+			        error: function (xhr) {
+			            console.error('AJAX 요청 실패:', xhr.responseText);
+			            Swal.fire({
+			                icon: 'error',
+			                title: '오류 발생',
+			                text: '작업 중 문제가 발생했습니다. 다시 시도해주세요.',
+			            });
+			        },
+			    });
+
 
 		}
 

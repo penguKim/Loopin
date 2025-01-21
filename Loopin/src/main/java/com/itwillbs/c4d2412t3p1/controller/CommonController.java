@@ -86,6 +86,7 @@ public class CommonController {
 		}
 		
 		Map<String, Object> response = new HashMap<>();
+		
 		if(deleteCount <= 0) {
 			response.put("result", false);			
 		} else {

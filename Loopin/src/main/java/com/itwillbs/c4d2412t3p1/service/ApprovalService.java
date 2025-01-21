@@ -123,6 +123,11 @@ public class ApprovalService {
 			row.put("approval_tt", approval.getApproval_tt());
 			row.put("approval_fa", approval.getApproval_fa());
 			row.put("approval_sa", approval.getApproval_sa());
+			
+			// 현재 사용자가 1차 결재권자인지, 2차 결재권자인지 추가
+	        row.put("is_first_approver", currentCd.equals(approval.getApproval_fa())); // 1차 여부
+	        row.put("is_second_approver", currentCd.equals(approval.getApproval_sa())); // 2차 여부
+			
 			return row;
 		}).collect(Collectors.toList());
 	}
