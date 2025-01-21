@@ -132,6 +132,29 @@
 		
 		// 필터 엔터키 검색 이벤트
 		$('#filterModule').on('keypress', function(e) {
+			if (e.keyCode !== 13) return;
+					    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        
+		        if ((config.key === 'commute_wt' || config.key === 'commute_lt') && value) {
+		            if (!validateTime(value)) {
+		                showToast(input, 'error', 
+		                    '올바른 시간 형식이 아닙니다', 
+		                    '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
+		                input.val('');
+		                return;
+		            }
+		        }
+		        filterValues[config.key] = value;
+		    }
+		    
+		    filterValues.startDate = mainDateRangeStartInput.value;
+		    filterValues.endDate = mainDateRangeEndInput.value;
+		    
 		    getGridList(filterValues);
 		});
 
@@ -278,7 +301,7 @@
 			}),
 			success: function(data) {
 				if(!data['result']) {
-					showAlert('', 'error', '기록부 조회 실패', '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
+					showAlert('', 'error', '휴가 조회 실패', '휴가 조회에 실패하였습니다.<br>다시 접속해주세요.');
 				} else {
 					// 캘린더 템플릿 업데이트
 					calendar.setOptions({
