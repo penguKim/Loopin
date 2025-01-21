@@ -369,13 +369,22 @@
 					    xhr.setRequestHeader(header, token);
 					},
 					success: function(data) {
+						let icon = 'success';
+						let title = '삭제 성공';
+						let msg = '삭제에 성공했습니다.';
 						let row = data.data.contents;
 						grid.resetData(row);
+						if(!data['result']) {
+							icon = 'error';
+							title = '삭제 실패';
+							msg = '삭제에 실패했습니다.<br>다시 시도해주세요.';
+						}
 						if(grid == group_grid) {
 							group_code = '';	
 							group_row = {};
 							sub_grid.resetData([]);
 						}
+						showAlert('', icon, title, msg);
 					},
 					error : function(xhr, textStatus, errorThrown) {
 						console.log('조회 실패');
