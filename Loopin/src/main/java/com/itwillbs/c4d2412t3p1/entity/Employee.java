@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -135,8 +137,8 @@ public class Employee {
     @Column(name = "workinghour_id")
     private String workinghour_id;
 
-
-
+    @OneToMany(mappedBy = "employee") // NOTICE 엔티티의 employee 필드와 매핑
+    private List<Notice> notices;
 	
 	// 생성자
 	public Employee() {
