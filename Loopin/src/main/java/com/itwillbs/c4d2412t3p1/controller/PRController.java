@@ -1,5 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -109,13 +111,16 @@ public class PRController {
 		log.info("클라이언트값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+data.toString());
 		String BS = data.getBS();
 		log.info("BS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+BS);
+		String employee_cd = data.getEmployee_cd();
+		String employee_nm = data.getEmployee_nm();
+		String workingtime = data.getWorkingtime();
 		String overworkingtime = data.getOverworkingtime();
 		String nightworkingtime = data.getNightworkingtime();
 		String weekendworkingtime = data.getWeekendworkingtime();
 		String holydayworkingtime = data.getHolydayworkingtime();
-		String leastannual = data.getLeastannual();
+		String remainleave = data.getRemainleave();
 		String bonus = data.getBonus();
-		List<PRDTO> list = prS.calculatingMachine(BS,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,leastannual,bonus);
+		List<PRDTO> list = prS.calculatingMachine(employee_cd, employee_nm, BS,workingtime,overworkingtime,nightworkingtime,weekendworkingtime,holydayworkingtime,remainleave,bonus);
 		log.info("가져온 값!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"+list.toString());
 		return list;
 	}
@@ -127,9 +132,9 @@ public class PRController {
 
 	@GetMapping("/getempandbs")
 	@ResponseBody
-	public List<Employee> getempandbs() {
+	public List<Employee> getempandbs(@RequestParam("premth") String premth) {
 		
-		List<Employee> list = prS.select_empworklastmth();
+		List<Employee> list = prS.select_empworklastmth(premth);
 		
 		return list;
 	}
@@ -144,12 +149,14 @@ public class PRController {
 		return list;
 	}
 	
-	@PostMapping("/update_commutepr")
+	@PostMapping("/update_commuteprandcalpr")
 	@ResponseBody
-	public int update_commutepr() {
-		int response = prS.update_commutepr();
-		System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!response: "+response);
-		return response;
+	public List<Map<String,Object>> update_commutepr(@RequestBody List<PR_calculationMDTO> wtdata) throws ScriptException {
+		prS.update_commutepr();
+
+		List<Map<String, Object>> list = prS.calculatesalAllemp(wtdata);
+		
+		return list;
 	}
 	
 }

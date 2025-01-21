@@ -34,14 +34,17 @@ import com.itwillbs.c4d2412t3p1.entity.ComhistoryPK;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.CommutePK;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 import com.itwillbs.c4d2412t3p1.entity.common_codePK;
 import com.itwillbs.c4d2412t3p1.mapper.CommonMapper;
 import com.itwillbs.c4d2412t3p1.mapper.CommuteMapper;
+import com.itwillbs.c4d2412t3p1.mapper.HolidayMapper;
 import com.itwillbs.c4d2412t3p1.repository.ComhistoryRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommuteRepository;
+import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
@@ -59,9 +62,10 @@ public class CommuteService {
 	private final CommuteRepository commuteRepository;
 	private final WorkinghourRepository workinghourRepository;
 	private final HolidayRepository holidayRepository;
+	private final EmployeeRepository employeeRepository;
 	
 	private final CommuteMapper commuteMapper; 
-	
+	private final HolidayMapper holidayMapper;
 	
 
 
@@ -307,7 +311,7 @@ public class CommuteService {
 	    LocalDate previousDay = workDate.getDayOfWeek() == DayOfWeek.MONDAY ? workDate : workDate.minusDays(1);
 	    String endDate = previousDay.format(yMdFormatter);
 	    double totalWeeklyHours = commuteRepository.sumCommuteIgByDateRange(commute.getEmployee_cd(), startDate, endDate);
-	    boolean isHoliday = holidayRepository.findById(workDate.format(yMdFormatter)).orElse(null) != null; // 공휴일 유무
+	    boolean isHoliday = holidayMapper.isHoliday(workDate.format(yMdFormatter));
 	    
 	    Workinghour workinghour = workinghourRepository.findById(workinghour_id).orElse(null); // 근로형태 조회
 	    String workinghour_hs = workinghour.getWorkinghour_hs(); // 주휴요일
@@ -460,6 +464,8 @@ public class CommuteService {
 		series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
 		return series;
 	}
+
+
 
 
 
