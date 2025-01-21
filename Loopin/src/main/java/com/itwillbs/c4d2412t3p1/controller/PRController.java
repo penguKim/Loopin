@@ -159,4 +159,12 @@ public class PRController {
 		return list;
 	}
 	
+	@GetMapping("/iscal")
+	@ResponseBody
+	public String iscal(@RequestParam("premth") String premth) {
+		
+		String result = prS.isCal( premth);
+		return result;
+	}
+	
 }

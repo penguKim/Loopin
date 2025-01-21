@@ -51,36 +51,6 @@
 	  return Number(value);
 	}
 	
-	//근태버튼 상태 저장
-	function saveBtnState(isDisabled){
-		localStorage.setItem('btn_wt',isDisabled);
-	}
-	
-	//근태버튼 상태 로드시 복원
-	function restoreBtnState(){
-		const isDisabled = localStorage.getItem('btn_wt');
-		console.log('상태!!!',isDisabled)
-		$('#btn_wt').prop('disabled', isDisabled);
-	}
-	
-	//1일에 버튼활성화
-	function checkAndActivateButton() {
-		const today = new Date();
-		const dayOfMonth = today.getDate();
-
-		if (dayOfMonth === 1) {
-			localStorage.removeItem('btn_wt') // 매월 1일에 버튼 활성화
-			console.log("버튼이 활성화되었습니다.");
-		}
-	}
-
-	// 페이지 로드 시 버튼 상태 확인
-	$(document).ready(function(){
-		restoreBtnState();
-		checkAndActivateButton();
-	})
-	
-	
 	//////////////
 	// 그리드 생성 // 
 	//////////////
@@ -385,205 +355,224 @@
 			const currentday = new Date();
 			console.log('근태cday', currentday);
 			const day = currentday.getDate();
-				
-			 if(day < 1 || day > 22) {
-				swal.fire({
-					icon: 'error',
-					title: '사용불가',
-					text: '1일부터 7일 사이에만 조회 가능합니다.'
-				});
-				return;
-			}
 			
-			const modalid = 'wtmodal';
-			let modalEl = document.getElementById(modalid);
-
-			if (!modalEl) {
-				const modalHtml = `
-            <div class="modal" id="${modalid}" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered modal-xl">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">근태마감</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div id="grid_wt"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-primary" id="btn_ct">마감</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-				document.body.insertAdjacentHTML('beforeend', modalHtml);
-				modalEl = document.getElementById(modalid);
-			}
-
-			modalEl.addEventListener('hidden.bs.modal', function () {
-				modalEl.remove();
-				console.log('근태 확인 모달이 닫히고 삭제되었습니다.');
-			});
-
-			const modal = new bootstrap.Modal(modalEl);
-
-			modalEl.addEventListener('shown.bs.modal', function () {
-				const gridContainer = document.getElementById('grid_wt');
-				console.log('gridcon', gridContainer);
-
-				if (gridContainer) {
-					console.log('day', day);
-					console.log('empCD', employee_cd);
-
-						$.ajax({
-							url: "/getworkingtimeformth",
-							method: "GET",
-							dataType: "JSON",
-							data: {employee_cds: employee_cd, premth: premth},
-							success: function (data) {
-								console.log("근태 데이터", data);
-								const wtdata = data.map(item => {
-									return {
-										employee_cd: item.EMPLOYEE_CD !== undefined ? item.EMPLOYEE_CD : null,
-										employee_nm: item.EMPLOYEE_NM !== undefined ? item.EMPLOYEE_NM : "없음",
-										workingtime: item.WORKINGTIME !== undefined ? item.WORKINGTIME : 0,
-										overworkingtime: item.OVERWORKINGTIME !== undefined ? item.OVERWORKINGTIME : 0,
-										nightworkingtime: item.NIGHTWORKINGTIME !== undefined ? item.NIGHTWORKINGTIME : 0,
-										weekendworkingtime: item.WEEKENDWORKINGTIME !== undefined ? item.WEEKENDWORKINGTIME : 0,
-										holydayworkingtime: item.HOLYDAYWORKINGTIME !== undefined ? item.HOLYDAYWORKINGTIME : 0,
-										remainleave: item.ANNUAL_RA !== undefined ? item.ANNUAL_RA : 0,
-									};
-								});
-								console.log('데이터확인', wtdata);
-								const grid_wt = new tui.Grid({
-									el: gridContainer,
-									responsive: true,
-									scrollX: false,
-									scrollY: true,
-									bodyHeight: 330,
-									columns: [
-										{header: '사원코드', name: 'employee_cd', align: 'center'},
-										{header: '사원명', name: 'employee_nm', align: 'center'},
-										{header: '일반근무', name: 'workingtime', align: 'center'},
-										{header: '연장근무', name: 'overworkingtime', align: 'center'},
-										{header: '야간근무', name: 'nightworkingtime', align: 'center'},
-										{header: '주말근무', name: 'weekendworkingtime', align: 'center'},
-										{header: '휴일근무', name: 'holydayworkingtime', align: 'center'},
-										{header: '남은연차', name: 'remainleave', align: 'center'},
-									],
-									columnOptions: {
-										resizable: true,
-									},
-								});
-								grid_wt.resetData(wtdata);
-
-								/* 근태확정버튼 */
-								$(document).on('click', '#btn_ct', function () {
-									console.log('확정버튼누름!!!!!!!!');
-									const wdata = wtdata.map(item => {
-										let bsdata = BSwempcd.find(i => i.employee_cd === item.employee_cd);
-
-										return {
-											...item,
-											BS: bsdata.BS,
-											wm: premth,
-											wr: empcd,
-										}
-									});
-									console.log('가져와', wdata);
-									swal.fire({
-										title: "정말 마감하시겠습니까?",
-										text: "마감하시면 더이상 수정은 불가능합니다.",
-										icon: "warning",
-										showCancelButton: true,
-										confirmButtonColor: "#774df1",
-										cancelButtonColor: "",
-										confirmButtonText: "마감"
-									}).then((result) => {
-										if (result.isConfirmed) {
-											$.ajax({
-												url: "/update_commuteprandcalpr",
-												method: "POST",
-												contentType: "application/json",
-												data: JSON.stringify(wdata),
-												beforeSend: function (xhr) {
-													xhr.setRequestHeader(header, token);
+			$.ajax({
+				url:"/iscal",
+				method:"GET",
+				data:{premth:premth},
+				success:function(iscaldata){
+					console.log('근태마감했나요',iscaldata);
+					//debugger
+					if(iscaldata !== ""){
+						swal.fire({
+							title:"마감불가",
+							icon:"warning",
+							text:"이미 마감을했습니다."
+						})
+						saveBtnState(true);
+					}else{
+						if(day < 1 || day > 22) {
+							swal.fire({
+								icon: 'error',
+								title: '사용불가',
+								text: '1일부터 7일 사이에만 조회 가능합니다.'
+							});
+							return;
+						}
+						
+						const modalid = 'wtmodal';
+						let modalEl = document.getElementById(modalid);
+						
+						if (!modalEl) {
+							const modalHtml = `
+			            <div class="modal" id="${modalid}" tabindex="-1">
+			                <div class="modal-dialog modal-dialog-centered modal-xl">
+			                    <div class="modal-content">
+			                        <div class="modal-header">
+			                            <h5 class="modal-title">근태마감</h5>
+			                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			                        </div>
+			                        <div class="modal-body">
+			                            <div id="grid_wt"></div>
+			                        </div>
+			                        <div class="modal-footer">
+			                            <button type="button" class="btn btn-primary" id="btn_ct">마감</button>
+			                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                        </div>
+			                    </div>
+			                </div>
+			            </div>`;
+							document.body.insertAdjacentHTML('beforeend', modalHtml);
+							modalEl = document.getElementById(modalid);
+						}
+						
+						modalEl.addEventListener('hidden.bs.modal', function () {
+							modalEl.remove();
+							console.log('근태 확인 모달이 닫히고 삭제되었습니다.');
+						});
+			
+						const modal = new bootstrap.Modal(modalEl);
+						
+						modalEl.addEventListener('shown.bs.modal', function () {
+							const gridContainer = document.getElementById('grid_wt');
+							console.log('gridcon', gridContainer);
+			
+							if (gridContainer) {
+								console.log('day', day);
+								console.log('empCD', employee_cd);
+			
+									$.ajax({
+										url: "/getworkingtimeformth",
+										method: "GET",
+										dataType: "JSON",
+										data: {employee_cds: employee_cd, premth: premth},
+										success: function (data) {
+											console.log("근태 데이터", data);
+											const wtdata = data.map(item => {
+												return {
+													employee_cd: item.EMPLOYEE_CD !== undefined ? item.EMPLOYEE_CD : null,
+													employee_nm: item.EMPLOYEE_NM !== undefined ? item.EMPLOYEE_NM : "없음",
+													workingtime: item.WORKINGTIME !== undefined ? item.WORKINGTIME : 0,
+													overworkingtime: item.OVERWORKINGTIME !== undefined ? item.OVERWORKINGTIME : 0,
+													nightworkingtime: item.NIGHTWORKINGTIME !== undefined ? item.NIGHTWORKINGTIME : 0,
+													weekendworkingtime: item.WEEKENDWORKINGTIME !== undefined ? item.WEEKENDWORKINGTIME : 0,
+													holydayworkingtime: item.HOLYDAYWORKINGTIME !== undefined ? item.HOLYDAYWORKINGTIME : 0,
+													remainleave: item.ANNUAL_RA !== undefined ? item.ANNUAL_RA : 0,
+												};
+											});
+											console.log('데이터확인', wtdata);
+											const grid_wt = new tui.Grid({
+												el: gridContainer,
+												responsive: true,
+												scrollX: false,
+												scrollY: true,
+												bodyHeight: 330,
+												columns: [
+													{header: '사원코드', name: 'employee_cd', align: 'center'},
+													{header: '사원명', name: 'employee_nm', align: 'center'},
+													{header: '일반근무', name: 'workingtime', align: 'center'},
+													{header: '연장근무', name: 'overworkingtime', align: 'center'},
+													{header: '야간근무', name: 'nightworkingtime', align: 'center'},
+													{header: '주말근무', name: 'weekendworkingtime', align: 'center'},
+													{header: '휴일근무', name: 'holydayworkingtime', align: 'center'},
+													{header: '남은연차', name: 'remainleave', align: 'center'},
+												],
+												columnOptions: {
+													resizable: true,
 												},
-												success: function (data) {
-													console.log('근태확정', data);
-													Swal.fire({
-														title: "마감되었습니다.",
-														icon: "success"
-													});
-													$('#btn_wt').prop('disabled', true);
-													saveBtnState(true);
-													const result = data.map(item => {
-														const calculatedData = item.calculated;  
-														if (Array.isArray(calculatedData)) {
-															const result = calculatedData.reduce((acc, calItem) => {
-																acc[calItem.prdetail_nm] = calItem.amount;  // prdetail_nm을 키로, amount를 값으로 누적
-																return acc;
-															}, {
-																ta: item.ta,
-																td: item.td,
-																rs: item.rs,
-																employee_cd: item.employee_cd,
-																employee_nm: item.employee_nm
-															});
-															return result;
-														}
-														return {}; 
-													});
-													console.log('변환된 데이터:', result);
-													const resultA = result.map(item => ({
+											});
+											grid_wt.resetData(wtdata);
+			
+											/* 근태확정버튼 */
+											$(document).on('click', '#btn_ct', function () {
+												console.log('확정버튼누름!!!!!!!!');
+												const wdata = wtdata.map(item => {
+													let bsdata = BSwempcd.find(i => i.employee_cd === item.employee_cd);
+			
+													return {
 														...item,
-														EMPLOYEE_CD: item.employee_cd,
-														EMPLOYEE_NM: item.employee_nm,
-														PRDETAIL_BS: item.BS,
-														PRDETAIL_RS: item.rs,
-														PRDETAIL_TA: item.ta,
-														PRDETAIL_TD: item.td,
-														PRDETAIL_BN: item.B_BN,
-														PRDETAIL_HA: item.B_HA,
-														PRDETAIL_MT: item.B_MT,
-														PRDETAIL_NA: item.B_NA,
-														PRDETAIL_OT: item.B_OT,
-														PRDETAIL_RL: item.B_RL,
-														PRDETAIL_WA: item.B_WA,
-														PRDETAIL_GG: item.D_GG,
-														PRDETAIL_GM: item.D_GM,
-														PRDETAIL_GY: item.D_GY,
-														PRDETAIL_LG: item.D_LG,
-													}))
-													grid.resetData(resultA);
-													modal.hide();
-												},
-												error: function (xhr, status, error) {
-													console.log('근태확정 데이터 전송에 실패했습니다.', error);
-													Swal.fire({
-														title: "마감 실패",
-														icon: "error",
-														text: "데이터 전송에 실패했습니다. 다시 시도해주세요."
-													});
-												}
+														BS: bsdata.BS,
+														wm: premth,
+														wr: empcd,
+													}
+												});
+												console.log('가져와', wdata);
+												swal.fire({
+													title: "정말 마감하시겠습니까?",
+													text: "마감하시면 더이상 수정은 불가능합니다.",
+													icon: "warning",
+													showCancelButton: true,
+													confirmButtonColor: "#774df1",
+													cancelButtonColor: "",
+													confirmButtonText: "마감"
+												}).then((result) => {
+													if (result.isConfirmed) {
+														$.ajax({
+															url: "/update_commuteprandcalpr",
+															method: "POST",
+															contentType: "application/json",
+															data: JSON.stringify(wdata),
+															beforeSend: function (xhr) {
+																xhr.setRequestHeader(header, token);
+															},
+															success: function (data) {
+																console.log('근태확정', data);
+																Swal.fire({
+																	title: "마감되었습니다.",
+																	icon: "success"
+																});
+																const result = data.map(item => {
+																	const calculatedData = item.calculated;  
+																	if (Array.isArray(calculatedData)) {
+																		const result = calculatedData.reduce((acc, calItem) => {
+																			acc[calItem.prdetail_nm] = calItem.amount;  // prdetail_nm을 키로, amount를 값으로 누적
+																			return acc;
+																		}, {
+																			ta: item.ta,
+																			td: item.td,
+																			rs: item.rs,
+																			employee_cd: item.employee_cd,
+																			employee_nm: item.employee_nm
+																		});
+																		return result;
+																	}
+																	return {}; 
+																});
+																console.log('변환된 데이터:', result);
+																const resultA = result.map(item => ({
+																	...item,
+																	EMPLOYEE_CD: item.employee_cd,
+																	EMPLOYEE_NM: item.employee_nm,
+																	PRDETAIL_BS: item.BS,
+																	PRDETAIL_RS: item.rs,
+																	PRDETAIL_TA: item.ta,
+																	PRDETAIL_TD: item.td,
+																	PRDETAIL_BN: item.B_BN,
+																	PRDETAIL_HA: item.B_HA,
+																	PRDETAIL_MT: item.B_MT,
+																	PRDETAIL_NA: item.B_NA,
+																	PRDETAIL_OT: item.B_OT,
+																	PRDETAIL_RL: item.B_RL,
+																	PRDETAIL_WA: item.B_WA,
+																	PRDETAIL_GG: item.D_GG,
+																	PRDETAIL_GM: item.D_GM,
+																	PRDETAIL_GY: item.D_GY,
+																	PRDETAIL_LG: item.D_LG,
+																}))
+																grid.resetData(resultA);
+																modal.hide();
+															},
+															error: function (xhr, status, error) {
+																console.log('근태확정 데이터 전송에 실패했습니다.', error);
+																Swal.fire({
+																	title: "마감 실패",
+																	icon: "error",
+																	text: "데이터 전송에 실패했습니다. 다시 시도해주세요."
+																});
+															}
+														});
+													}
+												});
+											});
+										},
+										error: function (xhr, status, error) {
+											console.log("근태 확정 데이터 조회에 실패했습니다.", error);
+											Swal.fire({
+												title: "오류",
+												icon: "error",
+												text: "근태 데이터를 불러오는 데 실패했습니다."
 											});
 										}
 									});
-								});
-							},
-							error: function (xhr, status, error) {
-								console.log("근태 확정 데이터 조회에 실패했습니다.", error);
-								Swal.fire({
-									title: "오류",
-									icon: "error",
-									text: "근태 데이터를 불러오는 데 실패했습니다."
-								});
 							}
 						});
+						modal.show();
+					}
+				},
+				error:function(xhr,state,error){
+					console.log('근태 마감여부 확인에 실패했습니다.',error);
 				}
 			});
-			modal.show();
 	});
 
 	  //////////////////
@@ -591,15 +580,29 @@
 	//////////////////
 
 	$('#btn_bn').on('click',function(){
-		if(localStorage.getItem('btn_wt') == null){
-			swal.fire({
-				title:"설정불가",
-				icon:"warning",
-				text:"근태마감을 먼저 해주세요."
-			})
-			return;
-		}
-		// 이제 모달뜨고, 받은값 + 그리드값으로 공제만 계산다시한후 저장
+		$.ajax({
+			url:"/iscal",
+			method:"GET",
+			data:{premth:premth},
+			success:function(iscaldata){
+				console.log('근태마감했나요',iscaldata);
+				//debugger
+				if(iscaldata !== ""){
+					// 상여계산 시작
+					// 이제 모달뜨고, 받은값 + 그리드값으로 공제만 계산다시한후 저장 
+					console.log('TEST',grid.getData());
+				}else{
+					swal.fire({
+						title:"설정불가",
+						icon:"warning",
+						text:"근태마감을 먼저 해주세요."
+					})
+				}
+			},
+			error:function(xhr,state,error){
+				console.log('근태 마감여부 확인에 실패했습니다.',error);
+			}
+		});
 	});
 	
 	

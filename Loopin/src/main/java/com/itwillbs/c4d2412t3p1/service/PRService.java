@@ -436,4 +436,9 @@ public class PRService {
 		return result;
 	}
 
+	public String isCal(String premth) {
+		String iscal = prM.isCal(premth);
+		return iscal;
+	}
+
 }
