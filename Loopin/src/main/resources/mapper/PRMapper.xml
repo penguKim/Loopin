@@ -26,7 +26,7 @@
 			PRDETAIL.prdetail_na, 
 			PRDETAIL.prdetail_wa, 
 			PRDETAIL.prdetail_ha, 
-			PRDETAIL.prdetail_aa,
+			PRDETAIL.prdetail_rl,
 			PRDETAIL.prdetail_bn, 
 			PRDETAIL.prdetail_td, 
 			PRDETAIL.prdetail_gm, 
@@ -51,6 +51,7 @@
 	<select id="selectpradminfirstmodal" resultType="map">
 		SELECT
 			PRDETAIL.employee_cd, 
+			PRDETAIL.employee_nm, 
 			PRDETAIL.prdetail_bs, 
 			PRDETAIL.prdetail_ta,
 			PRDETAIL.prdetail_td, 
@@ -63,6 +64,7 @@
 
 	<select id="selectpradminfirstmodal2" resultType="map">
 		SELECT 
+			PRDETAIL.employee_nm,
 			PRDETAIL.prdetail_rs, 
 			PRDETAIL.prdetail_ta, 
 			PRDETAIL.prdetail_bs, 
@@ -71,7 +73,7 @@
 			PRDETAIL.prdetail_na,
 			PRDETAIL.prdetail_wa, 
 			PRDETAIL.prdetail_ha, 
-			PRDETAIL.prdetail_aa,
+			PRDETAIL.prdetail_rl,
 			PRDETAIL.prdetail_bn, 
 			PRDETAIL.prdetail_td, 
 			PRDETAIL.prdetail_gm, 
@@ -85,17 +87,45 @@
 	
     <select id="select_empworklastmth" resultType="map">
         <![CDATA[
-	        SELECT 
-	        	EMPLOYEE_CD,
-	        	EMPLOYEE_NM, 
-	        	EMPLOYEE_BS as BS
-	        FROM EMPLOYEE
-	        WHERE employee_rd IS NULL
-	          OR TO_DATE(employee_rd, 'YYYY-MM-DD') BETWEEN TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD')
-	            AND LAST_DAY(ADD_MONTHS(SYSDATE, 0))
+	        SELECT DISTINCT
+	        	e.EMPLOYEE_CD,
+	        	e.EMPLOYEE_NM, 
+	        	e.EMPLOYEE_BS as BS
+	        FROM EMPLOYEE e
+	        JOIN COMMUTE c ON e.EMPLOYEE_CD = c.EMPLOYEE_CD
+	        WHERE(
+			        e.EMPLOYEE_US = 1 AND 
+			        e.EMPLOYEE_RD IS NULL AND
+			        TO_DATE(c.COMMUTE_WD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+			    )
+			    OR 
+			    (
+			        e.EMPLOYEE_US = 0 AND
+			        TO_DATE(e.EMPLOYEE_RD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1)) AND
+			        TO_DATE(c.COMMUTE_WD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+			    )
         ]]>
     </select>
 
+	<select id="isCal" resultType="String">
+		SELECT pr_wm
+		FROM PR
+		WHERE pr_wm = #{premth}
+	</select>
+	
+	<select id="select_spes" resultType="map">
+		SELECT pd.* 
+		FROM PRDETAIL pd 
+		JOIN PR p ON pd.pr_id = p.pr_id 
+		WHERE p.pr_wm LIKE #{premth}
+	</select>
+	
 	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
 	    SELECT 
 	        c.employee_cd,
@@ -129,15 +159,12 @@
           </foreach>
 	</select>
 	
-	<select id="update_commutepr">
-		UPDATE COMMUTE C
-		SET c.COMMUTE_PR = CASE
-							WHEN c.COMMUTE_PR = 0 THEN 1
-							WHEN c.COMMUTE_PR = 1 THEN 0
-						   END
-		WHERE TO_DATE(COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
+	<update id="update_commutepr">
+		UPDATE COMMUTE c
+		SET c.COMMUTE_PR = 1
+		WHERE TO_DATE(c.COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
 							AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
-	</select>
+	</update>
 	
 </mapper>
     

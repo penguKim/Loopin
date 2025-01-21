@@ -1,8 +1,16 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +40,7 @@ import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import oracle.jdbc.proxy.annotation.Post;
 
 @RequiredArgsConstructor
 @Controller
@@ -46,7 +55,6 @@ public class CommuteController {
 	// 출퇴근 기록부 --------------------------------------------
 	@GetMapping("/commute")
 	public String commute(Model model) {
-
 	    
 		return "/commute/commute_list";
 	}
@@ -367,44 +375,80 @@ public class CommuteController {
 		}
 	}
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// -------------------------- 미사용 ---------------------------
-	// 근로정보 관리 --------------------------------------------
-	
-	@GetMapping("/worktype")
-	public String worktype() {
+
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_AT_ADMIN')")
+	@GetMapping("/commute_chart")
+	public String commuteChart() {		
 		
-		return "commute/work_type";
+		return "/commute/commute_chart";
 	}
 	
-//	@GetMapping("/select_WORKTYPE")
-//	public ResponseEntity<Map<String, Object>> select_WORKTYPE() {
-//		
-//		List<WorktypeDTO> list = commuteService.select_WORKTYPE();
-//		
-//		Map<String, Object> response = new HashMap<>(); 
-//	    response.put("result", true);
-//	    Map<String, Object> data = new HashMap<>();
-//	    data.put("contents", list);
-//	    response.put("data", data);
-//		
-//		
-//		return ResponseEntity.ok(response);
-//	}
+	
+	@PostMapping("/select_COMMUTE_timeList")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_timeList(@RequestBody CommuteRequestDTO commuteRequest) {
+		CommuteFilterRequest filter = commuteRequest.getCommuteFilter();
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			List<CommuteDTO> commuteList = commuteService.select_COMMUTE_timeList(filter);
+			response.put("commuteList", commuteList);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	@PostMapping("/select_COMMUTE_chartList")
+	public ResponseEntity<Map<String, Object>> select_COMMUTE_chartList(@RequestBody CommuteRequestDTO commuteRequest) {
+		CommuteFilterRequest filter = commuteRequest.getCommuteFilter();
+		Map<String, Object> response = new HashMap<>();
+		
+		System.out.println("---------------------컨트롤러");
+		try {
+//			List<CommuteDTO> commuteChart = commuteService.select_COMMUTE_commuteChart(filter);
+//			response.put("commuteList", commuteChart);
+			
+			
+	        List<CommuteDTO> commuteData = commuteService.select_COMMUTE_commuteChart(filter);
+	        Map<String, Object> chartData = new HashMap<>();
+	        
+	        // categories
+	        List<String> categories = commuteData.stream()
+	            .map(CommuteDTO::getCommute_wd)
+	            .collect(Collectors.toList());
+	            
+	        // series - 근무 유형별 데이터 한번에 생성
+	        List<Map<String, Object>> series = Arrays.asList(
+        		commuteService.createSeriesData("일반근무", CommuteDTO::getCommute_ig, commuteData),
+        		commuteService.createSeriesData("연장근무", CommuteDTO::getCommute_eg, commuteData),
+        		commuteService.createSeriesData("야간근무", CommuteDTO::getCommute_yg, commuteData),
+        		commuteService.createSeriesData("주말근무", CommuteDTO::getCommute_jg, commuteData),
+        		commuteService.createSeriesData("휴일근무", CommuteDTO::getCommute_hg, commuteData)
+	        );
+	        
+	        chartData.put("categories", categories);
+	        chartData.put("series", series);
+	        response.put("chartData", chartData);
+			
+			
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
+			
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
 	
 	
+	
+	
+	
+	
+	
+
 	
 }

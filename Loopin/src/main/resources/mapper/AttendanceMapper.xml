@@ -105,49 +105,112 @@
 							, NULL)
 	</insert>
 	
-	<select id="select_APPROVAL_ANNUAL" resultType="map">
-		SELECT e.EMPLOYEE_NM
-			   , a.APPROVAL_CD
-			   , c.COMMON_NM EMPLOYEE_DP
-			   , cc.COMMON_NM EMPLOYEE_GD
-			   , a.APPROVAL_WR  
-			   , a.APPROVAL_DV
-			   , a.APPROVAL_AV
-			   , JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS annualtype
-		       , JSON_VALUE(a.APPROVAL_CT, '$.startday') AS startday
-		       , JSON_VALUE(a.APPROVAL_CT, '$.endday') AS endday
-		       , CASE 
-		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1
-		             WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5
-		             ELSE 0 -- 병가
-		          END AS mapped_value
-		       , CASE
-		       		 WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN'
-		             AND JSON_VALUE(a.APPROVAL_CT, '$.startday') &lt;&gt; JSON_VALUE(a.APPROVAL_CT, '$.endday') 
-		         THEN 
-		             TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') 
-		             - TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') + 1
-		         ELSE 0
-		       END AS day_difference -- startday와 endday 간 차이 계산 (연차 갯수 계산)
-		  FROM APPROVAL a 
-	 LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_CD = a.APPROVAL_WR 
-	 LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
-	 LEFT JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = e.EMPLOYEE_GD
-		 WHERE 1=1
-		   AND a.APPROVAL_DV = '10'
-		   AND a.APPROVAL_AV = '5'
-		   <if test="isAdmin == false">AND e.EMPLOYEE_CD = ${employee_cd}</if>  <!--		   사원이라면 동적추가(employee_rl != 'sys, at')-->
+	<select id="select_APPROVAL_ANNUAL" resultType="map" parameterType="map">
+		WITH ANNUAL_USAGE AS (
+		    SELECT 
+		        e.EMPLOYEE_CD,
+		        e.EMPLOYEE_NM,
+		        c.COMMON_NM AS EMPLOYEE_DP,
+		        cc.COMMON_NM AS EMPLOYEE_GD,
+		        EXTRACT(YEAR FROM TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD')) AS USAGE_YEAR,
+		        CASE 
+		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1 -- 연차
+		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5 -- 반차
+		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'SN' THEN 0 -- 병가는 연차 소진 없음
+		            ELSE 0
+		        END AS MAPPED_VALUE
+		    FROM APPROVAL a
+		    LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_ID = a.APPROVAL_WR 
+		    LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
+		    LEFT JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = e.EMPLOYEE_GD
+		    WHERE 1=1
+		      AND a.APPROVAL_DV = '10'
+		      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
+		)
+		-- 연차 사용량을 계산
+		, ANNUAL_SUMMARY AS (
+		    SELECT 
+		        EMPLOYEE_CD,
+		        EMPLOYEE_NM,
+		        EMPLOYEE_DP,
+		        EMPLOYEE_GD,
+		        USAGE_YEAR,
+		        SUM(MAPPED_VALUE) AS ANNUAL_UA -- 사용연차 (Annual Used Amount)
+		    FROM ANNUAL_USAGE
+		    GROUP BY EMPLOYEE_CD, EMPLOYEE_NM, EMPLOYEE_DP, EMPLOYEE_GD, USAGE_YEAR
+		)
+		-- 최종 출력
+		SELECT 
+		    s.EMPLOYEE_CD,
+		    s.EMPLOYEE_NM,
+		    s.EMPLOYEE_DP,
+		    s.EMPLOYEE_GD,
+		    s.USAGE_YEAR,
+		    s.ANNUAL_UA, -- 사용연차
+		    a.ANNUAL_AA AS TOTAL_ANNUAL, -- 총연차
+		    a.ANNUAL_RA AS REMAINING_ANNUAL -- 잔여연차
+		FROM ANNUAL_SUMMARY s
+		LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD AND s.USAGE_YEAR = a.ANNUAL_YR
+		ORDER BY s.EMPLOYEE_CD, s.USAGE_YEAR
     </select>
     
-    <select id="select_calendar_ANNUAL" resultType="map">
+<!--    WITH ANNUAL_USAGE AS (
+    SELECT 
+        e.EMPLOYEE_CD,
+        e.EMPLOYEE_NM,
+        c.COMMON_NM AS EMPLOYEE_DP,
+        cc.COMMON_NM AS EMPLOYEE_GD,
+        EXTRACT(YEAR FROM TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD')) AS USAGE_YEAR,
+        CASE 
+            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1
+            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5
+            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'SN' THEN 0  병가는 연차 소진 없음
+            ELSE 0
+        END AS MAPPED_VALUE
+    FROM APPROVAL a
+    LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_ID = a.APPROVAL_WR 
+    LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
+    LEFT JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = e.EMPLOYEE_GD
+    WHERE 1=1
+      AND a.APPROVAL_DV = '10'
+      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
+)
+ 연차 사용량을 계산
+, ANNUAL_SUMMARY AS (
+    SELECT 
+        s.EMPLOYEE_CODE,
+        s.EMPLOYEE_NM,
+        s.EMPLOYEE_DP,
+        s.EMPLOYEE_GD,
+        s.USAGE_YEAR,
+        s.USED_ANNUAL,
+        a.TOTAL_ANNUAL,
+        a.TOTAL_ANNUAL - s.USED_ANNUAL AS REMAINING_ANNUAL
+    FROM ANNUAL_SUMMARY s
+    LEFT JOIN ANNUAL a ON s.EMPLOYEE_CODE = a.EMPLOYEE_ID 
+                       AND s.USAGE_YEAR = a.ANNUAL_YEAR
+    WHERE 1=1
+     특정 사원 이름 필터링
+    <if test="employee != null and employee != ''">
+        AND s.EMPLOYEE_NM = #{employee}
+    </if>
+	ORDER BY s.EMPLOYEE_CODE, s.USAGE_YEAR-->
+    
+    <select id="select_calendar_ANNUAL" resultType="map" parameterType="map">
 		WITH DATE_RANGE AS (
 		    SELECT 
 		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD') AS STARTDAY,
 		        TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD') AS ENDDAY,
 		        a.APPROVAL_CT,
 		        a.APPROVAL_DV,
-		        JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS ANNUAL_TYPE
+		        JSON_VALUE(a.APPROVAL_CT, '$.annualtype') AS ANNUAL_TYPE,
+		        c.COMMON_NM EMPLOYEE_DP,
+		        cc.COMMON_NM EMPLOYEE_GD,
+		        em.EMPLOYEE_NM EMPLOYEE_NM
 		    FROM APPROVAL a
+		    LEFT OUTER JOIN EMPLOYEE EM ON EM.EMPLOYEE_CD = a.APPROVAL_WR 
+			LEFT OUTER JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = EM.EMPLOYEE_DP
+			LEFT OUTER JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = EM.EMPLOYEE_GD
 		    WHERE a.APPROVAL_DV = '10'
 		      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
 		      AND JSON_VALUE(a.APPROVAL_CT, '$.endday') IS NOT NULL
@@ -157,13 +220,16 @@
 		      )
 		),
 		DATES AS (
-		    SELECT 
+		     SELECT 
 		        DR.STARTDAY,
 		        DR.ENDDAY,
 		        DR.APPROVAL_CT,
 		        DR.APPROVAL_DV,
 		        DR.ANNUAL_TYPE,
-		        DR.STARTDAY + (LEVEL - 1) AS GENERATED_DATE
+		        DR.STARTDAY + (LEVEL - 1) AS GENERATED_DATE,
+		        DR.EMPLOYEE_DP,
+		        DR.EMPLOYEE_GD,
+		        DR.EMPLOYEE_NM
 		    FROM DATE_RANGE DR
 		    CONNECT BY LEVEL &lt;= (CASE WHEN DR.STARTDAY &lt;&gt; DR.ENDDAY THEN (DR.ENDDAY - DR.STARTDAY) + 1 ELSE 1 END)
 		      AND PRIOR DR.STARTDAY = DR.STARTDAY
@@ -173,10 +239,25 @@
 		    TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD') AS GENERATED_DATE,
 		    COUNT(*) AS RECORD_COUNT,
 		    LISTAGG(JSON_VALUE(D.APPROVAL_CT, '$.reason'), ', ') WITHIN GROUP (ORDER BY D.GENERATED_DATE) AS REASONS,
-		    JSON_VALUE(D.APPROVAL_CT, '$.annualtype') AS ANNUALTYPE
+		    CASE 
+		        WHEN JSON_VALUE(D.APPROVAL_CT, '$.annualtype') = 'AN' THEN '연차'
+		        WHEN JSON_VALUE(D.APPROVAL_CT, '$.annualtype') = 'BN' THEN '반차'
+		        ELSE '반차' -- 예상치 못한 값 처리
+		    END AS ANNUALTYPE,
+		    d.EMPLOYEE_DP,
+	        d.EMPLOYEE_GD,
+	        d.EMPLOYEE_NM
 		FROM DATES D
-		WHERE D.GENERATED_DATE BETWEEN TO_DATE('2024-12-29', 'YYYY-MM-DD') AND TO_DATE('2025-02-01', 'YYYY-MM-DD')
-		GROUP BY TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD'), JSON_VALUE(D.APPROVAL_CT, '$.annualtype')
+		WHERE 1=1
+<!--		<if test="isAdmin == true">-->
+			<if test="holiday_dt1 != null and holiday_dt1 != '' and holiday_dt2 != null and holiday_dt2 != ''">
+				AND D.GENERATED_DATE BETWEEN TO_DATE(#{holiday_dt1}, 'YYYY-MM-DD') AND TO_DATE(#{holiday_dt2}, 'YYYY-MM-DD')
+			</if>
+			<if test="date != null and date != ''">
+				AND GENERATED_DATE = #{date}
+			</if>
+<!--		</if>-->
+		GROUP BY TO_CHAR(D.GENERATED_DATE, 'YYYY-MM-DD'), JSON_VALUE(D.APPROVAL_CT, '$.annualtype'), d.EMPLOYEE_DP, d.EMPLOYEE_GD, d.EMPLOYEE_NM
 		ORDER BY GENERATED_DATE
 	</select>
 	

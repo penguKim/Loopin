@@ -86,17 +86,8 @@ public class CommonController {
 		}
 		
 		Map<String, Object> response = new HashMap<>();
-		if(deleteCount <= 0) {
-			response.put("result", false);			
-		} else {
-			List<Common_codeDTO> codeList = commonService.select_common_code(code);
-			response.put("result", true);			
-			Map<String, Object> data = new HashMap<>();
-			data.put("contents", codeList);
-			response.put("data", data);
-		}
 		
-	    response.put("result", deleteCount <= 0);
+	    response.put("result", deleteCount >= 0);
 		List<Common_codeDTO> codeList = commonService.select_common_code(code);
 		Map<String, Object> data = new HashMap<>();
 		data.put("contents", codeList);
