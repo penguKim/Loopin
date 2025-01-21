@@ -21,11 +21,13 @@ import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
+import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final CommonService commonService;
+	private final EmployeeService employeeService;
 	
 
 	// 출퇴근 기록부 --------------------------------------------
@@ -344,9 +347,9 @@ public class CommuteController {
 		Map<String, Object> response = new HashMap<>();
 		EmployeeDetails employeeDetails = commuteService.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
-		String workinghour_id = employeeDetails.getWorkinghour_id();
+		Employee employee = employeeService.findEmployeeById(employee_cd);
+		String workinghour_id = employee.getWorkinghour_id();
 		if(workinghour_id == null) {
-			response.put("result", false);
 			response.put("msg", "근무형태를 등록해야합니다.<br>관리자에게 문의하세요.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
@@ -355,17 +358,14 @@ public class CommuteController {
 			Commute commute = commuteService.findById(employee_cd, workinghour_id);
 			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
 			
-			response.put("result", true);
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "하였습니다.");
 			response.put("commute", commute);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
-			response.put("result", false);
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "에 실패했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	
 	
 	
 	

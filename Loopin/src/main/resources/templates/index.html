@@ -207,101 +207,56 @@
 		console.log(event); // EventObject
 	});
 	
-		// 출근하기
-		$('#btn_attendance, #btn_leave_work').on('click', function() {
-			console.log('asdasd');
-			let isAttendance = $(this).attr('id') == 'btn_attendance';
-			let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
-			let timeInterval;
-			Swal.fire({
-				icon: 'question',
-				title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
-				html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
-				didOpen: () => {
-					// 1초마다 시간 업데이트
-					timeInterval = setInterval(() => {
-						$('#currentTime').text(getDateTime(new Date));
-					}, 1000);
-				},
-				showCancelButton: true,
-				confirmButtonColor: '#0d6efd',
-				cancelButtonColor: '#6c757d',
-				confirmButtonText: '확인',
-				cancelButtonText: '취소',
-				reverseButtons: true, 
-			}).then(result => {
-				clearInterval(timeInterval);
-				if (result.isConfirmed) { 
-					$.ajax({
-						type: 'post',
-						url: '/insert_COMMUTE',
-						contentType: 'application/json',
-						data: JSON.stringify({attendance : isAttendance}),
-						beforeSend : function(xhr) {
-						    xhr.setRequestHeader(header, token);
-						},
-						success: function(data) {
-							if(data['result']) {
-								showToast('', 'success', '', data['msg']);
-								if(isAttendance) {
-								    $('#btn_attendance').prop('disabled', true);
-								    $('#btn_leave_work').prop('disabled', false);
-								} else {
-								    $('#btn_leave_work').prop('disabled', true);
-								}
-							}
-						},
-						error : function(xhr, textStatus, errorThrown) {
-							let data = xhr.responseJSON;
-							showAlert('', 'error', '', data['msg']);
+	// 출근하기
+	$('#btn_attendance, #btn_leave_work').on('click', function() {
+		console.log('asdasd');
+		let isAttendance = $(this).attr('id') == 'btn_attendance';
+		let message = `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`;
+		let timeInterval;
+		Swal.fire({
+			icon: 'question',
+			title: `${isAttendance ? '출근' : '퇴근'}하시겠습니까?`,
+			html: `<span id="currentTime">${getDateTime(new Date)}</span>`,
+			didOpen: () => {
+				// 1초마다 시간 업데이트
+				timeInterval = setInterval(() => {
+					$('#currentTime').text(getDateTime(new Date));
+				}, 1000);
+			},
+			showCancelButton: true,
+			confirmButtonColor: '#0d6efd',
+			cancelButtonColor: '#6c757d',
+			confirmButtonText: '확인',
+			cancelButtonText: '취소',
+			reverseButtons: true, 
+		}).then(result => {
+			clearInterval(timeInterval);
+			if (result.isConfirmed) { 
+				$.ajax({
+					type: 'post',
+					url: '/insert_COMMUTE',
+					contentType: 'application/json',
+					data: JSON.stringify({attendance : isAttendance}),
+					beforeSend : function(xhr) {
+					    xhr.setRequestHeader(header, token);
+					},
+					success: function(data) {
+						showToast('', 'success', '', data['msg']);
+						if(isAttendance) {
+						    $('#btn_attendance').prop('disabled', true);
+						    $('#btn_leave_work').prop('disabled', false);
+						} else {
+						    $('#btn_leave_work').prop('disabled', true);
 						}
-					});
-				}
-			});
+					},
+					error : function(xhr, textStatus, errorThrown) {
+						let data = xhr.responseJSON;
+						showAlert('', 'error', '', data['msg']);
+					}
+				});
+			}
 		});
-		
-		// -------------------------- 추후 공통js로 빠질 함수(현재 commute_list에 있음) ------------------------
-		function getDateTime(date) {
-		    // 날짜 포맷팅
-		    const year = date.getFullYear();
-		    const month = String(date.getMonth() + 1).padStart(2, '0');
-		    const day = String(date.getDate()).padStart(2, '0');
-		    // 시간 포맷팅
-		    const hours = String(date.getHours()).padStart(2, '0');
-		    const minutes = String(date.getMinutes()).padStart(2, '0');
-		    const seconds = String(date.getSeconds()).padStart(2, '0');
-		    
-		    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
-		}
-		
-		function showAlert(element, icon, title, text) {
-			Swal.fire({
-			    icon: icon,
-			    title: title,
-			    html: text,
-			});
-			
-			if(element != '') {
-				element.focus();
-			}
-		}
-		
-		function showToast(element, icon, title, msg) {
-		    Swal.fire({
-		        toast: true,
-		        position: 'center',
-		        icon: icon,
-		        title: title,
-		        html: msg,
-		        showConfirmButton: false,
-		        timer: 1500,
-		    });
-			console.log(element);
-			
-			if(element != '') {
-				element.focus();
-			}
-		}
+	});
 	
 </script>
 

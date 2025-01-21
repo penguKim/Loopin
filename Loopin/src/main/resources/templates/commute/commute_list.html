@@ -624,7 +624,7 @@
 	}
 	
 	// 달력 상세 모달의 그리드
-	async function make_modal_grid(date) {
+	function make_modal_grid(date) {
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
 			data : {api: {readData: {url: '/select_COMMUTE_detail', method: 'GET', initParams: {commute_wd: date} }}},
@@ -670,7 +670,6 @@
 		
 		modal_grid.on('dblclick', function(ev) {
 			let row = modal_grid.getRow(ev.rowKey);
-			console.log('123123123123',row['commute_pr']);
 			if(row['commute_pr']) {
 				showAlert('', 'warning', '정산 완료', '정산이 완료된 기록은<br>수정이 불가능합니다.');
 				return;
