@@ -123,11 +123,11 @@ public class ApprovalService {
 			row.put("approval_tt", approval.getApproval_tt());
 			row.put("approval_fa", approval.getApproval_fa());
 			row.put("approval_sa", approval.getApproval_sa());
-			
+
 			// 현재 사용자가 1차 결재권자인지, 2차 결재권자인지 추가
-	        row.put("is_first_approver", currentCd.equals(approval.getApproval_fa())); // 1차 여부
-	        row.put("is_second_approver", currentCd.equals(approval.getApproval_sa())); // 2차 여부
-			
+			row.put("is_first_approver", currentCd.equals(approval.getApproval_fa())); // 1차 여부
+			row.put("is_second_approver", currentCd.equals(approval.getApproval_sa())); // 2차 여부
+
 			return row;
 		}).collect(Collectors.toList());
 	}
@@ -135,7 +135,11 @@ public class ApprovalService {
 	@Transactional
 	public void handleApprovalInsert(ApprovalDTO approvalDTO) {
 		// 1. 휴가 신청서 삽입
-		insert_APPROVAL(approvalDTO);
+		if (approvalDTO.getApproval_cd() == null) {
+			insert_APPROVAL(approvalDTO);
+		}else {
+			update_APPROVAL(approvalDTO);
+		}
 
 		// 2. 상태 처리
 		processApprovalStatus(approvalDTO);
@@ -240,7 +244,8 @@ public class ApprovalService {
 	}
 
 	@Transactional
-	public void processApproval(String approval_cd, String currentUserCd, boolean isApproved) throws IllegalAccessException {
+	public void processApproval(String approval_cd, String currentUserCd, boolean isApproved)
+			throws IllegalAccessException {
 		// Approval 엔티티 가져오기
 		Approval approval = approvalRepository.findById(approval_cd)
 				.orElseThrow(() -> new IllegalArgumentException("결재를 찾을 수 없습니다."));

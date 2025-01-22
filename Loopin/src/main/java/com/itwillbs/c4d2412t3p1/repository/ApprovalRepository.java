@@ -19,7 +19,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 	// 인사코드 값으로 찾기
 	@Query("SELECT a FROM Approval a WHERE a.approval_wr = :currentId")
 	List<Approval> findByApprovalCd(@Param("currentId") String currentId);
-
+	
 //     1차 결재권자 목록 조회
 	@Query("SELECT e FROM Employee e " + "JOIN COMMON_CODE c ON e.employee_gd = c.common_cc "
 			+ "WHERE c.common_gc = 'DEPARTMENT' " + // 직위 관련 필터 추가
