@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -167,4 +168,12 @@ public class PRController {
 		return result;
 	}
 	
+	@PostMapping("/calwbn")
+	@ResponseBody
+	public List<Map<String, Object>> getwt(@RequestBody List<PR_calculationMDTO> calbndata ) throws ScriptException {
+		
+		List<Map<String, Object>> list = prS.select_worktimeforbn(calbndata);
+		
+		return list;
+	}
 }

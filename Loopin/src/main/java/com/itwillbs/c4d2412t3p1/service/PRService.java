@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.script.ScriptException;
 
@@ -359,49 +362,49 @@ public class PRService {
 	        prdetail.setEmployee_cd(employee_cd);
 	        prdetail.setEmployee_nm(employee_nm);
 	        prdetail.setPr_id(prid);
-	        prdetail.setPredetail_ch(false);
-	        prdetail.setPredetail_ta(calculatedSalary.get(0).getTA());
-	        prdetail.setPredetail_td(calculatedSalary.get(0).getTD());
-	        prdetail.setPredetail_rs(calculatedSalary.get(0).getRS());
+	        prdetail.setPrdetail_ch(false);
+	        prdetail.setPrdetail_ta(calculatedSalary.get(0).getTA());
+	        prdetail.setPrdetail_td(calculatedSalary.get(0).getTD());
+	        prdetail.setPrdetail_rs(calculatedSalary.get(0).getRS());
 	        
 	        for(PRCalDTO pd : calculatedSalary.get(0).getCalculated()) {
 	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getPrdetail_nm());
 	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getAmount());
 	        	if(pd.getPrdetail_nm().equals("BS")) {
-	        		prdetail.setPredetail_bs(pd.getAmount());
+	        		prdetail.setPrdetail_bs(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_BN")) {
-	        		prdetail.setPredetail_bn(pd.getAmount());
+	        		prdetail.setPrdetail_bn(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_HA")) {
-	        		prdetail.setPredetail_ha(pd.getAmount());
+	        		prdetail.setPrdetail_ha(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_MT")) {
-	        		prdetail.setPredetail_mt(pd.getAmount());
+	        		prdetail.setPrdetail_mt(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_NA")) {
-	        		prdetail.setPredetail_na(pd.getAmount());
+	        		prdetail.setPrdetail_na(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_OT")) {
-	        		prdetail.setPredetail_ot(pd.getAmount());
+	        		prdetail.setPrdetail_ot(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_RL")) {
-	        		prdetail.setPredetail_rl(pd.getAmount());
+	        		prdetail.setPrdetail_rl(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_WA")) {
-	        		prdetail.setPredetail_wa(pd.getAmount());
+	        		prdetail.setPrdetail_wa(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GG")) {
-	        		prdetail.setPredetail_gg(pd.getAmount());
+	        		prdetail.setPrdetail_gg(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GM")) {
-	        		prdetail.setPredetail_gm(pd.getAmount());
+	        		prdetail.setPrdetail_gm(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GY")) {
-	        		prdetail.setPredetail_gy(pd.getAmount());
+	        		prdetail.setPrdetail_gy(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_LG")) {
-	        		prdetail.setPredetail_lg(pd.getAmount());
+	        		prdetail.setPrdetail_lg(pd.getAmount());
 	        	}
 	        }
 	        
@@ -439,6 +442,101 @@ public class PRService {
 	public String isCal(String premth) {
 		String iscal = prM.isCal(premth);
 		return iscal;
+	}
+
+	public List<Map<String, Object>> select_worktimeforbn(List<PR_calculationMDTO> calbndata) throws ScriptException {
+		
+		PR updatepr = new PR();
+		PRDetail updatepd = new PRDetail();
+		
+		Long prid = calbndata.get(0).getPrid();
+		List<String> pdids = calbndata.get(0).getPdid();
+		BigDecimal bn = new BigDecimal(calbndata.get(0).getBonus());
+		
+		if(Objects.nonNull(prid) && !pdids.isEmpty()) { // 상여계산으로 prid pdid 들고왔을때
+			
+			Optional<PR> prlist = prRep.findById(prid);
+			BigDecimal totalempta =  BigDecimal.ZERO;
+			BigDecimal totalemptd =  BigDecimal.ZERO;
+			BigDecimal totalempns =  BigDecimal.ZERO;
+			
+			String[] prwms = prlist.get().getPr_wm().split("-");
+			String prwmyear = prwms[0];
+			String prwm = prwms[1];
+			
+			for(String pd : pdids) {
+				Long pdid = Long.parseLong(pd);
+				Optional<PRDetail> pdlist = prdRep.findById(pdid);
+				List<String> employee_cdList = new ArrayList<>();
+				employee_cdList.add(pdlist.get().getEmployee_cd());
+				List<PR_calculationMDTO> test = prM.getwt(employee_cdList, prwm, prwmyear);
+				System.out.println("@@@@@@test : "+test);
+				
+				Map<String, Consumer<BigDecimal>> prDetailMap = new HashMap<>();
+				prDetailMap.put("BS", updatepd::setPrdetail_bs);
+				prDetailMap.put("B_BN", updatepd::setPrdetail_bn);
+				prDetailMap.put("B_HA", updatepd::setPrdetail_ha);
+				prDetailMap.put("B_MT", updatepd::setPrdetail_mt);
+				prDetailMap.put("B_NA", updatepd::setPrdetail_na);
+				prDetailMap.put("B_OT", updatepd::setPrdetail_ot);
+				prDetailMap.put("B_RL", updatepd::setPrdetail_rl);
+				prDetailMap.put("B_WA", updatepd::setPrdetail_wa);
+				prDetailMap.put("D_GG", updatepd::setPrdetail_gg);
+				prDetailMap.put("D_GM", updatepd::setPrdetail_gm);
+				prDetailMap.put("D_GY", updatepd::setPrdetail_gy);
+				prDetailMap.put("D_LG", updatepd::setPrdetail_lg);
+
+				for(PR_calculationMDTO p : test) {
+					String employee_cd = p.getEmployee_cd();
+					String employee_nm = p.getEmployee_nm();
+					String BS = p.getBS();
+					String workingtime = p.getWorkingtime();
+					String overworkingtime = p.getOverworkingtime();
+					String nightworkingtime = p.getNightworkingtime();
+					String weekendworkingtime = p.getWeekendworkingtime();
+					String holydayworkingtime = p.getHolydayworkingtime();
+					String remainleave = p.getRemainleave();
+					String bonus = p.getBonus();
+					
+					List<PRDTO> cal = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
+					totalempta = totalempta.add(cal.get(0).getTA());
+					totalemptd = totalemptd.add(cal.get(0).getTD());
+					totalempns = totalempns.add(cal.get(0).getRS());
+					
+					updatepd.setEmployee_cd(cal.get(0).getEmployee_cd());
+					updatepd.setEmployee_nm(cal.get(0).getEmployee_nm());
+					updatepd.setPr_id(prid);
+					updatepd.setPrdetail_id(pdid);
+					//ta,td,rs 추가해야함
+					
+					for( PRCalDTO pc : cal.get(0).getCalculated()) {
+						Consumer<BigDecimal> setter = prDetailMap.get(pc.getPrdetail_nm());
+					    if (setter != null) {
+					        setter.accept(pc.getAmount());
+					    }
+					}
+					
+				}
+				
+			}
+			
+			updatepr.setPr_gm(prlist.get().getPr_gm());
+			updatepr.setPr_id(prid);
+			updatepr.setPr_ns(totalempns);
+			updatepr.setPr_ta(totalempta);
+			updatepr.setPr_td(totalemptd);
+			updatepr.setPr_tp(prlist.get().getPr_tp());
+			updatepr.setPr_wd(prlist.get().getPr_wd());
+			updatepr.setPr_wr(prlist.get().getPr_wr());
+			updatepr.setPr_wm(prlist.get().getPr_wm());
+			prRep.save(updatepr);
+			
+			
+			
+		}else { // 추가 코드 수정 > 근태마감할때 
+			
+		}
+		return null;
 	}
 
 }

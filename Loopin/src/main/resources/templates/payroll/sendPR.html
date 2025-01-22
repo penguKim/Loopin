@@ -22,7 +22,7 @@
 							<input type="button" id="btn_wt" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#wtmodal" value="근태마감">
 						</div>
 						<div class="p-1">
-							<input type="button" id="btn_bn" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#wtmodal" value="공통상여">
+							<input type="button" id="btn_bn" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#bnmodal" value="공통상여">
 						</div>
 						</div>
 						<div id="grid" class="p-1"></div>
@@ -79,7 +79,7 @@
 		columns: [
 			{
 				header: 'prdetail_id',
-				name: 'prdetail_ID',
+				name: 'PRDETAIL_ID',
 				hidden: true,
 			},
 			{
@@ -363,15 +363,15 @@
 				success:function(iscaldata){
 					console.log('근태마감했나요',iscaldata);
 					//debugger
-					if(iscaldata !== ""){
+ 					if(iscaldata !== ""){
 						swal.fire({
 							title:"마감불가",
 							icon:"warning",
-							text:"이미 마감을했습니다."
+							text:"이미 마감을 했습니다."
 						})
 						saveBtnState(true);
 					}else{
-						if(day < 1 || day > 22) {
+						if(day < 1 || day > 7) {
 							swal.fire({
 								icon: 'error',
 								title: '사용불가',
@@ -590,7 +590,92 @@
 				if(iscaldata !== ""){
 					// 상여계산 시작
 					// 이제 모달뜨고, 받은값 + 그리드값으로 공제만 계산다시한후 저장 
-					console.log('TEST',grid.getData());
+					const modalid = 'bnmodal';
+					let modalEl = document.getElementById(modalid);
+						
+					if (!modalEl) {
+						const modalHtml = `<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false">
+			                <div class="modal-dialog modal-dialog-centered">
+			                  <div class="modal-content">
+			                    <div class="modal-header">
+			                      <h5 class="modal-title">공통 상여 지급</h5>
+			                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			                    </div>
+			                    <div class="modal-body">
+				                    <div class="input-group mb-3">
+				                      <input type="text" class="form-control" aria-label="Amount" id="amountInput">
+					                  <span class="input-group-text">원</span>
+				                    </div>
+			                    </div>
+			                    <div class="modal-footer">
+			                      <button type="button" class="btn btn-primary btn_bg" id="btn_gb">지급하기</button>
+			                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                    </div>
+			                  </div>
+			                </div>
+			              </div>`;
+						document.body.insertAdjacentHTML('beforeend', modalHtml);
+						modalEl = document.getElementById(modalid);
+					}
+						
+					modalEl.addEventListener('hidden.bs.modal', function () {
+						modalEl.remove();
+						console.log('공통 상여 모달이 닫히고 삭제되었습니다.');
+					});
+		
+					const modal = new bootstrap.Modal(modalEl);
+					const amountInput = document.getElementById('amountInput');
+					
+					modalEl.addEventListener('input', function (e) {
+						let value = e.target.value.replace(/,/g,'');
+						if(value){
+							e.target.value = Number(value).toLocaleString();
+						}
+					});
+					
+					$(document).off('click', '#btn_gb');
+					
+					$(document).on('click','#btn_gb', function(e){
+						console.log('상여지급 버튼 누름');
+						console.log('모달 인풋값',amountInput.value);
+						let inputvalue = amountInput.value.replace(/,/g,'');
+						console.log('인풋값숫자',inputvalue);
+						
+						const griddata = grid.getData();
+						console.log('그리드',griddata);
+						const prid = [...new Set(griddata.map(i=>i.PR_ID))];
+						const pdid = griddata.map(i=>i.PRDETAIL_ID);
+						console.log('prID',prid[0]);
+						console.log('prID',typeof prid[0]);
+						console.log('pdID',pdid);
+						
+						const calbnData = {
+								prid: prid[0],
+					            pdid: pdid,
+					            bonus: inputvalue.toString()
+						} 
+						console.log('calbn',calbnData);
+						
+						$.ajax({
+							url:"/calwbn",
+							method:"POST",
+							contentType:"application/json",
+							data: JSON.stringify([calbnData]),
+							beforeSend:function(xhr){
+								xhr.setRequestHeader(header,token);
+							},
+							success:function(calbndata){
+								console.log("상여계산",calbndata);
+							},
+							error:function(xhr,state,error){
+								console.log("공통상여 계산에 실패했습니다.",error);
+							}
+						});
+						
+					})
+					
+					modal.show();
+					
 				}else{
 					swal.fire({
 						title:"설정불가",

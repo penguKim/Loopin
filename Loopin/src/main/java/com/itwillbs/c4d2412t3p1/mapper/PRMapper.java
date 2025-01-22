@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 
 import org.apache.ibatis.annotations.Param;
@@ -34,5 +35,7 @@ public interface PRMapper {
 	String isCal(String premth);
 
 	List<Employee> select_spes(String premth);
+	
+	List<PR_calculationMDTO> getwt(@Param("employee_cdList") List<String> employee_cdList, @Param("prwm") String prwm, @Param("prwmyear") String prwmyear);
 
 }
