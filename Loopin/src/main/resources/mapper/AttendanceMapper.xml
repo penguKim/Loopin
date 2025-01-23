@@ -95,7 +95,7 @@
 						    , ANNUAL_UD
 							)
 					VALUES (#{EMPLOYEE_CD}
-				        	, #{ANNUAL_YR} + 1
+				        	, #{ANNUAL_YR}
 							, 0 
 							, #{EXPECT_ANNUAL} 
 							, #{EXPECT_ANNUAL} 
@@ -176,6 +176,7 @@
 			LEFT OUTER JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = EM.EMPLOYEE_DP
 			LEFT OUTER JOIN COMMON_CODE cc ON cc.COMMON_GC = 'POSITION' AND cc.COMMON_CC = EM.EMPLOYEE_GD
 		    WHERE a.APPROVAL_DV = '10'
+		      AND a.APPROVAL_AV = '50'
 		      AND JSON_VALUE(a.APPROVAL_CT, '$.startday') IS NOT NULL
 		      AND JSON_VALUE(a.APPROVAL_CT, '$.endday') IS NOT NULL
 		      AND (
