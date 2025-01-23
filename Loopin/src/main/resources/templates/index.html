@@ -18,7 +18,7 @@
 		padding: 30px 30px 30px 50px !important;
 	}
 	.toastui-calendar-weekday-event-title { /* 캘린더 이벤트 조절 */
-	    font-size: 12px !important;
+	    font-size: 11px !important;
 	    font-weight: normal !important;
 	}
 	.toastui-calendar-weekday-event { /* 캘린더 이벤트 조절 */
@@ -157,7 +157,7 @@
 </body>
 <script th:inline="javascript">
 	// 변수
-	const token = $("meta[name='_csrf']").attr("content")
+	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const div_calendar = document.getElementById('div_calendar');
 	const btn_calendar_prev = $('#btn_calendar_prev');
@@ -174,6 +174,7 @@
 		$("#current_time").text(`${year}-${month}-${day} ${hours}:${minutes}:${seconds} `);
 		
 		make_calendar();
+		
 		
 		// 이전 달 보기 이벤트
 		btn_calendar_prev.on('click', function(){ 
