@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,7 +41,8 @@ public class DashboardController {
 		EmployeeDetails employeeDetails = commuteService.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		String workinghour_id = employeeDetails.getWorkinghour_id();
-		Commute commute = commuteService.findById(employee_cd, workinghour_id);
+		String today = LocalDate.now().toString();
+		Commute commute = commuteService.findById(employee_cd, workinghour_id, today);
 		
 		String currentCd = employeeDetails.getEmployee_cd();
 		

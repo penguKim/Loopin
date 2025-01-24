@@ -230,9 +230,9 @@ public class CommuteService {
 	
 	// 출근 -------------------------------------
 	// 출퇴근 기록 찾기
-	public Commute findById(String employee_cd, String workinghour_id) {
-		String today = LocalDate.now().toString();
-		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, today)).orElse(null);
+	public Commute findById(String employee_cd, String workinghour_id, String date) {
+
+		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, date)).orElse(null);
 	}
 	
 	// 출근하기
@@ -262,6 +262,44 @@ public class CommuteService {
 					.commute_wd(today.toString())
 					.workinghour_id(workinghour_id)
 					.commute_wt(formattedTime)
+					.commute_ru(regUser)
+					.commute_rd(regDate)
+					.build();
+			return commuteRepository.save(commute);
+		}
+	}
+	
+	// 출근하기
+	public Commute insert_COMMUTE_list(String employee_cd, String workinghour_id, Commute commuteEntity ) {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
+		LocalDate today = LocalDate.now();
+		LocalTime time = LocalTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+		String formattedTime = time.format(formatter);
+
+		if(commuteEntity != null) { // 업데이트
+		
+//			commuteEntity.setCommute_ld(today.toString());
+//			commuteEntity.setCommute_lt(formattedTime);
+			commuteEntity.setCommute_ld("2025-01-24");
+			commuteEntity.setCommute_lt("20:00:00");
+			commuteEntity.setCommute_uu(regUser);
+			commuteEntity.setCommute_ud(regDate);
+			
+            // 근로시간 계산 및 설정
+            setCOMMUTE_hour(commuteEntity, false);
+            
+            return commuteRepository.save(commuteEntity);
+            
+		} else { // 인서트
+			Commute commute = Commute.builder()
+					.employee_cd(employee_cd)
+					.workinghour_id(workinghour_id)
+//					.commute_wd(today.toString())
+//					.commute_wt(formattedTime)
+					.commute_wd("2025-01-24")
+					.commute_wt("09:00:00")
 					.commute_ru(regUser)
 					.commute_rd(regDate)
 					.build();
@@ -457,6 +495,10 @@ public class CommuteService {
 	    series.put("name", name);
 	    series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
 	    return series;
+	}
+
+	public List<String> select_EMPLOYEE_CD_list() {
+		return commuteMapper.select_EMPLOYEE_CD_list();
 	}
 
 

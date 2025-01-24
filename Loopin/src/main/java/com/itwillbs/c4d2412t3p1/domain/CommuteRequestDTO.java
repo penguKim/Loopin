@@ -24,4 +24,8 @@ public class CommuteRequestDTO {
 	String calendarStartDate; // 캘린더 시작일
 	String calendarEndDate; // 캘린더 종료일
 	
+	// 전원 출퇴근 임시 변수
+	String day;
+	String time;
+	
 }

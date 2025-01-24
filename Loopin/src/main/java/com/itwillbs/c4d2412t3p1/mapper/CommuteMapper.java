@@ -5,7 +5,6 @@ import org.apache.ibatis.annotations.Param;
 
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
-import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import java.util.List;
@@ -40,4 +39,8 @@ public interface CommuteMapper {
 	// 일자별 근로시간 차트
 	List<CommuteDTO> select_COMMUTE_commuteChart(@Param("filter") CommuteFilterRequest filter);
     
+	// 임시 -----------
+	// 입사인원 코드 조회
+	List<String> select_EMPLOYEE_CD_list();
+	
 }

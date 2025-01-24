@@ -71,6 +71,12 @@
 									<div id="grid"></div>
 								</div>
 							</div>
+							<div>
+								<input type="text" id="day">
+								<input type="text" id="time">								
+								<input type="button" id="commute_list_work" value="임시일괄출근">
+								<input type="button" id="commute_list_leave" value="임시일괄퇴근">
+							</div>
 						</div>
 					</div>
 				</div>
@@ -123,7 +129,30 @@
 		tui.Grid.applyTheme('striped');
 		make_calendar();
 		
-
+		$('#commute_list_work, #commute_list_leave').on('click', function() {
+			
+			let data = {
+				day: $('#day').val(),
+				time: $('#time').val(),
+				attendance: $(this) == $('#commute_list_work') ? true : false
+			}
+			
+			$.ajax({
+				type: 'post',
+				url: '/insert_COMMUTE_list',
+				contentType: 'application/json',
+				data: JSON.stringify(data),
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+					alert('등록성공');
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
 		
 		// 필터 -------------------------
 		initializeFilterModule('filterModule', filterConfig, (filterValues) => {

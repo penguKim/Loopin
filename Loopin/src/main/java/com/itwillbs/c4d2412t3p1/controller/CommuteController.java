@@ -357,13 +357,14 @@ public class CommuteController {
 		String employee_cd = employeeDetails.getEmployee_cd();
 		Employee employee = employeeService.findEmployeeById(employee_cd);
 		String workinghour_id = employee.getWorkinghour_id();
+		String today = LocalDate.now().toString();
 		if(workinghour_id == null) {
 			response.put("msg", "근무형태를 등록해야합니다.<br>관리자에게 문의하세요.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		
 		try {
-			Commute commute = commuteService.findById(employee_cd, workinghour_id);
+			Commute commute = commuteService.findById(employee_cd, workinghour_id, today);
 			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
 			
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "하였습니다.");
@@ -448,7 +449,28 @@ public class CommuteController {
 	
 	
 	
-	
+	@ResponseBody
+	@PostMapping("/insert_COMMUTE_list")
+	public ResponseEntity<Map<String, Object>> insert_COMMUTE_list(@RequestBody CommuteRequestDTO commuteRequest) {
+		String[] arr = new String[] {"EM25-0010", "EM25-0071", "EM25-0011", "EM25-0044", "EM25-0042", "EM25-0014", "EM25-0039",
+				"EM25-0067", "EM25-0034", "EM25-0037", "EM25-0041", "EM25-0005", "EM25-0038", "EM25-0026", "EM25-0007", "EM25-0043", "EM25-0040"};
+		Map<String, Object> response = new HashMap<>();
+		List<String> employee_list = commuteService.select_EMPLOYEE_CD_list();
+		
+		System.out.println(commuteRequest.getDay());
+		System.out.println(commuteRequest.getTime());
+		System.out.println(employee_list.toString());
+//		for(String employee_cd : arr) {
+//			Employee employee = employeeService.findEmployeeById(employee_cd);
+//			String workinghour_id = employee.getWorkinghour_id();
+//			String today = LocalDate.now().toString();
+//			Commute commute = commuteService.findById(employee_cd, workinghour_id, "2025-01-24");
+//			commute = commuteService.insert_COMMUTE_list(employee_cd, workinghour_id, commute);	
+//			
+//		}
+		
+		return ResponseEntity.ok(response);
+	}
 
 	
 }

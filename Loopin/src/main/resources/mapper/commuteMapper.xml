@@ -174,4 +174,10 @@
 		ORDER BY DT.COMMUTE_WD
 	</select>
 	
+	
+	<select id="select_EMPLOYEE_CD_list">
+		SELECT EMPLOYEE_CD
+		  FROM EMPLOYEE
+		 WHERE EMPLOYEE_US = 1
+	</select>
 </mapper>
