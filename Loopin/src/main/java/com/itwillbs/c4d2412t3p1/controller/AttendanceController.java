@@ -309,6 +309,7 @@ public class AttendanceController {
 	    return response;
 	}
 	
+	/* TODO
 	@ResponseBody
 	@PostMapping("/select_APPROVAL_ANNUAL")
 	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL(@RequestBody Map<String, Object> params) {
@@ -321,7 +322,8 @@ public class AttendanceController {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
+			// TODO
+//			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
 			response.put("result", true);
 			response.put("data", annuals);
 			
@@ -389,5 +391,5 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	
+	*/
 }
