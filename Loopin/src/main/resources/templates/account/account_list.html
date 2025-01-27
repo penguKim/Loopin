@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
+</style>
+
+<body>
+	<main id="main" class="main">
+
+		<!-- 그리드 및 등록 버튼 -->
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">거래처 등록</h5>
+								<div class="col-sm-12">
+									<div id="filterModule" class="mb-3"></div>
+									<div id="grid"></div>
+								</div>
+								<div class="col-sm-12">
+									<button type="button" class="btn btn-primary" id="openCreateModal" onclick="showModal()">등록</button>
+									<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+		</section>
+	</main>
+	<!-- 메인 끝 -->
+</body>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+	function showModal() {
+		// 기존 모달 및 배경 제거
+		const existingModal = document.getElementById('modal_appointment_save');
+		if (existingModal) {
+		    const modalInstance = bootstrap.Modal.getInstance(existingModal);
+		    if (modalInstance) {
+		        modalInstance.hide(); // 기존 모달 닫기
+		    }
+		    existingModal.remove(); // 기존 모달 DOM 제거
+		}
+		document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove()); // 기존 배경 제거
+		
+	    // 모달 HTML 코드 생성
+	    const modalHtml = `
+		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+		    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="modalTitle">거래처 등록</h5>
+		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		            </div>
+		            <div class="modal-body">
+		                <form id="appointment_form" method="post" enctype="multipart/form-data">
+							<div class="row mb-3">
+						        <input type="hidden" class="form-control" id="account_cd" name="account_cd"><!-- 거래처코드 히든 -->
+						        <input type="hidden" class="form-control" id="account_em" name="account_em"><!-- 이메일 히든 -->
+							    <div class="col-md-4">
+							        <label for="account_nm" class="form-label">거래처명</label>
+							        <input type="text" class="form-control" id="account_nm" name="account_nm">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_dv" class="form-label">거래처구분</label>
+							        <select class="form-select" id="account_dv" name="account_dv">
+							            <option selected>선택</option>
+							            <option value="main">메인</option>
+							            <option value="sub">서브</option>
+							        </select>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ps" class="form-label">대표자명</label>
+							        <input type="text" class="form-control" id="account_cp" name="account_cp">
+							    </div>
+							</div>
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="account_ps" class="form-label">담당자명</label>
+							        <input type="text" class="form-control" id="account_ps" name="account_ps">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ph" class="form-label">연락처</label>
+							        <input type="text" class="form-control" id="account_ph" name="account_ph">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ph" class="form-label">팩스번호</label>
+							        <input type="text" class="form-control" id="account_fx" name="account_ph">
+							    </div>
+							</div>
+							
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="email_id" class="form-label">이메일 아이디</label>
+							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력" minlength="4" maxlength="16">
+							        <span id="email_id_check" class="text-danger"></span>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="custom_domain" class="form-label">도메인 직접 입력</label>
+							        <input type="text" class="form-control" id="custom_domain" name="custom_domain" placeholder="직접 입력">
+							        <span id="custom_domain_check" class="text-danger"></span>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="select_domain" class="form-label">도메인 선택</label>
+							        <select class="form-select" id="select_domain" name="select_domain">
+							            <option value="custom" selected>직접 입력</option>
+							            <option value="naver.com">naver.com</option>
+							            <option value="google.com">google.com</option>
+							            <option value="hanmail.net">hanmail.net</option>
+							            <option value="nate.com">nate.com</option>
+							            <option value="kakao.com">kakao.com</option>
+							        </select>
+							    </div>
+							</div>
+							
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="account_sb" class="form-label">사업자번호</label>
+							        <input type="text" class="form-control" id="account_sb" name="account_sb">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_uj" class="form-label">업종</label>
+							        <input type="text" class="form-control" id="account_uj" name="account_uj">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ut" class="form-label">업태</label>
+							        <input type="text" class="form-control" id="account_ut" name="account_ut">
+							    </div>
+							</div>
+							
+		                    <div class="row mb-3">
+		                        <div class="col-md-4">
+		                            <label for="account_zc" class="form-label">우편번호</label>
+		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" readonly onclick="findAddr()">
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_sa" class="form-label">기본주소</label>
+		                            <input type="text" class="form-control" id="account_sa" name="account_sa" placeholder="도로명 주소" readonly>
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_da" class="form-label">상세주소</label>
+		                            <input type="text" class="form-control" id="account_da" name="account_da" placeholder="상세 주소">
+		                        </div>
+		                    </div>
+
+							
+							<div class="row mb-3">
+							    <div class="col-md-6">
+							        <label for="account_sd" class="form-label">거래시작일</label>
+							        <input type="text" class="form-control" id="account_sd" name="account_sd">
+							        <div id="modal_startpicker-container"></div>
+							    </div>
+							    <div class="col-md-6">
+							        <label for="account_ed" class="form-label">거래종료일</label>
+							        <input type="text" class="form-control" id="account_ed" name="account_ed">
+							        <div id="modal_endpicker-container"></div>
+							    </div>
+							</div>
+
+		                    <div class="row mb-3">
+		                        <div class="col-md-4">
+		                            <label for="account_bk" class="form-label">은행</label>
+		                            <input type="text" class="form-control" id="account_bk" name="account_bk">
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_an" class="form-label">계좌번호</label>
+		                            <input type="text" class="form-control" id="account_an" name="account_an">
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_dt" class="form-label">예금주</label>
+		                            <input type="text" class="form-control" id="account_dt" name="account_dt">
+		                        </div>
+		                    </div>
+		                    <div class="row mb-3">
+		                        <div class="col-md-12">
+		                            <label for="account_nt" class="form-label">비고</label>
+		                            <textarea class="form-control" id="account_nt" name="account_nt" rows="3" style="height: 100px"></textarea>
+		                        </div>
+		                    </div>
+		                </form>
+		            </div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                <button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+
+	    `;
+
+	    // 모달 HTML을 동적으로 body에 추가
+	    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+	    // Bootstrap 모달 초기화 및 표시
+		// 모달 표시 후 DatePicker 초기화
+		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
+			// DatePicker 초기화
+		    initializeDatePickers(); 
+			// 모달 관련 동작 정의
+			initializeModalHandlers();
+			// 유효성 관련 정의
+			initializeValidationHandlers();
+		});
+		modal.show();
+
+		
+
+		// 모달 닫힐 때 배경 제거
+		document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
+		    document.getElementById('modal_appointment_save').remove();
+		    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+		});
+		
+	}
+
+	function initializeDatePickers() {
+	    const today = new Date(); // 오늘 날짜
+
+	    // 시작일과 종료일 DatePicker 초기화
+	    var startPicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: today, // 시작일 기본값: 오늘
+	            input: '#account_sd', // 시작일 입력 필드
+	            container: '#modal_startpicker-container', // 시작일 컨테이너
+	        },
+	        endpicker: {
+	            date: null, // 종료일은 초기값 없음
+	            input: '#account_ed', // 종료일 입력 필드
+	            container: '#modal_endpicker-container', // 종료일 컨테이너
+	            disabled: true, // 종료일 기본적으로 비활성화
+	        },
+	        format: 'YYYY-MM-dd',
+	        timePicker: false, // 시간 선택 비활성화
+	    });
+
+	    // 종료일 필드 초기화 및 비활성화
+	    $('#account_ed').val('').prop('disabled', true);
+
+	    // 시작일 선택 이벤트 처리
+	    startPicker.on('change:start', function (event) {
+	        if (event && event.date) {
+	            console.log('선택된 시작일: ', event.date);
+
+	            // 종료일의 최소 날짜 설정 (시작일 + 1일)
+	            var minEndDate = new Date(event.date);
+	            minEndDate.setDate(minEndDate.getDate() + 1);
+
+	            // 종료일 DatePicker 업데이트
+	            startPicker.getEndpicker().setOptions({
+	                date: minEndDate, // 종료일 기본값
+					disabled: false
+	            });
+
+	            // 종료일 필드 활성화
+	            $('#account_ed').prop('disabled', false);
+	        } else {
+	            console.error('유효한 시작일이 선택되지 않았습니다.');
+	        }
+	    });
+
+	    // 종료일 선택 이벤트 처리 (선택 사항)
+	    startPicker.on('change:end', function (event) {
+	        if (event && event.date) {
+	            console.log('선택된 종료일: ', event.date);
+	        }
+	    });
+
+	    // 모달 닫힐 때 DatePicker 초기화
+	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
+	        // 시작일과 종료일 필드 초기화
+	        $('#account_sd').val(today.toISOString().split('T')[0]); // 시작일 초기화: 오늘
+	        $('#account_ed').val('').prop('disabled', true); // 종료일 초기화 및 비활성화
+
+	        // DatePicker 초기화
+	        startPicker.getStartpicker().setOptions({ date: today });
+	        startPicker.getEndpicker().setOptions({ date: null, disabled: true });
+	    });
+	}
+	// 모달 관리 핸들러
+	function initializeModalHandlers() {
+	    // 1. 우편번호 찾기 기능
+	    function findAddr() {
+	        new daum.Postcode({
+	            oncomplete: function (data) {
+	                $("#account_zc").val(data.zonecode); // 우편번호
+	                $("#account_sa").val(data.roadAddress); // 기본주소
+	                $("#account_da").val("").focus(); // 상세주소 초기화
+	                
+	                // 통합 주소 업데이트 (상세주소 제외)
+	                const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
+	                $("#account_ad").val(fullAddress);
+	            }
+	        }).open();
+	    }
+
+	    // 2. 상세주소 입력 시 통합주소 갱신
+	    $("#account_da").off("input").on("input", function () {
+	        const zipCode = $("#account_zc").val();
+	        const roadAddress = $("#account_sa").val();
+	        const detailAddress = $(this).val();
+
+	        // 통합주소 갱신
+	        const fullAddress = `(${zipCode}) ${roadAddress} ${detailAddress}`;
+	        $("#account_ad").val(fullAddress);
+	    });
+ 
+	    // 3. 이메일 도메인 선택 처리
+	    function handleDomainChange() {
+	        $("#select_domain").off("change").on("change", function () {
+	            const customDomainInput = $("#custom_domain");
+	            const selectedDomain = $(this).val();
+
+	            if (selectedDomain === "custom") {
+	                // "직접 입력" 선택 시 필드 활성화
+	                customDomainInput.prop("disabled", false).val("").attr("placeholder", "직접 입력");
+	            } else {
+	                // 다른 도메인 선택 시 필드 비활성화 및 값 설정
+	                customDomainInput.prop("disabled", true).val(selectedDomain);
+	            }
+	        });
+	    }
+
+	    // 4. 이메일 완성 및 갱신
+	    function updateFullEmail() {
+	        const username = $("#email_id").val().trim(); // 아이디 입력값
+	        const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
+	        const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
+	        const domain = domainSelect === "custom" ? customDomain : domainSelect;
+
+	        // 이메일 필드 값 설정
+	        const fullEmail = username && domain ? `${username}@${domain}` : "";
+	        $("#account_em").val(fullEmail);
+	    }
+
+	    // 이메일 관련 이벤트 등록
+	    $("#email_id").off("input").on("input", updateFullEmail);
+	    $("#select_domain").off("change").on("change", function () {
+	        handleDomainChange(); // 도메인 선택 처리
+	        updateFullEmail();    // 이메일 갱신
+	    });
+	    $("#custom_domain").off("input").on("input", updateFullEmail);
+
+	    // 5. 우편번호 찾기 버튼에 이벤트 추가
+	    $("#account_zc").off("click").on("click", findAddr);
+	}
+
+
+	function initializeValidationHandlers() {
+	    // 1. 이메일 아이디 유효성 검사
+	    function validateEmailId() {
+	        $("#email_id").off("blur").on("blur", function () {
+	            const emailId = $(this).val().trim();
+	            const emailIdRegex = /^[a-zA-Z0-9_-]{4,20}$/; // 영어, 숫자, 하이픈(-), 밑줄(_)만 허용, 4~20자
+	            const feedbackElement = $("#email_id_check");
+
+	            if (!emailIdRegex.test(emailId)) {
+	                feedbackElement.text("이메일 아이디는 영어, 숫자, 하이픈(-), 밑줄(_)만 허용됩니다.").css("color", "red");
+	            } else {
+	                feedbackElement.text(""); // 문제 없으면 메시지 제거
+	            }
+	        });
+	    }
+
+	    // 2. 도메인 직접 입력 유효성 검사
+	    function validateCustomDomain() {
+	        $("#custom_domain").off("blur").on("blur", function () {
+	            const customDomain = $(this).val().trim();
+	            const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // 도메인 형식
+	            const feedbackElement = $("#custom_domain_check");
+
+	            if ($("#select_domain").val() === "custom") {
+	                // 직접 입력 도메인 유효성 검사
+	                if (!domainRegex.test(customDomain)) {
+	                    feedbackElement.text("올바른 도메인 형식이 아닙니다.").css("color", "red");
+	                } else {
+	                    feedbackElement.text(""); // 문제 없으면 메시지 제거
+	                }
+	            }
+	        });
+	    }
+
+	    // 3. 도메인 선택에 따른 유효성 메시지 및 직접 입력 필드 업데이트
+	    function handleDomainSelection() {
+	        $("#select_domain").off("change").on("change", function () {
+	            const selectedDomain = $(this).val(); // 선택된 도메인 값
+	            const feedbackElement = $("#custom_domain_check");
+
+	            if (selectedDomain === "custom") {
+	                // "직접 입력" 선택 시 필드 활성화
+	                $("#custom_domain").prop("disabled", false).val("").attr("placeholder", "직접 입력");
+	                feedbackElement.text(""); // 메시지 초기화
+	            } else {
+	                // 다른 도메인 선택 시 직접 입력 필드 비활성화 및 값 설정
+	                $("#custom_domain").prop("disabled", true).val(selectedDomain);
+	                feedbackElement.text(""); // 메시지 제거
+	            }
+	        });
+	    }
+
+	    // 유효성 검사 핸들러 등록
+	    validateEmailId();
+	    validateCustomDomain();
+	    handleDomainSelection();
+	}
+
+
+
+	
+	
+	
+	
+</script>
+
+<!-- 필터 모듈 JS File -->
+<script th:inline="javascript">
+	$(document).ready(function () {
+	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+		var userRole = /*[[${role}]]*/ 'default';
+		
+		const filterConfig = [
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: '', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
+            { key: '', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
+            { key: '', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
+            { key: '', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' },
+        ];
+		
+	    
+		setElementHeight('.card', -105);
+		
+		$(window).resize(function() {
+			setElementHeight('.card', -105);
+			if(grid != null) {
+				setGridHeight(grid, -430);
+			}
+		});
+
+		 $(document).on('filterToggled', function(e) {
+			 console.log(grid);
+			    if(e.detail.isVisible) {
+			        setGridHeight(grid, -460);
+			    } else {
+			        setGridHeight(grid, -390);
+			    }
+			});
+	    
+	    
+	    
+	    // 필터 모듈 초기화
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		    console.log('적용된 필터:', filterValues);
+		
+		    // 필터 적용 후 서버 요청 및 Grid 갱신
+		    fetch('/select_FILTERED_ACCOUNT', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json',
+		        			[csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(filterValues)
+		    })
+		    .then(response => response.json())
+		    .then(filteredData => {
+		        console.log('필터링된 데이터:', filteredData);
+		
+		        // Grid 데이터 갱신
+		        grid.resetData(filteredData);
+		    })
+		    .catch(error => console.error('필터 적용 오류:', error));
+		});
+	    
+	    // 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return;
+		    const filterValues = {};
+
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        let value = input.val();
+
+		        filterValues[config.key] = value;
+				
+				console.log('필터값:', filterValues);  // 필터링된 값 확인
+		    }
+
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/select_FILTERED_ACCOUNT',
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken,
+		        },
+		        data: JSON.stringify(filterValues),
+		        success: function(filteredData) {
+		            console.log('엔터키로 필터링된 데이터:', filteredData);
+		            grid.resetData(filteredData);
+		        },
+		        error: function(error) {
+		            console.error('엔터키 필터 적용 오류:', error);
+		        }
+		    });
+		});
+
+	    
+	    let employeeList = []; // 전체 발령 데이터
+
+	    let grid;
+
+	    // 데이터 가져오기 및 초기화
+	    $.ajax({
+	        url: '/select_EMPLOYEE',
+	        method: 'GET',
+	        success: function (response) {
+	            // 서버에서 가져온 데이터를 employeeList에 저장
+	            employeeList = response;
+
+	            // Grid 초기화
+	            grid = new tui.Grid({
+	                el: document.getElementById('grid'),
+	                data: employeeList.map(row => ({
+						
+						
+	                })), // 가져온 데이터 설정
+	                scrollX: true,
+	                scrollY: true,
+	                autoWidth: true,
+	                rowHeight: 'auto',
+	                bodyHeight: 'fitToParent',
+	                rowHeaders: ['checkbox'], // 체크박스 행
+	                zIndex: 100,
+        			summary: {
+        			    height: 40,
+        			    position: 'bottom', // or 'top'
+        			    columnContent: {
+        			    	employee_em: {
+        			            template: (valueMap) => {
+        			                return `총  ${valueMap.cnt} 건`
+        			            }
+        			        }
+        			    }
+        			},
+	                columns: [
+						{ header: '거래처코드', name: '', align: 'center', sortable: true },
+						{ header: '거래처명', name: '', align: 'center', sortable: true },
+						{ header: '거래처구분', name: '', align: 'center', sortable: true },
+						{ header: '사업자번호', name: '', align: 'center', sortable: true },
+						{ header: '담당자명', name: '', align: 'center', sortable: true },
+						{ header: '연락처', name: '', align: 'center', sortable: true },
+						{ header: '사용여부', name: '', align: 'center', sortable: true },
+						
+						// 숨김 컬럼
+						{ header: '', name: '', hidden: true },
+	                ]
+	            });
+	            
+				
+				// 그리드 클릭 이벤트 등록
+				grid.on('click', (ev) => {
+				    const columnName = ev.columnName;
+				    const rowKey = ev.rowKey;
+				    const rowData = grid.getRow(rowKey);
+				    console.log("rowData : " + rowData);
+
+					// 헤더 클릭인지 확인
+					if (rowKey === null || rowKey === undefined) {
+					    console.warn("헤더 클릭은 무시됩니다.");
+					    return;
+					}
+					
+					if (columnName === 'employee_cd' || columnName === 'employee_id' || columnName === 'employee_nm') {
+						console.log("모달에 표시할 데이터:", rowData);
+						openEditModal(rowData);
+					}
+				});
+				
+				setGridHeight(grid, -476);
+				
+	        },
+	        error: function (error) {
+	            console.error('데이터 로드 실패:', error);
+	        }
+	    });
+	    
+	    
+
+	    // 삭제 버튼 클릭 이벤트
+	    $('#btn_employee_delete').on('click', function () {
+	        const checkedRows = grid.getCheckedRows();
+	        if (checkedRows.length === 0) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '삭제할 사원을 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
+	            return;
+	        }
+
+	        const employee_cds = checkedRows.map(row => row.employee_cd);
+
+	        Swal.fire({
+	            title: '삭제 확인',
+	            text: `선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`,
+	            icon: 'warning',
+	            showCancelButton: true,
+	            confirmButtonText: '삭제',
+	            cancelButtonText: '취소',
+	            reverseButtons: true
+	        }).then((result) => {
+	            if (result.isConfirmed) {
+	                // 확인 버튼을 눌렀을 때 실행할 코드
+	                console.log(`선택한 사원(${employee_cds.join(', ')}) 삭제를 진행합니다.`);
+	                // 여기에서 실제 삭제 처리 로직을 추가합니다.
+	                
+	    	        $.ajax({
+	    	            url: '/delete_EMPLOYEE',
+	    	            method: 'POST',
+	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	    	            data: JSON.stringify({ employee_cds }),
+	    	            contentType: 'application/json',
+	    	            success: function () {
+	    		            Swal.fire({
+	    		                icon: 'success',
+	    		                title: '삭제완료!',
+	    		                text: '삭제가 완료되었습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    		            setTimeout(() => {
+	    		                location.reload();
+	    		            }, 1000);
+	    	            },
+	    	            error: function (xhr) {
+	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	    		            Swal.fire({
+	    		                icon: 'error',
+	    		                title: '오류발생',
+	    		                text: '삭제 중 오류가 발생했습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    	            }
+	    	        });
+	                
+	                
+	            } else if (result.dismiss === Swal.DismissReason.cancel) {
+	                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+	                console.log('삭제가 취소되었습니다.');
+	            }
+	        });
+	    });
+
+	    // 모달 닫힐 때 상태 초기화
+	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
+			$('#appointment_form')[0].reset(); // 폼 초기화
+			$('#employee_pw_check').text('');
+			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#modalTitle').text(''); // 모달 제목 초기화
+			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
+			
+		    // #reset-password-btn 버튼 상태 초기화
+		    if ($('#reset-password-btn').is(':hidden')) {
+		        $('#reset-password-btn').show(); // 모달 닫힐 때 버튼을 다시 보이게 함
+		    }
+			
+	    });
+
+		
+		// 등록 모달 열기
+		$('#openCreateModal').on('click', function () {
+		    openCreateModal();
+		});
+
+		// 등록 모달 함수
+		function openCreateModal() {
+		    // 모달 초기화
+		    resetModal();
+		    $('#resetFormBtn').show();
+		    // 모달 설정
+		    $('#modalTitle').text('거래처 등록');
+		    $('#modal_submit_button').text('등록');
+
+		    // 모달 열기
+		    const modalInstance = new bootstrap.Modal($('#modal_appointment_save')[0]);
+		    modalInstance.show();
+		}
+
+		// 모달 초기화 함수
+		function resetModal() {
+		    $('#appointment_form')[0].reset(); // 폼 초기화
+		    $('#employee_cd').val(''); // 수정용 필드 초기화
+	        $('#employee_bd_check').text('');
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+	        $('#employee_pw_check').text('');
+	        $('#employee_id_check').text('');
+	        
+	        // #employee_id, #employee_pw 상태 초기화
+	        $('#employee_id').prop('disabled', false);
+	        $('#employee_pw').prop('disabled', false).show();
+
+	        // Reset Password 버튼 삭제
+	        $('#reset-password-btn').remove();
+	        
+	        // endpicker 비활성화 처리
+	        $('#employee_rd').prop('disabled', true); // input 비활성화
+	        
+		}
+		
+	    // 초기화 버튼 클릭 이벤트
+	    $('#resetFormBtn').on('click', function () {
+	        // 폼의 모든 입력 필드 초기화
+	        $('#appointment_form')[0].reset();
+
+	        // disabled 상태 초기화
+	        $('#appointment_form input, #appointment_form select').each(function () {
+	            if ($(this).is(':disabled')) {
+	                $(this).prop('disabled', true); // 기존 disabled 유지
+	            } else {
+	                $(this).prop('disabled', false); // 활성화
+	            }
+	        });
+
+	        // 유효성 메시지 초기화
+	        $('#employee_bd_check').text('');
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+	        $('#employee_pw_check').text('');
+	        $('#employee_id_check').text('');
+	    });
+		
+	    
+	    
+		
+		// 수정 모달 열기 함수
+		function openEditModal(rowData) {
+		
+		    console.log("수정 모달 열기 데이터:", rowData);
+
+			
+		    $('#modalTitle').text('거래처 수정');
+		    $('#modal_submit_button').text('수정');
+		    $('#resetFormBtn').hide();
+			
+		    if (rowData.employee_ad) {
+		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
+		        const match = rowData.employee_ad.match(regex); // 수정된 부분
+		        if (match) {
+		            $("#employee_zc").val(match[1]); // 우편번호
+		            $("#employee_sa").val(match[2]); // 기본주소
+		            $("#employee_da").val(match[3].trim()); // 상세주소
+		        } else {
+		            console.warn('주소 형식이 잘못되었습니다:', rowData.employee_ad);
+		        }
+		    }
+		
+		    if (rowData.employee_em) {
+		        const [email_id, domain] = rowData.employee_em.split('@');
+		        if (email_id && domain) {
+		            $('#email_id').val(email_id);
+		            if (domain === 'custom') {
+		                $('#employee_domain').val('');
+		                $('#custom_domain').val(domain).prop('disabled', false);
+		            } else {
+		                $('#employee_domain').val(domain);
+		                $('#custom_domain').val('').prop('disabled', true);
+		            }
+		        } else {
+		            console.warn('이메일 형식이 잘못되었습니다:', rowData.employee_em);
+		        }
+		    }
+		
+		    $('#modal_appointment_save').modal('show');
+		
+		    console.log("수정 모달 열림", rowData); // 수정된 부분
+		}
+
+		// 폼 제출 이벤트
+		$('#appointment_form').off('submit').on('submit', function (event) {
+		    event.preventDefault();
+
+			
+		    const formData = new FormData(); // FormData 객체 생성
+		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
+		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
+
+		    // DTO 데이터를 JSON으로 생성
+		    const employeeDTO = {
+		        employee_cd: $('#employee_cd').val()
+		    };
+
+
+		    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
+
+		    if (fileInput) {
+		        formData.append('employee_pi', fileInput); // 파일 추가
+		    }
+
+		    $.ajax({
+		        url: url,
+		        method: 'POST',
+		        processData: false,
+		        contentType: false, // 멀티파트 전송 처리
+		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
+		        data: formData,
+		        success: function () {
+		        	Swal.fire({
+		        		  icon: 'success',
+		        		  title: mode === '등록' ? '등록 완료' : '수정 완료',
+		        		  text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		        		  confirmButtonText: '확인'
+		        		});
+
+		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
+		            setTimeout(() => {
+		                location.reload();
+		            }, 1000);
+		        },
+		        error: function (xhr) {
+		            console.error('AJAX Error:', xhr.responseText);
+		            console.error('AJAX Error:', employeeDTO);
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '작업 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		});
+		
+
+
+		
+    });
+	
+	
+	
+	
+	
+</script>
+</html>
