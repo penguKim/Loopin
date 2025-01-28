@@ -144,9 +144,12 @@ function getDateTime(date) {
  * @param {number} height 화면 높이에서 뺄 높이
  */
 function setElementHeight(el, height) {
-	let element = document.querySelector(el);
-    element.style.height = `${window.innerHeight + height}px`;
+    const elements = document.querySelectorAll(el);
+    elements.forEach(element => {
+        element.style.height = `${window.innerHeight + height}px`;
+    });
 }
+
 
 /**
  * 그리드 영역 높이 지정
@@ -318,4 +321,54 @@ function gridExcelDownload(grid, title) {
     });
 }
 
+/**
+ * ajax post 요청을 Promise로 처리하는 함수
+ * @param {string} url - 요청 url
+ * @param {Object} jsonData - JSON 데이터
+ * @returns {Promise} 응답 데이터
+ */
+function callAjaxPost(url, jsonData) {
+	const token = $("meta[name='_csrf']").attr("content");
+	const header = $("meta[name='_csrf_header']").attr("content");
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'post',
+            url: url,
+            contentType: 'application/json',
+            data: jsonData,
+			headers: {[header]: token},
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(xhr) {
+                reject(xhr.responseJSON);
+            }
+        });
+    });
+}
+
+/**
+ * ajax get 요청을 Promise로 처리하는 함수
+ * @param {string} url - 요청 url
+ * @param {Object} jsonData - JSON 데이터
+ * @returns {Promise} 응답 데이터
+ */
+function callAjaxGet(url, jsonData) {
+	const token = $("meta[name='_csrf']").attr("content");
+	const header = $("meta[name='_csrf_header']").attr("content");
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'get',
+            url: url,
+            data: jsonData,
+			headers: {[header]: token},
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(xhr) {
+                reject(xhr.responseJSON);
+            }
+        });
+    });
+}
 
