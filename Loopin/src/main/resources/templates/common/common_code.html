@@ -8,17 +8,18 @@
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
 <body>
 	<main id="main" class="main">
-	<div class="pagetitle">
-	
-		</div>
 		<section class="section">
 			<div class="row">
 				<div class="col-lg-4">
 					<div class="card">
 						<div class="card-body ">
-							<div class="d-flex align-items-center justify-content-between">
-								<h5 class="card-title">공통 코드</h5>
-								<div>
+							<h5 class="card-title">공통 코드</h5>
+							<div class="mb-3 row d-flex align-items-center justify-content-end">
+								<div class="col d-flex align-items-center justify-content-start">
+									<input type="text" id="group_search" class="form-control me-2" style="width:150px;">
+									<input type="button" id="btn_group_search" class="btn btn-primary" value="검색">
+								</div>
+								<div class="col-auto">
 									<input type="button" id="btn_group_remove" class="btn btn-primary" value="삭제">
 									<input type="button" id="btn_group_add" class="btn btn-primary" value="행추가">
 									<input type="button" id="btn_group_insert" class="btn btn-primary" value="등록">
@@ -33,9 +34,16 @@
 
 					<div class="card">
 						<div class="card-body">
-							<div class="d-flex align-items-center justify-content-between">
-								<h5 class="card-title">상세 코드</h5>
-								<div>
+							<h5 class="card-title">상세 코드</h5>
+							<div>
+
+							</div>
+							<div class="mb-3 row d-flex align-items-center justify-content-end">
+								<div class="col d-flex align-items-center justify-content-start">
+									<input type="text" id="sub_search" class="form-control me-2" style="width:150px;">
+									<input type="button" id="btn_sub_search" class="btn btn-primary" value="검색">
+								</div>
+								<div class="col-auto">
 									<input type="button" id="btn_code_remove" class="btn btn-primary" value="삭제">
 									<input type="button" id="btn_code_add" class="btn btn-primary" value="행추가">
 									<input type="button" id="btn_code_insert" class="btn btn-primary" value="등록">
@@ -57,35 +65,62 @@
 	let group_code = '';
 	let changeFlag = false; // 그리드 변경 전 이벤트 판별 플래그
 	let group_row = {};
+	const group_search = $('#group_search');
+	const btn_group_search = $('#btn_group_search');
+	const sub_search = $('#sub_search');
+	const btn_sub_search = $('#btn_sub_search');
 	const btn_group_remove = $('#btn_group_remove');
 	const btn_group_add = $('#btn_group_add');
 	const btn_group_insert = $('#btn_group_insert');
 	const btn_code_remove = $('#btn_code_remove');
 	const btn_code_add = $('#btn_code_add');
 	const btn_code_insert = $('#btn_code_insert');
-	const token = $("meta[name='_csrf']").attr("content")
+	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
-	
 	
 	// ------------------------------
 	
 	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
 		make_group_grid();
 		make_sub_grid();
 		
-		// 그룹코드 그리드 ----------------------
-		
-		group_grid.on('click', function(ev) {
-			group_row = group_grid.getRow(ev.rowKey);
-			if(group_row['common_cc'] == null || group_row['common_cc'] == '') {
-				sub_grid.resetData([]);
-			} else {
-				select_code(group_row);
-			}
-			
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(group_grid, -270);
+		setGridHeight(sub_grid, -270);
+
+		$(window).resize(function() {
+			setElementHeight('.card', -105);
+			setGridHeight(group_grid, -270);
+			setGridHeight(sub_grid, -270);
 		});
 		
-		// 행 추가
+		// 그룹코드 그리드 ----------------------
+		
+		// 그룹코드 검색
+		group_search.on('keypress', function(e) {
+			if (e.keyCode !== 13) return;
+			select_code(group_grid, '');
+		});
+
+		btn_group_search.on('click', function() {
+			select_code(group_grid, '');
+		});
+		
+		group_grid.on('click', function(ev) {
+	        group_row = group_grid.getRow(ev.rowKey);
+	        if(group_row['common_cc'] == null || group_row['common_cc'] == '') {
+	            sub_grid.resetData([]);
+	        } else {
+				sub_search.val('');
+	            select_code(sub_grid, group_row['common_cc']);
+	        }
+		});
+
+		
+		// 그룹코드 추가
 		btn_group_add.on('click', function() {
 		   const newRowKey = group_grid.appendRow(
 			        {
@@ -97,20 +132,16 @@
 			    );
 		});
 		
-		// 행 등록
+		// 그룹코드 등록
 		btn_group_insert.on('click', function(ev) {
 			insert_code(group_grid);
 		});
 		
-		// 행 데이터 삭제
+		// 그룹코드 삭제
 		btn_group_remove.on('click', function() {
 			let checkedRows = group_grid.getCheckedRows();
-			if (checkedRows.length == 0) {
-				Swal.fire({
-				    icon: "warning",
-				    title: "삭제 항목 체크",
-				    text: "삭제할 항목을 체크해주세요.",
-				});
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 항목을 체크해주세요.');
 			    return;
 			}
 			let newRows = checkedRows.filter(row => row['common_gc'] == null);
@@ -128,23 +159,26 @@
 		
 		// 상세코드 그리드 ------------------------
 
-		// 상세코드 행 추가
-		btn_code_add.on('click', function() {
-			if(Object.keys(group_row) == 0) {
-				Swal.fire({
-				    icon: "warning",
-				    title: "공통 코드 선택",
-				    text: "공통 코드를 선택해주세요.",
-				});
+		// 공통코드 검색
+		sub_search.on('keypress', function(e) {
+			if (e.keyCode !== 13) return;
+			if(!groupCodeCheck('검색')) { // 그룹코드 체크
 				return;
 			}
-			if(group_row['common_gc'] == null) {
-				Swal.fire({
-				    icon: "warning",
-				    title: "공통 코드 선택",
-				    text: "공통 코드 등록 후 선택해주세요.",
-				});
-				return
+			select_code(sub_grid, group_code);
+		});
+
+		btn_sub_search.on('click', function() {
+			if(!groupCodeCheck('검색')) { // 그룹코드 체크
+				return;
+			}
+			select_code(sub_grid, group_code);
+		});
+		
+		// 상세코드 행 추가
+		btn_code_add.on('click', function() {
+			if(!groupCodeCheck('추가')) { // 그룹코드 체크
+				return;
 			}
 			sub_grid.appendRow({
                     "common_cc": '',
@@ -165,30 +199,13 @@
 	
 	// 상세코드 삭제
 	btn_code_remove.on('click', function() {
-		if(Object.keys(group_row) == 0) {
-			Swal.fire({
-			    icon: "warning",
-			    title: "공통 코드 선택",
-			    text: "공통 코드를 선택해주세요.",
-			});
+		if(!groupCodeCheck('삭제')) { // 그룹코드 체크
 			return;
-		}
-		if(group_row['common_gc'] == null) {
-			Swal.fire({
-			    icon: "warning",
-			    title: "공통 코드 선택",
-			    text: "공통 코드 등록 후 선택해주세요.",
-			});
-			return
 		}
 		
 		let checkedRows = sub_grid.getCheckedRows();
-		if (checkedRows.length == 0) {
-			Swal.fire({
-			    icon: "warning",
-			    title: "삭제 항목 체크",
-			    text: "삭제할 항목을 체크해주세요.",
-			});
+		if (!checkedRows.length) {
+			showAlert('', 'warning', '삭제 항목 체크', '삭제할 항목을 체크해주세요.');
 		    return;
 		}
 		let newRows = checkedRows.filter(row => row['common_gc'] == null);
@@ -210,27 +227,31 @@
 	
 	// 함수 영역 -------------------
 	
-	// 상세코드 조회
-	function select_code(rowdata) {
-		group_code = rowdata['common_cc'];
-		$.ajax({
-			type: 'get',
-			url: '/select_common_code',
-			data: {
-				code : group_code
-			},
-			success: function(data) {
-				let row = data.data.contents;
-				sub_grid.resetData(row);
-			},
-			error : function(xhr, textStatus, errorThrown) {
-				console.log('조회 실패');
+	// 코드 조회
+	async function select_code(grid, rowdata) {
+	    group_code = rowdata || '';
+	    let data = {
+	        code: group_code,
+	        filter: !group_code ? group_search.val() : sub_search.val()
+	    }
+	    let jsonData = JSON.stringify(data);
+	    
+	    try {
+	        let ajaxData = await callAjaxPost('/select_common_code', jsonData);
+	        // 성공 시 실행되는 코드
+	        let row = ajaxData.data.contents;
+	        grid.resetData(row);
+			if(grid == group_grid) {
+				sub_grid.resetData([]);
 			}
-		});
+	    } catch (error) {
+			showAlert('', 'error', '조회 실패', error.msg);
+	    }
 	}
-	
-	
-	function insert_code(grid) {
+
+
+	// 코드 등록
+	async function insert_code(grid) {
 		let validationResult = grid.validate();
 		const valChecked = validationResult.some(row => {
 		    const rowKey = row['rowKey'];
@@ -248,11 +269,7 @@
 				} else if (errorType == 'REQUIRED') {
 				    msg = `${rowKey + 1}행의 ${header}을(를) 입력해주세요.`;
 				}
-				Swal.fire({
-				    icon: "error",
-				    title: "입력 체크",
-				    text: `${rowKey + 1}행의 ${header}은(는) 올바른 형식이 아닙니다.`,
-				});
+				showAlert('', 'error', '입력 체크', msg);
 
 				grid.focus(rowKey, columnName);
 		        
@@ -268,69 +285,38 @@
 		const createdRows = modifiedData.createdRows;
 		const updatedRows = modifiedData.updatedRows;
 
-		if(grid != group_grid && group_code == '') {
-			Swal.fire({
-			    icon: "warning",
-			    title: "공통 코드 선택",
-			    text: "공통 코드를 선택해주세요.",
-			});
+		if(!groupCodeCheck('등록')) { // 그룹코드 체크
 			return;
 		}
 		
 		if(createdRows.length == 0 && updatedRows.length == 0) {
-			Swal.fire({
-			    icon: "warning",
-			    title: "등록 항목 체크",
-			    text: "등록할 항목이 없습니다.",
-			});
+			showAlert('', 'warning', '등록 항목 체크', '등록할 항목이 없습니다.');
 			return;
 		}
-
-		const json = {
+		let json = {
 			createdRows: createdRows,
 			updatedRows: updatedRows,
-			code: grid == group_grid ? '' : group_code
+			code: grid == group_grid ? '' : group_code,
 		}
 		
-		let icon = 'success';
-		let title = '등록 성공';
-		let text = '등록하였습니다.';
-		
 		const jsonData = JSON.stringify(json);			
-		$.ajax({
-			type: 'post',
-			url: '/insert_common_code',
-			data: jsonData,
-			contentType: 'application/json',
-			beforeSend : function(xhr) {
-			    xhr.setRequestHeader(header, token);
-			},
-			success: function(data) {
-				if(!data['result']) {
-					let icon = 'error';
-					let title = '등록 실패';
-					let text = '등록에 실패하였습니다.';
-				} else {
-					const row = data.data.contents;
-					grid.uncheckAll();
-					// group_grid.focus(-1);
-					grid.resetData(row);
-				}
-				
-				Swal.fire({
-				    icon: icon,
-				    title: title,
-				    text: text,
-				});
-			},
-			error : function(xhr, textStatus, errorThrown) {
-				console.log('조회 실패');
-			}
-		});
+		
+		let ajaxData = await callAjaxPost('/insert_common_code', jsonData);
+		try {
+			const row = ajaxData.data.contents;
+			grid.uncheckAll();
+			grid.resetData(row);
+			const targetSearch = grid == group_grid ? [group_search, sub_search] : [sub_search];
+			targetSearch.forEach(search => search.val(''));
+			showAlert('', 'success', '등록 성공', '등록하였습니다.');
+		} catch (error) {
+			showAlert('', 'error', '등록 실패', '등록에 실패하였습니다.');
+		}
+
 	}
 
 	// 코드 삭제
-	function delete_code(grid, rows) {
+	async function delete_code(grid, rows) {
 		let msg = '선택한 항목을 삭제하시겠습니까?';
 		
 		if(grid == group_grid) {
@@ -338,68 +324,45 @@
 			msg = '상세 코드가 있을 경우 모두 지워집니다.<br>선택한 항목을 삭제하시겠습니까?';
 		}
 		
-		const json = {
+		let json = {
 				deletedRows: rows,
-				code: group_code
+				code: group_code,
 			}
 			
 		const jsonData = JSON.stringify(json);	
 		
-		Swal.fire({
-		   icon: 'warning',
-		   title: '선택 항목 삭제',
-		   html: msg,
-		   
-		   showCancelButton: true,
-		   confirmButtonColor: '#0d6efd',
-		   cancelButtonColor: '#6c757d',
-		   confirmButtonText: '승인',
-		   cancelButtonText: '취소',
-		   
-		   reverseButtons: true, // 버튼 순서 거꾸로
-		   
-		}).then(result => {
-			if (result.isConfirmed) { 
-				$.ajax({
-					type: 'post',
-					url: '/delete_common_code',
-					data: jsonData,
-					contentType: 'application/json',
-					beforeSend : function(xhr) {
-					    xhr.setRequestHeader(header, token);
-					},
-					success: function(data) {
-						let icon = 'success';
-						let title = '삭제 성공';
-						let msg = '삭제에 성공했습니다.';
-						let row = data.data.contents;
-						grid.resetData(row);
-						if(!data['result']) {
-							icon = 'error';
-							title = '삭제 실패';
-							msg = '삭제에 실패했습니다.<br>다시 시도해주세요.';
-						}
-						if(grid == group_grid) {
-							group_code = '';	
-							group_row = {};
-							sub_grid.resetData([]);
-						}
-						showAlert('', icon, title, msg);
-					},
-					error : function(xhr, textStatus, errorThrown) {
-						console.log('조회 실패');
-					}
-				});
+		if (!await showConfirm(`선택 항목 삭제`, msg)) { 
+			return;
+		}
+		let ajaxData = await callAjaxPost('/delete_common_code', jsonData);
+		try {
+			let row = ajaxData.data.contents;
+			grid.resetData(row);
+			
+			if(grid == group_grid) {
+				group_code = '';	
+				group_row = {};
+				sub_grid.resetData([]);
 			}
-		});
+			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
+		} catch (error) {
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
 	}
 	
 	function make_group_grid(gridData) {
 		const dataSource = {
-				  api: {
-					    readData: {url: '/select_common_code', method: 'GET' },
-				  	}
-				}
+		    api: {
+		        readData: {
+		            url: '/select_common_code',
+		            method: 'POST',
+		            contentType: 'application/json',
+		            headers: {
+		                [header]: token
+		            }
+		        }
+		    }
+		}
 		
 		group_grid = new tui.Grid({
 			el : document.getElementById('group_grid'),
@@ -533,98 +496,12 @@
 		});
 	}
 	
-	
-	// -------- 미사용 ------------
-	function modal_detail(flag, data) {
-		let title = '상세 코드';
-		let display = '';
-		if(flag) {
-			title = '공통 코드';
-			display = 'd-none';
-		}		
-
-		const div_modal = 'div_common_modal';
-		let modalElement = document.getElementById('#${div_modal}');
-		
-		if(!modalElement) {
-			let modalHtml = `
-			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false">
-				<div class="modal-dialog modal-dialog-centered">
-		            <div class="modal-content">
-						<div class="modal-header">
-		            		<h5 class="modal-title">${title}</h5>
-		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div class="row">
-								<div class="col-6">
-									<label for="common_cc" class="form-label">코드명</label>
-									<input type="text" class="form-control" id="common_cc">
-								</div>
-								<div class="col-6">
-									<label for="common_nm" class="form-label">항목명</label>
-									<input type="text" class="form-control" id="common_nm">
-								</div>
-							</div>
-							<div class="row">
-								<div class="col-12">
-									<label for="common_ct" class="form-label">설명</label>
-									<input type="text" class="form-control" id="common_ct">
-								</div>
-							</div>
-							<div class="row ${display}">
-								<div class="col-6">
-									<label for="common_in" class="form-label">정렬순서</label>
-									<input type="text" class="form-control" id="common_in">
-								</div>
-								<div class="col-6">
-									<label for="common_us" class="form-label">사용여부</label>
-									<select class="form-select">
-										<option value="true">사용</option>
-										<option value="false">미사용</option>
-									</select>
-								</div>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" class="btn btn-primary">등록</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			`;
-			
-			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
-			
-			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
-		}
-		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
-		
-		let common_cc = $('#common_cc');
-		let common_nm = $('#common_nm');
-		let common_ct = $('#common_ct');
-		let common_in = $('#common_in');
-		let common_us = $('#common_us');
-		
-        modalElement.addEventListener('shown.bs.modal', function () {
-        	if(data != undefined) {
-        		common_cc.val(data['common_cc']);
-        		common_nm.val(data['common_nm']);
-        		common_ct.val(data['common_ct']);
-        		common_in.val(data['common_in']);
-        		common_us.val(data['common_us']);
-        	}
-        });
-		
-		modalElement.addEventListener('hidden.bs.modal', function () {
-			$('button, input, select, textarea').each(function () {
-                $(this).blur();
-            });
-			modalElement.remove();
-		});
-		
-		modal.show();
+	// 그룹코드 선택여부 체크
+	function groupCodeCheck(text) {
+	    const isValid = Object.keys(group_row).length && group_row['common_gc'];
+	    !isValid && showAlert('', 'warning', '공통 코드 선택', `공통 코드 선택 후 ${text}해주세요.`);
+	    return isValid;
 	}
+
 </script>
 </html>
