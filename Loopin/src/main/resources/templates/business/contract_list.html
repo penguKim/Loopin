@@ -191,7 +191,7 @@
 			        productGrid.removeRows(checkedRowKeys); // 체크된 행 삭제
 			        updateOrderSummary(productGrid); // 수주수량 및 수주금액 업데이트
 			    } else {
-			        alert('삭제할 행을 선택하세요.');
+			        showAlert(null, "error", "삭제 실패 알림", "삭제할 행을 선택해주세요");
 			    }
 			});
 			
