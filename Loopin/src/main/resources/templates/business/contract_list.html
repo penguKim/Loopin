@@ -137,7 +137,7 @@
 										    <label for="contract_am" class="form-label">수주수량</label>
 										    <input type="text" class="form-control" id="contract_am" name="contract_am" readonly>
 										</div>
-										<div class="col-md-3">
+										<div class="col-md-">
 										    <label for="contract_mn" class="form-label">수주금액</label>
 										    <input type="text" class="form-control" id="contract_mn" name="contract_mn" readonly>
 										</div>
@@ -404,9 +404,9 @@
         const filterConfig = [
             { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
             { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
-            { key: 'contractNo', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-2' },
-            { key: 'clientCode', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-2' },
-            { key: 'employeeName', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-2' },
+            { key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-2' },
+            { key: 'account_cd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-2' },
+            { key: 'contract_ps', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-2' },
         ];
 
         // 필터 모듈 초기화
@@ -457,12 +457,12 @@
             selectionUnit: 'row',
 			bodyHeight: 100, // 고정 높이 설정
             columns: [
-                { header: '수주일자', name: 'contract_date', align: 'center', sortable: true },
-                { header: '수주번호', name: 'contract_no', align: 'center', sortable: true },
-                { header: '거래처', name: 'clientCode', align: 'center', sortable: true },
-                { header: '수주수량', name: 'contract_qty', align: 'center', sortable: true },
-                { header: '납기일', name: 'delivery_date', align: 'center', sortable: true },
-                { header: '수주여부', name: 'contract_status', align: 'center', sortable: true },
+                { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
+                { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+                { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
+                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
+                { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
             ]
         });
     }
@@ -481,10 +481,14 @@
             selectionUnit: 'row',
 			bodyHeight: 200, // 고정 높이 설정
             columns: [
-                { header: '코드명', name: 'contract_cc', sortable: true, editor: 'text' },
-                { header: '항목명', name: 'contract_nm', sortable: true, editor: 'text' },
-                { header: '정렬순서', name: 'contract_in', sortable: true, align: 'center', editor: 'text' },
-                { header: '설명', name: 'contract_ct', sortable: true, editor: 'text' }
+                { header: '수주번호', name: 'contract_cd', sortable: true, editor: 'text' },
+                { header: '제품코드', name: 'product_cd', sortable: true, editor: 'text' },
+                { header: '제품명', name: 'contract_in', sortable: true, align: 'center', editor: 'text' },
+                { header: '사이즈', name: 'product_sz', sortable: true, editor: 'text' },
+                { header: '색상', name: 'product_cr', sortable: true, editor: 'text' },
+                { header: '수주수량', name: 'contract_am', sortable: true, editor: 'text' },
+                { header: '기준단위', name: 'product_un', sortable: true, editor: 'text' },
+                { header: '납기일', name: 'contract_ed', sortable: true, editor: 'text' }
             ]
         });
     }
