@@ -64,7 +64,6 @@
 		});
 
 		// 검색필터
-	
 		(async () => {
 		    const commonList = await getCommonList("USE", "WHTYPE");
 		    if(commonList) {
@@ -74,14 +73,14 @@
 		            { key: 'warehouse_tp', label: '창고유형', type: 'select', list: setFilterList(commonList['APPROVAL']), col: 'col-2' },
 		            { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(commonList['USE']), col: 'col-auto' },
 		        ];
+		        
+		        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		            // getGridList(filterValues);
+		        });
+				// 엑셀 버튼 추가
+				addExcelButton(grid, '창고관리');
 		    }
-		}).then(() => {
-		    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-		        // getGridList(filterValues);
-		    });
-		});
-
-
+		})();
 		
 		$(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
@@ -91,8 +90,7 @@
 		    }
 		});
 		
-		// 엑셀 버튼 추가
-		addExcelButton(grid, '창고관리');
+		
 		
 	});
 	
