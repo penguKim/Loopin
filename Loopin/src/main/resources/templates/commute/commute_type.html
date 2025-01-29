@@ -83,8 +83,11 @@
 		setElementHeight('.card', -105);
 		
 		$(window).resize(function() {
-			setElementHeight('.card', -105);
-			setGridHeight(grid, -270);;
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -270);
+				setGridWidth(grid, 0);
+			}, 300);
 		});
 		
 	});

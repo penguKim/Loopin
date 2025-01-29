@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">창고 관리</h1>
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid;
+	// let week = /*[[${commonList}]]*/[];
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	let list = [{value: '1', text: '일'}, {value: '2', text: '이'}];
+	let radio = [{value: '1', text: '일', checked: 'checked'}, {value: '2', text: '이'}];
+	const today = new Date();
+	let filterConfig = [];
+
+	// ------------------------------
+	
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		
+		make_grid();
+
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -350);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -350);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+
+		// 검색필터
+	
+		(async () => {
+		    const commonList = await getCommonList("USE", "WHTYPE");
+		    if(commonList) {
+		        filterConfig = [
+		            { key: 'warehouse_cd', label: '창고코드', type: 'text', placeholder: '창고코드 입력', col: 'col-2' },
+		            { key: 'warehouse_nm', label: '창고명', type: 'text', placeholder: '창고명 입력', col: 'col-2' },
+		            { key: 'warehouse_tp', label: '창고유형', type: 'select', list: setFilterList(commonList['APPROVAL']), col: 'col-2' },
+		            { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(commonList['USE']), col: 'col-auto' },
+		        ];
+		    }
+		}).then(() => {
+		    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		        // getGridList(filterValues);
+		    });
+		});
+
+
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -420);
+		    } else {
+		        setGridHeight(grid, -350);
+		    }
+		});
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '창고관리');
+		
+	});
+	
+
+	function make_grid() {
+		const dataSource = {
+		    api: {
+		        readData: {
+		            url: '/select_WAREHOUSE_list',
+		            method: 'POST',
+		            contentType: 'application/json',
+		            headers: {
+		                [header]: token
+		            }
+		        }
+		    }
+		}
+		
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '창고코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
+				{header : '창고명', name : 'warehouse_nm', sortable : true, filter: 'text'},
+				{header : '창고유형', name : 'warehouse_tp', sortable : true, filter: 'text'},
+				{header : '정렬순서', name : 'warehouse_in', sortable : true, filter: 'text'}, 
+				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
+				{header : '사용여부', name : 'warehouse_us', sortable : true, 
+					editor: {
+						type: 'select',
+						options: {
+							listItems : [
+								{text : '사용', value : 'true'},
+								{text : '미사용', value : 'false'}
+							]
+						}
+					},
+					formatter: function({value}) {
+						return value == 'true' ? '사용' : value == 'false' ? '미사용' : '';
+					}
+				}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	warehouse_us: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+
+		});
+		
+	}
+	
+
+
+</script>
+</html>

@@ -158,9 +158,20 @@ function setElementHeight(el, height) {
  */
 function setGridHeight(grid, height) {
 	const newHeight = window.innerHeight + height; // offset은 음수값
-	console.log(newHeight);
     grid.setBodyHeight(newHeight);
 }
+
+/**
+ * 그리드 영역 너비 지정
+ * @param {*} grid 그리드 객체
+ * @param {number} width 부모 요소에서 뺄 너비
+ */
+function setGridWidth(grid, width) {
+	const newWidth = $(grid.el).parent().width() + width;
+    grid.setWidth(newWidth);
+}
+
+
 
 /**
  * 인풋을 hh:mm:ss 형식으로 입력
@@ -322,6 +333,26 @@ function gridExcelDownload(grid, title) {
 }
 
 /**
+ * 검색 모듈에 엑셀버튼 추가
+ * @param {*} grid 그리드 겍체
+ * @param {String} title 엑셀 파일명
+ */
+function addExcelButton(grid, title) {
+    const resetFilter = $('#resetFilter');
+    if (!$('#btn_excel_download').length && resetFilter.length) {
+        const excelBtn = $('<button>', {
+            id: 'btn_excel_download',
+            class: 'btn btn-primary me-2',
+            text: '엑셀'
+        }).on('click', () => {
+            gridExcelDownload(grid, title);
+        });
+        
+        resetFilter.before(excelBtn);
+    }
+}
+
+/**
  * ajax post 요청을 Promise로 처리하는 함수
  * @param {string} url - 요청 url
  * @param {Object} jsonData - JSON 데이터
@@ -372,3 +403,36 @@ function callAjaxGet(url, jsonData) {
     });
 }
 
+/**
+ * 공통코드 조회
+ * @param {string} codes - 공통코드 조회할 가변 문자열
+ * @returns {*} 응답 데이터
+ */
+async function getCommonList(...codes) {
+	let data = {
+		list: codes
+	};
+	let jsonData = JSON.stringify(data);
+	try {
+	    let ajaxData = await callAjaxPost('/select_COMMON_list', jsonData);
+		return ajaxData['commonList'];
+	} catch (error) {
+		console.log(error.msg);
+		return null;
+	}
+}
+
+/**
+ * 공통코드 -> 필터 리스트 변환
+ * @param {string} commonCode - 공통코드 리스트
+ * @returns {*} 필터 리스트
+ */
+function setFilterList(commonCode) {
+    if (!commonCode || !Array.isArray(commonCode)) return [];
+    
+    return commonCode.map((item, index) => ({
+        value: item.common_cc,
+        text: item.common_nm,
+        checked: index == 0 ? 'checked' : ''
+    }));
+}
