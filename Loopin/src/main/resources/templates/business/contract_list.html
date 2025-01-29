@@ -110,32 +110,36 @@
 		                            <input type="hidden" id="contract_cd" name="contract_cd">
 		                            <div class="row mb-3">
 		                                <div class="col-md-4">
-		                                    <label for="account_nm" class="form-label">담당자명</label>
-		                                    <input type="text" class="form-control" id="contract_nm" name="contract_nm">
+		                                    <label for="contract_ps" class="form-label">담당자명</label>
+		                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
 		                                </div>
 		                                <div class="col-md-4">
 		                                    <label for="account_sd" class="form-label">수주일</label>
-		                                    <input type="text" class="form-control" id="account_sd" name="account_sd">
+		                                    <input type="text" class="form-control" id="contract_sd" name="account_sd">
 		                                    <div id="modal_startpicker-container"></div>
 		                                </div>
 		                                <div class="col-md-4">
 		                                    <label for="account_ed" class="form-label">납기일</label>
-		                                    <input type="text" class="form-control" id="account_ed" name="account_ed">
+		                                    <input type="text" class="form-control" id="contract_ed" name="account_ed">
 		                                    <div id="modal_endpicker-container"></div>
 		                                </div>
 		                            </div>
 		                            <div class="row mb-3">
-		                                <div class="col-md-4">
+		                                <div class="col-md-3">
 		                                    <label for="account_cp" class="form-label">거래처코드</label>
-		                                    <input type="text" class="form-control" id="account_cp" name="account_cp">
+		                                    <input type="text" class="form-control" id="account_cd" name="account_cp">
 		                                </div>
-										<div class="col-md-4">
-										    <label for="order_qty" class="form-label">수주수량</label>
-										    <input type="text" class="form-control" id="order_qty" name="order_qty" readonly>
+										<div class="col-md-3">
+										    <label for="contract_st" class="form-label">수주상태</label>
+										    <input type="text" class="form-control" id="contract_st" name="contract_st" readonly>
 										</div>
-										<div class="col-md-4">
-										    <label for="order_amount" class="form-label">수주금액</label>
-										    <input type="text" class="form-control" id="order_amount" name="order_amount" readonly>
+										<div class="col-md-3">
+										    <label for="contract_am" class="form-label">수주수량</label>
+										    <input type="text" class="form-control" id="contract_am" name="contract_am" readonly>
+										</div>
+										<div class="col-md-3">
+										    <label for="contract_mn" class="form-label">수주금액</label>
+										    <input type="text" class="form-control" id="contract_mn" name="contract_mn" readonly>
 										</div>
 		                            </div>
 		                            <div class="row mb-3">
@@ -145,7 +149,7 @@
 		                                </div>
 		                            </div>
 		                            <div class="row">
-		                                <div id="productGrid"></div> <!-- Toast UI Grid로 변경 -->
+		                                <div id="productGrid"></div>
 		                            </div>
 		                        </form>
 		                    </div>
@@ -165,12 +169,12 @@
 		        el: document.getElementById('productGrid'),
 		        data: [],
 		        columns: [
-		            { header: '제품코드', name: 'code', align: 'center' },
-		            { header: '제품명', name: 'name', align: 'center' },
-		            { header: '색상', name: 'color', align: 'center' },
-		            { header: '사이즈', name: 'size', align: 'center' },
-		            { header: '수량', name: 'qty', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-		            { header: '단가', name: 'money', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+		            { header: '제품코드', name: 'product_cd', align: 'center' },
+		            { header: '제품명', name: 'product_nm', align: 'center' },
+		            { header: '색상', name: 'product_cr', align: 'center' },
+		            { header: '사이즈', name: 'product_sz', align: 'center' },
+		            { header: '수량', name: 'contract_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+		            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
 		        ],
 		        rowHeaders: ['checkbox'],
 		        scrollX: false,
@@ -189,7 +193,7 @@
 			    const checkedRowKeys = productGrid.getCheckedRowKeys(); // 체크된 행의 rowKey 가져오기
 			    if (checkedRowKeys.length > 0) {
 			        productGrid.removeRows(checkedRowKeys); // 체크된 행 삭제
-			        updateOrderSummary(productGrid); // 수주수량 및 수주금액 업데이트
+			        updateContractSummary(productGrid); // 수주수량 및 수주금액 업데이트
 			    } else {
 			        showAlert(null, "error", "삭제 실패 알림", "삭제할 행을 선택해주세요");
 			    }
@@ -198,25 +202,25 @@
 			
 			// Toast UI Grid 데이터 변경 시 수주수량 및 수주금액 업데이트
 			productGrid.on('afterChange', function (ev) {
-			    updateOrderSummary(productGrid);
+			    updateContractSummary(productGrid);
 			});
 
 			// 수주수량 및 수주금액 업데이트 함수
-			function updateOrderSummary(grid) {
+			function updateContractSummary(grid) {
 			    const data = grid.getData();
 			    let totalQty = 0;
 			    let totalAmount = 0;
 
 			    data.forEach(row => {
-			        const qty = parseFloat(row.qty) || 0;
-			        const money = parseFloat(row.money) || 0;
+			        const qty = parseFloat(row.contract_am) || 0;
+			        const money = parseFloat(row.contract_ct) || 0;
 
 			        totalQty += qty;
 			        totalAmount += qty * money;
 			    });
 
-			    $('#order_qty').val(totalQty);
-			    $('#order_amount').val(totalAmount.toLocaleString()); // 천 단위 구분
+			    $('#contract_am').val(totalQty);
+			    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
 			}
 			
 			
@@ -257,12 +261,12 @@
 		    const startPicker = tui.DatePicker.createRangePicker({
 		        startpicker: {
 		            date: today,
-		            input: '#account_sd',
+		            input: '#contract_sd',
 		            container: '#modal_startpicker-container',
 		        },
 		        endpicker: {
 		            date: null,
-		            input: '#account_ed',
+		            input: '#contract_ed',
 		            container: '#modal_endpicker-container',
 		            disabled: true,
 		        },
@@ -271,7 +275,7 @@
 		    });
 
 		    // 종료일 필드 초기화 및 비활성화
-		    $('#account_ed').val('').prop('disabled', true);
+		    $('#contract_ed').val('').prop('disabled', true);
 
 		    // 시작일 선택 이벤트 처리
 		    startPicker.on('change:start', function (event) {
@@ -286,7 +290,7 @@
 		                disabled: false,
 		            });
 
-		            $('#account_ed').prop('disabled', false);
+		            $('#contract_ed').prop('disabled', false);
 		        }
 		    });
 
@@ -311,7 +315,7 @@
 		                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 		                    </div>
 		                    <div class="modal-body">
-		                        <div id="productSelectGrid"></div> <!-- Toast UI Grid -->
+		                        <div id="productSelectGrid"></div>
 		                    </div>
 		                    <div class="modal-footer">
 		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
@@ -324,18 +328,18 @@
 		    $('body').append(productModalHTML);
 
 		    const productData = [
-		        { code: 'AAA001', name: '조던1', color: '베이지', size: '220mm' },
-		        { code: 'AAA002', name: '조던2', color: '레드', size: '250mm' }
+		        { product_cd: 'AAA001', product_nm: '조던1', product_cr: '베이지', product_sz: '220mm' },
+		        { product_cd: 'AAA002', product_nm: '조던2', product_cr: '레드', product_sz: '250mm' }
 		    ];
 
 		    const productSelectGrid = new tui.Grid({
 		        el: document.getElementById('productSelectGrid'),
 		        data: productData,
 		        columns: [
-		            { header: '제품코드', name: 'code', align: 'center' },
-		            { header: '제품명', name: 'name', align: 'center' },
-		            { header: '색상', name: 'color', align: 'center' },
-		            { header: '사이즈', name: 'size', align: 'center' }
+		            { header: '제품코드', name: 'product_cd', align: 'center' },
+		            { header: '제품명', name: 'product_nm', align: 'center' },
+		            { header: '색상', name: 'product_cr', align: 'center' },
+		            { header: '사이즈', name: 'product_sz', align: 'center' }
 		        ],
 		        rowHeaders: ['checkbox'],
 		        scrollX: false,
@@ -359,11 +363,11 @@
 			        const newRows = [];
 
 			        selectedRows.forEach(row => {
-			            const isDuplicate = existingData.some(existingRow => existingRow.code === row.code);
+			            const isDuplicate = existingData.some(existingRow => existingRow.product_cd === row.product_cd);
 			            if (!isDuplicate) {
 			                newRows.push(row); // 중복이 아닐 경우만 추가
 			            } else {
-			                alert(`이미 등록된 제품입니다: ${row.code}`);
+			                alert(`이미 등록된 제품입니다: ${row.product_cd}`);
 			            }
 			        });
 
@@ -373,8 +377,8 @@
 
 			            // 첫 번째 새로 추가된 행의 수량 셀에 포커스 이동
 			            const rowIndex = existingData.length; // 새로 추가된 첫 번째 행의 인덱스
-			            productGrid.focus(rowIndex, 'qty'); // 'qty' 필드에 포커스 이동
-			            productGrid.startEditing(rowIndex, 'qty'); // 수량 필드를 바로 편집 상태로 설정
+			            productGrid.focus(rowIndex, 'contract_am'); // 'qty' 필드에 포커스 이동
+			            productGrid.startEditing(rowIndex, 'contract_am'); // 수량 필드를 바로 편집 상태로 설정
 			        }
 			    } else {
 			        alert('추가할 제품을 선택하세요.');
