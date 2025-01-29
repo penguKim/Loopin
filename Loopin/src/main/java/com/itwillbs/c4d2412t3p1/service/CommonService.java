@@ -150,5 +150,11 @@ public class CommonService {
 		
 	}
 	
-
+	public Map<String, List<Common_codeDTO>> select_COMMON_list(String... arr) {
+	    Map<String, List<Common_codeDTO>> commonList = new HashMap<>();
+	    for(String data : arr) {
+	        commonList.put(data, commonRepository.select_COMMON_list(data));
+	    }
+	    return commonList;
+	}
 }

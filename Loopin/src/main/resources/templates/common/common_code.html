@@ -6,6 +6,15 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -88,13 +97,17 @@
 		
 		// 창크기
 		setElementHeight('.card', -105);
-		setGridHeight(group_grid, -270);
-		setGridHeight(sub_grid, -270);
+		setGridHeight(group_grid, -325);
+		setGridHeight(sub_grid, -325);
 
 		$(window).resize(function() {
-			setElementHeight('.card', -105);
-			setGridHeight(group_grid, -270);
-			setGridHeight(sub_grid, -270);
+			setTimeout(() => {
+			    setElementHeight('.card', -105);
+			    setGridHeight(group_grid, -325);
+			    setGridWidth(group_grid, 0);
+			    setGridHeight(sub_grid, -325);
+			    setGridWidth(sub_grid, 0);
+			}, 300);
 		});
 		
 		// 그룹코드 그리드 ----------------------
@@ -109,14 +122,15 @@
 			select_code(group_grid, '');
 		});
 		
+		// 그룹코드 선택
 		group_grid.on('click', function(ev) {
-	        group_row = group_grid.getRow(ev.rowKey);
-	        if(group_row['common_cc'] == null || group_row['common_cc'] == '') {
-	            sub_grid.resetData([]);
-	        } else {
-				sub_search.val('');
-	            select_code(sub_grid, group_row['common_cc']);
-	        }
+			group_row = group_grid.getRow(ev.rowKey);
+			if(!group_row['common_gc']) {
+			    sub_grid.resetData([]);
+			    return;
+			}
+			sub_search.val('');
+			select_code(sub_grid, group_row['common_cc']);
 		});
 
 		
@@ -285,7 +299,7 @@
 		const createdRows = modifiedData.createdRows;
 		const updatedRows = modifiedData.updatedRows;
 
-		if(!groupCodeCheck('등록')) { // 그룹코드 체크
+		if(grid != group_grid && !groupCodeCheck('등록')) { // 그룹코드 체크
 			return;
 		}
 		
@@ -407,7 +421,18 @@
 					}
 				}, 
 				{header : '사용여부', name : 'common_us', hidden: true }
-			]
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	common_ct: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 		
 		group_grid.on('beforeChange', ev => {
@@ -477,7 +502,18 @@
 					}
 				}, 
 				{header : '설명', name : 'common_ct', sortable : true, editor: 'text'}, 
-			]
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	common_ct: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
 		});
 	
 		
