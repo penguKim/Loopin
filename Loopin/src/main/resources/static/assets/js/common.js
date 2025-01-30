@@ -280,11 +280,38 @@ function createSelectBox(el, list, title) {
 	if(title) {
 	    selectBox.append(`<option value="">${title}</option>`);		
 	}
-
+	console.log(list);
     list.forEach(data => {
         selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
     });
 }
+
+function createRadio(el, list, name, flag) {
+    const container = $(el);
+    
+    container.empty();
+    
+	if(flag) {
+	    container.append(`
+	        <div class="form-check form-check-inline">
+	            <input class="form-check-input" type="radio" 
+	                   name="${name}" id="${name}_ALL" value="ALL" checked>
+	            <label class="form-check-label" for="${name}_ALL">전체</label>
+	        </div>
+	    `);
+	}
+    
+    list.forEach(data => {
+        container.append(`
+			<div class="form-check">
+			    <input type="radio" id="${name}_${data.common_cc}"name="${name}" value="${data.common_cc}" 
+			        class="form-check-input">
+			    <label class="form-check-label" for="${name}_${data.common_cc}">${data.common_nm}</label>
+			</div>
+        `);
+    });
+}
+
 
 /**
  * 그리드 -> 엑셀 다운로드

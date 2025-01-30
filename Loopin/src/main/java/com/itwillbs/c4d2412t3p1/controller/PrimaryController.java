@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
+import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.PrimaryService;
 import com.itwillbs.c4d2412t3p1.service.UtilService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -156,6 +158,63 @@ public class PrimaryController {
 		return response;
 	}
 	
+	
+	// 제품 관리 --------------------------------------------
+	
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
+	@GetMapping("/product_list")
+	public String product_list(Model model) {
+	    
+		List<Map<String, String>> warehouseList = primaryService.select_WAREHOUSE_code();
+		
+		model.addAttribute("warehouseList", warehouseList);
+		
+		return "/primary/product_list";
+	}
 
+	// 제품 조회
+	@ResponseBody
+	@PostMapping("/select_PRODUCT_list")
+	public Map<String, Object> select_PRODUCT_list(@RequestBody PrimaryRequestDTO primaryDTO) {
+		ProductFilterRequest filter = primaryDTO.getProductFilter();
+		Map<String, Object> response = new HashMap<>(); 
+		List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+		
+		response.put("result", true);
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", list);
+		response.put("data", data);
+		
+		return response;
+	}
+	
+	// 창고 등록
+	// @LogActivity(value = "등록", action = "제품등록")
+	@ResponseBody
+	@PostMapping("/insert_PRODUCT")
+	public ResponseEntity<Map<String, Object>> insert_PRODUCT(@RequestBody PrimaryRequestDTO primaryDTO) {
+		ProductDTO product = primaryDTO.getProduct();
+		List<String> sizeList = primaryDTO.getSizeList();
+		List<String> colorList = primaryDTO.getColorList();
+		ProductFilterRequest filter = primaryDTO.getProductFilter();
+		
+		System.out.println("사이즈는" + sizeList);
+		System.out.println("컬러는" + colorList);
+		Map<String, Object> response = new HashMap<>();
+		
+	    try {
+	    	primaryService.insert_PRODUCT(product, sizeList, colorList);
+	    	
+			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+			response.put("list", list);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "등록에 실패했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 	
 }

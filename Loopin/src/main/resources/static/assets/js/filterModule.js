@@ -122,7 +122,7 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 			    return `
 			        <div class="${config.col}">
 			            <label class="form-label">${config.label}</label>
-			            <div class="d-flex gap-3 pt-2">
+			            <div class="d-flex gap-3 pt-2" id="${config.key}">
 			                ${config.list.map(option => `
 			                    <div class="form-check">
 			                        <input type="radio" id="${config.key}_${option.value}" name="${config.key}" value="${option.value}" 
