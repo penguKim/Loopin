@@ -11,9 +11,12 @@ function showAlert(element, icon, title, msg) {
 	    icon: icon,
 	    title: title,
 	    html: msg,
-	}).then(() => {
-	    if(element) {
-	        element.focus();
+	    didClose: () => {
+	        if (element) {
+	            setTimeout(() => {
+	                element.focus();
+	            }, 0);
+	        }
 	    }
 	});
 	
@@ -35,9 +38,12 @@ function showToast(element, icon, title, msg) {
         html: msg,
         showConfirmButton: false,
         timer: 1500,
-    }).then(() => {
-	    if(element) {
-	        element.focus();
+		didClose: () => {
+	        if (element) {
+	            setTimeout(() => {
+	                element.focus();
+	            }, 0);
+	        }
 	    }
 	});
 }

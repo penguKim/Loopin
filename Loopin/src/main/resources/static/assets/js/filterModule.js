@@ -166,15 +166,23 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 
 		    // 숨겨진 필터 값 가져오기
 			filterConfig.forEach(config => {
-	            const element = document.getElementById(config.key);
-				if (config.key !== 'startDate' && config.key !== 'endDate') {
-		            if (element) {
-		                filterValues[config.key] = element.value;
-		            } else {
-		                console.warn(`요소를 찾을 수 없습니다: ${config.key}`);
-		            }
-				}
-	        });
+			    if (config.key !== 'startDate' && config.key !== 'endDate') {
+			        let value = null;
+			        if (config.type === 'radio') {
+			            const selectedRadio = document.querySelector(`input[name="${config.key}"]:checked`);
+			            value = selectedRadio ? selectedRadio.value : null;
+			        } else {
+			            const element = document.getElementById(config.key);
+			            value = element ? element.value : null;
+			        }
+			        
+			        if (value !== null) {
+			            filterValues[config.key] = value;
+			        } else {
+			            console.warn(`입력 요소를 찾을 수 없습니다: ${config.key}`);
+			        }
+			    }
+			});
 
 		    onFilterApplyCallback(filterValues);
 		});

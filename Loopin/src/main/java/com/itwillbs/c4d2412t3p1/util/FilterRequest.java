@@ -119,5 +119,27 @@ public class FilterRequest {
 					&& (commute_lt == null || commute_lt.isEmpty());
 		}
 	}
+	
+	// 출퇴근 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class WarehouseFilterRequest extends FilterRequest {
+		
+		private String warehouse_cd;
+		private String warehouse_nm;
+		private String warehouse_tp;
+		private String warehouse_us;
+		
+		public WarehouseFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (warehouse_cd == null || warehouse_cd.isEmpty())
+					&& (warehouse_nm == null || warehouse_nm.isEmpty()) && (warehouse_tp == null || warehouse_tp.isEmpty());
+		}
+	}
 }
 
