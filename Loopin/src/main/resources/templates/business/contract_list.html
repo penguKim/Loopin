@@ -44,14 +44,6 @@
 			            <div class="card-body">
 			                <h5 class="card-title">필터</h5>
 			                <div id="filterModule"></div>
-			            </div>
-			        </div>
-			    </div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-lg-12">
-	                <div class="card">
-	                    <div class="card-body">
 	                        <div class="d-flex align-items-center justify-content-between">
 	                            <h5 class="card-title">수주 등록</h5>
 	                            <div>
@@ -63,22 +55,14 @@
 		                        <!-- 수주 등록 그리드 -->
 		                        <div id="contract_grid"></div>
 							</div>
-	                    </div>
-	                </div>
-                </div>
-			</div>
-			<div class="row mb-3">
-				<div class="col-lg-12">
-	                <div class="card">
-	                    <div class="card-body">
 	                        <div class="d-flex align-items-center justify-content-between">
 	                            <h5 class="card-title">수주 상세</h5>
 	                        </div>
 	                        <!-- 수주 상세 그리드 -->
 	                        <div id="detail_grid"></div>
-	                    </div>
-	                </div>
-	            </div>
+			            </div>
+			        </div>
+			    </div>
 			</div>
 	    </section>
 	</main>
@@ -137,9 +121,13 @@
 										    <label for="contract_am" class="form-label">수주수량</label>
 										    <input type="text" class="form-control" id="contract_am" name="contract_am" readonly>
 										</div>
-										<div class="col-md-">
+										<div class="col-md-3">
 										    <label for="contract_mn" class="form-label">수주금액</label>
 										    <input type="text" class="form-control" id="contract_mn" name="contract_mn" readonly>
+										</div>
+										<div class="col-sm-12">
+										    <label for="contract_rm" class="form-label">비고</label>
+											<textarea class="form-control" id="contract_rm" name="contract_rm" style="height: 200px"></textarea>
 										</div>
 		                            </div>
 		                            <div class="row mb-3">
@@ -400,6 +388,10 @@
     const header = $("meta[name='_csrf_header']").attr("content");
 
     $(function () {
+    	
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+    	
         // 필터 설정
         const filterConfig = [
             { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
