@@ -11,7 +11,6 @@ import lombok.extern.java.Log;
 @Controller
 @Log
 public class AccountController {
-
 	
     // 거래처 등록 페이지로 이동
 	@GetMapping("/account_list")

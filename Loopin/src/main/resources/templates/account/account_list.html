@@ -175,12 +175,18 @@
 
 							
 							<div class="row mb-3">
-							    <div class="col-md-6">
+							    <div class="col-md-4">
+							        <label for="select_domain" class="form-label">사용여부</label>
+							        <select class="form-select" id="select_domain" name="select_domain">
+							            <option value="custom" selected>직접 입력</option>
+							        </select>
+							    </div>
+							    <div class="col-md-4">
 							        <label for="account_sd" class="form-label">거래시작일</label>
 							        <input type="text" class="form-control" id="account_sd" name="account_sd">
 							        <div id="modal_startpicker-container"></div>
 							    </div>
-							    <div class="col-md-6">
+							    <div class="col-md-4">
 							        <label for="account_ed" class="form-label">거래종료일</label>
 							        <input type="text" class="form-control" id="account_ed" name="account_ed">
 							        <div id="modal_endpicker-container"></div>
@@ -352,16 +358,23 @@
 	    }
 
 	    // 4. 이메일 완성 및 갱신
-	    function updateFullEmail() {
-	        const username = $("#email_id").val().trim(); // 아이디 입력값
-	        const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
-	        const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
-	        const domain = domainSelect === "custom" ? customDomain : domainSelect;
+		function updateFullEmail() {
+		    const username = $("#email_id").val().trim(); // 아이디 입력값
+		    const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
+		    const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
+		    const domain = domainSelect === "custom" ? customDomain : domainSelect;
+		
+		    // username과 domain이 모두 비어 있는 경우, 이메일 필드를 빈 값으로 설정
+		    if (!username && !domain) {
+		        $("#account_em").val("");
+		        return;
+		    }
+		
+		    // 이메일 필드 값 설정
+		    const fullEmail = username && domain ? `${username}@${domain}` : username || domain;
+		    $("#account_em").val(fullEmail);
+		}
 
-	        // 이메일 필드 값 설정
-	        const fullEmail = username && domain ? `${username}@${domain}` : "";
-	        $("#account_em").val(fullEmail);
-	    }
 
 	    // 이메일 관련 이벤트 등록
 	    $("#email_id").off("input").on("input", updateFullEmail);
