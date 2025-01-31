@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper">
+<!-- //////////////////////////////////////////////////////////// 창고 관리 //////////////////////////////////////////////////////////// -->
+	<!-- 창고 조회 -->
+	<select id="select_WAREHOUSE_list" resultType="Warehouse">
+		SELECT WH.WAREHOUSE_CD, WH.WAREHOUSE_NM, CC.COMMON_NM WAREHOUSE_TP, WH.WAREHOUSE_IN, WH.WAREHOUSE_RM, WH.WAREHOUSE_US
+		  FROM WAREHOUSE WH
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC ='WHTYPE' AND CC.COMMON_CC = WH.WAREHOUSE_TP
+		 WHERE 1 = 1
+		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND WH.WAREHOUSE_CD LIKE '%${filter.warehouse_cd}%'</if>
+		 <if test="filter.warehouse_nm != null and filter.warehouse_nm != ''">AND WH.WAREHOUSE_NM LIKE '%${filter.warehouse_nm}%'</if>
+		 <if test="filter.warehouse_tp != null and filter.warehouse_tp != ''">AND WH.WAREHOUSE_TP = #{filter.warehouse_tp}</if>
+		 <if test="filter.warehouse_us != null and filter.warehouse_us != 'ALL'">AND WH.WAREHOUSE_US = #{filter.warehouse_us}</if>
+		 ORDER BY WH.WAREHOUSE_IN
+	</select>
+	
+
+</mapper>
