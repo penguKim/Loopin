@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
@@ -42,5 +43,6 @@ public interface CommuteMapper {
 	// 임시 -----------
 	// 입사인원 코드 조회
 	List<String> select_EMPLOYEE_CD_list();
+	EmployeeDTO select_EMPLOYEE(String employee_cd);
 	
 }

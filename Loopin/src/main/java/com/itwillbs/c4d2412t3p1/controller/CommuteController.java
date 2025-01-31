@@ -460,14 +460,7 @@ public class CommuteController {
 		System.out.println(commuteRequest.getDay());
 		System.out.println(commuteRequest.getTime());
 		System.out.println(employee_list.toString());
-//		for(String employee_cd : arr) {
-//			Employee employee = employeeService.findEmployeeById(employee_cd);
-//			String workinghour_id = employee.getWorkinghour_id();
-//			String today = LocalDate.now().toString();
-//			Commute commute = commuteService.findById(employee_cd, workinghour_id, "2025-01-24");
-//			commute = commuteService.insert_COMMUTE_list(employee_cd, workinghour_id, commute);	
-//			
-//		}
+		commuteService.insert_COMMUTE_list(employee_list, commuteRequest.getDay(), commuteRequest.getTime());	
 		
 		return ResponseEntity.ok(response);
 	}

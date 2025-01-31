@@ -22,11 +22,13 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
@@ -49,7 +51,6 @@ import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -269,43 +270,56 @@ public class CommuteService {
 		}
 	}
 	
-	// 출근하기
-	public Commute insert_COMMUTE_list(String employee_cd, String workinghour_id, Commute commuteEntity ) {
+	// 임시 전체 출근하기
+//	public Commute insert_COMMUTE_list(String employee_cd, String workinghour_id, Commute commuteEntity ) {
+	@Transactional
+	public void insert_COMMUTE_list(List<String> employee_list, String day, String time) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
-		LocalDate today = LocalDate.now();
-		LocalTime time = LocalTime.now();
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-		String formattedTime = time.format(formatter);
 
-		if(commuteEntity != null) { // 업데이트
-		
-//			commuteEntity.setCommute_ld(today.toString());
-//			commuteEntity.setCommute_lt(formattedTime);
-			commuteEntity.setCommute_ld("2025-01-24");
-			commuteEntity.setCommute_lt("20:00:00");
-			commuteEntity.setCommute_uu(regUser);
-			commuteEntity.setCommute_ud(regDate);
-			
-            // 근로시간 계산 및 설정
-            setCOMMUTE_hour(commuteEntity, false);
-            
-            return commuteRepository.save(commuteEntity);
-            
-		} else { // 인서트
-			Commute commute = Commute.builder()
-					.employee_cd(employee_cd)
-					.workinghour_id(workinghour_id)
-//					.commute_wd(today.toString())
-//					.commute_wt(formattedTime)
-					.commute_wd("2025-01-24")
-					.commute_wt("09:00:00")
-					.commute_ru(regUser)
-					.commute_rd(regDate)
-					.build();
-			return commuteRepository.save(commute);
-		}
+	    for(String employee_cd : employee_list) {
+	        try {
+	        	EmployeeDTO employee = commuteMapper.select_EMPLOYEE(employee_cd);
+
+	    	    String workinghour_id = employee.getWorkinghour_id();
+	    	    Commute commute = findById(employee.getEmployee_cd(), workinghour_id, day);
+	    	    
+	    	    if(commute != null) {
+	    	        updateCommute(commute, day, time, regUser, regDate);
+	    	    } else {
+	    	        insertCommute(employee.getEmployee_cd(), workinghour_id, day, time, regUser, regDate);
+	    	    }
+	        } catch (Exception e) {
+	            continue;
+	        }
+	    }
 	}
+
+
+	private void updateCommute(Commute commute, String day, String time, String regUser, Timestamp regDate) {
+	    commute.setCommute_ld(day);
+	    commute.setCommute_lt(time);
+	    commute.setCommute_uu(regUser);
+	    commute.setCommute_ud(regDate);
+	    setCOMMUTE_hour(commute, false);
+	    commuteRepository.save(commute);
+	}
+
+	private void insertCommute(String employee_cd, String workinghour_id, String day, String time, 
+	                         String regUser, Timestamp regDate) {
+	    Commute insertCommute = Commute.builder()
+	        .employee_cd(employee_cd)
+	        .workinghour_id(workinghour_id)
+	        .commute_wd(day)
+	        .commute_wt(time)
+	        .commute_ru(regUser)
+	        .commute_rd(regDate)
+	        .build();
+	    commuteRepository.save(insertCommute);
+	}
+
+
+
 	
 	
 	// 출퇴근 현황 --------------------------------------------

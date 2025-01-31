@@ -180,4 +180,9 @@
 		  FROM EMPLOYEE
 		 WHERE EMPLOYEE_US = 1
 	</select>
+	<select id="select_EMPLOYEE">
+		SELECT EMPLOYEE_CD, WORKINGHOUR_ID
+		  FROM EMPLOYEE
+		 WHERE EMPLOYEE_CD = #{employee_cd}
+	</select>
 </mapper>
