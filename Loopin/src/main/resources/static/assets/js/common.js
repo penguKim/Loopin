@@ -442,3 +442,33 @@ function setFilterList(commonCode) {
         checked: index == 0 ? 'checked' : ''
     }));
 }
+
+/**
+ * 인풋 길이 체크
+ * @param {string} selector 체크할 요소명
+ * @param {int} maxBytes 최대 바이트 수
+ * @returns {boolean} 
+ */
+function byteCheck(selector, maxBytes) {
+    let element = $(selector);
+    let text = element.val();
+    let encoder = new TextEncoder();
+    let byteLength = encoder.encode(text).length;
+    if(byteLength > maxBytes) {
+        let cutText = '';
+        for(let i = 0; i < text.length; i++) {
+            let char = text.slice(0, i + 1);
+            let charByteLength = encoder.encode(char).length;
+            
+            if (charByteLength > maxBytes) break;
+            
+            cutText = char;
+        }
+        
+        element.val(cutText);
+        return false;
+    }
+    return true;
+}
+
+
