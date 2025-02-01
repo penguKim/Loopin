@@ -95,8 +95,6 @@
 							        <label for="account_dv" class="form-label">거래처구분</label>
 							        <select class="form-select" id="account_dv" name="account_dv">
 							            <option selected>선택</option>
-							            <option value="main">메인</option>
-							            <option value="sub">서브</option>
 							        </select>
 							    </div>
 							    <div class="col-md-4">
@@ -225,29 +223,49 @@
 
 	    `;
 
-	    // 모달 HTML을 동적으로 body에 추가
-	    document.body.insertAdjacentHTML('beforeend', modalHtml);
+		var ACtypeList = window.ACtypeList || [];
+		
+		console.log('ACtypeList ' + ACtypeList);
+		
+		// 모달 HTML을 동적으로 body에 추가
+		document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-	    // Bootstrap 모달 초기화 및 표시
+		// Bootstrap 모달 객체 생성
+		const modalElement = document.getElementById('modal_appointment_save');
+		const modal = new bootstrap.Modal(modalElement);
+
+		// 거래처 구분 (account_dv) 옵션 추가
+		const accountDvSelect = document.getElementById('account_dv');
+		if (Array.isArray(window.ACtypeList) && window.ACtypeList.length > 0) {
+		    window.ACtypeList.forEach(item => {
+		        const option = document.createElement('option');
+		        option.value = item.common_cc;
+		        option.textContent = item.common_nm;
+		        accountDvSelect.appendChild(option);
+		    });
+		} else {
+		    console.warn("ACtypeList가 비어 있습니다.");
+		}
+		
 		// 모달 표시 후 DatePicker 초기화
-		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
-			// DatePicker 초기화
+		modalElement.addEventListener('shown.bs.modal', function () {
+		    // DatePicker 초기화
 		    initializeDatePickers(); 
-			// 모달 관련 동작 정의
-			initializeModalHandlers();
-			// 유효성 관련 정의
-			initializeValidationHandlers();
+		    // 모달 관련 동작 정의
+		    initializeModalHandlers();
+		    // 유효성 관련 정의
+		    initializeValidationHandlers();
 		});
+
+		
 		modal.show();
 
-		
-
 		// 모달 닫힐 때 배경 제거
-		document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
-		    document.getElementById('modal_appointment_save').remove();
+		modalElement.addEventListener('hidden.bs.modal', function () {
+		    modalElement.remove();
 		    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
 		});
-		
+
 	}
 
 	function initializeDatePickers() {
@@ -460,8 +478,12 @@
 	$(document).ready(function () {
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
+		
+		window.ACtypeList = /*[[${ACtype_list != null ? ACtype_list : '[]'}]]*/ [];
+		window.ACtypeList = typeof window.ACtypeList === "string" ? JSON.parse(window.ACtypeList) : window.ACtypeList;
 		var userRole = /*[[${role}]]*/ 'default';
+		
+		console.log(ACtypeList);
 		
 		const filterConfig = [
 			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
