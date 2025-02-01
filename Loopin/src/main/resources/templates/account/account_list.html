@@ -174,10 +174,10 @@
 							
 							<div class="row mb-3">
 							    <div class="col-md-4">
-							        <label for="select_domain" class="form-label">사용여부</label>
-							        <select class="form-select" id="select_domain" name="select_domain">
-							            <option value="custom" selected>직접 입력</option>
-							        </select>
+									<label for="account_us" class="form-label">사용여부</label>
+									<select class="form-select" id="account_us" name="account_us">
+									    <option selected>선택</option>
+									</select>
 							    </div>
 							    <div class="col-md-4">
 							        <label for="account_sd" class="form-label">거래시작일</label>
@@ -223,16 +223,12 @@
 
 	    `;
 
+		var useynList = window.useynList || [];
 		var ACtypeList = window.ACtypeList || [];
 		
-		console.log('ACtypeList ' + ACtypeList);
 		
 		// 모달 HTML을 동적으로 body에 추가
 		document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-		// Bootstrap 모달 객체 생성
-		const modalElement = document.getElementById('modal_appointment_save');
-		const modal = new bootstrap.Modal(modalElement);
 
 		// 거래처 구분 (account_dv) 옵션 추가
 		const accountDvSelect = document.getElementById('account_dv');
@@ -243,12 +239,21 @@
 		        option.textContent = item.common_nm;
 		        accountDvSelect.appendChild(option);
 		    });
-		} else {
-		    console.warn("ACtypeList가 비어 있습니다.");
+		}
+
+		// 사용여부 (account_us) 옵션 추가
+		const accountUsSelect = document.getElementById('account_us');
+		if (Array.isArray(window.useynList) && window.useynList.length > 0) {
+		    window.useynList.forEach(item => {
+		        const option = document.createElement('option');
+		        option.value = item.common_cc;
+		        option.textContent = item.common_nm;
+		        accountUsSelect.appendChild(option);
+		    });
 		}
 		
 		// 모달 표시 후 DatePicker 초기화
-		modalElement.addEventListener('shown.bs.modal', function () {
+		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
 		    // DatePicker 초기화
 		    initializeDatePickers(); 
 		    // 모달 관련 동작 정의
@@ -257,15 +262,11 @@
 		    initializeValidationHandlers();
 		});
 
-		
-		modal.show();
-
 		// 모달 닫힐 때 배경 제거
-		modalElement.addEventListener('hidden.bs.modal', function () {
-		    modalElement.remove();
+		document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
+		    document.getElementById('modal_appointment_save').remove();
 		    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
 		});
-
 	}
 
 	function initializeDatePickers() {
@@ -326,9 +327,13 @@
 	        $('#account_sd').val(today.toISOString().split('T')[0]); // 시작일 초기화: 오늘
 	        $('#account_ed').val('').prop('disabled', true); // 종료일 초기화 및 비활성화
 
-	        // DatePicker 초기화
-	        startPicker.getStartpicker().setOptions({ date: today });
-	        startPicker.getEndpicker().setOptions({ date: null, disabled: true });
+			// DatePicker 초기화
+			if (startPicker.startpicker) {
+			    startPicker.startpicker.setOptions({ date: today });
+			}
+			if (startPicker.endpicker) {
+			    startPicker.endpicker.setOptions({ date: null, disabled: true });
+			}
 	    });
 	}
 	// 모달 관리 핸들러
@@ -479,11 +484,14 @@
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 		
-		window.ACtypeList = /*[[${ACtype_list != null ? ACtype_list : '[]'}]]*/ [];
+		window.useynList = /*[[${useyn_list != null ? useyn_list : '[]'}]]*/ [];
+		window.useynList = typeof window.useynList === "string" ? JSON.parse(window.useynList) : window.useynList;
+
+		window.ACtypeList = /*[[${useyn_list != null ? useyn_list : '[]'}]]*/ [];
 		window.ACtypeList = typeof window.ACtypeList === "string" ? JSON.parse(window.ACtypeList) : window.ACtypeList;
+
 		var userRole = /*[[${role}]]*/ 'default';
 		
-		console.log(ACtypeList);
 		
 		const filterConfig = [
 			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},

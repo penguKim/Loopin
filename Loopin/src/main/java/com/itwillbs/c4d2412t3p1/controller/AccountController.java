@@ -21,7 +21,10 @@ public class AccountController {
 	@GetMapping("/account_list")
 	public String account_list(Model model) {
 		
+		// 거래처유형
 		model.addAttribute("ACtype_list", accountService.selectCommonList("ACTYPE"));
+		// 사용여부
+		model.addAttribute("useyn_list", accountService.selectCommonList("USEYN"));
 		
 		return "/account/account_list";
 	}
