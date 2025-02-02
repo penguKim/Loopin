@@ -409,10 +409,13 @@ public class PRService {
 	        }
 	        
 	        prdRep.save(prdetail);
+	        Long prdetailId = prdetail.getPrdetail_id();
 	        
 	        Map<String, Object> calculatedMap = new HashMap<>();
 	        calculatedMap.put("employee_cd", employee_cd);
 	        calculatedMap.put("employee_nm", employee_nm);
+	        calculatedMap.put("pr_id", prid);
+	        calculatedMap.put("prdetail_id", prdetailId);
 	        calculatedMap.put("ta", calculatedSalary.get(0).getTA());
 	        calculatedMap.put("td", calculatedSalary.get(0).getTD());
 	        calculatedMap.put("rs", calculatedSalary.get(0).getRS());
@@ -451,7 +454,9 @@ public class PRService {
 		
 		Long prid = calbndata.get(0).getPrid();
 		List<String> pdids = calbndata.get(0).getPdid();
-		BigDecimal bn = new BigDecimal(calbndata.get(0).getBonus());
+		String bn = calbndata.get(0).getBonus();
+		
+		List<Map<String, Object>> result = new ArrayList<>();
 		
 		if(Objects.nonNull(prid) && !pdids.isEmpty()) { // 상여계산으로 prid pdid 들고왔을때
 			
@@ -466,11 +471,14 @@ public class PRService {
 			
 			for(String pd : pdids) {
 				Long pdid = Long.parseLong(pd);
+				System.out.println("~~~~pdid : "+pdid);
 				Optional<PRDetail> pdlist = prdRep.findById(pdid);
+				System.out.println("~~~~pdlist : "+pdlist);
 				List<String> employee_cdList = new ArrayList<>();
 				employee_cdList.add(pdlist.get().getEmployee_cd());
-				List<PR_calculationMDTO> test = prM.getwt(employee_cdList, prwm, prwmyear);
+				Map<String, Object> test = prM.getwt(employee_cdList, prwm, prwmyear);
 				System.out.println("@@@@@@test : "+test);
+				System.out.println("@@@@@@test : "+test.get("NIGHTWORKINGTIME").getClass().getName());
 				
 				Map<String, Consumer<BigDecimal>> prDetailMap = new HashMap<>();
 				prDetailMap.put("BS", updatepd::setPrdetail_bs);
@@ -486,38 +494,60 @@ public class PRService {
 				prDetailMap.put("D_GY", updatepd::setPrdetail_gy);
 				prDetailMap.put("D_LG", updatepd::setPrdetail_lg);
 
-				for(PR_calculationMDTO p : test) {
-					String employee_cd = p.getEmployee_cd();
-					String employee_nm = p.getEmployee_nm();
-					String BS = p.getBS();
-					String workingtime = p.getWorkingtime();
-					String overworkingtime = p.getOverworkingtime();
-					String nightworkingtime = p.getNightworkingtime();
-					String weekendworkingtime = p.getWeekendworkingtime();
-					String holydayworkingtime = p.getHolydayworkingtime();
-					String remainleave = p.getRemainleave();
-					String bonus = p.getBonus();
-					
-					List<PRDTO> cal = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
-					totalempta = totalempta.add(cal.get(0).getTA());
-					totalemptd = totalemptd.add(cal.get(0).getTD());
-					totalempns = totalempns.add(cal.get(0).getRS());
-					
-					updatepd.setEmployee_cd(cal.get(0).getEmployee_cd());
-					updatepd.setEmployee_nm(cal.get(0).getEmployee_nm());
-					updatepd.setPr_id(prid);
-					updatepd.setPrdetail_id(pdid);
-					//ta,td,rs 추가해야함
-					
-					for( PRCalDTO pc : cal.get(0).getCalculated()) {
-						Consumer<BigDecimal> setter = prDetailMap.get(pc.getPrdetail_nm());
-					    if (setter != null) {
-					        setter.accept(pc.getAmount());
-					    }
-					}
-					
-				}
+				String employee_cd = pdlist.get().getEmployee_cd();
+				String employee_nm = pdlist.get().getEmployee_nm();
+				String BS = pdlist.get().getPrdetail_bs().toString();
+				String workingtime = test.get("WORKINGTIME").toString();
+				String overworkingtime = test.get("OVERWORKINGTIME").toString();
+				String nightworkingtime = test.get("NIGHTWORKINGTIME").toString();
+				String weekendworkingtime = test.get("WEEKENDWORKINGTIME").toString();
+				String holydayworkingtime = test.get("HOLYDAYWORKINGTIME").toString();
+				String remainleave = test.get("ANNUAL_RA") == null ? "0" : test.get("ANNUAL_RA").toString();
+				String bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
 				
+				List<PRDTO> cal = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
+				totalempta = totalempta.add(cal.get(0).getTA());
+				totalemptd = totalemptd.add(cal.get(0).getTD());
+				totalempns = totalempns.add(cal.get(0).getRS());
+				
+				updatepd.setEmployee_cd(cal.get(0).getEmployee_cd());
+				updatepd.setEmployee_nm(cal.get(0).getEmployee_nm());
+				updatepd.setPr_id(prid);
+				updatepd.setPrdetail_id(pdid);
+				updatepd.setPrdetail_ta(cal.get(0).getTA());
+				updatepd.setPrdetail_td(cal.get(0).getTD());
+				updatepd.setPrdetail_rs(cal.get(0).getRS());
+				
+				for( PRCalDTO pc : cal.get(0).getCalculated()) {
+					Consumer<BigDecimal> setter = prDetailMap.get(pc.getPrdetail_nm());
+				    if (setter != null) {
+				        setter.accept(pc.getAmount());
+				    }
+				}
+				prdRep.save(updatepd);
+				
+				Map<String, Object> calculatedMap = new HashMap<>();
+		        calculatedMap.put("EMPLOYEE_CD", employee_cd);
+		        calculatedMap.put("EMPLOYEE_NM", employee_nm);
+		        calculatedMap.put("PR_ID", prid);
+		        calculatedMap.put("PRDETAIL_ID", pdid);
+		        calculatedMap.put("PRDETAIL_TA", updatepd.getPrdetail_ta());
+		        calculatedMap.put("PRDETAIL_TD", updatepd.getPrdetail_td());
+		        calculatedMap.put("PRDETAIL_RS", updatepd.getPrdetail_rs());
+		        calculatedMap.put("PRDETAIL_BS", updatepd.getPrdetail_bs());
+		        calculatedMap.put("PRDETAIL_MT", updatepd.getPrdetail_mt());
+		        calculatedMap.put("PRDETAIL_OT", updatepd.getPrdetail_ot());
+		        calculatedMap.put("PRDETAIL_NA", updatepd.getPrdetail_na());
+		        calculatedMap.put("PRDETAIL_WA", updatepd.getPrdetail_wa());
+		        calculatedMap.put("PRDETAIL_HA", updatepd.getPrdetail_ha());
+		        calculatedMap.put("PRDETAIL_RL", updatepd.getPrdetail_rl());
+		        calculatedMap.put("PRDETAIL_BN", updatepd.getPrdetail_bn());
+		        calculatedMap.put("PRDETAIL_GM", updatepd.getPrdetail_gm());
+		        calculatedMap.put("PRDETAIL_GY", updatepd.getPrdetail_gy());
+		        calculatedMap.put("PRDETAIL_GG", updatepd.getPrdetail_gg());
+		        calculatedMap.put("PRDETAIL_LG", updatepd.getPrdetail_lg());
+		        
+		        result.add(calculatedMap);
 			}
 			
 			updatepr.setPr_gm(prlist.get().getPr_gm());
@@ -531,7 +561,7 @@ public class PRService {
 			updatepr.setPr_wm(prlist.get().getPr_wm());
 			prRep.save(updatepr);
 			
-			
+			return result;
 			
 		}else { // 추가 코드 수정 > 근태마감할때 
 			

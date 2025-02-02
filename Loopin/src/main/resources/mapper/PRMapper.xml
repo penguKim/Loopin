@@ -178,11 +178,11 @@
 	        SUM(NVL(cm.commute_hg,0)) AS holydayworkingtime,
 	        <choose>
 	            <!-- prwm이 12일 경우에만 연차 정보를 가져옴 -->
-	            <when test="prwm == '12'">
-	                an.ANNUAL_RA
+	            <when test="prwm != '12'">
+	                NULL AS ANNUAL_RA
 	            </when>
 	            <otherwise>
-	                NULL AS ANNUAL_RA
+	                an.ANNUAL_RA
 	            </otherwise>
 	        </choose>
 	    FROM COMMUTE cm
@@ -200,7 +200,7 @@
 	                        <foreach item="employee_cd" collection="employee_cdList" open="(" separator="," close=")">
 	                            #{employee_cd}
 	                        </foreach>
-	    GROUP BY cm.EMPLOYEE_CD, ep.EMPLOYEE_NM, an.ANNUAL_RA
+	    GROUP BY cm.EMPLOYEE_CD, ep.EMPLOYEE_NM
 	</select>
 
 	

@@ -36,6 +36,6 @@ public interface PRMapper {
 
 	List<Employee> select_spes(String premth);
 	
-	List<PR_calculationMDTO> getwt(@Param("employee_cdList") List<String> employee_cdList, @Param("prwm") String prwm, @Param("prwmyear") String prwmyear);
+	Map<String, Object> getwt(@Param("employee_cdList") List<String> employee_cdList, @Param("prwm") String prwm, @Param("prwmyear") String prwmyear);
 
 }

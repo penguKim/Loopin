@@ -19,6 +19,7 @@ public class PrimaryRequestDTO {
 	// 창고 관리
 	WarehouseFilterRequest warehouseFilter;
 	WarehouseDTO warehouse;
+	List<WareareaDTO> wareareaList;
 	List<WarehouseDTO> warehouseList;
 	
 	String warehouse_cd;
