@@ -177,7 +177,7 @@
 		                    <div class="row mb-3">
 		                        <div class="col-md-4">
 		                            <label for="account_zc" class="form-label">우편번호</label>
-		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" readonly onclick="findAddr()">
+		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" readonly>
 		                        </div>
 		                        <div class="col-md-4">
 		                            <label for="account_sa" class="form-label">기본주소</label>
@@ -258,8 +258,37 @@
 		
 		// Bootstrap Modal 객체 생성 및 실행
 		const modalInstance = new bootstrap.Modal(modalElement);
-		modalInstance.show();
 		
+		
+		// 모달이 완전히 표시된 후 이벤트 리스너 추가
+		setTimeout(() => {
+		    modalElement.addEventListener('shown.bs.modal', function () {
+		        console.log("모달이 완전히 열림 - 초기화 시작");
+
+		        if (typeof initializeDatePickers === "function") {
+		            console.log("DatePicker 초기화 실행");
+		            initializeDatePickers();
+		        } else {
+		            console.error(" initializeDatePickers 함수가 존재하지 않습니다.");
+		        }
+
+		        if (typeof initializeModalHandlers === "function") {
+		            console.log("모달 핸들러 초기화 실행");
+		            initializeModalHandlers();
+		        } else {
+		            console.error("initializeModalHandlers 함수가 존재하지 않습니다.");
+		        }
+
+		        if (typeof initializeValidationHandlers === "function") {
+		            console.log("유효성 검사 초기화 실행");
+		            initializeValidationHandlers();
+		        } else {
+		            console.error("initializeValidationHandlers 함수가 존재하지 않습니다.");
+		        }
+		    });
+
+		    modalInstance.show();
+		}, 100);
 
 
 	    if (mode === 'edit' && rowData) {
@@ -313,16 +342,6 @@
 		populateSelectOptions('account_ut', window.BItypeList);
 
 		
-		// 모달 표시 후 DatePicker 초기화
-		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
-		    // DatePicker 초기화
-		    initializeDatePickers(); 
-		    // 모달 관련 동작 정의
-		    initializeModalHandlers();
-		    // 유효성 관련 정의
-		    initializeValidationHandlers();
-		});
-
 		// 모달 닫힐 때 배경 제거
 		document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
 		    document.getElementById('modal_appointment_save').remove();
@@ -397,34 +416,65 @@
 			}
 	    });
 	}
+	
+	
+	let currentPopup = null;
+
+	// 주소 찾기 함수
+	function findAddr() {
+	    console.log("findAddr 호출");
+
+	    // 기존 팝업 닫기
+	    if (currentPopup && !currentPopup.closed) {
+	        console.log("기존 팝업 닫기");
+	        currentPopup.close();
+	    }
+
+	    // 새로운 주소 검색 팝업 열기
+	    currentPopup = new daum.Postcode({
+	        oncomplete: function (data) {
+	            console.log("주소 검색 완료:", data);
+
+	            // 검색 결과를 입력 필드에 반영
+	            $("#account_zc").val(data.zonecode); // 우편번호
+	            $("#account_sa").val(data.roadAddress); // 기본주소
+	            $("#account_da").val("").focus(); // 상세주소 초기화
+
+	            // 통합 주소 업데이트
+	            const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
+	            $("#account_ad").val(fullAddress);
+
+	            // 팝업 창 닫기
+	            if (currentPopup) {
+	                currentPopup.close();
+	                console.log("팝업이 닫혔습니다.");
+	            }
+	        },
+	        onclose: function () {
+	            console.log("사용자가 팝업을 닫았습니다.");
+	        }
+	    }).open();
+	}
+
 	// 모달 관리 핸들러
 	function initializeModalHandlers() {
-		function findAddr() {
+		// 우편번호 버튼 클릭 이벤트 등록
+		$("#account_zc").off("click").on("click", findAddr);
 
-		     new daum.Postcode({
-		         oncomplete: function (data) {
-		             $("#account_zc").val(data.zonecode); // 우편번호
-		             $("#account_sa").val(data.roadAddress); // 기본주소
-		             $("#account_da").val("").focus(); // 상세주소 초기화
-		             
-		             // 통합 주소 업데이트 (상세주소 제외)
-		             const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
-		             $("#account_ad").val(fullAddress);
-		         }
-		     }).open();
-		 }
+		// 상세주소 입력 시 통합주소 갱신
+		$("#account_da").off("input").on("input", function () {
+		    const zipCode = $("#account_zc").val();
+		    const roadAddress = $("#account_sa").val();
+		    const detailAddress = $(this).val();
 
-	    // 2. 상세주소 입력 시 통합주소 갱신
-	    $("#account_da").off("input").on("input", function () {
-	        const zipCode = $("#account_zc").val();
-	        const roadAddress = $("#account_sa").val();
-	        const detailAddress = $(this).val();
+		    // 통합 주소 갱신
+		    const fullAddress = `(${zipCode}) ${roadAddress} ${detailAddress}`;
+		    $("#account_ad").val(fullAddress);
+		});
 
-	        // 통합주소 갱신
-	        const fullAddress = `(${zipCode}) ${roadAddress} ${detailAddress}`;
-	        $("#account_ad").val(fullAddress);
-	    });
- 
+		// 우편번호 버튼 클릭 이벤트 등록
+		$("#account_zc").off("click").on("click", findAddr);
+
 	    // 3. 이메일 도메인 선택 처리
 	    function handleDomainChange() {
 	        $("#select_domain").off("change").on("change", function () {
@@ -468,8 +518,6 @@
 	    });
 	    $("#custom_domain").off("input").on("input", updateFullEmail);
 
-	    // 5. 우편번호 찾기 버튼에 이벤트 추가
-	    $("#account_zc").off("click").on("click", findAddr);
 	}
 
 
