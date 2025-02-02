@@ -9,5 +9,6 @@ import java.util.Map;
 public interface DashboardMapper {
 	
     Map<String, Object> select_total_EMPLOYEE(String currentCd);
+    List<Map<String, Object>> select_EMPLOYEE_APPROVAL(Map<String, Object> params);
     
 }

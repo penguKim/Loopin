@@ -193,9 +193,9 @@
 		});
 	    
 	    calendar.on('clickEvent', ({ event }) => {
-			if(isAdmin) {
+			//if(isAdmin) {
 				modal_detail(event);
-			}
+			//}
 		});
 
 	};
@@ -279,7 +279,7 @@
 					            backgroundColor: '#fff'
 					        };
 					    } 
-				        return {
+					    return {
 				            id: `${annual.GENERATED_DATE}`,
 				            title: `${annual.ANNUALTYPE}`,
 				            start: annual.GENERATED_DATE,
@@ -289,6 +289,7 @@
 				            backgroundColor: '#fff'
 				        };
 					});
+					console.log(event);
 					calendar.createEvents(event);
 				}
 			},
@@ -333,9 +334,9 @@
 			bodyHeight : 400,
 			columns : [
 				{header : '사원코드', name : 'EMPLOYEE_CD', hidden : true},
-				{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text'}, 
-				{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'select'}, 
-				{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'select'}, 
+				{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text', align: 'center'}, 
+				{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'select', align: 'center'}, 
+				{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'select', align: 'center'}, 
 				{header : '사용연차', name : 'ANNUAL_UA', sortable : true, align: 'center'},
 				{header : '잔여연차', name : 'REMAINING_ANNUAL', sortable : true, align: 'center'},
 				{header : '총연차', name : 'TOTAL_ANNUAL', sortable : true, filter: 'select', align: 'center'},
@@ -425,10 +426,10 @@
 			bodyHeight : 600,
 			columns : [
 						{header : '갯수', name : 'RECORD_COUNT', hidden : true}, 
-						{header : '날짜', name : 'GENERATED_DATE', sortable : true, filter: 'text'}, 
-						{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text'}, 
-						{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'text'}, 
-						{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'text'}, 
+						{header : '날짜', name : 'GENERATED_DATE', sortable : true, filter: 'text', align: 'center'}, 
+						{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text', align: 'center'}, 
+						{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'text', align: 'center'}, 
+						{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'text', align: 'center'}, 
 						{header : '휴가종류', name : 'ANNUALTYPE', sortable : true, align: 'center'},
 						{header : '사유', name : 'REASONS', sortable : true, filter: 'text'},
 			],

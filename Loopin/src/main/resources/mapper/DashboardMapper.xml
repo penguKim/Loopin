@@ -5,13 +5,29 @@
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.DashboardMapper">
     
     <select id="select_total_EMPLOYEE" resultType="map">
-		 SELECT e.*, a.*, c.*, w.WORKINGHOUR_WT, w.WORKINGHOUR_LT 
+		 SELECT e.*, a.*, c.*, w.WORKINGHOUR_WT, w.WORKINGHOUR_LT--, ap.APPROVAL_TT
 		   FROM EMPLOYEE e
 LEFT OUTER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD AND ANNUAL_YR = TO_CHAR(SYSDATE, 'YYYY')
 	  LEFT JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC AND c.COMMON_GC = 'DEPARTMENT'
 	  LEFT JOIN WORKINGHOUR w ON e.WORKINGHOUR_ID = w.WORKINGHOUR_ID
 		  WHERE e.EMPLOYEE_CD = #{currentCd}
-			   
+	</select>
+	
+    <select id="select_EMPLOYEE_APPROVAL" resultType="map">
+		SELECT a.APPROVAL_TT
+			   , a.APPROVAL_WR
+			   , (SELECT COUNT(*) FROM APPROVAL<if test="!isAdmin"> WHERE APPROVAL_WR = a.APPROVAL_WR</if>) AS APPROVAL_COUNT
+			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS STARTDAY
+			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS ENDDAY	
+			   , TO_CHAR(JSON_VALUE(a.APPROVAL_CT, '$.reason')) AS REASON
+		  FROM APPROVAL a
+	 LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
+	 LEFT JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC AND c.COMMON_GC = 'DEPARTMENT'
+		 WHERE 1=1
+		 <if test="!isAdmin">
+			   AND e.EMPLOYEE_CD = #{currentCd}
+			</if>
+		 FETCH FIRST 4 ROWS ONLY
 	</select>
 	
     
