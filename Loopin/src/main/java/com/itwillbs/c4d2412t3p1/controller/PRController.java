@@ -1,14 +1,10 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

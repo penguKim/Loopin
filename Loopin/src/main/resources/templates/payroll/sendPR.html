@@ -9,6 +9,11 @@
 <span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
 	<main id="main" class="main">
 		<div class="pagetitle"></div>
+		<div id="loadingSpinner" class="loading-overlay" style="display: none;">
+		    <div class="spinner-border text-primary" style="width: 60px; height: 60px;" role="status">
+		        <span class="visually-hidden">Loading...</span>
+		    </div>
+		</div>
 		<div class="col-lg-12">
 			<div class="card">
 				<div class="card" id="div_card">
@@ -335,6 +340,7 @@
 			//debugger;
 			console.log('결과그리드데이터',firstdata);
 			grid.resetData(firstdata);
+			setGridHeight(grid, -476);;
 			const BSwempcd = empdata.map(item => {return {employee_cd: item.EMPLOYEE_CD, BS: item.BS}});
 			const employee_cd = empdata.map(item => item.EMPLOYEE_CD);
 			window.BSwempcd = BSwempcd;
@@ -460,6 +466,17 @@
 												columnOptions: {
 													resizable: true,
 												},
+												summary: {
+														    height: 40,
+														    position: 'bottom',
+														    columnContent: {
+														    	employee_cd: {
+														            template: (valueMap) => {
+														                return `총  ${valueMap.cnt} 명`
+														            }
+														        },
+														    }
+														},
 											});
 											grid_wt.resetData(wtdata);
 			
@@ -494,6 +511,7 @@
 															data: JSON.stringify(wdata),
 															beforeSend: function (xhr) {
 																xhr.setRequestHeader(header, token);
+																$("#loadingSpinner").show();
 															},
 															success: function (data) {
 																console.log('근태확정', data);
@@ -512,7 +530,9 @@
 																			td: item.td,
 																			rs: item.rs,
 																			employee_cd: item.employee_cd,
-																			employee_nm: item.employee_nm
+																			employee_nm: item.employee_nm,
+																			PR_ID: item.pr_id,
+																			PRDETAIL_ID: item.prdetail_id
 																		});
 																		return result;
 																	}
@@ -549,7 +569,10 @@
 																	icon: "error",
 																	text: "데이터 전송에 실패했습니다. 다시 시도해주세요."
 																});
-															}
+															},
+															complete: function () {
+													            $("#loadingSpinner").hide(); // 요청 완료 후 스피너 숨김
+													        }
 														});
 													}
 												});
@@ -663,13 +686,24 @@
 							data: JSON.stringify([calbnData]),
 							beforeSend:function(xhr){
 								xhr.setRequestHeader(header,token);
+					            $("#loadingSpinner").show();
 							},
 							success:function(calbndata){
 								console.log("상여계산",calbndata);
+								grid.resetData(calbndata);
+								Swal.fire({
+									title: "지급되었습니다.",
+									icon: "success"
+								});
+								modal.hide();
+								
 							},
 							error:function(xhr,state,error){
 								console.log("공통상여 계산에 실패했습니다.",error);
-							}
+							},							
+							complete: function () {
+					            $("#loadingSpinner").hide();
+					        }
 						});
 						
 					})
@@ -696,7 +730,7 @@
 	//////////////////
 
 	setElementHeight('#div_card', -110);
-		
+	
 	$(window).resize(function() {
 		setElementHeight('#div_card', -110);
 		if(grid != null) {
