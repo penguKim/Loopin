@@ -16,7 +16,8 @@ import lombok.ToString;
 public class ProductDTO {
 	
 	private String product_cd;
-	private String item_cd;
+	private String product_gc;
+	private String product_cc;
 	private String product_nm;
 	private String product_sz;
 	private String product_cr;
@@ -32,9 +33,9 @@ public class ProductDTO {
 	private String product_uu;
 	private Timestamp product_ud;
 	
-	private String product_gc;
-	private String product_cc;
-	
+	private String product_crnm;
+	private String product_gn;
+	private String product_cn;
 	
 	
 	public ProductDTO() {}

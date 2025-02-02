@@ -40,14 +40,18 @@ public class Product {
 	@Column(name = "product_cd", length = 30)
 	private String product_cd;
 	@Id
-	@Column(name = "item_cd", length = 30)
-	private String item_cd;
+	@Column(name = "product_cc", length = 30)
+	private String product_cc;
+	@Id
 	@Column(name = "product_sz", length = 200)
 	private String product_sz;
+	@Id
 	@Column(name = "product_cr", length = 300)
 	private String product_cr;
+	@Column(name = "product_gc", length = 30)
+	private String product_gc;
 	@Column(name = "product_nm", length = 500)
-	private String warehouse_nm;
+	private String product_nm;
 	@Column(name = "product_gd", length = 10)
 	private String product_gd;
 	@Column(name = "product_un", length = 10)
@@ -76,8 +80,9 @@ public class Product {
 	public static Product setProduct(ProductDTO product) {
 	    return Product.builder()
 	    		.product_cd(product.getProduct_cd())
-	    		.item_cd(product.getItem_cd())
-	    		.warehouse_nm(product.getItem_cd())
+	    		.product_gc(product.getProduct_gc())
+	    		.product_cc(product.getProduct_cc())
+	    		.product_nm(product.getProduct_nm())
 	    		.product_sz(product.getProduct_sz())
 	    		.product_cr(product.getProduct_cr())
 	    		.product_gd(product.getProduct_gd())

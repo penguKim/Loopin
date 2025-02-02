@@ -20,6 +20,8 @@ import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
+import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
@@ -178,7 +180,7 @@ public class PrimaryController {
 		return "/primary/product_list";
 	}
 
-	// 제품 조회
+	// 제품 리스트 조회
 	@ResponseBody
 	@PostMapping("/select_PRODUCT_list")
 	public Map<String, Object> select_PRODUCT_list(@RequestBody PrimaryRequestDTO primaryDTO) {
@@ -194,7 +196,7 @@ public class PrimaryController {
 		return response;
 	}
 	
-	// 창고 등록
+	// 제품 등록
 	// @LogActivity(value = "등록", action = "제품등록")
 	@ResponseBody
 	@PostMapping("/insert_PRODUCT")
@@ -218,6 +220,57 @@ public class PrimaryController {
 		} catch (Exception e) {
 			e.printStackTrace();
 			response.put("msg", "등록에 실패했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 품목소분류 조회
+	@ResponseBody
+	@PostMapping("/select_PRODUCT_CC")
+	public ResponseEntity<Map<String, Object>> select_PRODUCT_CC(@RequestBody PrimaryRequestDTO primaryDTO) {
+		Map<String, Object> response = new HashMap<>();
+		
+	    try {
+	    	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
+	    	if (!product_cc.isEmpty()) {
+	    	    String key = product_cc.keySet().iterator().next();
+	    	    List<Common_codeDTO> firstList = product_cc.get(key);
+	    	    response.put("product_cc", firstList);
+	    	}
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "등록된 코드가 없습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 제품 상세 조회
+	@ResponseBody
+	@PostMapping("/select_PRODUCT_detail")
+	public ResponseEntity<Map<String, Object>> select_PRODUCT_detail(@RequestBody PrimaryRequestDTO primaryDTO) {
+		Map<String, Object> response = new HashMap<>();
+		
+	    try {
+	    	ProductFilterRequest filter = new ProductFilterRequest();
+	    	filter.setProduct_cd(primaryDTO.getProduct_cd());
+	    	filter.setProduct_cc(primaryDTO.getProduct_cc());
+	    	List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+	        if (!list.isEmpty()) {
+	            response.put("product", list.get(0));
+	            Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(list.get(0).getProduct_gc());
+		    	if (!product_cc.isEmpty()) {
+		    	    String key = product_cc.keySet().iterator().next();
+		    	    List<Common_codeDTO> firstList = product_cc.get(key);
+		    	    response.put("product_cc", firstList);
+		    	}
+	        }
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "조회에 실패했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}

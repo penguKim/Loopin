@@ -1,10 +1,12 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Product;
-import com.itwillbs.c4d2412t3p1.entity.ProductPK;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper;
@@ -126,38 +128,62 @@ public class PrimaryService {
 	}
 
 	// 제품 등록
-	public Product insert_PRODUCT(ProductDTO productDTO, List<String> sizeList, List<String> colorList) {
+	@Transactional
+	public void insert_PRODUCT(ProductDTO productDTO, List<String> sizeList, List<String> colorList) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
+
+	    System.out.println("리스트에 없는 목록 삭제");
+	    productRepository.deleteBySizeOrColor(productDTO.getProduct_cd(), productDTO.getProduct_cc(), sizeList, colorList);
+	    productRepository.flush(); // 삭제 내용 DB 반영
+
+	    List<Product> remainingProducts = productRepository.findByProductCdAndItemCd(productDTO.getProduct_cd(), productDTO.getProduct_cc());
+	    System.out.println("남아있는 목록 : " + remainingProducts.toString());
 	    
-//        Product product = productRepository.findById(new ProductPK(productDTO.getProduct_cd(), productDTO.getItem_cd()))
-		Product product = productRepository.findById(new ProductPK(productDTO.getProduct_cd(), "MAT"))
-            .map(existing -> {
-            	// DTO -> 엔티티 변환
-//                existing.setWarehouse_nm(warehouseDTO.getWarehouse_nm());
-//                existing.setWarehouse_tp(warehouseDTO.getWarehouse_tp());
-//                existing.setWarehouse_in(warehouseDTO.getWarehouse_in());
-//                existing.setWarehouse_us(warehouseDTO.isWarehouse_us());
-//                existing.setWarehouse_rm(warehouseDTO.getWarehouse_rm());
-                existing.setProduct_uu(regUser);
-                existing.setProduct_ud(time);
-                return existing;
-            })
-            .orElseGet(() -> {
-            	productDTO.setItem_cd("TEST");
-            	productDTO.setProduct_sz(String.join(",", sizeList));
-            	productDTO.setProduct_cr(String.join(",", colorList));
-            	productDTO.setProduct_ru(regUser);
-            	productDTO.setProduct_rd(time);
-                return Product.setProduct(productDTO);
-            });
-        
-		
-		
-		
-        return productRepository.save(product);
+	    List<Product> newProducts = new ArrayList<>();
+	    for(String size : sizeList) {
+	        for(String color : colorList) {
+	            boolean exists = remainingProducts.stream()
+	                .anyMatch(product -> 
+		                product.getProduct_sz().equals(size) && 
+		                product.getProduct_cr().equals(color)
+	                );
+	            
+	            if(!exists) {
+	                ProductDTO product = new ProductDTO();
+	                BeanUtils.copyProperties(productDTO, product);
+	                product.setProduct_sz(size);
+	                product.setProduct_cr(color);
+	                
+	                if(product.getProduct_ru() == null) {
+	                	System.out.println("신규등록 : " + size + ", " + color);
+	                	product.setProduct_ru(regUser);
+	                	product.setProduct_rd(time);
+	                } 
+	                else {
+	                	System.out.println("수정 : " + size + ", " + color);
+	                	product.setProduct_uu(regUser);
+	                	product.setProduct_ud(time);
+	                }
+	                
+	                newProducts.add(Product.setProduct(product));
+	            }
+	        }
+	    }
+	    
+	    if(!newProducts.isEmpty()) {
+	    	System.out.println("저장할게 몇개인지 : " + newProducts.size());
+	        productRepository.saveAll(newProducts);
+	    }
 	}
 
 
+
+	// 제품 상세 조회
+	public Product select_PRODUCT_detail(String product_cd, String item_cd) {
+		
+		// return productRepository.findByProductCdAndItemCd(product_cd, item_cd);
+		return null;
+	}
 
 }

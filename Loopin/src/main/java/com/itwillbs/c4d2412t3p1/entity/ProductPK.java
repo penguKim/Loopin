@@ -19,8 +19,8 @@ import lombok.Setter;
 public class ProductPK implements Serializable {
 	
 	private String product_cd;
-	private String item_cd;
-	// private String product_sz;
-	// private String product_cr;
+	private String product_cc;
+	 private String product_sz;
+	 private String product_cr;
 	
 }
