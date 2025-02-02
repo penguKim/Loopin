@@ -469,3 +469,66 @@ function setFilterList(commonCode) {
         checked: index == 0 ? 'checked' : ''
     }));
 }
+
+/**
+ * 인풋 길이 체크
+ * @param {string} selector 체크할 요소명
+ * @param {int} maxBytes 최대 바이트 수
+ * @returns {boolean} 
+ */
+function byteCheck(selector, maxBytes) {
+    let element = $(selector);
+    let text = element.val();
+    let encoder = new TextEncoder();
+    let byteLength = encoder.encode(text).length;
+    if(byteLength > maxBytes) {
+        let cutText = '';
+        for(let i = 0; i < text.length; i++) {
+            let char = text.slice(0, i + 1);
+            let charByteLength = encoder.encode(char).length;
+            
+            if (charByteLength > maxBytes) break;
+            
+            cutText = char;
+        }
+        
+        element.val(cutText);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 그리드 검증 체크
+ * @param {*} grid - 그리드 객체
+ * @returns {boolean} 검증 통과 시 true
+ */
+function gridValidationCheck(grid) {
+	const ERROR_MESSAGES = {
+	    'REGEXP': '올바른 형식이 아닙니다.',
+	    'REQUIRED': '입력해주세요.',
+	    'NUMBER': '숫자만 입력 가능합니다.',
+	    'MIN': '최소값보다 작습니다.',
+	    'MAX': '최대값보다 큽니다.'
+	};
+	const getErrorMessage = (errorType, rowKey, header) => {
+	    return `${rowKey + 1}행의 ${header}은(는) ${ERROR_MESSAGES[errorType]}`;
+	};
+    const validationResult = grid.validate();
+    
+    for (const row of validationResult) {
+        const rowKey = row['rowKey'];
+        
+        for (const cell of row.errors) {
+            const column = grid.getColumns().find(col => col['name'] == cell.columnName);
+            const header = column['header'];
+            const errorType = cell.errorCode[0];
+            
+            const msg = getErrorMessage(errorType, rowKey, header);
+            showAlert('', 'error', '입력 체크', msg);
+            grid.focus(rowKey, cell.columnName);
+            return false;
+        }
+    }
+    return true;
+}

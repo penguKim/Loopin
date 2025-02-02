@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
+import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
+import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
@@ -70,19 +72,19 @@ public class PrimaryController {
 		return response;
 	}
 	
+	
 	// 창고 등록
 	@LogActivity(value = "등록", action = "창고등록")
 	@ResponseBody
 	@PostMapping("/insert_WAREHOUSE")
 	public ResponseEntity<Map<String, Object>> insert_WAREHOUSE(@RequestBody PrimaryRequestDTO primaryDTO) {
 		WarehouseDTO warehouse = primaryDTO.getWarehouse();
+		List<WareareaDTO> wareareaList = primaryDTO.getWareareaList();
 		WarehouseFilterRequest filter = primaryDTO.getWarehouseFilter();
-		System.out.println("파라미터는 : " + warehouse);
-		System.out.println("필터는 : " + filter);
 		Map<String, Object> response = new HashMap<>();
 		
 	    try {
-	    	primaryService.insert_WAREHOUSE(warehouse);
+	    	primaryService.insert_WAREHOUSE(warehouse, wareareaList);
 	    	
 			List<WarehouseDTO> list = primaryService.select_WAREHOUSE_list(filter);
 			response.put("list", list);
@@ -105,6 +107,9 @@ public class PrimaryController {
 	    try {
 	    	Warehouse warehouse =  primaryService.select_WAREHOUSE_detail(warehouse_cd);
 	    	response.put("warehouse", warehouse);
+	    	List<Warearea> wareareaList = primaryService.select_WAREAREA_list(warehouse_cd);
+			System.out.println("wareareaList : " + wareareaList);
+			response.put("wareareaList", wareareaList);
 			
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -132,9 +137,10 @@ public class PrimaryController {
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			e.printStackTrace();
-			response.put("msg", "조회에 실패했습니다.");
+			response.put("msg", "창고 삭제 중 오류가 발생했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+		
 	}
 	
 	// 창고코드 중복 체크

@@ -6,9 +6,16 @@
 <!-- //////////////////////////////////////////////////////////// 창고 관리 //////////////////////////////////////////////////////////// -->
 	<!-- 창고 조회 -->
 	<select id="select_WAREHOUSE_list" resultType="Warehouse">
-		SELECT WH.WAREHOUSE_CD, WH.WAREHOUSE_NM, CC.COMMON_NM WAREHOUSE_TP, WH.WAREHOUSE_IN, WH.WAREHOUSE_RM, WH.WAREHOUSE_US
+		WITH WAREAREALIST AS (
+			SELECT WAREHOUSE_CD, COUNT(*) WACOUNT
+			  FROM WAREAREA 
+			 GROUP BY WAREHOUSE_CD
+		)
+		SELECT WH.WAREHOUSE_CD, WH.WAREHOUSE_NM, CC.COMMON_NM WAREHOUSE_TP, WH.WAREHOUSE_IN, 
+			   WH.WAREHOUSE_RM, WH.WAREHOUSE_US, NVL(WA.WACOUNT, 0) WACOUNT
 		  FROM WAREHOUSE WH
 		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC ='WHTYPE' AND CC.COMMON_CC = WH.WAREHOUSE_TP
+		  LEFT OUTER JOIN WAREAREALIST WA ON WA.WAREHOUSE_CD = WH.WAREHOUSE_CD
 		 WHERE 1 = 1
 		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND WH.WAREHOUSE_CD LIKE '%${filter.warehouse_cd}%'</if>
 		 <if test="filter.warehouse_nm != null and filter.warehouse_nm != ''">AND WH.WAREHOUSE_NM LIKE '%${filter.warehouse_nm}%'</if>

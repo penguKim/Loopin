@@ -10,17 +10,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
+import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.entity.ProductPK;
+import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper;
 import com.itwillbs.c4d2412t3p1.repository.ProductRepository;
+import com.itwillbs.c4d2412t3p1.repository.WareareaRepository;
 import com.itwillbs.c4d2412t3p1.repository.WarehouseRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -32,6 +34,7 @@ public class PrimaryService {
 	private final PrimaryMapper primaryMapper;
 	private final WarehouseRepository warehouseRepository;
 	private final ProductRepository productRepository;
+	private final WareareaRepository wareareaRepository;
 
 	// 창고 관리 ----------------------------------------------------------------
 	public List<WarehouseDTO> select_WAREHOUSE_list(WarehouseFilterRequest filter) {
@@ -39,7 +42,8 @@ public class PrimaryService {
 	}
 
 	// 창고 등록
-	public Warehouse insert_WAREHOUSE(WarehouseDTO warehouseDTO) {
+	@Transactional
+	public void insert_WAREHOUSE(WarehouseDTO warehouseDTO, List<WareareaDTO> wareareaDTOList) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
 	    
@@ -60,28 +64,53 @@ public class PrimaryService {
                 return Warehouse.setWarehouse(warehouseDTO);
             });
         
-        return warehouseRepository.save(warehouse);
+        // 창고 등록
+        warehouseRepository.save(warehouse);
+        // 기존 구역 삭제
+        wareareaRepository.deleteByWarehouseCd(warehouseDTO.getWarehouse_cd());
+
+        List<Warearea> wareareaList = wareareaDTOList.stream()
+            .map(warearea -> {
+            	warearea.setWarehouse_cd(warehouseDTO.getWarehouse_cd());
+                return Warearea.setWarehouse(warearea);
+            })
+            .collect(Collectors.toList());
+        // 구역 등록
+        wareareaRepository.saveAll(wareareaList);
+	}
+	
+	// 창고코드 중복 체크
+	public boolean check_WAREHOUSE_CD(String warehouse_cd) {
+		return warehouseRepository.findById(warehouse_cd).isEmpty();
 	}
 
 	// 창고 상세 조회
 	public Warehouse select_WAREHOUSE_detail(String warehouse_cd) {
 		return warehouseRepository.findById(warehouse_cd).orElse(null);
 	}
+	
+
+	// 창고구역 조회
+	public List<Warearea> select_WAREAREA_list(String warehouse_cd) {
+		return wareareaRepository.findByWarehouseCd(warehouse_cd);
+	}
 
 	// 창고 삭제
 	@Transactional
 	public void delete_WAREHOUSE(List<WarehouseDTO> warehouseList) {
+		// 창고에 재고가 있을 경우 삭제안되게 로직 수정
+		
 	    List<String> warehouseCodes = warehouseList.stream()
 	        .map(WarehouseDTO::getWarehouse_cd)
 	        .collect(Collectors.toList());
-	        
+	    
+	    wareareaRepository.deleteByWarehouseCdIn(warehouseCodes);
+	    
 	    warehouseRepository.deleteAllById(warehouseCodes);
 	}
 
 	
-	public boolean check_WAREHOUSE_CD(String warehouse_cd) {
-		return warehouseRepository.findById(warehouse_cd).isEmpty();
-	}
+
 
 	
 	// 제품 관리 ----------------------------------------------------------------4
