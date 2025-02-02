@@ -11,7 +11,13 @@ import com.itwillbs.c4d2412t3p1.entity.Account;
 
 @Repository
 public interface AccountRepository  extends JpaRepository<Account, String> {
-
+	
+	// 시퀀스 조회
+	@Query(value = "SELECT NT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	Long getNextSequenceValue();
+	
+	
+	// 거래처 조회
 	@Query(value = "SELECT a.account_cd AS account_cd, \n" +
             "       a.account_nm AS account_nm, \n" +
             "       d.common_nm AS account_dv, \n" +

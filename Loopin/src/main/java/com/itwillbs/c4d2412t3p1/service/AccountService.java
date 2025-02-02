@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,10 +9,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
+import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
+import com.itwillbs.c4d2412t3p1.entity.Notice;
 import com.itwillbs.c4d2412t3p1.repository.AccountRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -29,6 +35,7 @@ public class AccountService {
     	return commonRepository.selectCommonList("00", string);
     }
     
+    // 거래처 데이터 조회
 	public List<Map<String, Object>> select_ACCOUNT_DETAIL() {
 
 		List<Object[]> result;
@@ -61,11 +68,26 @@ public class AccountService {
 			account.put("account_mf", row[21]);
 			account.put("account_md", row[22]);
 
-
 			return account;
 			
 		}).collect(Collectors.toList());
 	}
 
+	
+	// 거래처 등록
+	@Transactional
+    public void insert_ACCOUNT(AccountDTO accountDTO) throws IOException {
+        
+        // 시퀀스 값 가져오기
+        Long sequenceValue = accountRepository.getNextSequenceValue();
+        System.out.println("Next Sequence Value: " + sequenceValue);
+
+        Account account = Account.createAccount(accountDTO, sequenceValue);
+        
+        accountRepository.save(account);
+        System.out.println("@@@@@@@@@" + account);
+    }
+	
+	
 	
 }

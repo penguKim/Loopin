@@ -48,7 +48,7 @@
 								</div>
 								<div class="col-sm-12">
 									<button type="button" class="btn btn-primary" id="openCreateModal" onclick="showModal()">등록</button>
-									<button type="button" class="btn btn-primary" id="btn_employee_delete">삭제</button>
+									<button type="button" class="btn btn-primary" id="btn_account_delete">삭제</button>
 								</div>
 							</div>
 						</div>
@@ -83,10 +83,11 @@
 		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 		            </div>
 		            <div class="modal-body">
-		                <form id="appointment_form" method="post" enctype="multipart/form-data">
+		                <form id="appointment_form" method="post" enctype="multipart/form-data" onsubmit="return false;">
 							<div class="row mb-3">
 						        <input type="hidden" class="form-control" id="account_cd" name="account_cd"><!-- 거래처코드 히든 -->
 						        <input type="hidden" class="form-control" id="account_em" name="account_em"><!-- 이메일 히든 -->
+						        <input type="hidden" class="form-control" id="account_ad" name="account_ad"><!-- 주소 히든 -->
 							    <div class="col-md-4">
 							        <label for="account_nm" class="form-label">거래처명</label>
 							        <input type="text" class="form-control" id="account_nm" name="account_nm">
@@ -219,7 +220,7 @@
 		            </div>
 		            <div class="modal-footer">
 		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                <button type="submit" id="modal_submit_button" class="btn btn-primary" form="appointment_form">등록</button>
+		                <button type="button" id="modal_submit_button" class="btn btn-primary">등록</button>
 		            </div>
 		        </div>
 		    </div>
@@ -347,20 +348,22 @@
 	}
 	// 모달 관리 핸들러
 	function initializeModalHandlers() {
-	    // 1. 우편번호 찾기 기능
-	    function findAddr() {
-	        new daum.Postcode({
-	            oncomplete: function (data) {
-	                $("#account_zc").val(data.zonecode); // 우편번호
-	                $("#account_sa").val(data.roadAddress); // 기본주소
-	                $("#account_da").val("").focus(); // 상세주소 초기화
-	                
-	                // 통합 주소 업데이트 (상세주소 제외)
-	                const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
-	                $("#account_ad").val(fullAddress);
-	            }
-	        }).open();
-	    }
+		function findAddr() {
+		     console.log("findAddr() 실행됨!"); // ✅ 함수 실행 확인
+
+		     new daum.Postcode({
+		         oncomplete: function (data) {
+		             console.log("주소 검색 완료:", data); // ✅ 주소 검색 성공 여부 확인
+		             $("#account_zc").val(data.zonecode); // 우편번호
+		             $("#account_sa").val(data.roadAddress); // 기본주소
+		             $("#account_da").val("").focus(); // 상세주소 초기화
+		             
+		             // 통합 주소 업데이트 (상세주소 제외)
+		             const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
+		             $("#account_ad").val(fullAddress);
+		         }
+		     }).open();
+		 }
 
 	    // 2. 상세주소 입력 시 통합주소 갱신
 	    $("#account_da").off("input").on("input", function () {
@@ -535,7 +538,9 @@
 			        setGridHeight(grid, -390);
 			    }
 			});
-	    
+		
+		// 필터 모듈 및 그리드 로드
+		loadGridData(); 
 	    
 	    
 	    // 필터 모듈 초기화
@@ -594,105 +599,153 @@
 		});
 
 	    
-	    let employeeList = []; // 전체 발령 데이터
+	    let accountList = []; // 전체 데이터
 
 	    let grid;
 
-	    // 데이터 가져오기 및 초기화
-	    $.ajax({
-	        url: '/select_ACCOUNT',
-	        method: 'GET',
-	        success: function (response) {
-	            // 서버에서 가져온 데이터를 employeeList에 저장
-	            employeeList = response;
+		function loadGridData() {
+			
+			tui.Grid.setLanguage('ko');
+			tui.Grid.applyTheme('striped');
+			
+		    $.ajax({
+		        url: '/select_ACCOUNT',
+		        method: 'GET',
+		        success: function (response) {
+		            accountList = response;
 
-	            // Grid 초기화
-	            grid = new tui.Grid({
-	                el: document.getElementById('grid'),
-	                data: employeeList.map(row => ({
-						
-						
-	                })), // 가져온 데이터 설정
-	                scrollX: true,
-	                scrollY: true,
-	                autoWidth: true,
-	                rowHeight: 'auto',
-	                bodyHeight: 'fitToParent',
-	                rowHeaders: ['checkbox'], // 체크박스 행
-	                zIndex: 100,
-        			summary: {
-        			    height: 40,
-        			    position: 'bottom', // or 'top'
-        			    columnContent: {
-        			    	employee_em: {
-        			            template: (valueMap) => {
-        			                return `총  ${valueMap.cnt} 건`
-        			            }
-        			        }
-        			    }
-        			},
-	                columns: [
-						{ header: '거래처코드', name: '', align: 'center', sortable: true },
-						{ header: '거래처명', name: '', align: 'center', sortable: true },
-						{ header: '거래처구분', name: '', align: 'center', sortable: true },
-						{ header: '사업자번호', name: '', align: 'center', sortable: true },
-						{ header: '담당자명', name: '', align: 'center', sortable: true },
-						{ header: '연락처', name: '', align: 'center', sortable: true },
-						{ header: '사용여부', name: '', align: 'center', sortable: true },
-						
-						// 숨김 컬럼
-						{ header: '', name: '', hidden: true },
-	                ]
-	            });
-	            
-				
-				// 그리드 클릭 이벤트 등록
-				grid.on('click', (ev) => {
-				    const columnName = ev.columnName;
-				    const rowKey = ev.rowKey;
-				    const rowData = grid.getRow(rowKey);
-				    console.log("rowData : " + rowData);
+		            if (grid) {
+		                grid.resetData(accountList.map(row => ({
+		                    account_cd: row.account_cd,
+		                    account_nm: row.account_nm,
+		                    account_dv: row.account_dv,
+		                    account_cp: row.account_cp,
+		                    account_ps: row.account_ps,
+		                    account_ph: row.account_ph,
+		                    account_fx: row.account_fx,
+		                    account_em: row.account_em,
+		                    account_sb: row.account_sb,
+		                    account_uj: row.account_uj,
+		                    account_ut: row.account_ut,
+		                    account_ad: row.account_ad,
+		                    account_sd: row.account_sd,
+		                    account_ed: row.account_ed,
+		                    account_bk: row.account_bk,
+		                    account_an: row.account_an,
+		                    account_dt: row.account_dt,
+		                    account_us: row.account_us,
+		                    account_nt: row.account_nt,
+		                    account_wr: row.account_wr,
+		                    account_wd: row.account_wd,
+		                    account_mf: row.account_mf,
+		                    account_md: row.account_md
+		                })));
+		            } else {
+		                grid = new tui.Grid({
+		                    el: document.getElementById('grid'),
+		                    data: accountList.map(row => ({
+		                        account_cd: row.account_cd,
+		                        account_nm: row.account_nm,
+		                        account_dv: row.account_dv,
+		                        account_cp: row.account_cp,
+		                        account_ps: row.account_ps,
+		                        account_ph: row.account_ph,
+		                        account_fx: row.account_fx,
+		                        account_em: row.account_em,
+		                        account_sb: row.account_sb,
+		                        account_uj: row.account_uj,
+		                        account_ut: row.account_ut,
+		                        account_ad: row.account_ad,
+		                        account_sd: row.account_sd,
+		                        account_ed: row.account_ed,
+		                        account_bk: row.account_bk,
+		                        account_an: row.account_an,
+		                        account_dt: row.account_dt,
+		                        account_us: row.account_us,
+		                        account_nt: row.account_nt,
+		                        account_wr: row.account_wr,
+		                        account_wd: row.account_wd,
+		                        account_mf: row.account_mf,
+		                        account_md: row.account_md
+		                    })),
+		                    scrollX: true,
+		                    scrollY: true,
+		                    autoWidth: true,
+		                    rowHeight: 'auto',
+		                    bodyHeight: 'fitToParent',
+		                    rowHeaders: ['checkbox'],
+		                    zIndex: 100,
+		                    columns: [
+		                        { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+		                        { header: '거래처명', name: 'account_nm', align: 'center', sortable: true },
+		                        { header: '거래처구분', name: 'account_dv', align: 'center', sortable: true },
+		                        { header: '사업자번호', name: 'account_sb', align: 'center', sortable: true },
+		                        { header: '대표자명', name: 'account_cp', align: 'center', sortable: true },
+		                        { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
+		                        { header: '연락처', name: 'account_ph', align: 'center', sortable: true },
+		                        { header: '사용여부', name: 'account_us', align: 'center', sortable: true }
+		                    ],
+							summary: {
+							    height: 40,
+							    position: 'bottom', // or 'top'
+							    columnContent: {
+							    	account_us: {
+							            template: (valueMap) => {
+							                return `총  ${valueMap.cnt} 건`
+							            }
+							        }
+							    }
+							},
+		                });
 
-					// 헤더 클릭인지 확인
-					if (rowKey === null || rowKey === undefined) {
-					    console.warn("헤더 클릭은 무시됩니다.");
-					    return;
-					}
-					
-					if (columnName === 'employee_cd' || columnName === 'employee_id' || columnName === 'employee_nm') {
-						console.log("모달에 표시할 데이터:", rowData);
-						openEditModal(rowData);
-					}
-				});
-				
-				setGridHeight(grid, -476);
-				
-	        },
-	        error: function (error) {
-	            console.error('데이터 로드 실패:', error);
-	        }
-	    });
+		                // 그리드 클릭 이벤트 등록
+		                grid.on('click', (ev) => {
+		                    const columnName = ev.columnName;
+		                    const rowKey = ev.rowKey;
+		                    const rowData = grid.getRow(rowKey);
+		                    console.log("rowData : " + rowData);
+
+		                    // 헤더 클릭인지 확인
+		                    if (rowKey === null || rowKey === undefined) {
+		                        console.warn("헤더 클릭은 무시됩니다.");
+		                        return;
+		                    }
+		                    
+		                    if (columnName === 'account_cd' || columnName === 'account_id' || columnName === 'account_nm') {
+		                        console.log("모달에 표시할 데이터:", rowData);
+		                        openEditModal(rowData);
+		                    }
+		                });
+
+		                setGridHeight(grid, -476);
+		            }
+		        },
+		        error: function (error) {
+		            console.error('데이터 로드 실패:', error);
+		        }
+		    });
+		}
 	    
 	    
 
 	    // 삭제 버튼 클릭 이벤트
-	    $('#btn_employee_delete').on('click', function () {
+	    $('#btn_account_delete').on('click', function () {
 	        const checkedRows = grid.getCheckedRows();
 	        if (checkedRows.length === 0) {
 	            Swal.fire({
 	                icon: 'error',
 	                title: '오류 발생!',
-	                text: '삭제할 사원을 선택하세요.',
+	                text: '삭제할 거래처를 선택하세요.',
 	                confirmButtonText: '확인'
 	            });
 	            return;
 	        }
 
-	        const employee_cds = checkedRows.map(row => row.employee_cd);
+	        const account_cds = checkedRows.map(row => row.account_cd);
 
 	        Swal.fire({
 	            title: '삭제 확인',
-	            text: `선택한 사원(${employee_cds.join(', ')})을 삭제하시겠습니까?`,
+	            text: `선택한 거래처(${account_cds.join(', ')})을 삭제하시겠습니까?`,
 	            icon: 'warning',
 	            showCancelButton: true,
 	            confirmButtonText: '삭제',
@@ -701,14 +754,13 @@
 	        }).then((result) => {
 	            if (result.isConfirmed) {
 	                // 확인 버튼을 눌렀을 때 실행할 코드
-	                console.log(`선택한 사원(${employee_cds.join(', ')}) 삭제를 진행합니다.`);
-	                // 여기에서 실제 삭제 처리 로직을 추가합니다.
+	                console.log(`선택한 거래처(${account_cds.join(', ')}) 삭제를 진행합니다.`);
 	                
 	    	        $.ajax({
-	    	            url: '/delete_EMPLOYEE',
+	    	            url: '/delete_ACCOUNT',
 	    	            method: 'POST',
 	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
-	    	            data: JSON.stringify({ employee_cds }),
+	    	            data: JSON.stringify({ account_cds }),
 	    	            contentType: 'application/json',
 	    	            success: function () {
 	    		            Swal.fire({
@@ -717,9 +769,7 @@
 	    		                text: '삭제가 완료되었습니다.',
 	    		                confirmButtonText: '확인'
 	    		            });
-	    		            setTimeout(() => {
-	    		                location.reload();
-	    		            }, 1000);
+							loadGridData();
 	    	            },
 	    	            error: function (xhr) {
 	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
@@ -743,8 +793,7 @@
 	    // 모달 닫힐 때 상태 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
 			$('#appointment_form')[0].reset(); // 폼 초기화
-			$('#employee_pw_check').text('');
-			$('#employee_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#account_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
 			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
 			
@@ -778,22 +827,12 @@
 		// 모달 초기화 함수
 		function resetModal() {
 		    $('#appointment_form')[0].reset(); // 폼 초기화
-		    $('#employee_cd').val(''); // 수정용 필드 초기화
-	        $('#employee_bd_check').text('');
+		    $('#account_cd').val(''); // 수정용 필드 초기화
 	        $('#custom_domain_check').text('');
 	        $('#email_id_check').text('');
-	        $('#employee_pw_check').text('');
-	        $('#employee_id_check').text('');
-	        
-	        // #employee_id, #employee_pw 상태 초기화
-	        $('#employee_id').prop('disabled', false);
-	        $('#employee_pw').prop('disabled', false).show();
 
 	        // Reset Password 버튼 삭제
 	        $('#reset-password-btn').remove();
-	        
-	        // endpicker 비활성화 처리
-	        $('#employee_rd').prop('disabled', true); // input 비활성화
 	        
 		}
 		
@@ -812,11 +851,8 @@
 	        });
 
 	        // 유효성 메시지 초기화
-	        $('#employee_bd_check').text('');
 	        $('#custom_domain_check').text('');
 	        $('#email_id_check').text('');
-	        $('#employee_pw_check').text('');
-	        $('#employee_id_check').text('');
 	    });
 		
 	    
@@ -832,31 +868,31 @@
 		    $('#modal_submit_button').text('수정');
 		    $('#resetFormBtn').hide();
 			
-		    if (rowData.employee_ad) {
+		    if (rowData.account_ad) {
 		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
-		        const match = rowData.employee_ad.match(regex); // 수정된 부분
+		        const match = rowData.account_ad.match(regex); // 수정된 부분
 		        if (match) {
-		            $("#employee_zc").val(match[1]); // 우편번호
-		            $("#employee_sa").val(match[2]); // 기본주소
-		            $("#employee_da").val(match[3].trim()); // 상세주소
+		            $("#account_zc").val(match[1]); // 우편번호
+		            $("#account_sa").val(match[2]); // 기본주소
+		            $("#account_da").val(match[3].trim()); // 상세주소
 		        } else {
-		            console.warn('주소 형식이 잘못되었습니다:', rowData.employee_ad);
+		            console.warn('주소 형식이 잘못되었습니다:', rowData.account_ad);
 		        }
 		    }
 		
-		    if (rowData.employee_em) {
-		        const [email_id, domain] = rowData.employee_em.split('@');
+		    if (rowData.account_em) {
+		        const [email_id, domain] = rowData.account_em.split('@');
 		        if (email_id && domain) {
 		            $('#email_id').val(email_id);
 		            if (domain === 'custom') {
-		                $('#employee_domain').val('');
+		                $('#select_domain').val('');
 		                $('#custom_domain').val(domain).prop('disabled', false);
 		            } else {
-		                $('#employee_domain').val(domain);
+		                $('#select_domain').val(domain);
 		                $('#custom_domain').val('').prop('disabled', true);
 		            }
 		        } else {
-		            console.warn('이메일 형식이 잘못되었습니다:', rowData.employee_em);
+		            console.warn('이메일 형식이 잘못되었습니다:', rowData.account_em);
 		        }
 		    }
 		
@@ -865,50 +901,66 @@
 		    console.log("수정 모달 열림", rowData); // 수정된 부분
 		}
 
+		$(document).on('click', '#modal_submit_button', function () {
+		    console.log("등록 버튼 클릭됨!");
+
+		    $('#appointment_form').trigger('submit'); // 폼 제출 이벤트 실행
+		});
+
+		
+		
 		// 폼 제출 이벤트
-		$('#appointment_form').off('submit').on('submit', function (event) {
-		    event.preventDefault();
+		$(document).on('submit', '#appointment_form', function (event) {
+		    event.preventDefault(); // ✅ 기본 제출 동작 차단
 
-			
-		    const formData = new FormData(); // FormData 객체 생성
-		    const mode = $('#modal_submit_button').text().trim(); // 등록/수정 모드 확인
-		    const url = mode === '등록' ? '/insert_EMPLOYEE' : '/update_EMPLOYEE';
+		    const mode = $('#modal_submit_button').text().trim();
+		    const url = mode === '등록' ? '/insert_ACCOUNT' : '/update_ACCOUNT';
 
-		    // DTO 데이터를 JSON으로 생성
-		    const employeeDTO = {
-		        employee_cd: $('#employee_cd').val()
+		    const accountDTO = {
+		        account_cd: $('#account_cd').val(),
+		        account_nm: $('#account_nm').val(),
+		        account_dv: $('#account_dv').val(),
+		        account_cp: $('#account_cp').val(),
+		        account_ps: $('#account_ps').val(),
+		        account_ph: $('#account_ph').val(),
+		        account_fx: $('#account_fx').val(),
+		        account_em: $('#account_em').val(),
+		        account_sb: $('#account_sb').val(),
+		        account_uj: $('#account_uj').val(),
+		        account_ut: $('#account_ut').val(),
+		        account_ad: $('#account_ad').val(),
+		        account_sd: $('#account_sd').val(),
+		        account_ed: $('#account_ed').val(),
+		        account_bk: $('#account_bk').val(),
+		        account_an: $('#account_an').val(),
+		        account_dt: $('#account_dt').val(),
+		        account_us: $('#account_us').val() === 'true',
+		        account_nt: $('#account_nt').val(),
+		        account_wr: $('#account_wr').val(),
+		        account_wd: $('#account_wd').val(),
+		        account_mf: $('#account_mf').val(),
+		        account_md: $('#account_md').val()
 		    };
-
-
-		    formData.append('employeeDTO', new Blob([JSON.stringify(employeeDTO)], { type: 'application/json' })); // JSON 추가
-
-		    if (fileInput) {
-		        formData.append('employee_pi', fileInput); // 파일 추가
-		    }
 
 		    $.ajax({
 		        url: url,
 		        method: 'POST',
-		        processData: false,
-		        contentType: false, // 멀티파트 전송 처리
-		        headers: { 'X-CSRF-TOKEN': csrfToken }, // CSRF 토큰 추가
-		        data: formData,
+		        contentType: "application/json", // ✅ JSON 형식으로 변경
+		        headers: { 'X-CSRF-TOKEN': csrfToken },
+		        data: JSON.stringify(accountDTO), // JSON 직렬화 후 전송
 		        success: function () {
-		        	Swal.fire({
-		        		  icon: 'success',
-		        		  title: mode === '등록' ? '등록 완료' : '수정 완료',
-		        		  text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
-		        		  confirmButtonText: '확인'
-		        		});
+		            Swal.fire({
+		                icon: 'success',
+		                title: mode === '등록' ? '등록 완료' : '수정 완료',
+		                text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		                confirmButtonText: '확인'
+		            });
 
 		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-		            setTimeout(() => {
-		                location.reload();
-		            }, 1000);
+		            loadGridData(); // 페이지 새로고침 없이 그리드만 업데이트
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
-		            console.error('AJAX Error:', employeeDTO);
 		            Swal.fire({
 		                icon: 'error',
 		                title: '오류 발생!',
@@ -918,6 +970,7 @@
 		        }
 		    });
 		});
+
 		
 
 
