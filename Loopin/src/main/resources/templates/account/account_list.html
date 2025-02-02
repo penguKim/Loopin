@@ -47,7 +47,7 @@
 									<div id="grid"></div>
 								</div>
 								<div class="col-sm-12">
-									<button type="button" class="btn btn-primary" id="openCreateModal" onclick="showModal()">등록</button>
+									<button type="button" class="btn btn-primary" id="openCreateModal" onclick="openModal('add')">등록</button>
 									<button type="button" class="btn btn-primary" id="btn_account_delete">삭제</button>
 								</div>
 							</div>
@@ -61,17 +61,30 @@
 
 <script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
 <script>
-	function showModal() {
+	function openModal(mode, rowData = null) {
+		console.log("openModal 호출됨");
+		console.log("mode:", mode, "rowData:", rowData);
+		
 		// 기존 모달 및 배경 제거
+		document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+		// 기존 모달이 있으면 삭제
 		const existingModal = document.getElementById('modal_appointment_save');
 		if (existingModal) {
-		    const modalInstance = bootstrap.Modal.getInstance(existingModal);
-		    if (modalInstance) {
-		        modalInstance.hide(); // 기존 모달 닫기
-		    }
-		    existingModal.remove(); // 기존 모달 DOM 제거
+		    console.log("기존 모달 제거");
+		    existingModal.remove();
 		}
-		document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove()); // 기존 배경 제거
+		
+		// 모달이 이미 존재하는지 확인 후 중복 실행 방지
+		if (document.getElementById('modal_appointment_save')) {
+		    return;
+		}
+		
+		
+		// 모달 제목 및 버튼 텍스트 설정
+		const modalTitle = mode === 'edit' ? '거래처 수정' : '거래처 등록';
+		const submitButtonText = mode === 'edit' ? '수정' : '등록';
+		
 		
 	    // 모달 HTML 코드 생성
 	    const modalHtml = `
@@ -79,7 +92,7 @@
 		    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 		        <div class="modal-content">
 		            <div class="modal-header">
-		                <h5 class="modal-title" id="modalTitle">거래처 등록</h5>
+		                <h5 class="modal-title" id="modalTitle">${modalTitle}</h5>
 		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 		            </div>
 		            <div class="modal-body">
@@ -220,7 +233,7 @@
 		            </div>
 		            <div class="modal-footer">
 		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                <button type="button" id="modal_submit_button" class="btn btn-primary">등록</button>
+		                <button type="button" id="modal_submit_button" class="btn btn-primary">${submitButtonText}</button>
 		            </div>
 		        </div>
 		    </div>
@@ -228,6 +241,7 @@
 
 	    `;
 
+		
 		var useynList = window.useynList || [];
 		var ACtypeList = window.ACtypeList || [];
 		
@@ -235,6 +249,43 @@
 		// 모달 HTML을 동적으로 body에 추가
 		document.body.insertAdjacentHTML('beforeend', modalHtml);
 
+		// 모달이 추가된 후 실행
+		const modalElement = document.getElementById('modal_appointment_save');
+		if (!modalElement) {
+		    console.error("모달이 생성되지 않았습니다.");
+		    return;
+		}
+		
+		// Bootstrap Modal 객체 생성 및 실행
+		const modalInstance = new bootstrap.Modal(modalElement);
+		modalInstance.show();
+		
+
+
+	    if (mode === 'edit' && rowData) {
+	        console.log("모달이 열렸고, 데이터를 삽입합니다.");
+	        
+	        // 요소가 존재하는지 확인 후 값 설정
+	        const fields = [
+	            "account_cd", "account_nm", "account_dv", "account_cp",
+	            "account_ps", "account_ph", "account_fx", "account_em",
+	            "account_sb", "account_uj", "account_ut", "account_ad",
+	            "account_sd", "account_ed", "account_bk", "account_an",
+	            "account_dt", "account_us", "account_nt", "account_wr",
+	            "account_wd", "account_mf", "account_md"
+	        ];
+
+	        fields.forEach(id => {
+	            const element = document.getElementById(id);
+	            if (element) {
+	                element.value = rowData[id] || "";
+	            } else {
+	                console.warn(`${id} 요소를 찾을 수 없습니다.`);
+	            }
+	        });
+	    }
+
+		
 		
 		// 셀렉트 박스 관련 함수
 		function populateSelectOptions(selectId, dataList) {
@@ -349,11 +400,9 @@
 	// 모달 관리 핸들러
 	function initializeModalHandlers() {
 		function findAddr() {
-		     console.log("findAddr() 실행됨!"); // ✅ 함수 실행 확인
 
 		     new daum.Postcode({
 		         oncomplete: function (data) {
-		             console.log("주소 검색 완료:", data); // ✅ 주소 검색 성공 여부 확인
 		             $("#account_zc").val(data.zonecode); // 우편번호
 		             $("#account_sa").val(data.roadAddress); // 기본주소
 		             $("#account_da").val("").focus(); // 상세주소 초기화
@@ -679,11 +728,29 @@
 		                        { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
 		                        { header: '거래처명', name: 'account_nm', align: 'center', sortable: true },
 		                        { header: '거래처구분', name: 'account_dv', align: 'center', sortable: true },
-		                        { header: '사업자번호', name: 'account_sb', align: 'center', sortable: true },
 		                        { header: '대표자명', name: 'account_cp', align: 'center', sortable: true },
 		                        { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
 		                        { header: '연락처', name: 'account_ph', align: 'center', sortable: true },
-		                        { header: '사용여부', name: 'account_us', align: 'center', sortable: true }
+		                        { header: '이메일', name: 'account_em', align: 'center', sortable: true },
+								
+								// 숨김 컬럼
+								{ header: '팩스번호', name: 'account_fx', hidden: true },
+								{ header: '사업자번호', name: 'account_sb', hidden: true },
+								{ header: '업종', name: 'account_uj', hidden: true },
+								{ header: '업태', name: 'account_ut', hidden: true },
+								{ header: '주소', name: 'account_ad', hidden: true },
+								{ header: '거래시작일', name: 'account_sd', hidden: true },
+								{ header: '거래종료일', name: 'account_ed', hidden: true },
+								{ header: '은행', name: 'account_bk', hidden: true },
+								{ header: '계좌번호', name: 'account_an', hidden: true },
+								{ header: '예금주', name: 'account_dt', hidden: true },
+								{ header: '사용여부', name: 'account_us', hidden: true },
+								{ header: '비고', name: 'account_nt', hidden: true },
+								{ header: '작성자', name: 'account_wr', hidden: true },
+								{ header: '작성일', name: 'account_wd', hidden: true },
+								{ header: '수정자', name: 'account_mf', hidden: true },
+								{ header: '수정일', name: 'account_md', hidden: true }
+								
 		                    ],
 							summary: {
 							    height: 40,
@@ -713,7 +780,7 @@
 		                    
 		                    if (columnName === 'account_cd' || columnName === 'account_id' || columnName === 'account_nm') {
 		                        console.log("모달에 표시할 데이터:", rowData);
-		                        openEditModal(rowData);
+		                        openModal('edit', rowData); // 수정 모달 실행
 		                    }
 		                });
 
@@ -805,24 +872,6 @@
 	    });
 
 		
-		// 등록 모달 열기
-		$('#openCreateModal').on('click', function () {
-		    openCreateModal();
-		});
-
-		// 등록 모달 함수
-		function openCreateModal() {
-		    // 모달 초기화
-		    resetModal();
-		    $('#resetFormBtn').show();
-		    // 모달 설정
-		    $('#modalTitle').text('거래처 등록');
-		    $('#modal_submit_button').text('등록');
-
-		    // 모달 열기
-		    const modalInstance = new bootstrap.Modal($('#modal_appointment_save')[0]);
-		    modalInstance.show();
-		}
 
 		// 모달 초기화 함수
 		function resetModal() {
@@ -858,57 +907,15 @@
 	    
 	    
 		
-		// 수정 모달 열기 함수
-		function openEditModal(rowData) {
-		
-		    console.log("수정 모달 열기 데이터:", rowData);
 
-			
-		    $('#modalTitle').text('거래처 수정');
-		    $('#modal_submit_button').text('수정');
-		    $('#resetFormBtn').hide();
-			
-		    if (rowData.account_ad) {
-		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
-		        const match = rowData.account_ad.match(regex); // 수정된 부분
-		        if (match) {
-		            $("#account_zc").val(match[1]); // 우편번호
-		            $("#account_sa").val(match[2]); // 기본주소
-		            $("#account_da").val(match[3].trim()); // 상세주소
-		        } else {
-		            console.warn('주소 형식이 잘못되었습니다:', rowData.account_ad);
-		        }
-		    }
 		
-		    if (rowData.account_em) {
-		        const [email_id, domain] = rowData.account_em.split('@');
-		        if (email_id && domain) {
-		            $('#email_id').val(email_id);
-		            if (domain === 'custom') {
-		                $('#select_domain').val('');
-		                $('#custom_domain').val(domain).prop('disabled', false);
-		            } else {
-		                $('#select_domain').val(domain);
-		                $('#custom_domain').val('').prop('disabled', true);
-		            }
-		        } else {
-		            console.warn('이메일 형식이 잘못되었습니다:', rowData.account_em);
-		        }
-		    }
-		
-		    $('#modal_appointment_save').modal('show');
-		
-		    console.log("수정 모달 열림", rowData); // 수정된 부분
-		}
-
+		// 폼 제출 이벤트 실행
 		$(document).on('click', '#modal_submit_button', function () {
 		    console.log("등록 버튼 클릭됨!");
 
 		    $('#appointment_form').trigger('submit'); // 폼 제출 이벤트 실행
 		});
 
-		
-		
 		// 폼 제출 이벤트
 		$(document).on('submit', '#appointment_form', function (event) {
 		    event.preventDefault(); // ✅ 기본 제출 동작 차단
