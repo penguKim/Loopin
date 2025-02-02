@@ -148,6 +148,33 @@
 			}
 		});
 		
+		// 창고 구역 행 추가
+		$(document).on('click', '#btn_area_add', function() {
+			modal_grid.appendRow(
+			        {
+			            "common_cc": '',
+			            "common_nm": '',
+			            "common_us": '',
+			        },
+			        { focus: true }
+			    );
+		});
+		
+		// 그룹코드 삭제
+		$(document).on('click', '#btn_area_remove', function() {
+			let checkedRows = modal_grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 항목을 체크해주세요.');
+			    return;
+			}
+	    	checkedRows.forEach(row => {
+	    		modal_grid.removeRow(row.rowKey);
+	    	});
+		});
+
+
+
+		
 		// 창고 등록
 		$(document).on('click', '#btn_modal_save', function() {
 			insert_WAREHOUSE();
@@ -207,6 +234,7 @@
 				{header : '창고코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
 				{header : '창고명', name : 'warehouse_nm', sortable : true, filter: 'text'},
 				{header : '창고유형', name : 'warehouse_tp', sortable : true, filter: 'text'},
+				{header : '구역수', name : 'wacount', align: 'center', filter: 'text'},
 				{header : '정렬순서', name : 'warehouse_in', align: 'center', sortable : true, filter: 'text'}, 
 				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
 				{header : '사용여부', name : 'warehouse_us', align: 'center', sortable : true, filter: 'select',
@@ -278,6 +306,16 @@
 								<label for="modal_warehouse_rm" class="col-2 col-form-label">비고</label>
 								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_rm"></div>
 							</div>
+							<div class="row mb-3">
+								<div class="d-flex justify-content-between mb-1">
+									<div>구역지정<span class="text-danger">*</span></div>
+									<div>
+										<input type="button" id="btn_area_remove" class="btn btn-primary" value="삭제">
+										<input type="button" id="btn_area_add" class="btn btn-primary" value="행추가">
+									</div>
+								</div>
+								<div id="modal_grid"></div>
+							</div>
 						</div>
 						<div class="modal-footer d-flex justify-content-between">
 							<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
@@ -300,6 +338,7 @@
 
 		
         modalElement.addEventListener('shown.bs.modal', function () {
+			make_modal_grid();
 			createSelectBox($('#modal_warehouse_tp'), whtypeList, '선택하세요.');
 			createSelectBox($('#modal_warehouse_us'), /*[[${commonList['USEYN']}]]*/ [], '선택하세요.');
 			$('#modal_warehouse_cd').mask('Z'.repeat(10), {
@@ -329,6 +368,88 @@
 		
 	}
 	
+	
+	// 모달 그리드 생성
+	function make_modal_grid() {
+		
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 200,
+			columns : [
+				{header : '구역코드', name : 'warearea_cd', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+						regExp: /^[^ㄱ-ㅎㅏ-ㅣ가-힣]*$/
+					}},
+				{header : '구역명', name : 'warearea_nm', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+					},
+				},
+				{header : '최대적재량', name : 'warearea_cp', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+						dataType: 'number',
+						min: 0,
+						regExp: /^\d*$/ // 숫자만 허용
+					}
+				},
+				{header : '정렬순서', name : 'warearea_in', align: 'center', sortable : true, filter: 'text', 
+					editor: 'text',
+					validation: {
+						required: true,
+						dataType: 'number',
+						min: 0,
+						regExp: /^\d*$/ // 숫자만 허용
+					}
+				},
+				{header : '사용여부', name : 'warearea_us', align: 'center', sortable : true, filter: 'select',
+					editor: {
+						type: 'select',
+						options: {
+							listItems : [
+								{text : '사용', value : 'true'},
+								{text : '미사용', value : 'false'}
+							]
+						}
+					},
+					validation: {
+						required: true,
+					},
+					formatter: function({value}) {
+						return value == true ? '사용' : value == false ? '미사용' : '';
+					}
+				}, 
+				{header : '비고', name : 'warearea_rm', sortable : true, filter: 'text', editor: 'text',}
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	warehouse_us: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+
+		});
+		
+		modal_grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			// make_modal_detail('update');
+			// setModalInput(row);
+		});
+	}
+	
 	// 모달 조회
 	async function setModalInput(row) {
 		let data = {
@@ -338,14 +459,15 @@
 		try {
 		    let ajaxData = await callAjaxPost('/select_WAREHOUSE_detail', jsonData);
 			let warehouse = ajaxData['warehouse'];
-			
+			console.log(ajaxData['wareareaList']);
 			modalData = {
 			    warehouse_cd: warehouse['warehouse_cd'],
 			    warehouse_nm: warehouse['warehouse_nm'],
 			    warehouse_tp: warehouse['warehouse_tp'],
 			    warehouse_in: warehouse['warehouse_in'],
 			    warehouse_us: warehouse['warehouse_us'] == true ? 1 : 0,
-			    warehouse_rm: warehouse['warehouse_rm']
+			    warehouse_rm: warehouse['warehouse_rm'],
+				warearea: ajaxData['wareareaList']
 			};
 			
 			setModalValues(modalData);
@@ -364,8 +486,17 @@
 		    { field: modal_warehouse_us, message: '사용여부를 선택해주세요.' }
 		];
 		const invalidField = validations.find(v => !v.field.val()?.trim());
-		if (invalidField) {
+		if(invalidField) {
 		    showAlert(invalidField.field, 'warning', '', invalidField.message);
+		    return;
+		}
+		
+		if(!modal_grid.getData().length) {
+			showAlert('', 'warning', '구역 확인', '최소 1개 이상의 구역을 등록해주세요.');
+			return;
+		}
+		
+		if(!gridValidationCheck(modal_grid)) {
 		    return;
 		}
 
@@ -380,8 +511,13 @@
 			warehouse_us: modal_warehouse_us.val() == 1 ? true : false,
 			warehouse_rm: modal_warehouse_rm.val().trim(),
 		}
+		let wareareaList = modal_grid.getData();
+		let data = {
+			warehouse: warehouse,
+			wareareaList: wareareaList,
+		}
 		
-		let jsonData = JSON.stringify({warehouse: warehouse});
+		let jsonData = JSON.stringify(data);
 		try {
 		    let ajaxData = await callAjaxPost('/insert_WAREHOUSE', jsonData);
 		    // 성공 시 실행되는 코드
@@ -419,6 +555,7 @@
 	    modal_warehouse_in.val(data.warehouse_in);
 	    modal_warehouse_us.val(data.warehouse_us);
 	    modal_warehouse_rm.val(data.warehouse_rm);
+		modal_grid.resetData(data.warearea);
 	}
 	
 	// 검색 인풋 초기화
@@ -428,6 +565,5 @@
 		$('#warehouse_tp').val('');
 		setRadioValue('warehouse_us', 'ALL');
 	}
-
 </script>
 </html>
