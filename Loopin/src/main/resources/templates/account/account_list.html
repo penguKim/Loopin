@@ -148,11 +148,15 @@
 							    </div>
 							    <div class="col-md-4">
 							        <label for="account_uj" class="form-label">업종</label>
-							        <input type="text" class="form-control" id="account_uj" name="account_uj">
+									<select class="form-select" id="account_uj" name="account_uj">
+									    <option selected>선택</option>
+									</select>
 							    </div>
 							    <div class="col-md-4">
 							        <label for="account_ut" class="form-label">업태</label>
-							        <input type="text" class="form-control" id="account_ut" name="account_ut">
+									<select class="form-select" id="account_ut" name="account_ut">
+									    <option selected>선택</option>
+									</select>
 							    </div>
 							</div>
 							
@@ -230,27 +234,32 @@
 		// 모달 HTML을 동적으로 body에 추가
 		document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-		// 거래처 구분 (account_dv) 옵션 추가
-		const accountDvSelect = document.getElementById('account_dv');
-		if (Array.isArray(window.ACtypeList) && window.ACtypeList.length > 0) {
-		    window.ACtypeList.forEach(item => {
-		        const option = document.createElement('option');
-		        option.value = item.common_cc;
-		        option.textContent = item.common_nm;
-		        accountDvSelect.appendChild(option);
-		    });
+		
+		// 셀렉트 박스 관련 함수
+		function populateSelectOptions(selectId, dataList) {
+		    const selectElement = document.getElementById(selectId);
+		    if (Array.isArray(dataList) && dataList.length > 0) {
+		        dataList.forEach(item => {
+		            const option = document.createElement('option');
+		            option.value = item.common_cc;
+		            option.textContent = item.common_nm;
+		            selectElement.appendChild(option);
+		        });
+		    }
 		}
 
+		// 거래처 구분 (account_dv) 옵션 추가
+		populateSelectOptions('account_dv', window.ACtypeList);
+
 		// 사용여부 (account_us) 옵션 추가
-		const accountUsSelect = document.getElementById('account_us');
-		if (Array.isArray(window.useynList) && window.useynList.length > 0) {
-		    window.useynList.forEach(item => {
-		        const option = document.createElement('option');
-		        option.value = item.common_cc;
-		        option.textContent = item.common_nm;
-		        accountUsSelect.appendChild(option);
-		    });
-		}
+		populateSelectOptions('account_us', window.useynList);
+
+		// 업종 (account_uj) 옵션 추가
+		populateSelectOptions('account_uj', window.BTtypeList);
+		
+		// 업태 (account_ut) 옵션 추가
+		populateSelectOptions('account_ut', window.BItypeList);
+
 		
 		// 모달 표시 후 DatePicker 초기화
 		document.getElementById('modal_appointment_save').addEventListener('shown.bs.modal', function () {
@@ -484,11 +493,17 @@
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 		
+		// 사용여부, 거래처구분, 업태, 업종 리스트 불러오기 및 JSON 변환
 		window.useynList = /*[[${useyn_list != null ? useyn_list : '[]'}]]*/ [];
-		window.useynList = typeof window.useynList === "string" ? JSON.parse(window.useynList) : window.useynList;
+		window.ACtypeList = /*[[${ACtype_list != null ? ACtype_list : '[]'}]]*/ [];
+		window.BTtypeList = /*[[${BTtype_list != null ? BTtype_list : '[]'}]]*/ [];
+		window.BItypeList = /*[[${BItype_list != null ? BItype_list : '[]'}]]*/ [];
 
-		window.ACtypeList = /*[[${useyn_list != null ? useyn_list : '[]'}]]*/ [];
-		window.ACtypeList = typeof window.ACtypeList === "string" ? JSON.parse(window.ACtypeList) : window.ACtypeList;
+		// JSON 문자열인지 확인 후 변환
+		["useynList", "ACtypeList", "BTtypeList", "BItypeList"].forEach(key => {
+		    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
+		});
+
 
 		var userRole = /*[[${role}]]*/ 'default';
 		
@@ -585,7 +600,7 @@
 
 	    // 데이터 가져오기 및 초기화
 	    $.ajax({
-	        url: '/select_EMPLOYEE',
+	        url: '/select_ACCOUNT',
 	        method: 'GET',
 	        success: function (response) {
 	            // 서버에서 가져온 데이터를 employeeList에 저장
