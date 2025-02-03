@@ -36,6 +36,7 @@ public class ProductDTO {
 	private String product_crnm;
 	private String product_gn;
 	private String product_cn;
+	private String warehouse_nm;
 	
 	
 	public ProductDTO() {}

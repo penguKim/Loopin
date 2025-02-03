@@ -25,4 +25,8 @@ public interface ProductRepository extends JpaRepository<Product, ProductPK> {
                             @Param("sizes") List<String> sizes,
                             @Param("colors") List<String> colors);
 
+    @Modifying
+    @Query("DELETE FROM Product p WHERE p.product_cd IN :productCodes")
+	void deleteByProductCdIn(@Param("productCodes") List<String> procudtCodes);
+
 }

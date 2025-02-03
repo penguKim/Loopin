@@ -280,12 +280,18 @@ function createSelectBox(el, list, title) {
 	if(title) {
 	    selectBox.append(`<option value="">${title}</option>`);		
 	}
-	console.log(list);
     list.forEach(data => {
         selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
     });
 }
 
+/**
+ * 라디오버튼 생성
+ * @param {String} el 선택자
+ * @param {*} list 리스트
+ * @param {String} name name 값
+ * @param {boolean} flag true -> 전체 버튼 추가
+ */
 function createRadio(el, list, name, flag) {
     const container = $(el);
     
@@ -311,6 +317,45 @@ function createRadio(el, list, name, flag) {
         `);
     });
 }
+
+/**
+ * select2 생성
+ * @param {String} el 선택자
+ * @param {*} list 리스트
+ * @param {String} name name 값
+ * @param {boolean} flag true -> 전체 버튼 추가
+ */
+function createSelect2(selectId, data, placeholder, parentModal) {
+    const select = $(`${selectId}`);
+    
+    select.select2({
+        dropdownParent: $(`#${parentModal}`),
+        placeholder: placeholder,
+        width: '100%',
+        data: data.map(item => ({
+            id: item['common_cc'],
+            text: item['common_nm']
+        }))
+    }).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId}">전체 선택</button>`);
+
+    $(`#select-all-${selectId}`).on('click', function() {
+        const button = $(this);
+        
+        if (select.val() && select.val().length == select.find('option').length) {
+            select.val(null);
+            button.text('전체 선택');
+        } else {
+            const allOptions = select.find('option').map(function() {
+                return $(this).val();
+            }).get();
+            select.val(allOptions);
+            button.text('전체 해제');
+        }
+        
+        select.trigger('change');
+    });
+}
+
 
 
 /**

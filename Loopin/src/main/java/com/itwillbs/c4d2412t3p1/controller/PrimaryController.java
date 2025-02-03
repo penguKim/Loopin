@@ -122,6 +122,7 @@ public class PrimaryController {
 	}
 	
 	// 창고 삭제
+	@LogActivity(value = "삭제", action = "창고삭제")
 	@ResponseBody
 	@PostMapping("/delete_WAREHOUSE")
 	public ResponseEntity<Map<String, Object>> delete_WAREHOUSE(@RequestBody PrimaryRequestDTO primaryDTO) {
@@ -273,6 +274,31 @@ public class PrimaryController {
 			response.put("msg", "조회에 실패했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+	}
+	
+	// 제품 삭제
+	@ResponseBody
+	@PostMapping("/delete_PRODUCT")
+	public ResponseEntity<Map<String, Object>> delete_PRODUCT(@RequestBody PrimaryRequestDTO primaryDTO) {
+		List<ProductDTO> productList = primaryDTO.getProductList();
+		
+		
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			primaryService.delete_PRODUCT(productList);
+			
+			
+			List<ProductDTO> list = primaryService.select_PRODUCT_list(primaryDTO.getProductFilter());
+			response.put("list", list);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "창고 삭제 중 오류가 발생했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
 	}
 	
 	

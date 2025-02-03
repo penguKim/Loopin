@@ -177,13 +177,17 @@ public class PrimaryService {
 	    }
 	}
 
-
-
-	// 제품 상세 조회
-	public Product select_PRODUCT_detail(String product_cd, String item_cd) {
+	// 제품 삭제
+	@Transactional
+	public void delete_PRODUCT(List<ProductDTO> productList) {
+		// 재고가 있거나 공정이 진행중인 제품은 삭제안되게 처리 예정
 		
-		// return productRepository.findByProductCdAndItemCd(product_cd, item_cd);
-		return null;
+	    List<String> productCodes = productList.stream()
+	        .map(ProductDTO::getProduct_cd)
+	        .collect(Collectors.toList());
+	    
+	    productRepository.deleteByProductCdIn(productCodes);
 	}
+
 
 }

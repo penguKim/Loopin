@@ -22,6 +22,7 @@ public class PrimaryRequestDTO {
 
 	// 제품관리
 	ProductFilterRequest productFilter;
+	List<ProductDTO> productList;
 	ProductDTO product;
 	List<String> sizeList;
 	List<String> colorList;
