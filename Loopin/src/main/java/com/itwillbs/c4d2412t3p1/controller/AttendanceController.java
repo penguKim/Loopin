@@ -311,7 +311,7 @@ public class AttendanceController {
 	    return response;
 	}
 	
-	/* TODO
+	
 	@ResponseBody
 	@PostMapping("/select_APPROVAL_ANNUAL")
 	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL(@RequestBody Map<String, Object> params) {
@@ -324,8 +324,8 @@ public class AttendanceController {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			// TODO
-//			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
+			
+			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
 			response.put("result", true);
 			response.put("data", annuals);
 			
@@ -374,7 +374,7 @@ public class AttendanceController {
 		
 		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
 		params.put("employee_cd", employee.getEmployee_cd());		
-		params.put("date", date);		
+		params.put("date", date);
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
@@ -383,7 +383,6 @@ public class AttendanceController {
 			data.put("contents", list);
 			response.put("result", true);
 			response.put("data", data);
-			//response.put("holidayList", holidayList);
 			return ResponseEntity.ok(response);
 			
 		} catch (Exception e) {
@@ -393,5 +392,5 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	*/
+	
 }
