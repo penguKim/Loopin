@@ -120,7 +120,7 @@ public class Account {
     
     // 사용여부
     @Column(name = "account_us", length = 10)
-    private Boolean account_us;
+    private String account_us;
     
     // 비고
     @Column(name = "account_nt", length = 200)
@@ -166,7 +166,7 @@ public class Account {
 			String account_bk,
 			String account_an,
 			String account_dt,
-			Boolean account_us,
+			String account_us,
 			String account_nt,
 			String account_wr,
 			Timestamp account_wd,

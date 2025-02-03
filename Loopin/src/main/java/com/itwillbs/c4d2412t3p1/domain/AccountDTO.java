@@ -29,7 +29,7 @@ public class AccountDTO {
 	private String account_bk;
 	private String account_an;
 	private String account_dt;
-	private Boolean account_us;
+	private String account_us;
 	private String account_nt;
 	private String account_wr;
 	private Timestamp account_wd;
