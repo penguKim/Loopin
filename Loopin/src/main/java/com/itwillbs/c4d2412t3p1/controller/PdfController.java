@@ -30,6 +30,7 @@ public class PdfController {
 
 	private final SpringTemplateEngine templateEngine;
 
+	
 	@GetMapping("/generatePdf")
     public void generatePdf(@RequestParam("approval_cd") String approval_cd,
                             HttpServletResponse response) throws Exception {
