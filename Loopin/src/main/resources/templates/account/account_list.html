@@ -177,7 +177,7 @@
 		                    <div class="row mb-3">
 		                        <div class="col-md-4">
 		                            <label for="account_zc" class="form-label">우편번호</label>
-		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" readonly>
+		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" onclick="findAddr()" readonly>
 		                        </div>
 		                        <div class="col-md-4">
 		                            <label for="account_sa" class="form-label">기본주소</label>
@@ -305,23 +305,6 @@
 		    
 		    // 옵션이 모두 채워진 후 값을 설정
 		    setTimeout(() => {
-		        Object.keys(selectFields).forEach(field => {
-		            const $select = $(`#${field}`);
-		            if ($select.length) {
-		                const textToMatch = rowData[field];
-		                const matchType = selectFields[field];
-		                const matchingOption = $select.find('option').filter((_, option) => {
-		                    return $(option).text().trim() === textToMatch.trim() || $(option).val().trim() === String(textToMatch).trim();
-		                });
-
-		                if (matchingOption.length) {
-		                    $select.val(matchingOption.val()).prop('selected', true);
-		                } else {
-		                    console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
-		                }
-		            }
-		        });
-		        
 		        if (rowData.account_em) {
 		            const emailParts = rowData.account_em.split('@');
 		            if (emailParts.length === 2) {
@@ -349,6 +332,24 @@
 		                $('#account_da').val(match[3].trim()); // 상세주소
 		            }
 		        }
+		        
+		        Object.keys(selectFields).forEach(field => {
+		            const $select = $(`#${field}`);
+		            if ($select.length) {
+		                const textToMatch = rowData[field];
+		                const matchType = selectFields[field];
+		                const matchingOption = $select.find('option').filter((_, option) => {
+		                    return $(option).text().trim() === textToMatch.trim() || $(option).val().trim() === String(textToMatch).trim();
+		                });
+
+		                if (matchingOption.length) {
+		                    $select.val(matchingOption.val()).prop('selected', true);
+		                } else {
+		                    console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
+		                }
+		            }
+		        });
+		        
 		        
 		    }, 100);
 		    
@@ -524,9 +525,6 @@
 
 	// 모달 관리 핸들러
 	function initializeModalHandlers() {
-		// 우편번호 버튼 클릭 이벤트 등록
-		$("#account_zc").off("click").on("click", findAddr);
-
 		// 상세주소 입력 시 통합주소 갱신
 		$("#account_da").off("input").on("input", function () {
 		    const zipCode = $("#account_zc").val();

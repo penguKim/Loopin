@@ -10,10 +10,8 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
-import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
-import com.itwillbs.c4d2412t3p1.entity.Notice;
 import com.itwillbs.c4d2412t3p1.repository.AccountRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 
@@ -88,6 +86,26 @@ public class AccountService {
         System.out.println("@@@@@@@@@" + account);
     }
 	
+	
+	public void update_ACCOUNT(AccountDTO accountDTO) throws IOException {
+	    Account account = accountRepository.findById(accountDTO.getAccount_cd())
+	            .orElseThrow(() -> new IllegalArgumentException("해당 거래처가 존재하지 않습니다."));
+	    
+	    // 엔티티 업데이트
+	    account.setAccountEntity(account, accountDTO);
+
+	    // 데이터베이스 저장
+	    accountRepository.save(account);
+		
+	}
+	
+	
+    // CD로 Account 조회
+    public Account findNoticeById(String account_cd) {
+        // Repository를 사용하여 데이터 조회
+        return accountRepository.findById(account_cd)
+                .orElseThrow(() -> new IllegalArgumentException("해당 ID의 데이터를 찾을 수 없습니다."));
+    }
 	
 	
 }

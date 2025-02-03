@@ -1,14 +1,9 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,14 +13,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 
-import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
-import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
-import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.service.AccountService;
 
 import lombok.RequiredArgsConstructor;
@@ -97,6 +88,60 @@ public class AccountController {
 	        response.put("message", "데이터 저장 실패: " + e.getMessage());
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
+	}
+
+	@PostMapping("/update_ACCOUNT")
+	public ResponseEntity<Map<String, String>> update_ACCOUNT(
+			@RequestBody AccountDTO accountDTO
+			) {
+		Map<String, String> response = new HashMap<>();
+		
+		// 시큐리티 세션 값 가져오기
+		String employee_id = SecurityContextHolder.getContext().getAuthentication().getName(); 
+		
+		try {
+			
+	    	String account_cd = accountDTO.getAccount_cd();
+	    	
+	        if (account_cd == null) {
+	            response.put("message", "데이터 수정 실패: ID(account_cd)가 전달되지 않았습니다.");
+	            return ResponseEntity.badRequest().body(response);
+	        }
+			
+	        // 기존 데이터 조회
+	        Account account = accountService.findNoticeById(accountDTO.getAccount_cd());
+	        if (account == null) {
+	            response.put("message", "데이터 수정 실패: 해당 CD의 데이터를 찾을 수 없습니다.");
+	            return ResponseEntity.badRequest().body(response);
+	        }
+	        // 기존 account_wr 값 유지 
+			accountDTO.setAccount_wr(account.getAccount_wr());
+			
+			// 기존 account_wd 값 유지 
+			accountDTO.setAccount_wd(account.getAccount_md());
+			
+			// 수정자 처리
+			accountDTO.setAccount_mf(employee_id);
+			
+			// 수정일 처리
+			accountDTO.setAccount_md(new Timestamp(System.currentTimeMillis()));
+			
+			accountService.update_ACCOUNT(accountDTO);
+			
+			// 성공 응답
+			response.put("message", "데이터가 성공적으로 수정되었습니다.");
+			return ResponseEntity.ok(response); // JSON 형식으로 반환
+			
+	    } catch (IllegalArgumentException e) {
+	        // ID로 조회되지 않는 경우 처리
+	        response.put("message", "데이터 수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+			
+		} catch (Exception e) {
+			log.severe("데이터 저장 실패: " + e.getMessage()); // 오류 로그 추가
+			response.put("message", "데이터 수정 실패: 알 수 없는 오류가 발생했습니다. " + e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 
 	
