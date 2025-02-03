@@ -16,32 +16,35 @@
 			<div class="row">
 				<div class="col-lg-8">
 					<div class="card">
-						<div class="card-body ">
-							<div class="d-prcode_flex align-items-center justify-content-between">
-								<h5 class="card-title">수당 코드</h5>
-								<!-- <div>
-									<input type="button" id="btn_group_remove" class="btn btn-primary" value="삭제">
-									<input type="button" id="btn_group_add" class="btn btn-primary" value="행추가">
-									<input type="button" id="btn_group_insert" class="btn btn-primary" value="등록">
-								</div> -->
+						<div class="card" id="div_card">
+							<div class="card-body">
+								<div class="d-prcode_flex align-items-center justify-content-between">
+									<h5 class="card-title">수당 코드</h5>
+									<!-- <div>
+										<input type="button" id="btn_group_remove" class="btn btn-primary" value="삭제">
+										<input type="button" id="btn_group_add" class="btn btn-primary" value="행추가">
+										<input type="button" id="btn_group_insert" class="btn btn-primary" value="등록">
+									</div> -->
+								</div>
+								<div id="allowance_grid"></div>
 							</div>
-							<div id="allowance_grid"></div>
 						</div>
 					</div>
 				</div>
 				<div class="col-lg-4">
-
 					<div class="card">
-						<div class="card-body">
-							<div class="d-prcode_flex align-items-center justify-content-between">
-								<h5 class="card-title">공제 코드</h5>
-								<!-- <div>
-									<input type="button" id="btn_code_remove" class="btn btn-primary" value="삭제">
-									<input type="button" id="btn_code_add" class="btn btn-primary" value="행추가">
-									<input type="button" id="btn_code_insert" class="btn btn-primary" value="등록">
-								</div> -->
+						<div class="card" id="div_card2">
+							<div class="card-body">
+								<div class="d-prcode_flex align-items-center justify-content-between">
+									<h5 class="card-title">공제 코드</h5>
+									<!-- <div>
+										<input type="button" id="btn_code_remove" class="btn btn-primary" value="삭제">
+										<input type="button" id="btn_code_add" class="btn btn-primary" value="행추가">
+										<input type="button" id="btn_code_insert" class="btn btn-primary" value="등록">
+									</div> -->
+								</div>
+								<div id="deduction_grid"></div>
 							</div>
-							<div id="deduction_grid"></div>
 						</div>
 					</div>
 				</div>
@@ -81,7 +84,7 @@ $.ajax({
 						/\(휴일근무시간\ <= 8\)\?통상시급\*휴일근무시간\*1\.5\:통상시급\*휴일근무시간\*2/g, 
 								'8시간 이내 : 통상시급*휴일근무*1.5                                                  8시간 이상 : 통상시급*휴일근무*2'
 						);
-				prcode_fl = prcode_fl.replace(/BS/g, '기본급');
+				prcode_fl = prcode_fl.replace(/BS\/12/g, '기본급');
 				prcode_fl = prcode_fl.replace(/BN/g, '상여');
 	
 				item.prcode_fl = prcode_fl;
@@ -132,5 +135,16 @@ const deduction_grid = new tui.Grid({
 		{header: '수당항목명', name: 'prcode_nm', align: 'center'},
 		{header: '계산식', name: 'prcode_fl', whiteSpace: 'pre-wrap', align: 'center'},
 	],
+});
+
+setElementHeight('#div_card', -110);
+setElementHeight('#div_card2', -110);
+
+$(window).resize(function() {
+	setElementHeight('#div_card', -110);
+	setElementHeight('#div_card2', -110);
+	if(grid != null) {
+		setGridHeight(grid, -430);
+	}
 });
 </script>
