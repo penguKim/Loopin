@@ -22,10 +22,18 @@ LEFT OUTER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD AND ANNUAL_YR = TO_CHA
 			   , TO_CHAR(JSON_VALUE(a.APPROVAL_CT, '$.reason')) AS REASON
 			   , e.EMPLOYEE_NM
 			   , (SELECT COUNT(*) 
-					FROM APPROVAL 
+					FROM APPROVAL a
+			   LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
+			   LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
 				   WHERE 1=1
-	 <if test="isAdmin"> AND APPROVAL_FA = #{currentCd}</if> 
-	<if test="!isAdmin"> AND APPROVAL_WR = a.APPROVAL_WR</if>) AS APPROVAL_COUNT
+	 <if test="isAdmin"> AND
+						   (
+							(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
+							OR 
+							(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
+						   )
+	 </if> 
+	<if test="!isAdmin"> AND e.EMPLOYEE_CD = #{currentCd}</if>) AS APPROVAL_COUNT
 		  FROM APPROVAL a
 	 LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
 	 LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
@@ -34,7 +42,12 @@ LEFT OUTER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD AND ANNUAL_YR = TO_CHA
 			   AND e.EMPLOYEE_CD = #{currentCd}
 		 </if>
 		 <if test="isAdmin">
-			   AND a.APPROVAL_FA = #{currentCd}
+			   AND
+			   (
+				(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
+				OR 
+				(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
+			   )
 		 </if>
 		 FETCH FIRST 4 ROWS ONLY
 	</select>

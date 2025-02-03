@@ -572,12 +572,12 @@
 				const event = list.map(approval=> {
 					var li = document.createElement('li');
 	                li.className = 'list-group-item';
-	                li.innerHTML = `<a href="#" data-bs-toggle="modal" data-bs-target="#modal-${approval.APPROVAL_TT}">${approval.APPROVAL_TT}</a>`;
+	                li.innerHTML = `<a href="#" data-bs-toggle="modal" data-bs-target="#modal-${approval.APPROVAL_CD}">${approval.APPROVAL_TT}</a>`;
 	                listContainer.appendChild(li);
 
 	                // 모달 생성
 	                var modal = document.createElement('div');
-	                modal.id = `modal-${approval.APPROVAL_TT}`;
+	                modal.id = `modal-${approval.APPROVAL_CD}`;
 	                modal.className = 'modal fade';
 	                modal.tabIndex = -1;
 					modal.setAttribute("data-bs-backdrop", "static");

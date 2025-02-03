@@ -77,7 +77,7 @@ public class DashboardController {
 	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_APPROVAL() {
 		Map<String, Object> params = new HashMap<>();
 		EmployeeDetails employee = commuteService.getEmployee();
-		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN", "PR_ADMIN", "HR_ADMIN"));
 		params.put("currentCd", employee.getEmployee_cd());
 		
 		Map<String, Object> response = new HashMap<>(); 
