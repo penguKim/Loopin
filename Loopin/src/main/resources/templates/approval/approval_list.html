@@ -468,14 +468,14 @@
 		                        },
 		                        {
 		                            header: '1차 결재권자',
-		                            name: 'approval_fa',
+		                            name: 'approval_fa_parse',
 		                            align: 'center',
 		                            filter: { type: 'select' },
 		                            sortable: true,
 		                        },
 		                        {
 		                            header: '2차 결재권자',
-		                            name: 'approval_sa',
+		                            name: 'approval_sa_parse',
 		                            align: 'center',
 		                            filter: { type: 'select' },
 		                            sortable: true,
@@ -542,6 +542,29 @@
 		                    if (rowData.is_second_approver && rowData.approval_av_cc === "30") {
 		                        openEditModal(rowData, '읽기', true);
 		                        return;
+		                    }
+		                    
+		                    if (rowData.approval_av_cc === "40") {
+		                        
+		                        Swal.fire({
+		                            title: "문서를 출력하시겠습니까?",
+		                            icon: "question",
+		                            showCancelButton: true,
+		                            confirmButtonColor: "#3085d6",
+		                            cancelButtonColor: "#d33",
+		                            confirmButtonText: "Yes"
+		                          }).then((result) => {
+		                            if (result.isConfirmed) {
+		                              Swal.fire({
+		                                title: "처리 중!",
+		                                text: "문서가 곧 출력됩니다!",
+		                                icon: "success"
+		                              }).then(() => {
+		                                  
+		                                  window.open('/generatePdf?approval_cd=' + rowData.approval_cd, '_blank');
+		                              });
+		                            }
+		                          });
 		                    }
 
 		                });

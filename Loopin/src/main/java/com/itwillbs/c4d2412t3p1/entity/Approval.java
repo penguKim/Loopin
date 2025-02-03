@@ -24,7 +24,7 @@ import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 public class Approval {
 
 	@Id
-	@Column(name = "approval_cd", length = 15)
+	@Column(name = "APPROVAL_CD", length = 15)
 	private String approval_cd; // 결재코드
 
 	@Transient
