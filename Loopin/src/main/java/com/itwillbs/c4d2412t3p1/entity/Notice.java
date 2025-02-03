@@ -26,7 +26,7 @@ import lombok.ToString;
 @Table(name = "NOTICE")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "employee")
 @SequenceGenerator(name = "nt_sequence_generator", sequenceName = "nt_sequence", allocationSize = 1)
 public class Notice {
 	
