@@ -16,17 +16,26 @@ LEFT OUTER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD AND ANNUAL_YR = TO_CHA
     <select id="select_EMPLOYEE_APPROVAL" resultType="map">
 		SELECT a.APPROVAL_TT
 			   , a.APPROVAL_WR
-			   , (SELECT COUNT(*) FROM APPROVAL<if test="!isAdmin"> WHERE APPROVAL_WR = a.APPROVAL_WR</if>) AS APPROVAL_COUNT
+			   , c.COMMON_NM AS APPROVAL_AV
 			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS STARTDAY
 			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS ENDDAY	
 			   , TO_CHAR(JSON_VALUE(a.APPROVAL_CT, '$.reason')) AS REASON
+			   , e.EMPLOYEE_NM
+			   , (SELECT COUNT(*) 
+					FROM APPROVAL 
+				   WHERE 1=1
+	 <if test="isAdmin"> AND APPROVAL_FA = #{currentCd}</if> 
+	<if test="!isAdmin"> AND APPROVAL_WR = a.APPROVAL_WR</if>) AS APPROVAL_COUNT
 		  FROM APPROVAL a
 	 LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
-	 LEFT JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC AND c.COMMON_GC = 'DEPARTMENT'
+	 LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
 		 WHERE 1=1
 		 <if test="!isAdmin">
 			   AND e.EMPLOYEE_CD = #{currentCd}
-			</if>
+		 </if>
+		 <if test="isAdmin">
+			   AND a.APPROVAL_FA = #{currentCd}
+		 </if>
 		 FETCH FIRST 4 ROWS ONLY
 	</select>
 	
