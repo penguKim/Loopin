@@ -587,51 +587,19 @@ public class PRService {
 		}
 	}
 
-	public List<Map<String, Object>> select_givebnone(List<PR_calculationMDTO> calbndata) {
-
-//		 사원 한명 값 계산 다시 해서 업데이트하고 그 후 모든 데이터 넘겨주기
-		PR updatepr = new PR();
-		PRDetail updatepd = new PRDetail();
-		
-		Long prid = calbndata.get(0).getPrid();
-		Long pdid = Long.parseLong(calbndata.get(0).getPdid().get(0));
-		String bn = calbndata.get(0).getBonus();
-		
-//		1. 사원 한명의 근태&pd값 다 들고오기 & 해당월의 pr값도 들고오기
-		Optional<PR> prlist = prRep.findById(prid);
-		Optional<PRDetail> pdlist = prdRep.findById(pdid);
-		List<String> employee_cdList = new ArrayList<>();
-		employee_cdList.add(pdlist.get().getEmployee_cd());
-		String[] prwms = prlist.get().getPr_wm().split("-");
-		String prwmyear = prwms[0];
-		String prwm = prwms[1];
-		Map<String, Object> getwtemp = prM.getwt(employee_cdList, prwm, prwmyear);
-//		2. 기존 pr값의 ta td ns 다 사원의 값을 빼기
-		BigDecimal beforeta = prlist.get().getPr_ta().subtract(pdlist.get().getPrdetail_ta());
-		BigDecimal beforetd = prlist.get().getPr_td().subtract(pdlist.get().getPrdetail_td());
-		BigDecimal beforens = prlist.get().getPr_ns().subtract(pdlist.get().getPrdetail_rs());
-		
-//		3. 기존 bn값에 추가로 주는 bn추가해서 급여계산 다시하고 pd업데이트
-		String employee_cd = pdlist.get().getEmployee_cd();
-		String employee_nm = pdlist.get().getEmployee_nm();
-		String BS = pdlist.get().getPrdetail_bs().multiply(new BigDecimal(12)).toString();
-		String workingtime = getwtemp.get("WORKINGTIME").toString();
-		String overworkingtime = getwtemp.get("OVERWORKINGTIME").toString();
-		String nightworkingtime = getwtemp.get("NIGHTWORKINGTIME").toString();
-		String weekendworkingtime = getwtemp.get("WEEKENDWORKINGTIME").toString();
-		String holydayworkingtime = getwtemp.get("HOLYDAYWORKINGTIME").toString();
-		String remainleave = getwtemp.get("ANNUAL_RA") == null ? "0" : getwtemp.get("ANNUAL_RA").toString();
-		String bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
-		
-//		4. 2의 pr값에 새로 계산된 ta,td,ns 더해서 pr업데이트
-		
-		return null;
-	}
-
-
 	public List<Map<String, Object>> select_prmodaldata(String empcd, Long prid) {
 
 		return prM.select_prmodaldata(empcd,prid);
 	}
 
+	public int update_prch(Long prid) {
+		
+		int result = prM.update_prch(prid);
+		
+//		if (result == 0) {
+//	        return 0; 
+//	    }else {
+	    	return result;
+//	    }
+	}
 }

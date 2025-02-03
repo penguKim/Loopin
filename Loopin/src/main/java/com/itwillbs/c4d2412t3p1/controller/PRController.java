@@ -186,4 +186,12 @@ public class PRController {
 		return list;
 	}
 	
+	@PostMapping("/sendpr")
+	@ResponseBody
+	public int updateprch(@RequestBody Map<String, Long> request) {
+		Long prid = request.get("prid");
+		int result = prS.update_prch(prid);
+		return result;
+	}
+	
 }

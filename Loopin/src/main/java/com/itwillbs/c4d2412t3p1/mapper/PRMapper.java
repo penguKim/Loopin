@@ -4,10 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
-
-import com.itwillbs.c4d2412t3p1.domain.PR_calculationMDTO;
-import com.itwillbs.c4d2412t3p1.entity.Employee;
-
 import org.apache.ibatis.annotations.Param;
 
 @Mapper
@@ -39,5 +35,7 @@ public interface PRMapper {
 	Map<String, Object> getwt(@Param("employee_cdList") List<String> employee_cdList, @Param("prwm") String prwm, @Param("prwmyear") String prwmyear);
 
 	List<Map<String, Object>> select_prmodaldata(@Param("empcd")String empcd,@Param("prid") Long prid);
+	
+	int update_prch(@Param("prid")Long prid);
 
 }

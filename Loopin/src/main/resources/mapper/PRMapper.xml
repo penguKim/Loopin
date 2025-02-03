@@ -215,5 +215,11 @@
 			AND ep.EMPLOYEE_CD = #{empcd}
 	</select>	
 	
+	<update id="update_prch">
+		UPDATE PRDETAIL pd
+		SET pd.prdetail_ch = 1
+		WHERE pd.pr_id = #{prid}
+	</update>
+	
 </mapper>
     

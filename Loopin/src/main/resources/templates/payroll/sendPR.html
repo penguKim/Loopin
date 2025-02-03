@@ -357,7 +357,7 @@
 	/////////////
 
 	//근태확인 버튼
-	$('#btn_wt').on('click', function () {
+	document.getElementById('btn_wt').addEventListener('click', function () {
 			const currentday = new Date();
 			console.log('근태cday', currentday);
 			const day = currentday.getDate();
@@ -954,7 +954,6 @@
 								}); 
 							}
 						});
-						
 					}
 				},
 				error:function(xhr,status,error){
@@ -966,7 +965,45 @@
 		}
 	});
 	  
-	
+	document.getElementById('btn_send').addEventListener('click', function () {
+		const prid = Number(grid.getData()[0].PR_ID);
+		console.log('너 숫자아냐?',typeof prid)
+		$.ajax({
+			url:"/sendpr",
+			method:"POST",
+			contentType:"application/json",
+			data: JSON.stringify({prid:prid}),
+			beforeSend:function(xhr){
+				xhr.setRequestHeader(header,token);
+	            $("#loadingSpinner").show();
+			},
+			success:function(data){
+				console.log("급여이체",data);
+				if(data == grid.getData().length){
+					Swal.fire({
+						title: `총 ${data}건 이체 되었습니다.`,
+						icon: "success"
+					});
+				}else{
+					Swal.fire({
+						title: `${data-grid.getData().length}건이 이체 되지 않았습니다.`,
+						text: `이체 여부를 확인해 주세요.`,
+						icon: "warning"
+					});
+				};
+			},
+			error:function(xhr,state,error){
+				console.log("급여 이체에 실패했습니다.",error);
+				Swal.fire({
+					title: "이체에 실패했습니다.",
+					icon: "error"
+				});
+			},							
+			complete: function () {
+	            $("#loadingSpinner").hide();
+	        }
+		}); 
+	})
 	  //////////////////
 	 // 카드 크기 설정 //
 	//////////////////
