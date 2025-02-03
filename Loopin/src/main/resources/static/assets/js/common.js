@@ -11,9 +11,12 @@ function showAlert(element, icon, title, msg) {
 	    icon: icon,
 	    title: title,
 	    html: msg,
-	}).then(() => {
-	    if(element) {
-	        element.focus();
+	    didClose: () => {
+	        if (element) {
+	            setTimeout(() => {
+	                element.focus();
+	            }, 0);
+	        }
 	    }
 	});
 	
@@ -35,9 +38,12 @@ function showToast(element, icon, title, msg) {
         html: msg,
         showConfirmButton: false,
         timer: 1500,
-    }).then(() => {
-	    if(element) {
-	        element.focus();
+		didClose: () => {
+	        if (element) {
+	            setTimeout(() => {
+	                element.focus();
+	            }, 0);
+	        }
 	    }
 	});
 }
@@ -158,9 +164,20 @@ function setElementHeight(el, height) {
  */
 function setGridHeight(grid, height) {
 	const newHeight = window.innerHeight + height; // offset은 음수값
-	console.log(newHeight);
     grid.setBodyHeight(newHeight);
 }
+
+/**
+ * 그리드 영역 너비 지정
+ * @param {*} grid 그리드 객체
+ * @param {number} width 부모 요소에서 뺄 너비
+ */
+function setGridWidth(grid, width) {
+	const newWidth = $(grid.el).parent().width() + width;
+    grid.setWidth(newWidth);
+}
+
+
 
 /**
  * 인풋을 hh:mm:ss 형식으로 입력
@@ -322,6 +339,26 @@ function gridExcelDownload(grid, title) {
 }
 
 /**
+ * 검색 모듈에 엑셀버튼 추가
+ * @param {*} grid 그리드 겍체
+ * @param {String} title 엑셀 파일명
+ */
+function addExcelButton(grid, title) {
+    const resetFilter = $('#resetFilter');
+    if (!$('#btn_excel_download').length && resetFilter.length) {
+        const excelBtn = $('<button>', {
+            id: 'btn_excel_download',
+            class: 'btn btn-primary me-2',
+            text: '엑셀'
+        }).on('click', () => {
+            gridExcelDownload(grid, title);
+        });
+        
+        resetFilter.before(excelBtn);
+    }
+}
+
+/**
  * ajax post 요청을 Promise로 처리하는 함수
  * @param {string} url - 요청 url
  * @param {Object} jsonData - JSON 데이터
@@ -372,3 +409,99 @@ function callAjaxGet(url, jsonData) {
     });
 }
 
+/**
+ * 공통코드 조회
+ * @param {string} codes - 공통코드 조회할 가변 문자열
+ * @returns {*} 응답 데이터
+ */
+async function getCommonList(...codes) {
+	let data = {
+		list: codes
+	};
+	let jsonData = JSON.stringify(data);
+	try {
+	    let ajaxData = await callAjaxPost('/select_COMMON_list', jsonData);
+		return ajaxData['commonList'];
+	} catch (error) {
+		console.log(error.msg);
+		return null;
+	}
+}
+
+/**
+ * 공통코드 -> 필터 리스트 변환
+ * @param {string} commonCode - 공통코드 리스트
+ * @returns {*} 필터 리스트
+ */
+function setFilterList(commonCode) {
+    if (!commonCode || !Array.isArray(commonCode)) return [];
+    
+    return commonCode.map((item, index) => ({
+        value: item.common_cc,
+        text: item.common_nm,
+        checked: index == 0 ? 'checked' : ''
+    }));
+}
+
+/**
+ * 인풋 길이 체크
+ * @param {string} selector 체크할 요소명
+ * @param {int} maxBytes 최대 바이트 수
+ * @returns {boolean} 
+ */
+function byteCheck(selector, maxBytes) {
+    let element = $(selector);
+    let text = element.val();
+    let encoder = new TextEncoder();
+    let byteLength = encoder.encode(text).length;
+    if(byteLength > maxBytes) {
+        let cutText = '';
+        for(let i = 0; i < text.length; i++) {
+            let char = text.slice(0, i + 1);
+            let charByteLength = encoder.encode(char).length;
+            
+            if (charByteLength > maxBytes) break;
+            
+            cutText = char;
+        }
+        
+        element.val(cutText);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 그리드 검증 체크
+ * @param {*} grid - 그리드 객체
+ * @returns {boolean} 검증 통과 시 true
+ */
+function gridValidationCheck(grid) {
+	const ERROR_MESSAGES = {
+	    'REGEXP': '올바른 형식이 아닙니다.',
+	    'REQUIRED': '입력해주세요.',
+	    'NUMBER': '숫자만 입력 가능합니다.',
+	    'MIN': '최소값보다 작습니다.',
+	    'MAX': '최대값보다 큽니다.'
+	};
+	const getErrorMessage = (errorType, rowKey, header) => {
+	    return `${rowKey + 1}행의 ${header}은(는) ${ERROR_MESSAGES[errorType]}`;
+	};
+    const validationResult = grid.validate();
+    
+    for (const row of validationResult) {
+        const rowKey = row['rowKey'];
+        
+        for (const cell of row.errors) {
+            const column = grid.getColumns().find(col => col['name'] == cell.columnName);
+            const header = column['header'];
+            const errorType = cell.errorCode[0];
+            
+            const msg = getErrorMessage(errorType, rowKey, header);
+            showAlert('', 'error', '입력 체크', msg);
+            grid.focus(rowKey, cell.columnName);
+            return false;
+        }
+    }
+    return true;
+}

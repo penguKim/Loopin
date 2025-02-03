@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +30,7 @@ public class CommonController {
 	private final CommonService commonService;
 	private final UtilService util;
 
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN')")
 	@GetMapping("common_code")
 	public String common_code() {
 		
@@ -105,7 +107,24 @@ public class CommonController {
 	}
 
 	
+	@ResponseBody
+	@PostMapping("/select_COMMON_list")
+	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody Common_code_listDTO commonDTO) {
+		System.out.println("코드들은 : " + commonDTO.getList());
+		Map<String, Object> response = new HashMap<>(); 
+		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(commonDTO.getList());
+		log.info(commonList.toString());
 
+		if(commonList.size() > 0) {
+			response.put("commonList", commonList);
+			
+			return ResponseEntity.ok(response);
+		} else {
+			response.put("msg", "조회에 실패했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
 
 	
 	

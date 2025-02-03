@@ -210,26 +210,6 @@ public class CommuteController {
 	}
 	
 	
-	@ResponseBody
-	@PostMapping("/select_COMMON_list")
-	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody List<String> list) {
-		
-		Map<String, Object> response = new HashMap<>(); 
-		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(list);
-		log.info(commonList.toString());
-
-		if(commonList.size() > 0) {
-			response.put("result", true);
-			response.put("list", commonList);
-			
-			return ResponseEntity.ok(response);
-		} else {
-			response.put("result", false);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
-		
-	}
-	
 	// 근로 관리 --------------------------------------------
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_AT_ADMIN')")
 	@GetMapping("/commute_type")

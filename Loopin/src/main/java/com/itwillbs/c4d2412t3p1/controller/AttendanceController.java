@@ -232,6 +232,8 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		
+		
+		
 	}
 	
 	@LogActivity(value = "입력", action = "회사휴일등록")
