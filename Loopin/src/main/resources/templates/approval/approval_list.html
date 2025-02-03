@@ -983,7 +983,7 @@
 						container: '#startpicker-container-leave', // 시작일 선택기 컨테이너
 					},
 					endpicker: {
-						date: oneMonthLater,
+						date: today,
 						input: '#leave_end_date', // 휴가 종료일 입력 필드
 						container: '#endpicker-container-leave', // 종료일 선택기 컨테이너
 					},
@@ -995,7 +995,7 @@
 				});
 
 				leaveDatePicker.setStartDate(today);
-				leaveDatePicker.setEndDate(oneMonthLater);
+				leaveDatePicker.setEndDate(today);
 
 
 				// 휴가 시작일 변경 이벤트
