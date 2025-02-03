@@ -563,6 +563,9 @@
 				case '수정':
 					console.log('수정 모드 실행');
 					$('.modal-title').text('휴가 신청서 수정');
+					// 기존 결재 구분 값 hidden input에 설정
+					console.log("수정 모드 실행: 기존 approval_dv 값 (코드값) : " + rowData.approval_dv_cc);
+				    $('#selected_dv').val(rowData.approval_dv_cc);
 					$('#leave_submit_button').text('수정').show();
 					$('#approval_buttons').html(''); // 승인/반려 버튼 제거
 					setFormData(rowData, false); // 수정 모드로 데이터 설정
@@ -595,40 +598,6 @@
 			const modalInstance = new bootstrap.Modal($('#modal_leave_request')[0]);
 			modalInstance.show();
 
-// 			if (mode === '수정') {
-// 				// 폼 제출 이벤트 등록 (수정용)
-// 				$('#leave_request_form').off('submit').on('submit', function (event) {
-// 					event.preventDefault();
-
-// 					const formData = new FormData(this);
-
-// 					const firstApproverVal = $('#first_approver').val();
-// 					const firstApproverCd = firstApproverVal.match(/\(([^)]+)\)/)?.[1];
-
-// 					const secondApproverVal = $('#second_approver').val();
-// 					const secondApproverCd = secondApproverVal.match(/\(([^)]+)\)/)?.[1];
-
-// 					formData.append('approval_fa', firstApproverCd);
-// 					formData.append('approval_sa', secondApproverCd);
-
-// 					$.ajax({
-// 						url: '/update_APPROVAL', // 수정용 API 엔드포인트
-// 						method: 'POST',
-// 						data: formData,
-// 						processData: false,
-// 						contentType: false,
-// 						success: function () {
-// 							alert('수정이 완료되었습니다.');
-// 							modalInstance.hide();
-// 							grid.reloadData();
-// 						},
-// 						error: function (error) {
-// 							console.error('수정 중 오류 발생:', error);
-// 							alert('수정 중 오류가 발생했습니다.');
-// 						},
-// 					});
-// 				});
-// 			}
 		}
 
 		// 폼 데이터 설정 함수
@@ -1132,7 +1101,6 @@
 
 			const formData = new FormData(); // FormData 객체 생성
 			const mode = $('#leave_submit_button').text().trim(); // 등록/수정 모드 확인
-			const url = mode === '등록' ? '/insert_APPROVAL' : '/update_APPROVAL';
 
 			const firstApproverVal = $('#first_approver').val();
 			const secondApproverVal = $('#second_approver').val();
@@ -1178,7 +1146,7 @@
 
 			// AJAX 요청
 			$.ajax({
-				url: url,
+				url: '/save_APPROVAL',
 				method: 'POST',
 				processData: false,
 				contentType: false,

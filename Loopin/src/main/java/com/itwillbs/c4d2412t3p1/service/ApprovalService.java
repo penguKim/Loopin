@@ -113,6 +113,7 @@ public class ApprovalService {
 			// 기안서 구분(DRAFT) 공통 코드 이름으로 변환
 			String draftName = draftCodes.getOrDefault(approval.getApproval_dv(), "Unknown");
 			row.put("approval_dv", draftName);
+			row.put("approval_dv_cc", approval.getApproval_dv());
 
 			// 결재 상태(APPROVAL) 공통 코드 이름으로 변환
 			String approvalName = approvalCodes.getOrDefault(approval.getApproval_av(), "Unknown");
@@ -133,7 +134,7 @@ public class ApprovalService {
 	}
 
 	@Transactional
-	public void handleApprovalInsert(ApprovalDTO approvalDTO) {
+	public void handleApproval(ApprovalDTO approvalDTO) {
 		// 1. 휴가 신청서 삽입
 		if (approvalDTO.getApproval_cd() == null) {
 			insert_APPROVAL(approvalDTO);
