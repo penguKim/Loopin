@@ -13,7 +13,7 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface PRMapper {
 
-	List<Employee>select_empworklastmth();
+	List<Map<String, Object>> select_empworklastmth();
 	
 	List<Map<String, Object>>select_wokringtimeformth(@Param("employee_cdList") List<String> employee_cdList);
 	
@@ -34,8 +34,10 @@ public interface PRMapper {
 
 	String isCal(String premth);
 
-	List<Employee> select_spes(String premth);
+	List<Map<String, Object>> select_spes(String premth);
 	
 	Map<String, Object> getwt(@Param("employee_cdList") List<String> employee_cdList, @Param("prwm") String prwm, @Param("prwmyear") String prwmyear);
+
+	List<Map<String, Object>> select_prmodaldata(@Param("empcd")String empcd,@Param("prid") Long prid);
 
 }

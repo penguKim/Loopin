@@ -129,9 +129,10 @@ public class PRController {
 
 	@GetMapping("/getempandbs")
 	@ResponseBody
-	public List<Employee> getempandbs(@RequestParam("premth") String premth) {
+	public List<Map<String, Object>> getempandbs(@RequestParam("premth") String premth) {
 		
-		List<Employee> list = prS.select_empworklastmth(premth);
+		List<Map<String, Object>> list = prS.select_empworklastmth(premth);
+//		List<Employee> list = prS.select_empworklastmth(premth);
 		
 		return list;
 	}
@@ -168,8 +169,21 @@ public class PRController {
 	@ResponseBody
 	public List<Map<String, Object>> getwt(@RequestBody List<PR_calculationMDTO> calbndata ) throws ScriptException {
 		
-		List<Map<String, Object>> list = prS.select_worktimeforbn(calbndata);
+//		if(calbndata.get(0).getPdid().size() == 1) {
+//			List<Map<String, Object>> list = prS.select_givebnone(calbndata);
+//			return list;
+//		}else {
+			List<Map<String, Object>> list = prS.select_worktimeforbn(calbndata);
+			return list;
+//		}
+	}
+	
+	@GetMapping("/getempprdata")
+	@ResponseBody
+	public List<Map<String, Object>> getMethodName(@RequestParam("empcd") String empcd, @RequestParam("prid") Long prid) {
 		
+		List<Map<String, Object>> list = prS.select_prmodaldata(empcd,prid);
 		return list;
 	}
+	
 }

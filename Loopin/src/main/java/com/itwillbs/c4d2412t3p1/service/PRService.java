@@ -255,14 +255,14 @@ public class PRService {
 	    }
 	}
 
-	public List<Employee> select_empworklastmth(String premth) {
+	public List<Map<String, Object>> select_empworklastmth(String premth) {
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@premth: "+premth);
 		String iscal = prM.isCal(premth);
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@iscal: "+iscal);
 		if(iscal != null && iscal.equals(premth)) {
 			return prM.select_spes(premth);
 		}else {
-			List<Employee> list = prM.select_empworklastmth();
+			List<Map<String, Object>> list = prM.select_empworklastmth();
 			return list;
 		}
 	}
@@ -420,6 +420,7 @@ public class PRService {
 	        calculatedMap.put("td", calculatedSalary.get(0).getTD());
 	        calculatedMap.put("rs", calculatedSalary.get(0).getRS());
 	        calculatedMap.put("calculated", calculatedSalary.get(0).getCalculated());
+//	        calculatedMap.put("calculated", prdetail.getPrdetail_bn());     // 이렇게 풀어서 보내주면 프론트에서 js로 데이터 전처리가 필요없다. > 묶어서 계산한거에 익숙해져서 풀어보내줄수있다는걸 생각하지 못함,, 나중에 시간되면 풀어서 보내주고 js고치기.
 	        
 	        result.add(calculatedMap);
 	    }
@@ -467,18 +468,40 @@ public class PRService {
 			
 			String[] prwms = prlist.get().getPr_wm().split("-");
 			String prwmyear = prwms[0];
-			String prwm = prwms[1];
+			String premth = prwms[1];
 			
 			for(String pd : pdids) {
 				Long pdid = Long.parseLong(pd);
 				System.out.println("~~~~pdid : "+pdid);
 				Optional<PRDetail> pdlist = prdRep.findById(pdid);
+				if(pdids.size() == 1) {
+					totalempta = prlist.get().getPr_ta().subtract(pdlist.get().getPrdetail_ta());
+					totalemptd = prlist.get().getPr_td().subtract(pdlist.get().getPrdetail_td());
+					totalempns = prlist.get().getPr_ns().subtract(pdlist.get().getPrdetail_rs());
+				}
 				System.out.println("~~~~pdlist : "+pdlist);
 				List<String> employee_cdList = new ArrayList<>();
 				employee_cdList.add(pdlist.get().getEmployee_cd());
-				Map<String, Object> test = prM.getwt(employee_cdList, prwm, prwmyear);
-				System.out.println("@@@@@@test : "+test);
-				System.out.println("@@@@@@test : "+test.get("NIGHTWORKINGTIME").getClass().getName());
+				Map<String, Object> getwtemp = prM.getwt(employee_cdList, premth, prwmyear);
+				System.out.println("@@@@@@getwtemp : "+getwtemp);
+				System.out.println("@@@@@@getwtemp : "+getwtemp.get("NIGHTWORKINGTIME").getClass().getName());
+				
+				String employee_cd = pdlist.get().getEmployee_cd();
+				String employee_nm = pdlist.get().getEmployee_nm();
+				String BS = pdlist.get().getPrdetail_bs().multiply(new BigDecimal(12)).toString();
+				String workingtime = getwtemp.get("WORKINGTIME").toString();
+				String overworkingtime = getwtemp.get("OVERWORKINGTIME").toString();
+				String nightworkingtime = getwtemp.get("NIGHTWORKINGTIME").toString();
+				String weekendworkingtime = getwtemp.get("WEEKENDWORKINGTIME").toString();
+				String holydayworkingtime = getwtemp.get("HOLYDAYWORKINGTIME").toString();
+				String remainleave = getwtemp.get("ANNUAL_RA") == null ? "0" : getwtemp.get("ANNUAL_RA").toString();
+				String bonus = null;
+				
+				if(pdids.size() ==1) {
+					bonus = bn;
+				}else {
+					bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
+				}
 				
 				Map<String, Consumer<BigDecimal>> prDetailMap = new HashMap<>();
 				prDetailMap.put("BS", updatepd::setPrdetail_bs);
@@ -493,17 +516,6 @@ public class PRService {
 				prDetailMap.put("D_GM", updatepd::setPrdetail_gm);
 				prDetailMap.put("D_GY", updatepd::setPrdetail_gy);
 				prDetailMap.put("D_LG", updatepd::setPrdetail_lg);
-
-				String employee_cd = pdlist.get().getEmployee_cd();
-				String employee_nm = pdlist.get().getEmployee_nm();
-				String BS = pdlist.get().getPrdetail_bs().toString();
-				String workingtime = test.get("WORKINGTIME").toString();
-				String overworkingtime = test.get("OVERWORKINGTIME").toString();
-				String nightworkingtime = test.get("NIGHTWORKINGTIME").toString();
-				String weekendworkingtime = test.get("WEEKENDWORKINGTIME").toString();
-				String holydayworkingtime = test.get("HOLYDAYWORKINGTIME").toString();
-				String remainleave = test.get("ANNUAL_RA") == null ? "0" : test.get("ANNUAL_RA").toString();
-				String bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
 				
 				List<PRDTO> cal = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
 				totalempta = totalempta.add(cal.get(0).getTA());
@@ -524,6 +536,7 @@ public class PRService {
 				        setter.accept(pc.getAmount());
 				    }
 				}
+				
 				prdRep.save(updatepd);
 				
 				Map<String, Object> calculatedMap = new HashMap<>();
@@ -549,6 +562,7 @@ public class PRService {
 		        
 		        result.add(calculatedMap);
 			}
+		
 			
 			updatepr.setPr_gm(prlist.get().getPr_gm());
 			updatepr.setPr_id(prid);
@@ -560,13 +574,64 @@ public class PRService {
 			updatepr.setPr_wr(prlist.get().getPr_wr());
 			updatepr.setPr_wm(prlist.get().getPr_wm());
 			prRep.save(updatepr);
-			
-			return result;
-			
+			if(pdids.size() != 1) {
+				System.out.println("----------- 전체상여계산");
+				return result;
+			}else {
+				System.out.println("----------- 개인상여계산");
+				return prM.select_spes(prlist.get().getPr_wm()); 
+			}
 		}else { // 추가 코드 수정 > 근태마감할때 
 			
+			return null;
 		}
+	}
+
+	public List<Map<String, Object>> select_givebnone(List<PR_calculationMDTO> calbndata) {
+
+//		 사원 한명 값 계산 다시 해서 업데이트하고 그 후 모든 데이터 넘겨주기
+		PR updatepr = new PR();
+		PRDetail updatepd = new PRDetail();
+		
+		Long prid = calbndata.get(0).getPrid();
+		Long pdid = Long.parseLong(calbndata.get(0).getPdid().get(0));
+		String bn = calbndata.get(0).getBonus();
+		
+//		1. 사원 한명의 근태&pd값 다 들고오기 & 해당월의 pr값도 들고오기
+		Optional<PR> prlist = prRep.findById(prid);
+		Optional<PRDetail> pdlist = prdRep.findById(pdid);
+		List<String> employee_cdList = new ArrayList<>();
+		employee_cdList.add(pdlist.get().getEmployee_cd());
+		String[] prwms = prlist.get().getPr_wm().split("-");
+		String prwmyear = prwms[0];
+		String prwm = prwms[1];
+		Map<String, Object> getwtemp = prM.getwt(employee_cdList, prwm, prwmyear);
+//		2. 기존 pr값의 ta td ns 다 사원의 값을 빼기
+		BigDecimal beforeta = prlist.get().getPr_ta().subtract(pdlist.get().getPrdetail_ta());
+		BigDecimal beforetd = prlist.get().getPr_td().subtract(pdlist.get().getPrdetail_td());
+		BigDecimal beforens = prlist.get().getPr_ns().subtract(pdlist.get().getPrdetail_rs());
+		
+//		3. 기존 bn값에 추가로 주는 bn추가해서 급여계산 다시하고 pd업데이트
+		String employee_cd = pdlist.get().getEmployee_cd();
+		String employee_nm = pdlist.get().getEmployee_nm();
+		String BS = pdlist.get().getPrdetail_bs().multiply(new BigDecimal(12)).toString();
+		String workingtime = getwtemp.get("WORKINGTIME").toString();
+		String overworkingtime = getwtemp.get("OVERWORKINGTIME").toString();
+		String nightworkingtime = getwtemp.get("NIGHTWORKINGTIME").toString();
+		String weekendworkingtime = getwtemp.get("WEEKENDWORKINGTIME").toString();
+		String holydayworkingtime = getwtemp.get("HOLYDAYWORKINGTIME").toString();
+		String remainleave = getwtemp.get("ANNUAL_RA") == null ? "0" : getwtemp.get("ANNUAL_RA").toString();
+		String bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
+		
+//		4. 2의 pr값에 새로 계산된 ta,td,ns 더해서 pr업데이트
+		
 		return null;
+	}
+
+
+	public List<Map<String, Object>> select_prmodaldata(String empcd, Long prid) {
+
+		return prM.select_prmodaldata(empcd,prid);
 	}
 
 }

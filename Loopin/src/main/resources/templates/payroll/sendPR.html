@@ -31,7 +31,7 @@
 						</div>
 						</div>
 						<div id="grid" class="p-1"></div>
-						<div class="d-flex justify-content-end align-items-end p-1">
+						<div class="card-footer d-flex justify-content-end align-items-end p-1">
 							<input type="button" id="btn_send" class="btn btn-primary ml-3" value="이체하기">
 						</div>
 					</div>
@@ -612,7 +612,6 @@
 				//debugger
 				if(iscaldata !== ""){
 					// 상여계산 시작
-					// 이제 모달뜨고, 받은값 + 그리드값으로 공제만 계산다시한후 저장 
 					const modalid = 'bnmodal';
 					let modalEl = document.getElementById(modalid);
 						
@@ -724,6 +723,249 @@
 		});
 	});
 	
+	  //////////////////
+	 // 사원 개별 상여 //
+	//////////////////
+	  
+	grid.on('click', function(e){
+		const eRowKey = e.rowKey;
+		console.log('e',e);
+		if(eRowKey != null){
+			const selrowdata = grid.getData().find(row => row.rowKey === eRowKey);
+			console.log('rowdata',selrowdata);
+			const selempcd = selrowdata.EMPLOYEE_CD;
+			const selprid = selrowdata.PR_ID;
+			$.ajax({
+				url:"/getempprdata",
+				method:"GET",
+				data:{prid:selprid,empcd:selempcd},
+				success:function(data){
+					console.log("급여기본정보",data);
+					if(data != null){
+						const modalid = 'prmodal';
+						let modalEl = document.getElementById(modalid);
+							
+						if (!modalEl) {
+							const modalHtml = `
+							<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false">
+				                <div class="modal-dialog modal-dialog-centered modal-lg">
+				                  <div class="modal-content">
+				                    <div class="modal-header">
+				                      <h5 class="modal-title"> ${selrowdata.EMPLOYEE_NM} 급여정보</h5>
+				                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				                    </div>
+				                    <div class="modal-body">
+				                    
+				                    	<form class="row g-3">
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">예금주</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_DT" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">은행</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_BK" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">계좌</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_AN" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-6">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">기본급</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_BS" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">식대</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_MT" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">연장수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_OT" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">야근수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_NA" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">주말수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_WA" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">휴일수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_HA" disabled>
+							                    </div>
+				                   			</div>
+		                    				<div class="col-md-6">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">상여</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_BN">
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">연차수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_RL" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">국민연금</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GM" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">고용보험</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GY" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">건강보험</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GG" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">장기요양</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_LG" disabled>
+							                    </div>
+				                   			</div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">총지급액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_TA" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">총공제액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_TD" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">실지급액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_RS" disabled>
+							                    </div>
+						                    </div>
+				                    	</form>
+				                    </div>
+				                    <div class="modal-footer">
+				                      <button type="button" class="btn btn-primary btn_bg" id="btn_save">저장하기</button>
+				                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+				                    </div>
+				                  </div>
+				                </div>
+				              </div>`;
+							document.body.insertAdjacentHTML('beforeend', modalHtml);
+							modalEl = document.getElementById(modalid);
+						}
+							
+						modalEl.addEventListener('hidden.bs.modal', function () {
+							modalEl.remove();
+							console.log('사원 급여정보 모달이 닫히고 삭제되었습니다.');
+						});
+				        document.getElementById('EMPLOYEE_DT').value = data[0].EMPLOYEE_DT;
+			            document.getElementById('EMPLOYEE_BK').value = data[0].EMPLOYEE_BK;
+			            document.getElementById('EMPLOYEE_AN').value = data[0].EMPLOYEE_AN;
+			            document.getElementById('PRDETAIL_BS').value = `${data[0].PRDETAIL_BS.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_MT').value = `${data[0].PRDETAIL_MT.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_OT').value = `${data[0].PRDETAIL_OT.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_NA').value = `${data[0].PRDETAIL_NA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_WA').value = `${data[0].PRDETAIL_WA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_HA').value = `${data[0].PRDETAIL_HA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_BN').value = `${data[0].PRDETAIL_BN.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_RL').value = `${data[0].PRDETAIL_RL.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GM').value = `${data[0].PRDETAIL_GM.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GY').value = `${data[0].PRDETAIL_GY.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GG').value = `${data[0].PRDETAIL_GG.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_LG').value = `${data[0].PRDETAIL_LG.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_TA').value = `${data[0].PRDETAIL_TA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_TD').value = `${data[0].PRDETAIL_TD.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_RS').value = `${data[0].PRDETAIL_RS.toLocaleString('kr-KR')}원`;
+						
+						const modal = new bootstrap.Modal(modalEl);
+						modal.show();
+						
+						const amountInput = document.getElementById('PRDETAIL_BN');
+						console.log('확인',amountInput);
+						
+						amountInput.addEventListener('input', function (e) {
+						    let value = e.target.value;
+						    
+						    // 쉼표를 제거한 후 숫자만 남기기
+						    value = value.replace(/,/g, ''); // 쉼표 제거
+						    
+						    // 숫자로 변환 (NaN을 방지)
+						    if (!isNaN(value) && value.trim() !== '') {
+						        // 숫자에 천 단위 구분 쉼표 추가
+						        e.target.value = Number(value).toLocaleString('kr-KR');
+						    } else {
+						        // 입력 값이 숫자가 아닌 경우에는 빈 문자열로 처리
+						        e.target.value = '';
+						    }
+						});
+						
+						amountInput.addEventListener('blur',function(e){
+						    // "원"이 이미 끝에 있는지 확인
+						    if (!e.target.value.endsWith('원')) {
+						        // "원"이 없으면 추가
+						        e.target.value = e.target.value + '원';
+						    }
+						});
+						
+						document.getElementById("btn_save").addEventListener("click", function(e) {
+						    console.log("저장 버튼이 클릭되었습니다.");
+							
+							const calbnData = {
+									prid: data[0].PR_ID,
+						            pdid: [data[0].PRDETAIL_ID],
+						            bonus: Number(amountInput.value.replace(/,/g,'').replace('원', ''))
+							} 
+							console.log('calbn',calbnData);
+							if(amountInput.value.replace(/,/g,'').replace('원', '') == data[0].PRDETAIL_BN){
+								modal.hide();
+								Swal.fire({
+									title: "변경사항 없이 저장되었습니다.",
+									icon: "success"
+								});
+							}else{
+							    $.ajax({
+									url:"/calwbn",
+									method:"POST",
+									contentType:"application/json",
+									data: JSON.stringify([calbnData]),
+									beforeSend:function(xhr){
+										xhr.setRequestHeader(header,token);
+							            $("#loadingSpinner").show();
+									},
+									success:function(calbndata){
+										console.log("상여계산",calbndata);
+										grid.resetData(calbndata);
+										Swal.fire({
+											title: "저장되었습니다.",
+											icon: "success"
+										});
+										modal.hide();
+									},
+									error:function(xhr,state,error){
+										console.log("상여 계산에 실패했습니다.",error);
+									},							
+									complete: function () {
+							            $("#loadingSpinner").hide();
+							        }
+								}); 
+							}
+						});
+						
+					}
+				},
+				error:function(xhr,status,error){
+					console.log("사원 급여정보 조회에 실패했습니다.",error);
+				}
+			});
+			
+			
+		}
+	});
+	  
 	
 	  //////////////////
 	 // 카드 크기 설정 //

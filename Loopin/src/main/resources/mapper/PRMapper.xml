@@ -203,6 +203,17 @@
 	    GROUP BY cm.EMPLOYEE_CD, ep.EMPLOYEE_NM
 	</select>
 
+	<select id="select_prmodaldata" resultType="map">
+		SELECT 
+			ep.EMPLOYEE_DT,
+			ep.EMPLOYEE_BK,
+			ep.EMPLOYEE_AN,
+			pd.*
+		FROM EMPLOYEE ep
+		JOIN PRDETAIL pd ON ep.EMPLOYEE_CD = pd.EMPLOYEE_CD 
+		WHERE pd.PR_ID = #{prid}
+			AND ep.EMPLOYEE_CD = #{empcd}
+	</select>	
 	
 </mapper>
     
