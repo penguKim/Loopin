@@ -56,7 +56,7 @@ public class Employee {
     @Column(name = "employee_id", unique = true, length = 16)
     private String employee_id;
     
-    @Column(name = "employee_pw", length = 16)
+    @Column(name = "employee_pw", length = 255)
     private String employee_pw;
 
     @Column(name = "employee_dp", length = 10)
@@ -137,9 +137,6 @@ public class Employee {
     @Column(name = "workinghour_id")
     private String workinghour_id;
 
-    @OneToMany(mappedBy = "employee") // NOTICE 엔티티의 employee 필드와 매핑
-    private List<Notice> notices;
-	
 	// 생성자
 	public Employee() {
 	}

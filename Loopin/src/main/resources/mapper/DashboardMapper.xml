@@ -5,13 +5,56 @@
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.DashboardMapper">
     
     <select id="select_total_EMPLOYEE" resultType="map">
-		 SELECT e.*, a.*, c.*, w.WORKINGHOUR_WT, w.WORKINGHOUR_LT 
-		   FROM EMPLOYEE e
-LEFT OUTER JOIN ANNUAL a ON e.EMPLOYEE_CD = a.EMPLOYEE_CD AND ANNUAL_YR = TO_CHAR(SYSDATE, 'YYYY')
-	  LEFT JOIN COMMON_CODE c ON e.EMPLOYEE_DP = c.COMMON_CC AND c.COMMON_GC = 'DEPARTMENT'
-	  LEFT JOIN WORKINGHOUR w ON e.WORKINGHOUR_ID = w.WORKINGHOUR_ID
-		  WHERE e.EMPLOYEE_CD = #{currentCd}
-			   
+		SELECT e.*, a.*, c.*, w.WORKINGHOUR_WT, w.WORKINGHOUR_LT--, ap.APPROVAL_TT
+		  FROM EMPLOYEE e
+	LEFT OUTER JOIN ANNUAL a 
+	        ON e.EMPLOYEE_CD = a.EMPLOYEE_CD 
+	       AND ANNUAL_YR = TO_CHAR(SYSDATE, 'YYYY')
+		  LEFT JOIN COMMON_CODE c 
+		    ON e.EMPLOYEE_DP = c.COMMON_CC 
+		   AND c.COMMON_GC = 'DEPARTMENT'
+		  LEFT JOIN WORKINGHOUR w 
+		    ON e.WORKINGHOUR_ID = w.WORKINGHOUR_ID
+		 WHERE e.EMPLOYEE_CD = #{currentCd}
+	</select>
+	
+    <select id="select_EMPLOYEE_APPROVAL" resultType="map">
+		SELECT a.APPROVAL_TT
+			   , a.APPROVAL_WR
+			   , c.COMMON_NM AS APPROVAL_AV
+			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS STARTDAY
+			   , TO_CHAR(TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.endday'), 'YYYY-MM-DD'), 'YYYY-MM-DD') AS ENDDAY	
+			   , TO_CHAR(JSON_VALUE(a.APPROVAL_CT, '$.reason')) AS REASON
+			   , e.EMPLOYEE_NM
+			   , (SELECT COUNT(*) 
+					FROM APPROVAL a
+			   LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
+			   LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
+				   WHERE 1=1
+	 <if test="isAdmin"> AND
+						   (
+							(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
+							OR 
+							(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
+						   )
+	 </if> 
+	<if test="!isAdmin"> AND e.EMPLOYEE_CD = #{currentCd}</if>) AS APPROVAL_COUNT
+		  FROM APPROVAL a
+	 LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
+	 LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
+		 WHERE 1=1
+		 <if test="!isAdmin">
+			   AND e.EMPLOYEE_CD = #{currentCd}
+		 </if>
+		 <if test="isAdmin">
+			   AND
+			   (
+				(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
+				OR 
+				(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
+			   )
+		 </if>
+		 FETCH FIRST 4 ROWS ONLY
 	</select>
 	
     
