@@ -12,7 +12,7 @@ import java.util.Map;
 public interface CommonMapper {
 	
 	// 공통코드 조회
-    List<Common_codeDTO> select_common_code(@Param("code") String code);
+    List<Common_codeDTO> select_common_code(@Param("code") String code, @Param("filter") String filter);
     // 공통코드 리스트 등록
     int insertCommonCode(@Param("code") Common_codeDTO createdRows);
     // 공통코드 리스트 등록

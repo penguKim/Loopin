@@ -45,6 +45,7 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
 			""")
 	List<Object[]> findAllWithDetails();
 
+	
 	// 특정 employee_cd 데이터 조회
 	@Query("""
 			SELECT

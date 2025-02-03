@@ -152,7 +152,6 @@ public class AttendanceController {
 		log.info(holiday_dt1 + holiday_dt2 + " select_period_HOLIDAY 조회 시도");
 		
 		List<Map<String, Object>> list = attendanceService.select_period_HOLIDAY(holiday_dt1, holiday_dt2);
-		log.info(list + " list 값 확인");
 		List<Map<String, Object>> response = list.stream().map(holiday -> {
 	        Map<String, Object> row = new HashMap<>();
 
@@ -213,7 +212,6 @@ public class AttendanceController {
 	@PostMapping("/insert_ANNUAL")
 	public ResponseEntity<Map<String, Object>> insert_ANNUAL(@RequestBody String annual_yr) {
 		
-		log.info("날짜"+annual_yr);
 		
 		List<Map<String, Object>> annuals = attendanceService.select_ATTENDANCE();
 		
@@ -288,19 +286,16 @@ public class AttendanceController {
 	@ResponseBody
 	@PostMapping("/delete_company_HOLIDAY")
 	public Map<String, Object> delete_company_HOLIDAY(@RequestBody List<Map<String, Object>> requestData) {
-	    log.info("요청 데이터: {}" + requestData);
 
 	    // requestData에서 "holiday_dt" 값 추출
 	    List<String> deletedRows = requestData.stream()
 	            .map(row -> (String) row.get("holiday_dt")) // 각 Map에서 "holiday_dt" 값 추출
 	            .collect(Collectors.toList());
-	    log.info("삭제 대상: {}"+ deletedRows);
 
 	    int deleteCount = 0;
 
 	    if (deletedRows != null && !deletedRows.isEmpty()) {
 	        deleteCount = attendanceService.delete_company_HOLIDAY(deletedRows);
-	        log.info("삭제 대상: {}"+ deleteCount);
 	    }
 
 	    Map<String, Object> response = new HashMap<>();
@@ -316,22 +311,21 @@ public class AttendanceController {
 	    return response;
 	}
 	
+	/* TODO
 	@ResponseBody
-	@GetMapping("/select_APPROVAL_ANNUAL")
-	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL() {
+	@PostMapping("/select_APPROVAL_ANNUAL")
+	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL(@RequestBody Map<String, Object> params) {
 		
-		log.info("요청 데이터: {}"+commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
+		EmployeeDetails employee = commuteService.getEmployee();
 		
-		Map<String, Object> params = new HashMap<>(); 
 		
 		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
-		log.info("요청 데이터: {}" + commuteService.getEmployee());
-		params.put("employee_cd", commuteService.getEmployee());
+		params.put("employee_cd", employee.getEmployee_cd());		
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
-			log.info("요청 데이터: {}" + annuals);
+			// TODO
+//			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
 			response.put("result", true);
 			response.put("data", annuals);
 			
@@ -349,7 +343,6 @@ public class AttendanceController {
 		
 		EmployeeDetails employee = commuteService.getEmployee();
 		List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY((String)params.get("holiday_dt1"),(String)params.get("holiday_dt2"));
-		log.info("홀리데이리스트" + holidayList);
 		
 		
 		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
@@ -357,14 +350,11 @@ public class AttendanceController {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			log.info("파람" + params);
 			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
 			
 			response.put("result", true);
 			response.put("holidayList", holidayList);
 			response.put("data", data);
-			//response.put("holidayList", holidayList);
-			log.info("리스트" + response);
 			return ResponseEntity.ok(response);
 			
 		} catch (Exception e) {
@@ -388,13 +378,12 @@ public class AttendanceController {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			log.info("파람" + params);
-			List<Map<String, Object>> data = attendanceService.select_calendar_ANNUAL(params);
-			
+			List<Map<String, Object>> list = attendanceService.select_calendar_ANNUAL(params);
+			Map<String, Object> data = new HashMap<>();
+			data.put("contents", list);
 			response.put("result", true);
 			response.put("data", data);
 			//response.put("holidayList", holidayList);
-			log.info("리스트" + response);
 			return ResponseEntity.ok(response);
 			
 		} catch (Exception e) {
@@ -404,5 +393,5 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	
+	*/
 }

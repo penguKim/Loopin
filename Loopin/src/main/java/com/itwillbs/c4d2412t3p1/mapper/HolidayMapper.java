@@ -28,4 +28,6 @@ public interface HolidayMapper {
     // 휴일 데이터 수정
     void update_company_HOLIDAY(Map<String, String> holiday);
 
+    // 공휴일(유급휴일) 판별
+	boolean isHoliday(String date);
 }

@@ -1138,10 +1138,17 @@
 			const secondApproverVal = $('#second_approver').val();
 			const firstApproverCd = firstApproverVal.match(/\(([^)]+)\)/)?.[1];
 			const secondApproverCd = secondApproverVal?.match(/\(([^)]+)\)/)?.[1];
-
+			
+			// 등록일 경우 approval_cd 초기화
+			let approval_cdVal = $('#approval_cd').val().trim();
+			approval_cdVal = approval_cdVal === '' ? null : approval_cdVal;
+			
+			console.log('approval_cd 값:', $('#approval_cd').val());
+			console.log('mode 값:', mode);
+			
 			// DTO 데이터를 JSON으로 생성
 			const ApprovalDTO = {
-				approval_cd: $('#approval_cd').val(), // 결재 코드
+				approval_cd: approval_cdVal, // 결재 코드
 				approval_sd: $('#approval_sd').val(), // 결재 시작일
 				approval_ed: $('#approval_ed').val(), // 결재 종료일
 				approval_tt: $('#approval_tt').val(), // 제목

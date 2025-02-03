@@ -73,6 +73,7 @@ public class ApprovalController {
 
 		try {
 			// 데이터 저장 처리
+			log.info("approvalDTO : " +  approvalDTO);
 			approvalService.handleApprovalInsert(approvalDTO);
 
 			response.put("message", "데이터가 성공적으로 저장되었습니다.");

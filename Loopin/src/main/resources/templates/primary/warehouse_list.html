@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">창고 관리</h1>
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-3">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, modal_grid, modal;
+	let useList = /*[[${commonList['USE']}]]*/ [];
+	let whtypeList = /*[[${commonList['WHTYPE']}]]*/ [];
+	let modal_warehouse_cd,modal_warehouse_nm, modal_warehouse_tp, modal_warehouse_in, modal_warehouse_us, modal_warehouse_rm;
+	let modalData = {}; // 모달 초기화 시 사용
+	const btn_insert = $('#btn_insert');
+	const btn_delete = $('#btn_delete');
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	const today = new Date();
+	const filterConfig = [
+	    { key: 'warehouse_cd', label: '창고코드', type: 'text', placeholder: '창고코드 입력', col: 'col-2' },
+	    { key: 'warehouse_nm', label: '창고명', type: 'text', placeholder: '창고명 입력', col: 'col-2' },
+	    { key: 'warehouse_tp', label: '창고유형', type: 'select', list: setFilterList(whtypeList), col: 'col-2' },
+	    { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(useList), col: 'col-auto' },
+	];
+	
+
+	// ------------------------------
+	
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		
+		make_grid();
+
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -380);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -380);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+
+		// 검색필터
+		/*
+		(async () => {
+		    commonList = await getCommonList("USE", "USEYN", "WHTYPE");
+		    if(commonList) {
+		        filterConfig = [
+		            { key: 'warehouse_cd', label: '창고코드', type: 'text', placeholder: '창고코드 입력', col: 'col-2' },
+		            { key: 'warehouse_nm', label: '창고명', type: 'text', placeholder: '창고명 입력', col: 'col-2' },
+		            { key: 'warehouse_tp', label: '창고유형', type: 'select', list: setFilterList(commonList['WHTYPE']), col: 'col-2' },
+		            { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(commonList['USE']), col: 'col-auto' },
+		        ];
+		        
+		        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		            // getGridList(filterValues);
+		        });
+				// 엑셀 버튼 추가
+				addExcelButton(grid, '창고관리');
+		    }
+		})();
+		*/
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            getGridList(filterValues);
+        });
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '창고관리');
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -450);
+		    } else {
+		        setGridHeight(grid, -380);
+		    }
+		});
+		
+		// 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		    getGridList(filterValues);
+		});
+		
+		
+		// 등록 모달 클릭
+		btn_insert.on('click', function() {
+			modalData = {};
+			make_modal_detail();
+		});
+
+		// 	창고코드 중복검사	
+		$(document).on('blur', '#modal_warehouse_cd', async function() {
+			if ($('#div_WAREHOUSE_modal').is(':hidden')) {
+			    return;
+			}
+			let warehouse_cd = $(this).val();
+			let jsonData = JSON.stringify({warehouse_cd});
+			let ajaxData = await callAjaxPost('/check_WAREHOUSE_CD', jsonData);
+			if(!ajaxData['result']) {
+				showToast($(this), 'error', ajaxData['title'], ajaxData['msg']);
+				setTimeout(() => {
+			        $(this).val('');
+			    }, 1500);
+			}
+		});
+		
+		// 창고 구역 행 추가
+		$(document).on('click', '#btn_area_add', function() {
+			modal_grid.appendRow(
+			        {
+			            "common_cc": '',
+			            "common_nm": '',
+			            "common_us": '',
+			        },
+			        { focus: true }
+			    );
+		});
+		
+		// 그룹코드 삭제
+		$(document).on('click', '#btn_area_remove', function() {
+			let checkedRows = modal_grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 항목을 체크해주세요.');
+			    return;
+			}
+	    	checkedRows.forEach(row => {
+	    		modal_grid.removeRow(row.rowKey);
+	    	});
+		});
+
+
+
+		
+		// 창고 등록
+		$(document).on('click', '#btn_modal_save', function() {
+			insert_WAREHOUSE();
+		});
+		
+		// 창고 초기화 버튼
+		$(document).on('click', '#btn_modal_reset', function() {
+			if(modalData) {
+				setModalValues(modalData);
+			} else {
+				const modal = $(this).closest('.modal');
+				modal.find('input').val('');
+				modal.find('select').val('');
+			}
+		});
+
+		// 창고 삭제
+		btn_delete.on('click', function() {
+			let checkedRows = grid.getCheckedRows();
+			console.log(checkedRows);
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 창고를 체크해주세요.');
+			    return;
+			}
+			delect_WAREHOUSE(checkedRows);				
+		});
+		
+	});
+	
+
+	// 그리드 생성
+	function make_grid() {
+		const dataSource = {
+		    api: {
+		        readData: {
+		            url: '/select_WAREHOUSE_list',
+		            method: 'POST',
+		            contentType: 'application/json',
+		            headers: {
+		                [header]: token
+		            }
+		        }
+		    }
+		}
+		
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '창고코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
+				{header : '창고명', name : 'warehouse_nm', sortable : true, filter: 'text'},
+				{header : '창고유형', name : 'warehouse_tp', sortable : true, filter: 'text'},
+				{header : '구역수', name : 'wacount', align: 'center', filter: 'text'},
+				{header : '정렬순서', name : 'warehouse_in', align: 'center', sortable : true, filter: 'text'}, 
+				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
+				{header : '사용여부', name : 'warehouse_us', align: 'center', sortable : true, filter: 'select',
+					formatter: function({value}) {
+						return value == true ? '사용' : value == false ? '미사용' : '';
+					}
+				}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	warehouse_us: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+
+		});
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			make_modal_detail('update');
+			setModalInput(row);
+		});
+	}
+	
+	// 그리드 데이터 조회
+	async function getGridList(filter) {
+		let jsonData = JSON.stringify({warehouseFilter: filter});
+		let ajaxData = await callAjaxPost('/select_WAREHOUSE_list', jsonData);
+		grid.resetData(ajaxData.data.contents);
+	}
+	
+	// 상세 모달
+	function make_modal_detail(process) {
+		let text = !process ? '등록' : '수정';
+		let title = `창고 ${text}`;
+		const div_modal = 'div_WAREHOUSE_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+								<label for="modal_warehouse_cd" class="col-2 col-form-label">창고코드<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_cd" ${!process ? '' : 'disabled'}></div>
+								<label for="modal_warehouse_nm" class="col-2 col-form-label">창고명<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_nm"></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_warehouse_tp" class="col-2 col-form-label">창고유형<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_warehouse_tp" class="form-select"></select></div>
+								<label for="modal_warehouse_in" class="col-2 col-form-label">정렬순서<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_in"></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_warehouse_us" class="col-2 col-form-label">사용여부<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_warehouse_us" class="form-select"></select></div>
+								<label for="modal_warehouse_rm" class="col-2 col-form-label">비고</label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_rm"></div>
+							</div>
+							<div class="row mb-3">
+								<div class="d-flex justify-content-between mb-1">
+									<div>구역지정<span class="text-danger">*</span></div>
+									<div>
+										<input type="button" id="btn_area_remove" class="btn btn-primary" value="삭제">
+										<input type="button" id="btn_area_add" class="btn btn-primary" value="행추가">
+									</div>
+								</div>
+								<div id="modal_grid"></div>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
+							<div>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+								<button type="submit" id="btn_modal_save" class="btn btn-primary">${text}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			make_modal_grid();
+			createSelectBox($('#modal_warehouse_tp'), whtypeList, '선택하세요.');
+			createSelectBox($('#modal_warehouse_us'), /*[[${commonList['USEYN']}]]*/ [], '선택하세요.');
+			$('#modal_warehouse_cd').mask('Z'.repeat(10), {
+			        translation: {'Z': {pattern: /[A-Za-z0-9]/}},
+			    })
+			    .on('input', function() {
+			        $(this).val($(this).val().toUpperCase());
+			    });
+			$('#modal_warehouse_in').mask('000');
+			
+			modal_warehouse_cd = $('#modal_warehouse_cd');
+			modal_warehouse_nm = $('#modal_warehouse_nm');
+			modal_warehouse_tp = $('#modal_warehouse_tp');
+			modal_warehouse_in = $('#modal_warehouse_in');
+			modal_warehouse_us = $('#modal_warehouse_us');
+			modal_warehouse_rm = $('#modal_warehouse_rm');
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	
+	// 모달 그리드 생성
+	function make_modal_grid() {
+		
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 200,
+			columns : [
+				{header : '구역코드', name : 'warearea_cd', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+						regExp: /^[^ㄱ-ㅎㅏ-ㅣ가-힣]*$/
+					}},
+				{header : '구역명', name : 'warearea_nm', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+					},
+				},
+				{header : '최대적재량', name : 'warearea_cp', sortable : true, filter: 'text', editor: 'text',
+					validation: {
+						required: true,
+						dataType: 'number',
+						min: 0,
+						regExp: /^\d*$/ // 숫자만 허용
+					}
+				},
+				{header : '정렬순서', name : 'warearea_in', align: 'center', sortable : true, filter: 'text', 
+					editor: 'text',
+					validation: {
+						required: true,
+						dataType: 'number',
+						min: 0,
+						regExp: /^\d*$/ // 숫자만 허용
+					}
+				},
+				{header : '사용여부', name : 'warearea_us', align: 'center', sortable : true, filter: 'select',
+					editor: {
+						type: 'select',
+						options: {
+							listItems : [
+								{text : '사용', value : 'true'},
+								{text : '미사용', value : 'false'}
+							]
+						}
+					},
+					validation: {
+						required: true,
+					},
+					formatter: function({value}) {
+						return value == true ? '사용' : value == false ? '미사용' : '';
+					}
+				}, 
+				{header : '비고', name : 'warearea_rm', sortable : true, filter: 'text', editor: 'text',}
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	warehouse_us: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+
+		});
+		
+		modal_grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			// make_modal_detail('update');
+			// setModalInput(row);
+		});
+	}
+	
+	// 모달 조회
+	async function setModalInput(row) {
+		let data = {
+			warehouse_cd: row['warehouse_cd']
+		}
+		let jsonData = JSON.stringify(data);
+		try {
+		    let ajaxData = await callAjaxPost('/select_WAREHOUSE_detail', jsonData);
+			let warehouse = ajaxData['warehouse'];
+			console.log(ajaxData['wareareaList']);
+			modalData = {
+			    warehouse_cd: warehouse['warehouse_cd'],
+			    warehouse_nm: warehouse['warehouse_nm'],
+			    warehouse_tp: warehouse['warehouse_tp'],
+			    warehouse_in: warehouse['warehouse_in'],
+			    warehouse_us: warehouse['warehouse_us'] == true ? 1 : 0,
+			    warehouse_rm: warehouse['warehouse_rm'],
+				warearea: ajaxData['wareareaList']
+			};
+			
+			setModalValues(modalData);
+		} catch (error) {
+			showAlert('', 'error', '조회 실패', error.msg);
+		}
+	}
+	
+	// 창고 등록
+	async function insert_WAREHOUSE() {
+		const validations = [
+		    { field: modal_warehouse_cd, message: '창고코드를 입력해주세요.' },
+		    { field: modal_warehouse_nm, message: '창고명을 입력해주세요.' },
+		    { field: modal_warehouse_tp, message: '창고유형을 선택해주세요.' },
+		    { field: modal_warehouse_in, message: '정렬순서를 입력해주세요.' },
+		    { field: modal_warehouse_us, message: '사용여부를 선택해주세요.' }
+		];
+		const invalidField = validations.find(v => !v.field.val()?.trim());
+		if(invalidField) {
+		    showAlert(invalidField.field, 'warning', '', invalidField.message);
+		    return;
+		}
+		
+		if(!modal_grid.getData().length) {
+			showAlert('', 'warning', '구역 확인', '최소 1개 이상의 구역을 등록해주세요.');
+			return;
+		}
+		
+		if(!gridValidationCheck(modal_grid)) {
+		    return;
+		}
+
+		if(!await showConfirm(`창고 등록`, `창고를 등록하시겠습니까?`)) {
+			return;
+		}
+		let warehouse = {
+			warehouse_cd: modal_warehouse_cd.val().trim(),
+			warehouse_nm: modal_warehouse_nm.val().trim(),
+			warehouse_tp: modal_warehouse_tp.val(),
+			warehouse_in: modal_warehouse_in.val().trim(),
+			warehouse_us: modal_warehouse_us.val() == 1 ? true : false,
+			warehouse_rm: modal_warehouse_rm.val().trim(),
+		}
+		let wareareaList = modal_grid.getData();
+		let data = {
+			warehouse: warehouse,
+			wareareaList: wareareaList,
+		}
+		
+		let jsonData = JSON.stringify(data);
+		try {
+		    let ajaxData = await callAjaxPost('/insert_WAREHOUSE', jsonData);
+		    // 성공 시 실행되는 코드
+			showAlert('', 'success', '등록 성공', '');
+			grid.resetData(ajaxData['list']);
+			resetSearchInput();
+			modal.hide();
+		} catch (error) {
+			showAlert('', 'error', '등록 실패', error.msg);
+		}
+	}
+	
+	// 창고 삭제
+	async function delect_WAREHOUSE(checkedRows) {
+		if (!await showConfirm(`창고 삭제`, '선택한 창고를 삭제하시겠습니까?')) { 
+			return;
+		}
+		
+		let jsonData = JSON.stringify({warehouseList: checkedRows});
+		let ajaxData = await callAjaxPost('/delete_WAREHOUSE', jsonData);
+		try {
+			grid.resetData(ajaxData['list']);
+			resetSearchInput();
+			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
+		} catch (error) {
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
+	}
+
+	// 인풋 입력
+	function setModalValues(data) {
+	    modal_warehouse_cd.val(data.warehouse_cd);
+	    modal_warehouse_nm.val(data.warehouse_nm);
+	    modal_warehouse_tp.val(data.warehouse_tp);
+	    modal_warehouse_in.val(data.warehouse_in);
+	    modal_warehouse_us.val(data.warehouse_us);
+	    modal_warehouse_rm.val(data.warehouse_rm);
+		modal_grid.resetData(data.warearea);
+	}
+	
+	// 검색 인풋 초기화
+	function resetSearchInput(){
+		$('#warehouse_cd').val('');
+		$('#warehouse_nm').val('');
+		$('#warehouse_tp').val('');
+		setRadioValue('warehouse_us', 'ALL');
+	}
+</script>
+</html>

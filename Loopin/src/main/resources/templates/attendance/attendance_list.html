@@ -37,7 +37,7 @@
 				<div class="col-lg-12">
 					<div class="card" id="div_card" style="min-height: 400px;">
 						<div class="card-body">
-							<h1 class="card-title">휴가조회</h1>
+							<h1 class="card-title">휴가현황</h1>
 							<!-- 탭 헤드 -->
 							<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
 								<li class="nav-item" role="presentation">
@@ -93,18 +93,6 @@
 	const btn_calendar_next = $('#btn_calendar_next');
 	// 관리자인지 확인(권한 설정 후 달라질 수 있음)
 	const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
-	// 필터 항목
-	const filterConfig = [
-		{ key: 'startDate', label: '조회기간 시작일', type: 'datepicker', format: 'YYYY-MM-dd', value: getDate(new Date()) },
-		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(new Date()) },
-		{ key: 'EMPLOYEE_NM', label: '사원명', type: 'text', placeholder: '사원명 입력', col: 'col-3' },
-		{ key: 'EMPLOYEE_DP', label: '부서명', type: 'text', placeholder: '부서명 입력', col: 'col-3' },
-		{ key: 'EMPLOYEE_GD', label: '직위명', type: 'text', placeholder: '직위명 입력', col: 'col-3' },
-		{ key: 'SERVICE_YEARS', label: '근속연수', type: 'text', placeholder: '근속연수 입력', col: 'col-3' },
-		{ key: 'TOTAL_APPROVALS', label: '사용연차', type: 'text', placeholder: '최대 25개', col: 'col-3'},
-		{ key: 'ANNUAL_RA', label: '잔여연차', type: 'text', placeholder: '최대 25개', col: 'col-3'},
-		{ key: 'ANNUAL_AA', label: '총연차', type: 'text', placeholder: '최대 25개', col: 'col-3'},
-	];
 	// ------------------------------
 
 	
@@ -115,28 +103,6 @@
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		make_calendar();
-		
-
-		
-		// 필터 -------------------------
-		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-		    getGridList(filterValues);
-		});
-		$('#commute_wt, #commute_lt').attr('maxlength', 8)
-		$('#commute_wt').on('input', function() {
-			inputTimeFormat(document.querySelector('#commute_wt'));
-		});
-		$('#commute_lt').on('input', function() {
-			inputTimeFormat(document.querySelector('#commute_lt'));
-		});
-		
-		// 필터 엔터키 검색 이벤트
-		$('#filterModule').on('keypress', function(e) {
-		    getGridList(filterValues);
-		});
-
-
-
 		
 		// 달력 ----------------------
 		// 이전 달 보기 이벤트
@@ -216,24 +182,6 @@
 					},
 				},
 			},
-			calendars: [
-				{
-					id: 'cal1',
-					name: '총결원',
-					backgroundColor: '#03bd9e',
-				},
-				{
-					id: 'cal2',
-					name: '휴가자',
-					backgroundColor: '#ffffff',
-					borderLeft: '#ffffff',
-				},
-				{
-					id: 'cal3',
-					name: '출장',
-					backgroundColor: '#ffffff',
-				},
-			]
 		});
 		
 		updateCalendarTitle(); // 년월 타이틀
@@ -278,7 +226,7 @@
 			}),
 			success: function(data) {
 				if(!data['result']) {
-					showAlert('', 'error', '기록부 조회 실패', '기록부 조회에 실패하였습니다.<br>다시 접속해주세요.');
+					showAlert('', 'error', '휴가 조회 실패', '휴가 조회에 실패하였습니다.<br>다시 접속해주세요.');
 				} else {
 					// 캘린더 템플릿 업데이트
 					calendar.setOptions({
@@ -323,7 +271,7 @@
 					    if (isAdmin) {
 					        return {
 					            id: `${annual.GENERATED_DATE}`,
-					            title: `휴가인원 ${annual.RECORD_COUNT}명`,
+					            title: `${annual.EMPLOYEE_NM} ${annual.ANNUALTYPE}`,
 					            start: annual.GENERATED_DATE,
 					            end: annual.GENERATED_DATE,
 					            isAllday: true,
@@ -331,28 +279,15 @@
 					            backgroundColor: '#fff'
 					        };
 					    } 
-						/*
-						else {
-					        let title = '';
-					        if (annual.commute_wt) {
-					            // 출근 시간 포맷팅 (02:01:39 -> 02:01)
-					            const startTime = annual.commute_wt;
-					            title = annual.commute_lt 
-					                ? `${startTime} ~ ${annual.commute_lt}` 
-					                : `${startTime} ~`;
-					        }
-					        
-					        return {
-					            id: `${annual.commute_wd}`,
-					            title: title,
-					            start: annual.commute_wd,
-					            end: annual.commute_wd,
-					            isAllday: true,
-					            category: 'allday',
-					            backgroundColor: '#fff'
-					        };
-					    }
-						*/
+				        return {
+				            id: `${annual.GENERATED_DATE}`,
+				            title: `${annual.ANNUALTYPE}`,
+				            start: annual.GENERATED_DATE,
+				            end: annual.GENERATED_DATE,
+				            isAllday: true,
+				            category: 'allday',
+				            backgroundColor: '#fff'
+				        };
 					});
 					calendar.createEvents(event);
 				}
@@ -365,23 +300,20 @@
 	
 	// 그리드 데이터 조회
 	function getGridList(filter) {
-		const data = {
-		        commuteFilter: filter || 
-		        {
-		        	startDate: mainDateRangeStartInput.value, 
-	        	 	endDate: mainDateRangeEndInput.value 
-	        	}
-		    };
-		
+		const originalDate = new Date(); // 기존 날짜 가져오기
+	    const year = originalDate.getFullYear();
 		$.ajax({
-			type: 'GET',
+			type: 'POST',
 			url: '/select_APPROVAL_ANNUAL',
 			contentType: 'application/json',
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			data: JSON.stringify({
+				ANNUAL_YR : year
+			}),
 			success: function(data) {
-				if(!data['result']) {
-					showAlert('', 'error', '조회 실패' , '조회에 실패하였습니다.<br>다시 접속해주세요.');
-				}
-					grid.resetData(data['data']);
+				grid.resetData(data['data']);
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');
@@ -397,7 +329,6 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 400,
 			columns : [
@@ -405,9 +336,9 @@
 				{header : '사원명', name : 'EMPLOYEE_NM', sortable : true, filter: 'text'}, 
 				{header : '부서명', name : 'EMPLOYEE_DP', sortable : true, filter: 'select'}, 
 				{header : '직위명', name : 'EMPLOYEE_GD', sortable : true, filter: 'select'}, 
-				{header : '사용연차', name : 'USED_ANNUAL', sortable : true, align: 'center'},
+				{header : '사용연차', name : 'ANNUAL_UA', sortable : true, align: 'center'},
 				{header : '잔여연차', name : 'REMAINING_ANNUAL', sortable : true, align: 'center'},
-				{header : '총연차', name : 'TOTAL_ANNUAL', sortable : true, filter: 'select'},
+				{header : '총연차', name : 'TOTAL_ANNUAL', sortable : true, filter: 'select', align: 'center'},
 			],
 			summary: {
 			    height: 40,
@@ -422,10 +353,6 @@
 			},
 		});
 		
-		grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			make_insert_COMMUTE_modal(row['commute_wd'], row, 'grid');
-		});
 	}
 
 	// 달력 상세 모달
@@ -487,7 +414,6 @@
 	
 	// 달력 상세 모달의 그리드
 	function make_modal_grid(date) {
-		debugger;
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
 			data : {api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {date: date} }}},
