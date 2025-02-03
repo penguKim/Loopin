@@ -67,9 +67,6 @@ public class Notice {
     @Column(name = "notice_md")
     private Timestamp notice_md;
     
-
-    
-    
 	// 생성자
 	public Notice() {
 	}
