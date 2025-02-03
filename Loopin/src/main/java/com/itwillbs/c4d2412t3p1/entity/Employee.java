@@ -137,8 +137,6 @@ public class Employee {
     @Column(name = "workinghour_id")
     private String workinghour_id;
 
-    @OneToMany(mappedBy = "employee") // NOTICE 엔티티의 employee 필드와 매핑
-    private List<Notice> notices;
 	
 	// 생성자
 	public Employee() {
