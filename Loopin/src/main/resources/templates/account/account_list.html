@@ -395,6 +395,24 @@
 		    document.getElementById('modal_appointment_save').remove();
 		    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
 		});
+	} // openModal() 끝
+	
+	// 4. 이메일 완성 및 갱신
+	function updateFullEmail() {
+	    const username = $("#email_id").val().trim(); // 아이디 입력값
+	    const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
+	    const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
+	    const domain = domainSelect === "custom" ? customDomain : domainSelect;
+	
+	    // username과 domain이 모두 비어 있는 경우, 이메일 필드를 빈 값으로 설정
+	    if (!username && !domain) {
+	        $("#account_em").val("");
+	        return;
+	    }
+	
+	    // 이메일 필드 값 설정
+	    const fullEmail = username && domain ? `${username}@${domain}` : username || domain;
+	    $("#account_em").val(fullEmail);
 	}
 
 	function initializeDatePickers() {
@@ -520,9 +538,6 @@
 		    $("#account_ad").val(fullAddress);
 		});
 
-		// 우편번호 버튼 클릭 이벤트 등록
-		$("#account_zc").off("click").on("click", findAddr);
-
 	    // 3. 이메일 도메인 선택 처리
 	    function handleDomainChange() {
 	        $("#select_domain").off("change").on("change", function () {
@@ -539,32 +554,13 @@
 	        });
 	    }
 
-	    // 4. 이메일 완성 및 갱신
-		function updateFullEmail() {
-		    const username = $("#email_id").val().trim(); // 아이디 입력값
-		    const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
-		    const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
-		    const domain = domainSelect === "custom" ? customDomain : domainSelect;
-		
-		    // username과 domain이 모두 비어 있는 경우, 이메일 필드를 빈 값으로 설정
-		    if (!username && !domain) {
-		        $("#account_em").val("");
-		        return;
-		    }
-		
-		    // 이메일 필드 값 설정
-		    const fullEmail = username && domain ? `${username}@${domain}` : username || domain;
-		    $("#account_em").val(fullEmail);
-		}
-
-
 	    // 이메일 관련 이벤트 등록
-	    $("#email_id").off("input").on("input", updateFullEmail);
+// 	    $("#email_id").off("input").on("input", updateFullEmail);
 	    $("#select_domain").off("change").on("change", function () {
 	        handleDomainChange(); // 도메인 선택 처리
-	        updateFullEmail();    // 이메일 갱신
+// 	        updateFullEmail();    // 이메일 갱신
 	    });
-	    $("#custom_domain").off("input").on("input", updateFullEmail);
+// 	    $("#custom_domain").off("input").on("input", updateFullEmail);
 
 	}
 
@@ -1000,11 +996,6 @@
 	        $('#email_id_check').text('');
 	    });
 		
-	    
-	    
-		
-
-		
 		// 폼 제출 이벤트 실행
 		$(document).on('click', '#modal_submit_button', function () {
 		    console.log("등록 버튼 클릭됨!");
@@ -1019,6 +1010,8 @@
 		    const mode = $('#modal_submit_button').text().trim();
 		    const url = mode === '등록' ? '/insert_ACCOUNT' : '/update_ACCOUNT';
 
+		    updateFullEmail();
+		    
 		    const accountDTO = {
 		        account_cd: $('#account_cd').val(),
 		        account_nm: $('#account_nm').val(),
@@ -1044,7 +1037,8 @@
 		        account_mf: $('#account_mf').val(),
 		        account_md: $('#account_md').val()
 		    };
-
+		    
+		    
 		    $.ajax({
 		        url: url,
 		        method: 'POST',
