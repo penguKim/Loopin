@@ -265,12 +265,12 @@
 		    modalElement.addEventListener('shown.bs.modal', function () {
 		        console.log("모달이 완전히 열림 - 초기화 시작");
 
-		        if (typeof initializeDatePickers === "function") {
-		            console.log("DatePicker 초기화 실행");
-		            initializeDatePickers();
-		        } else {
-		            console.error(" initializeDatePickers 함수가 존재하지 않습니다.");
-		        }
+	            if (typeof initializeDatePickers === "function") {
+	                console.log("initializeDatePickers 실행 mode:", mode, "rowData:", rowData);
+	                initializeDatePickers(mode, rowData);
+	            } else {
+	                console.error("initializeDatePickers 함수가 존재하지 않습니다.");
+	            }
 
 		        if (typeof initializeModalHandlers === "function") {
 		            console.log("모달 핸들러 초기화 실행");
@@ -292,8 +292,14 @@
 
 
 		if (mode === 'edit' && rowData) {
-		    console.log("모달이 열렸고, 데이터를 삽입합니다.");
 
+	        $('#account_sd').val(rowData.account_sd);
+	        $('#account_ed').val(rowData.account_ed);
+	        $('#account_ed').prop('disabled', false);  // 종료일 활성화
+	        
+	        console.log("설정된 account_sd 값:", $('#account_sd').val());
+	        console.log("설정된 account_ed 값:", $('#account_ed').val());
+			
 		    // select 요소의 값을 설정하기 위한 매핑
 		    const selectFields = {
 		        account_dv: 'text',
@@ -416,73 +422,78 @@
 	    $("#account_em").val(fullEmail);
 	}
 
-	function initializeDatePickers() {
+	function initializeDatePickers(mode, rowData = null) {
+	    console.log("initializeDatePickers 실행됨, mode:", mode, "rowData:", rowData);
+
 	    const today = new Date(); // 오늘 날짜
+	    const startDate = rowData && rowData.account_sd ? new Date(rowData.account_sd) : today; // 시작일 설정
+	    const endDate = rowData && rowData.account_ed ? new Date(rowData.account_ed) : null; // 종료일 설정
+
+	    console.log("초기 설정된 시작일:", startDate);
+	    console.log("초기 설정된 종료일:", endDate);
 
 	    // 시작일과 종료일 DatePicker 초기화
 	    var startPicker = tui.DatePicker.createRangePicker({
 	        startpicker: {
-	            date: today, // 시작일 기본값: 오늘
-	            input: '#account_sd', // 시작일 입력 필드
-	            container: '#modal_startpicker-container', // 시작일 컨테이너
+	            date: startDate,
+	            input: '#account_sd',
+	            container: '#modal_startpicker-container',
 	        },
 	        endpicker: {
-	            date: null, // 종료일은 초기값 없음
-	            input: '#account_ed', // 종료일 입력 필드
-	            container: '#modal_endpicker-container', // 종료일 컨테이너
-	            disabled: true, // 종료일 기본적으로 비활성화
+	            date: endDate,
+	            input: '#account_ed',
+	            container: '#modal_endpicker-container',
+	            disabled: mode === 'add', // 등록 모드에서는 비활성화
 	        },
 	        format: 'YYYY-MM-dd',
-	        timePicker: false, // 시간 선택 비활성화
+	        timePicker: false,
 	    });
 
-	    // 종료일 필드 초기화 및 비활성화
-	    $('#account_ed').val('').prop('disabled', true);
+	    if (mode === 'add') {
+	        $('#account_ed').val('').prop('disabled', true); // 등록 모드에서는 종료일 비활성화
+	    } else {
+	        $('#account_ed').prop('disabled', false); // 수정 모드에서는 활성화
+	    }
 
 	    // 시작일 선택 이벤트 처리
 	    startPicker.on('change:start', function (event) {
 	        if (event && event.date) {
-	            console.log('선택된 시작일: ', event.date);
+	            console.log('선택된 시작일:', event.date);
 
-	            // 종료일의 최소 날짜 설정 (시작일 + 1일)
 	            var minEndDate = new Date(event.date);
 	            minEndDate.setDate(minEndDate.getDate() + 1);
 
-	            // 종료일 DatePicker 업데이트
 	            startPicker.getEndpicker().setOptions({
-	                date: minEndDate, // 종료일 기본값
-					disabled: false
+	                date: minEndDate,
+	                disabled: false,
 	            });
 
-	            // 종료일 필드 활성화
 	            $('#account_ed').prop('disabled', false);
-	        } else {
-	            console.error('유효한 시작일이 선택되지 않았습니다.');
 	        }
 	    });
 
-	    // 종료일 선택 이벤트 처리 (선택 사항)
-	    startPicker.on('change:end', function (event) {
-	        if (event && event.date) {
-	            console.log('선택된 종료일: ', event.date);
-	        }
-	    });
-
-	    // 모달 닫힐 때 DatePicker 초기화
+	    // 모달이 닫힐 때 초기화
 	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
-	        // 시작일과 종료일 필드 초기화
-	        $('#account_sd').val(today.toISOString().split('T')[0]); // 시작일 초기화: 오늘
-	        $('#account_ed').val('').prop('disabled', true); // 종료일 초기화 및 비활성화
+	        if (mode === 'edit' && rowData) {
+	            $('#account_sd').val(rowData.account_sd);
+	            $('#account_ed').val(rowData.account_ed);
+	        } else {
+	            $('#account_sd').val(today.toISOString().split('T')[0]);
+	            $('#account_ed').val('').prop('disabled', true);
+	        }
 
-			// DatePicker 초기화
-			if (startPicker.startpicker) {
-			    startPicker.startpicker.setOptions({ date: today });
-			}
-			if (startPicker.endpicker) {
-			    startPicker.endpicker.setOptions({ date: null, disabled: true });
-			}
+	        if (startPicker.startpicker) {
+	            startPicker.startpicker.setOptions({ date: startDate });
+	        }
+	        if (startPicker.endpicker) {
+	            startPicker.endpicker.setOptions({ date: endDate, disabled: mode === 'add' });
+	        }
 	    });
+
+	    console.log("최종 설정된 account_sd:", $('#account_sd').val());
+	    console.log("최종 설정된 account_ed:", $('#account_ed').val());
 	}
+
 	
 	
 	let currentPopup = null;
@@ -953,12 +964,6 @@
 			$('#account_cd').val(''); // 숨겨진 수정용 필드 초기화
 			$('#modalTitle').text(''); // 모달 제목 초기화
 			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
-			
-		    // #reset-password-btn 버튼 상태 초기화
-		    if ($('#reset-password-btn').is(':hidden')) {
-		        $('#reset-password-btn').show(); // 모달 닫힐 때 버튼을 다시 보이게 함
-		    }
-			
 	    });
 
 		
@@ -970,9 +975,6 @@
 	        $('#custom_domain_check').text('');
 	        $('#email_id_check').text('');
 
-	        // Reset Password 버튼 삭제
-	        $('#reset-password-btn').remove();
-	        
 		}
 		
 	    // 초기화 버튼 클릭 이벤트
@@ -1065,11 +1067,6 @@
 		        }
 		    });
 		});
-
-		
-
-
-		
     });
 	
 	
