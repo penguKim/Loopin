@@ -299,6 +299,7 @@
 	        $('#account_sd').val(rowData.account_sd);
 	        $('#account_ed').val(rowData.account_ed);
 	        $('#account_ed').prop('disabled', false);  // 종료일 활성화
+	        $('#resetFormBtn').hide(); // 버튼 숨기기
 	        
 	        console.log("설정된 account_sd 값:", $('#account_sd').val());
 	        console.log("설정된 account_ed 값:", $('#account_ed').val());
@@ -964,35 +965,28 @@
 	    });
 
 		
-
+	    $(document).on('click', '#resetFormBtn', function () {
+			console.log('리셋버튼 호출 ');
+			resetModal();
+	        
+	    });
+	    
 		// 모달 초기화 함수
 		function resetModal() {
 		    $('#appointment_form')[0].reset(); // 폼 초기화
+	        $('#appointment_form select').prop('selectedIndex', 0);
 	        $('#custom_domain_check').text('');
 	        $('#email_id_check').text('');
-
+			
+	        // 오늘 날짜 설정 (YYYY-MM-DD 형식)
+	        let today = new Date();
+	        let formattedDate = today.getFullYear() + '-' + 
+	                            ('0' + (today.getMonth() + 1)).slice(-2) + '-' + 
+	                            ('0' + today.getDate()).slice(-2);
+	        
+	        $('#account_sd').val(formattedDate);
 		}
 		
-	    // 초기화 버튼 클릭 이벤트
-	    $('#resetFormBtn').on('click', function () {
-	    	
-	    	console.log('클릭됨!!');
-	        // 폼의 모든 입력 필드 초기화
-	        $('#appointment_form')[0].reset();
-
-	        // disabled 상태 초기화
-	        $('#appointment_form input, #appointment_form select').each(function () {
-	            if ($(this).is(':disabled')) {
-	                $(this).prop('disabled', true); // 기존 disabled 유지
-	            } else {
-	                $(this).prop('disabled', false); // 활성화
-	            }
-	        });
-
-	        // 유효성 메시지 초기화
-	        $('#custom_domain_check').text('');
-	        $('#email_id_check').text('');
-	    });
 		
 		// 폼 제출 이벤트 실행
 		$(document).on('click', '#modal_submit_button', function () {
