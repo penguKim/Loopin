@@ -150,10 +150,10 @@ public class FilterRequest {
 	// 공지사항 전용 필터 클래스
 	public static class AccountFilterRequest extends FilterRequest {
 		
-		private String account_cd;
-		private String account_nm;
-		private String account_ps;
-		private String account_dv;
+		private String accountCd;
+		private String accountNm;
+		private String accountPs;
+		private String accountDv;
 		
 		public AccountFilterRequest() {
 			super();
@@ -162,8 +162,8 @@ public class FilterRequest {
 		@Override
 		public boolean isEmpty() {
 			return super.isEmpty() 
-					&& (account_cd == null || account_cd.isEmpty()) && (account_nm == null || account_nm.isEmpty())
-					&& (account_ps == null || account_ps.isEmpty()) && (account_dv == null || account_dv.isEmpty());
+					&& (accountCd == null || accountCd.isEmpty()) && (accountNm == null || accountNm.isEmpty())
+					&& (accountPs == null || accountPs.isEmpty()) && (accountDv == null || accountDv.isEmpty());
 		}
 	}
 	

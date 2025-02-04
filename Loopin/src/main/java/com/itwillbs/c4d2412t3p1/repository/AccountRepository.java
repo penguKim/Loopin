@@ -90,10 +90,10 @@ public interface AccountRepository  extends JpaRepository<Account, String> {
 	            "LEFT JOIN common_code q ON a.account_uj = q.common_cc AND q.common_gc = 'BTTYPE' \n" +
 	            "LEFT JOIN common_code t ON a.account_ut = t.common_cc AND t.common_gc = 'BITYPE' \n" +
 	            "LEFT JOIN common_code p ON a.account_us = p.common_cc AND p.common_gc = 'USEYN' \n" +
-	            "WHERE (:#{#filterRequest.account_cd} IS NULL OR a.account_cd LIKE %:#{#filterRequest.account_cd}%) \n" +
-	            "  AND (:#{#filterRequest.account_nm} IS NULL OR a.account_nm LIKE %:#{#filterRequest.account_nm}%) \n" +
-	            "  AND (:#{#filterRequest.account_ps} IS NULL OR a.account_ps LIKE %:#{#filterRequest.account_ps}%) \n" +    
-	            "  AND (:#{#filterRequest.account_dv} IS NULL OR d.common_nm LIKE %:#{#filterRequest.account_dv}%) \n" +
+	            "WHERE (:#{#filterRequest.accountCd} IS NULL OR a.account_cd LIKE %:#{#filterRequest.accountCd}%) \n" +
+	            "  AND (:#{#filterRequest.accountNm} IS NULL OR a.account_nm LIKE %:#{#filterRequest.accountNm}%) \n" +
+	            "  AND (:#{#filterRequest.accountPs} IS NULL OR a.account_ps LIKE %:#{#filterRequest.accountPs}%) \n" +    
+	            "  AND (:#{#filterRequest.accountDv} IS NULL OR d.common_nm LIKE %:#{#filterRequest.accountDv}%) \n" +
 	            "  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL \n" +
 	            "       OR a.account_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) \n" +
 	            "ORDER BY a.account_cd DESC", 

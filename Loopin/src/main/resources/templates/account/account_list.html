@@ -231,10 +231,13 @@
 		                    </div>
 		                </form>
 		            </div>
-		            <div class="modal-footer">
-		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                <button type="button" id="modal_submit_button" class="btn btn-primary">${submitButtonText}</button>
-		            </div>
+		            <div class="modal-footer d-flex justify-content-between">
+		            	<button type="button" class="btn btn-danger" id="resetFormBtn"  style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+		            	<div>
+			                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                <button type="button" id="modal_submit_button" class="btn btn-primary">${submitButtonText}</button>
+		            	</div>
+	                </div>
 		        </div>
 		    </div>
 		</div>
@@ -658,10 +661,10 @@
 		const filterConfig = [
 			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
 			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
-            { key: 'account_cd', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
-            { key: 'account_nm', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
-            { key: 'account_ps', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
-            { key: 'account_dv', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' }
+            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
+            { key: 'accountNm', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
+            { key: 'accountPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
+            { key: 'accountDv', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' }
         ];
 		
 	    
@@ -965,7 +968,6 @@
 		// 모달 초기화 함수
 		function resetModal() {
 		    $('#appointment_form')[0].reset(); // 폼 초기화
-		    $('#account_cd').val(''); // 수정용 필드 초기화
 	        $('#custom_domain_check').text('');
 	        $('#email_id_check').text('');
 
@@ -973,6 +975,8 @@
 		
 	    // 초기화 버튼 클릭 이벤트
 	    $('#resetFormBtn').on('click', function () {
+	    	
+	    	console.log('클릭됨!!');
 	        // 폼의 모든 입력 필드 초기화
 	        $('#appointment_form')[0].reset();
 
