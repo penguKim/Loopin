@@ -327,7 +327,6 @@ function createRadio(el, list, name, flag) {
  */
 function createSelect2(selectId, data, placeholder, parentModal) {
     const select = $(`${selectId}`);
-    
     select.select2({
         dropdownParent: $(`#${parentModal}`),
         placeholder: placeholder,
@@ -336,9 +335,9 @@ function createSelect2(selectId, data, placeholder, parentModal) {
             id: item['common_cc'],
             text: item['common_nm']
         }))
-    }).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId}">전체 선택</button>`);
+    }).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId.substring(1)}">전체 선택</button>`);
 
-    $(`#select-all-${selectId}`).on('click', function() {
+    $(document).on('click', `#select-all-${selectId.substring(1)}`, function() {
         const button = $(this);
         
         if (select.val() && select.val().length == select.find('option').length) {

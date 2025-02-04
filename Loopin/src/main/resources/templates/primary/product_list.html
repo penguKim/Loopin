@@ -134,7 +134,19 @@
 		
 		// 품목 대분류 선택
 		$(document).on('change', '#modal_product_gc', () => changeProduct_gc('#modal_product_gc', '#modal_product_cc'));
-		$(document).on('change', '#product_gc', () => changeProduct_gc('#product_gc', '#product_cc'));
+		$(document).on('change', '#product_gc', function() {
+			changeProduct_gc('#product_gc', '#product_cc');
+			if($(this).val() == 'MATERIALS' || $(this).val() == 'SUBMAT') {
+				$('#div_select').css('.d-none');
+			}
+		});
+		
+		$(document).on('click', '#modal_product_cc', function(e) {
+			if(!$('#modal_product_gc').val()) {
+				showAlert($('#modal_product_gc'), 'info', '대분류 선택', '품목 대분류를 먼저 선택해주세요.');
+				return;
+			}
+		});
 		
 		// 제품 등록
 		$(document).on('click', '#btn_modal_save', function() {
@@ -275,7 +287,7 @@
 								<label for="modal_product_cc" class="col-2 col-form-label">품목소분류<span class="text-danger">*</span></label>
 								<div class="col-4"><select id="modal_product_cc" class="form-select"></select></div>
 							</div>
-							<div class="row mb-3">
+							<div class="row mb-3" id="div_select">
 								<label for="modal_product_sz" class="col-2 col-form-label">사이즈<span class="text-danger">*</span></label>
 								<div class="col-4"><select id="modal_product_sz" class="form-select" multiple></select></div>
 								<label for="modal_product_cr" class="col-2 col-form-label">색상<span class="text-danger">*</span></label>
