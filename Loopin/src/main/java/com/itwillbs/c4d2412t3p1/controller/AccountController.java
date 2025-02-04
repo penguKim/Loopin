@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
 import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.service.AccountService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.AccountFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -144,7 +146,48 @@ public class AccountController {
 		}
 	}
 
+	//	거래처 삭제(거래처 사용여부 미사용 지정)
+	@PostMapping("/delete_ACCOUNT")
+	public ResponseEntity<Map<String, Object>> delete_ACCOUNT(@RequestBody Map<String, List<String>> request) {
+		
+		List<String> accountCds  = request.get("account_cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
+		
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+			accountService.updateAccountStatus(accountCds, "0");
+			response.put("success", true);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
 	
+	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_ACCOUNT")
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_ACCOUNT(@RequestBody AccountFilterRequest filterRequest) {
+
+	    try {
+	            // 필터 조건이 비어 있으면 전체 인사정보 반환
+	            if (filterRequest.isEmpty()) {
+	                List<Map<String, Object>> accounts = accountService.select_ACCOUNT_DETAIL();
+	                log.info("accounts : "+ accounts);
+	                return ResponseEntity.ok(accounts);
+	            }
+
+	            // 필터 조건에 따른 필터링된 인사정보 반환
+	            List<Map<String, Object>> filteredAccountList = accountService.select_FILTERED_ACCOUNT(filterRequest);
+	            log.info("filteredAccountList : "+ filteredAccountList);
+	            return ResponseEntity.ok(filteredAccountList);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+    }
 	
 	
 } // 컨트롤러 끝

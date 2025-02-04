@@ -632,12 +632,6 @@
 	    handleDomainSelection();
 	}
 
-
-
-	
-	
-	
-	
 </script>
 
 <!-- 필터 모듈 JS File -->
@@ -664,10 +658,10 @@
 		const filterConfig = [
 			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
 			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
-            { key: '', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
-            { key: '', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
-            { key: '', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
-            { key: '', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' },
+            { key: 'account_cd', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
+            { key: 'account_nm', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
+            { key: 'account_ps', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
+            { key: 'account_dv', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' }
         ];
 		
 	    
@@ -833,6 +827,7 @@
 		                        { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
 		                        { header: '연락처', name: 'account_ph', align: 'center', sortable: true },
 		                        { header: '이메일', name: 'account_em', align: 'center', sortable: true },
+								{ header: '사용여부', name: 'account_us', align: 'center', sortable: true },
 								
 								// 숨김 컬럼
 								{ header: '팩스번호', name: 'account_fx', hidden: true },
@@ -845,7 +840,6 @@
 								{ header: '은행', name: 'account_bk', hidden: true },
 								{ header: '계좌번호', name: 'account_an', hidden: true },
 								{ header: '예금주', name: 'account_dt', hidden: true },
-								{ header: '사용여부', name: 'account_us', hidden: true },
 								{ header: '비고', name: 'account_nt', hidden: true },
 								{ header: '작성자', name: 'account_wr', hidden: true },
 								{ header: '작성일', name: 'account_wd', hidden: true },
