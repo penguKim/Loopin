@@ -110,6 +110,7 @@
 			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
 			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
 			    )
+			ORDER BY ep.EMPLOYEE_NM
         ]]>
     </select>
 
@@ -124,6 +125,7 @@
 		FROM PRDETAIL pd 
 		JOIN PR pr ON pd.pr_id = pr.pr_id 
 		WHERE pr.pr_wm LIKE #{premth}
+		ORDER BY pd.EMPLOYEE_NM
 	</select>
 	
 	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
