@@ -203,11 +203,10 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 
 			filterConfig.forEach(config => {
 		        if (config.type == 'radio') {
-		            const defaultOption = config.list.find(option => option.checked);
-		            if (defaultOption) {
-		                const radio = document.getElementById(`${config.key}_${defaultOption.value}`);
-		                if (radio) radio.checked = true;
-		            }
+					const defaultRadio = document.getElementById(
+					    `${config.key}_${(config.list.find(opt => opt.checked)?.value || 'ALL')}`
+					);
+					if (defaultRadio) defaultRadio.checked = true;
 		        } else {
 		            const element = document.getElementById(config.key);
 		            if (element) {

@@ -20,7 +20,7 @@ public class PrimaryRequestDTO {
 	List<WarehouseDTO> warehouseList;
 	String warehouse_cd;
 
-	// 제품관리
+	// 품목관리
 	ProductFilterRequest productFilter;
 	List<ProductDTO> productList;
 	ProductDTO product;

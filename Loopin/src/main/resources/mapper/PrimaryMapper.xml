@@ -27,9 +27,12 @@
 	<!-- 제품 조회 -->
 	<select id="select_PRODUCT_list" resultType="Product">
 		SELECT PR.PRODUCT_CD, PR.PRODUCT_GC, CC2.COMMON_NM PRODUCT_GN, PR.PRODUCT_CC, CC3.COMMON_NM PRODUCT_CN, PR.PRODUCT_NM,
-		       LISTAGG(DISTINCT PR.PRODUCT_SZ, ', ') WITHIN GROUP (ORDER BY PR.PRODUCT_SZ) AS PRODUCT_SZ,
-		       LISTAGG(DISTINCT PR.PRODUCT_CR, ', ') WITHIN GROUP (ORDER BY PRODUCT_CR) AS PRODUCT_CR,
-		       LISTAGG(DISTINCT CC.COMMON_NM, ', ') WITHIN GROUP (ORDER BY CC.COMMON_NM) AS PRODUCT_CRNM,
+			   CASE WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT PR.PRODUCT_SZ, ', ') WITHIN GROUP (ORDER BY PR.PRODUCT_SZ) END AS PRODUCT_SZ,
+	    	   CASE WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT PR.PRODUCT_CR, ', ') WITHIN GROUP (ORDER BY PRODUCT_CR) END AS PRODUCT_CR,
+	    	   CASE  WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT CC.COMMON_NM, ', ') WITHIN GROUP (ORDER BY CC.COMMON_NM) END AS PRODUCT_CRNM,
 		       PR.PRODUCT_GD, PR.PRODUCT_UN, PR.PRODUCT_WH, WH.WAREHOUSE_NM, PR.PRODUCT_PR, PR.PRODUCT_PC, PR.PRODUCT_RM, PR.PRODUCT_US
 		  FROM PRODUCT PR
 		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'COLOR' AND PR.PRODUCT_CR = CC.COMMON_CC
@@ -38,8 +41,9 @@
 		  LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = PR.PRODUCT_WH
 		 WHERE 1 = 1
 		 <if test="filter.product_cd != null and filter.product_cd != ''">AND PR.PRODUCT_CD LIKE '%${filter.product_cd}%'</if>
-		 <if test="filter.product_cc != null and filter.product_cc != ''">AND PR.PRODUCT_CC LIKE '%${filter.product_cc}%'</if>
 		 <if test="filter.product_nm != null and filter.product_nm != ''">AND PR.PRODUCT_NM LIKE '%${filter.product_nm}%'</if>
+		 <if test="filter.product_gc != null and filter.product_gc != ''">AND PR.PRODUCT_GC = #{filter.product_gc}</if>
+		 <if test="filter.product_cc != null and filter.product_cc != ''">AND PR.PRODUCT_CC = #{filter.product_cc}</if>
 		 <if test="filter.product_wh != null and filter.product_wh != ''">AND PR.PRODUCT_WH = #{filter.product_wh}</if>
 		 <if test="filter.product_us != null and filter.product_us != 'ALL'">AND PR.PRODUCT_US = #{filter.product_us}</if>
 		 GROUP BY PR.PRODUCT_CD, PR.PRODUCT_GC, CC2.COMMON_NM, PR.PRODUCT_CC, CC3.COMMON_NM, PR.PRODUCT_NM, PR.PRODUCT_GD, 
@@ -57,6 +61,11 @@
 	    WHERE WAREHOUSE_US = 1
 	</select>
 
-	
-
+	<!-- 품목 사진 조회 -->
+	<select id="select_PRODUCT_PC" resultType="Product">
+		SELECT PR.PRODUCT_CD, PR.PRODUCT_PC
+		FROM PRODUCT PR
+		WHERE PR.PRODUCT_CD = #{product_cd}
+		GROUP BY PR.PRODUCT_CD, PR.PRODUCT_PC
+	</select>
 </mapper>

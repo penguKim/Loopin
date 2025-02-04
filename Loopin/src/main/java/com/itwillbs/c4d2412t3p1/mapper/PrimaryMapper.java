@@ -14,6 +14,7 @@ import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 @Mapper
 public interface PrimaryMapper {
 
+	// 창고 관리 ----------------------------
 	// 창고 조회
 	List<WarehouseDTO> select_WAREHOUSE_list(@Param("filter") WarehouseFilterRequest filter);
 
@@ -22,5 +23,9 @@ public interface PrimaryMapper {
 
 	// 창고목록 조회
 	List<Map<String, String>> select_WAREHOUSE_code();
+
+	// 품목 관리 ----------------------------
+	// 품목 사진 조회
+	ProductDTO select_PRODUCT_PC(@Param("product_cd") String product_cd);
 	
 }

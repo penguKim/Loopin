@@ -299,7 +299,7 @@ function createRadio(el, list, name, flag) {
     
 	if(flag) {
 	    container.append(`
-	        <div class="form-check form-check-inline">
+	        <div class="form-check">
 	            <input class="form-check-input" type="radio" 
 	                   name="${name}" id="${name}_ALL" value="ALL" checked>
 	            <label class="form-check-label" for="${name}_ALL">전체</label>
@@ -342,13 +342,11 @@ function createSelect2(selectId, data, placeholder, parentModal) {
         
         if (select.val() && select.val().length == select.find('option').length) {
             select.val(null);
-            button.text('전체 선택');
         } else {
             const allOptions = select.find('option').map(function() {
                 return $(this).val();
             }).get();
             select.val(allOptions);
-            button.text('전체 해제');
         }
         
         select.trigger('change');
@@ -470,6 +468,35 @@ function callAjaxGet(url, jsonData) {
             url: url,
             data: jsonData,
 			headers: {[header]: token},
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(xhr) {
+                reject(xhr.responseJSON);
+            }
+        });
+    });
+}
+
+/**
+ * ajax post 요청을 Promise로 처리하는 함수
+ * @param {string} url - 요청 url
+ * @param {Object} jsonData - form 데이터
+ * @returns {Promise} 응답 데이터
+ */
+function callAjaxFileUpload(url, formData) {
+	const token = $("meta[name='_csrf']").attr("content");
+	const header = $("meta[name='_csrf_header']").attr("content");
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: url,
+			processData: false,
+			contentType: false,
+            data: formData,
+			headers: {
+				[header]: token,
+		},
             success: function(response) {
                 resolve(response);
             },

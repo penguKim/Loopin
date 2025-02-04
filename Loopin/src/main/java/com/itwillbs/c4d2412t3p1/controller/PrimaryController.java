@@ -13,15 +13,15 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
-import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
@@ -38,8 +38,7 @@ import lombok.extern.java.Log;
 @Controller
 @Log
 public class PrimaryController {
-	
-	private final UtilService util;
+
 	private final PrimaryService primaryService;
 	private final CommonService commonService;
 	
@@ -168,7 +167,7 @@ public class PrimaryController {
 	}
 	
 	
-	// 제품 관리 --------------------------------------------
+	// 품목 관리 --------------------------------------------
 	
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
 	@GetMapping("/product_list")
@@ -181,7 +180,7 @@ public class PrimaryController {
 		return "/primary/product_list";
 	}
 
-	// 제품 리스트 조회
+	// 품목 리스트 조회
 	@ResponseBody
 	@PostMapping("/select_PRODUCT_list")
 	public Map<String, Object> select_PRODUCT_list(@RequestBody PrimaryRequestDTO primaryDTO) {
@@ -197,11 +196,12 @@ public class PrimaryController {
 		return response;
 	}
 	
-	// 제품 등록
+	// 품목 등록
 	// @LogActivity(value = "등록", action = "제품등록")
 	@ResponseBody
 	@PostMapping("/insert_PRODUCT")
-	public ResponseEntity<Map<String, Object>> insert_PRODUCT(@RequestBody PrimaryRequestDTO primaryDTO) {
+	public ResponseEntity<Map<String, Object>> insert_PRODUCT(@RequestPart(value = "requestData") PrimaryRequestDTO primaryDTO,
+		    @RequestPart(value = "image", required = false) MultipartFile image) {
 		ProductDTO product = primaryDTO.getProduct();
 		List<String> sizeList = primaryDTO.getSizeList();
 		List<String> colorList = primaryDTO.getColorList();
@@ -212,17 +212,39 @@ public class PrimaryController {
 		Map<String, Object> response = new HashMap<>();
 		
 	    try {
-	    	primaryService.insert_PRODUCT(product, sizeList, colorList);
+	        
+	    	primaryService.insert_PRODUCT(product, image, sizeList, colorList);
 	    	
 			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
 			response.put("list", list);
-			
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			e.printStackTrace();
-			response.put("msg", "등록에 실패했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+	}
+	
+
+	
+	// 품목코드 중복 체크
+	@ResponseBody
+	@PostMapping("/check_PRODUCT_CD")
+	public Map<String, Object> check_PRODUCT_CD(@RequestBody PrimaryRequestDTO primaryDTO) {
+		String product_cd = primaryDTO.getProduct_cd();
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			boolean check = primaryService.check_PRODUCT_CD(product_cd); // 중복이면 false
+			System.out.println("cpzmsms : " + check);
+			response.put("result", check);
+			if(!check) {
+				response.put("title", "코드명 중복");
+				response.put("msg", "이미 사용중인 코드입니다.");
+			}
+		} catch (Exception e) {
+			response.put("msg", "체크에 실패했습니다.");
+		}
+		return response;
 	}
 	
 	// 품목소분류 조회

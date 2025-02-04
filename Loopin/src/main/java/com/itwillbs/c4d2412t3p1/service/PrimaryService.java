@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
@@ -33,6 +35,7 @@ import lombok.extern.java.Log;
 @Log
 public class PrimaryService {
 	
+	private final UtilService util;
 	private final PrimaryMapper primaryMapper;
 	private final WarehouseRepository warehouseRepository;
 	private final ProductRepository productRepository;
@@ -115,9 +118,9 @@ public class PrimaryService {
 
 
 	
-	// 제품 관리 ----------------------------------------------------------------4
+	// 품목 관리 ----------------------------------------------------------------4
 	
-	// 제품 조회
+	// 품목 조회
 	public List<ProductDTO> select_PRODUCT_list(ProductFilterRequest filter) {
 		return primaryMapper.select_PRODUCT_list(filter);
 	}
@@ -127,60 +130,110 @@ public class PrimaryService {
 		return primaryMapper.select_WAREHOUSE_code();
 	}
 
-	// 제품 등록
+	// 품목 등록
 	@Transactional
-	public void insert_PRODUCT(ProductDTO productDTO, List<String> sizeList, List<String> colorList) {
+	public void insert_PRODUCT(ProductDTO productDTO, MultipartFile image, List<String> sizeList, List<String> colorList) throws IOException {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
+	    
+	    // 기존 파일 처리
+	    ProductDTO productImage = primaryMapper.select_PRODUCT_PC(productDTO.getProduct_cd());
+	    if (productImage != null && productImage.getProduct_pc() != null
+	        && (image == null || !image.isEmpty())) {
+	        util.deleteFile(productImage.getProduct_pc());
+	    }
 
-	    System.out.println("리스트에 없는 목록 삭제");
+	    // 새 파일 업로드 처리
+	    if (image != null && !image.isEmpty()) {
+	        util.setFile("PRODUCT", image, productDTO::setProduct_pc);
+	    } else if (image == null) {
+	        productDTO.setProduct_pc(null);
+	    }
+	    
+	    // 원자재거나 부자재일 경우
+	    if (productDTO.getProduct_gc().equals("MATERIALS") || productDTO.getProduct_gc().equals("SUBMAT")) {
+	    	productDTO.setProduct_sz("-");
+	    	productDTO.setProduct_cr("-");
+	        if(productDTO.getProduct_ru() == null) {
+	        	productDTO.setProduct_ru(regUser);
+	        	productDTO.setProduct_rd(time);
+	        } else {
+	        	productDTO.setProduct_uu(regUser);
+	        	productDTO.setProduct_ud(time);
+	        }
+	        productRepository.save(Product.setProduct(productDTO));
+	        return;
+	    }
+
 	    productRepository.deleteBySizeOrColor(productDTO.getProduct_cd(), productDTO.getProduct_cc(), sizeList, colorList);
-	    productRepository.flush(); // 삭제 내용 DB 반영
+	    productRepository.flush();
 
 	    List<Product> remainingProducts = productRepository.findByProductCdAndItemCd(productDTO.getProduct_cd(), productDTO.getProduct_cc());
 	    System.out.println("남아있는 목록 : " + remainingProducts.toString());
 	    
-	    List<Product> newProducts = new ArrayList<>();
+	    List<Product> productList = new ArrayList<>();
 	    for(String size : sizeList) {
 	        for(String color : colorList) {
 	            boolean exists = remainingProducts.stream()
 	                .anyMatch(product -> 
-		                product.getProduct_sz().equals(size) && 
-		                product.getProduct_cr().equals(color)
+	                    product.getProduct_sz().equals(size) && 
+	                    product.getProduct_cr().equals(color)
 	                );
-	            
-	            if(!exists) {
+	            if(!exists) { // 등록
 	                ProductDTO product = new ProductDTO();
 	                BeanUtils.copyProperties(productDTO, product);
 	                product.setProduct_sz(size);
 	                product.setProduct_cr(color);
 	                
 	                if(product.getProduct_ru() == null) {
-	                	System.out.println("신규등록 : " + size + ", " + color);
-	                	product.setProduct_ru(regUser);
-	                	product.setProduct_rd(time);
-	                } 
-	                else {
-	                	System.out.println("수정 : " + size + ", " + color);
-	                	product.setProduct_uu(regUser);
-	                	product.setProduct_ud(time);
+	                    product.setProduct_ru(regUser);
+	                    product.setProduct_rd(time);
+	                } else {
+	                    product.setProduct_uu(regUser);
+	                    product.setProduct_ud(time);
 	                }
 	                
-	                newProducts.add(Product.setProduct(product));
+	                productList.add(Product.setProduct(product));
+	            } else { // 수정
+	                Product existingProduct = remainingProducts.stream()
+	                    .filter(product -> 
+	                        product.getProduct_sz().equals(size) && 
+	                        product.getProduct_cr().equals(color))
+	                    .findFirst()
+	                    .get();
+	                
+	                existingProduct.setProduct_nm(productDTO.getProduct_nm());
+	                existingProduct.setProduct_gd(productDTO.getProduct_gd());
+	                existingProduct.setProduct_un(productDTO.getProduct_un());
+	                existingProduct.setProduct_wh(productDTO.getProduct_wh());
+	                existingProduct.setProduct_pr(productDTO.getProduct_pr());
+	                existingProduct.setProduct_pc(productDTO.getProduct_pc());
+	                existingProduct.setProduct_rm(productDTO.getProduct_rm());
+	                existingProduct.setProduct_us(productDTO.isProduct_us());
+	                existingProduct.setProduct_uu(regUser);
+	                existingProduct.setProduct_ud(time);
+	                
+	                productList.add(existingProduct);
 	            }
 	        }
 	    }
 	    
-	    if(!newProducts.isEmpty()) {
-	    	System.out.println("저장할게 몇개인지 : " + newProducts.size());
-	        productRepository.saveAll(newProducts);
+	    if(!productList.isEmpty()) {
+	        System.out.println("저장할게 몇개인지 : " + productList.size());
+	        productRepository.saveAll(productList);
 	    }
 	}
 
-	// 제품 삭제
+	// 품목 중복 체크
+	public boolean check_PRODUCT_CD(String product_cd) {
+		return productRepository.findByProductCd(product_cd).isEmpty();
+	}
+
+
+	// 품목 삭제
 	@Transactional
 	public void delete_PRODUCT(List<ProductDTO> productList) {
-		// 재고가 있거나 공정이 진행중인 제품은 삭제안되게 처리 예정
+		// 재고가 있거나 공정이 진행중인 품목은 삭제안되게 처리 예정
 		
 	    List<String> productCodes = productList.stream()
 	        .map(ProductDTO::getProduct_cd)
@@ -188,6 +241,7 @@ public class PrimaryService {
 	    
 	    productRepository.deleteByProductCdIn(productCodes);
 	}
+
 
 
 }
