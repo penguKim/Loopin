@@ -25,13 +25,10 @@
 		tui.Grid.applyTheme('striped');
 		
 		function formatCurrency(value) {
-			  if (value && typeof value === 'object' && value.amount !== undefined) {
-			    return value.amount.toLocaleString('ko-KR', { style: 'currency', currency: 'KRW' });  // 객체의 'amount' 속성에 쉼표 추가
-			  } else if (typeof value === 'number') {
-			    return value.toLocaleString('ko-KR',{ style: 'currency', currency: 'KRW' });  // 숫자에 대해서도 쉼표 추가
+			if (typeof value === 'number') {
+			    return value.toLocaleString('ko-KR') + '원';
 			  }
-			  return value;  // 객체나 숫자가 아니면 원래 값 그대로 반환
-			}
+		}
 		
 		// Ajax로 급여 데이터 조회
 		$.ajax({
@@ -60,7 +57,7 @@
 			responsive: true,
 			scrollX:true,
 			scrollY:true,
-			bodyHeight : 485,
+			//bodyHeight : 485,
 			columns : [ 
 				{
 					header : 'NO.',
@@ -330,13 +327,5 @@
 			}
 		});
 
-		$(document).on('filterToggled', function(e) {
-		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -500);
-		    } else {
-		        setGridHeight(grid, -430);
-		    }
-		});
-		
 </script>
 </html>
