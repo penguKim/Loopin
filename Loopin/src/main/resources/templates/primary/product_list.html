@@ -6,15 +6,6 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-<style>
-	.tui-grid-cell-summary {
-	    background-color: #ddd;
-	    border-color: #fff;
-	    border-left-width: 1px;
-	    border-right-width: 1px;
-	    color: #333;
-	}
-</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -56,6 +47,10 @@
 	];
 	let commonList = [];
 	let warehouseList = /*[[${warehouseList}]]*/[];
+	const byteField = {
+		    'modal_product_nm': 50,
+		    'modal_product_rm': 500
+		};
 
 	// ------------------------------
 	
@@ -166,6 +161,16 @@
 			}
 		});
 		
+		// 인풋 길이 체크
+		$(document).on('input', Object.keys(byteField).map(id => '#' + id).join(','), function() {
+		    const fieldId = $(this).attr('id');
+		    const maxBytes = byteField[fieldId];
+		    
+		    if(!byteCheck('#' + fieldId, maxBytes)) {
+		    	showToast($(this), 'warning', '입력 길이 초과', `최대 ${maxBytes}자까지 입력가능합니다.`);
+		    }
+		});
+
 		// 품목 대분류 선택
 		$(document).on('change', '#product_gc', () => changeProduct_gc('#product_gc', '#product_cc'));
 		$(document).on('change', '#modal_product_gc', function() {
@@ -304,7 +309,7 @@
 		if(!modalElement) {
 			let modalHtml = `
 			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-				<div class="modal-dialog modal-dialog-centered modal-lg">
+				<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
 		            <div class="modal-content">
 						<div class="modal-header">
 		            		<h5 class="modal-title">${title}</h5>
