@@ -113,11 +113,11 @@
 		        cc.COMMON_NM AS EMPLOYEE_GD,
 		        EXTRACT(YEAR FROM TO_DATE(JSON_VALUE(a.APPROVAL_CT, '$.startday'), 'YYYY-MM-DD')) AS USAGE_YEAR,
 		        CASE 
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1 -- 연차
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'BN' THEN 0.5 -- 반차
-		            WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'SN' THEN 0 -- 병가는 연차 소진 없음
-		            ELSE 0
-		        END AS MAPPED_VALUE
+				    WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'AN' THEN 1 -- 연차
+				    WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') LIKE '%BN%' THEN 0.5 -- 반차
+				    WHEN JSON_VALUE(a.APPROVAL_CT, '$.annualtype') = 'SN' THEN 0 -- 병가는 연차 소진 없음
+				    ELSE 0
+				END AS MAPPED_VALUE
 		    FROM APPROVAL a
 		    LEFT JOIN EMPLOYEE e ON e.EMPLOYEE_ID = a.APPROVAL_WR 
 		    LEFT JOIN COMMON_CODE c ON c.COMMON_GC = 'DEPARTMENT' AND c.COMMON_CC = e.EMPLOYEE_DP
