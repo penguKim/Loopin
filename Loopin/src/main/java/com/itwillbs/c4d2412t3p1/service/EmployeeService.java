@@ -63,7 +63,8 @@ public class EmployeeService {
         // 파일 저장 처리
         if (employee_pi != null && !employee_pi.isEmpty()) {
         	fileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
-            Path path = Paths.get(uploadDir, fileName);
+        	String dateDir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        	Path path = Paths.get(uploadDir, "EMPLOYEE", dateDir, fileName);
         
 	        // 업로드 디렉터리 생성
 	        if (!Files.exists(path.getParent())) {
@@ -72,7 +73,6 @@ public class EmployeeService {
 	        
 	        // 파일 저장
 	        Files.copy(employee_pi.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
-	        
         }
         
         
@@ -115,7 +115,8 @@ public class EmployeeService {
 	    // 새 사진 업로드 처리
 	    if (employee_pi != null && !employee_pi.isEmpty()) {
 	        String fileName = UUID.randomUUID().toString() + "_" + employee_pi.getOriginalFilename();
-	        Path path = Paths.get(uploadDir, fileName);
+	        String dateDir = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	        Path path = Paths.get(uploadDir, "EMPLOYEE", dateDir, fileName);
 
 	        // 업로드 디렉터리 생성
 	        if (!Files.exists(path.getParent())) {
@@ -125,8 +126,6 @@ public class EmployeeService {
 	        // 파일 저장
 	        Files.copy(employee_pi.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
-	        // 엔티티에 새 파일 이름 설정
-	        employee.setEmployee_pi(fileName);
 	    } else if (!"true".equals(employeeDTO.getPhotoDeleted())) {
 	        // 사진 삭제 요청이 없을 경우, 기존 사진 유지
 	        employeeDTO.setEmployee_pi(employee.getEmployee_pi());
