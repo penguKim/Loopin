@@ -94,6 +94,9 @@
 	// 관리자인지 확인(권한 설정 후 달라질 수 있음)
 	const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
 	// ------------------------------
+	const urlParams = new URLSearchParams(window.location.search);
+	const type = urlParams.get("type");
+	console.log(type);
 
 	
 
@@ -213,6 +216,7 @@
 	function getCalendarList() {
 		calendarStartDate = getDate(calendar.getDateRangeStart().toDate());
 		calendarEndDate = getDate(calendar.getDateRangeEnd().toDate());
+		
 		$.ajax({
 			type: 'post',
 			url: '/select_calendar_ANNUAL',
@@ -222,7 +226,8 @@
 			},
 			data: JSON.stringify({
 			    holiday_dt1: calendarStartDate,
-			    holiday_dt2: calendarEndDate
+			    holiday_dt2: calendarEndDate,
+				...(type != null && { type })
 			}),
 			success: function(data) {
 				if(!data['result']) {
@@ -312,7 +317,8 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			data: JSON.stringify({
-				ANNUAL_YR : year
+				ANNUAL_YR : year,
+				...(type != null && { type })
 			}),
 			success: function(data) {
 				grid.resetData(data['data']);
@@ -418,7 +424,7 @@
 	function make_modal_grid(date) {
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : {api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {date: date} }}},
+			data : {api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {date: date, ...(type != null && { type })} }}},
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
