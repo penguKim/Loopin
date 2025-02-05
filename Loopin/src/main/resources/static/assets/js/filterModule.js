@@ -45,42 +45,52 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
         return;
     }
 	
+	// 기간 필터 확인
+	const hasDateRange = filterConfig.some(config => 
+	    config.key == 'startDate' || config.key == 'endDate'
+	);
+	
 	const startDate = filterConfig.find(config => config.key == 'startDate');
 	const endDate = filterConfig.find(config => config.key == 'endDate');
-
+	
     // 기본 필터 UI 생성
-    const defaultFilterHTML = `
-        <div class="row align-items-center g-0">
-            <div class="col-auto me-5">
-                <label for="mainDateRangeStartInput" class="form-label">${startDate.label}</label>
-                <input type="text" id="mainDateRangeStartInput" class="form-control" style="width: 153.5px;">
-                <div id="mainDateRangeStartContainer"></div>
-            </div>
-            <div class="col-auto me-5">
-                <label for="mainDateRangeEndInput" class="form-label">${endDate.label}</label>
-                <input type="text" id="mainDateRangeEndInput" class="form-control" style="width: 153.5px;">
-                <div id="mainDateRangeEndContainer"></div>
-            </div>
-            <div class="col d-flex justify-content-end align-items-center mt-3">
-                <button id="resetFilter" class="btn btn-secondary me-2">초기화</button>
-                <button id="applyFilter" class="btn btn-primary me-2">검색</button>
-                <button id="toggleFilters" class="btn btn-outline-secondary">
-                    <i class="bi bi-chevron-down"></i>
-                </button>
-            </div>
-        </div>
-        <div id="additionalFilters" class="row d-none"></div>
-    `;
+	// 기본 필터 UI 생성
+	const defaultFilterHTML = `
+	    <div class="row align-items-center g-0">
+	        ${hasDateRange ? `
+	            <div class="col-auto me-5">
+	                <label for="mainDateRangeStartInput" class="form-label">${startDate.label}</label>
+	                <input type="text" id="mainDateRangeStartInput" class="form-control" style="width: 153.5px;">
+	                <div id="mainDateRangeStartContainer"></div>
+	            </div>
+	            <div class="col-auto me-5">
+	                <label for="mainDateRangeEndInput" class="form-label">${endDate.label}</label>
+	                <input type="text" id="mainDateRangeEndInput" class="form-control" style="width: 153.5px;">
+	                <div id="mainDateRangeEndContainer"></div>
+	            </div>
+	        ` : ''}
+	        <div class="col d-flex justify-content-end align-items-center mt-3">
+	            <button id="resetFilter" class="btn btn-secondary me-2">초기화</button>
+	            <button id="applyFilter" class="btn btn-primary me-2">검색</button>
+	            <button id="toggleFilters" class="btn btn-outline-secondary">
+	                <i class="bi bi-chevron-down"></i>
+	            </button>
+	        </div>
+	    </div>
+	    <div id="additionalFilters" class="row d-none"></div>
+	`;
 
     filterModule.innerHTML = defaultFilterHTML;
 	
     // Main DateRangePicker 초기화
-    setTimeout(() => {
-        const mainPicker = createDateRangePicker('mainDateRange', startDate.format,startDate.value, endDate.value);
-        if (mainPicker) {
-            console.log('Main DateRangePicker 초기화 성공');
-        }
-    }, 0); // DOM 안정화 후 실행
+	if (hasDateRange) {
+	    setTimeout(() => {
+	        const mainPicker = createDateRangePicker('mainDateRange', startDate.format, startDate.value, endDate.value);
+	        if (mainPicker) {
+	            console.log('Main DateRangePicker 초기화 성공');
+	        }
+	    }, 0);
+	}
 
     // 숨겨진 필터 UI 생성
     const additionalFilterHTML = filterConfig
@@ -94,6 +104,36 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
                     </div>
                 `;
             }
+			if (config.type === 'select') {
+			    return `
+			        <div class="${config.col}">
+			            <label for="${config.key}" class="form-label">${config.label}</label>
+			            <select id="${config.key}" class="form-select">
+			                <option value="">선택하세요.</option>
+			                ${config.list.map(option => 
+			                    `<option value="${option.value}">${option.text}</option>`
+			                ).join('')}
+			            </select>
+			        </div>
+			    `;
+			}
+
+			if (config.type === 'radio') {
+			    return `
+			        <div class="${config.col}">
+			            <label class="form-label">${config.label}</label>
+			            <div class="d-flex gap-3 pt-2">
+			                ${config.list.map(option => `
+			                    <div class="form-check">
+			                        <input type="radio" id="${config.key}_${option.value}" name="${config.key}" value="${option.value}" 
+			                            class="form-check-input"  ${option.checked ? 'checked' : ''}>
+			                        <label class="form-check-label" for="${config.key}_${option.value}">${option.text}</label>
+			                    </div>
+			                `).join('')}
+			            </div>
+			        </div>
+			    `;
+			}
         }).join('');
 
     document.getElementById('additionalFilters').innerHTML = additionalFilterHTML;
@@ -107,35 +147,46 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 	        return;
 	    }
 
-	    // 검색 버튼 이벤트 등록
-	    applyButton.addEventListener('click', () => {
-	        const filterValues = {};
+		// 검색 버튼 이벤트 등록
+		applyButton.addEventListener('click', () => {
+		    const filterValues = {};
 
-	        // Main DateRangePicker 값 가져오기
-	        const startInput = document.getElementById('mainDateRangeStartInput');
-	        const endInput = document.getElementById('mainDateRangeEndInput');
+		    if (hasDateRange) {
+			    // Main DateRangePicker 값 가져오기
+		        const startInput = document.getElementById('mainDateRangeStartInput');
+		        const endInput = document.getElementById('mainDateRangeEndInput');
 
-	        if (startInput && endInput) {
-	            filterValues['startDate'] = startInput.value;
-	            filterValues['endDate'] = endInput.value;
-	        } else {
-	            console.error('Main DateRangePicker 필드가 누락되었습니다.');
-	        }
+		        if (startInput && endInput) {
+		            filterValues['startDate'] = startInput.value;
+		            filterValues['endDate'] = endInput.value;
+				} else {
+		            console.error('Main DateRangePicker 필드가 누락되었습니다.');
+		        }
+		    }
 
-	        // 숨겨진 필터 값 가져오기
-	        filterConfig.forEach(config => {
-	            const element = document.getElementById(config.key);
-				if (config.key !== 'startDate' && config.key !== 'endDate') {
-		            if (element) {
-		                filterValues[config.key] = element.value;
-		            } else {
-		                console.warn(`요소를 찾을 수 없습니다: ${config.key}`);
-		            }
-				}
-	        });
+		    // 숨겨진 필터 값 가져오기
+			filterConfig.forEach(config => {
+			    if (config.key !== 'startDate' && config.key !== 'endDate') {
+			        let value = null;
+			        if (config.type === 'radio') {
+			            const selectedRadio = document.querySelector(`input[name="${config.key}"]:checked`);
+			            value = selectedRadio ? selectedRadio.value : null;
+			        } else {
+			            const element = document.getElementById(config.key);
+			            value = element ? element.value : null;
+			        }
+			        
+			        if (value !== null) {
+			            filterValues[config.key] = value;
+			        } else {
+			            console.warn(`입력 요소를 찾을 수 없습니다: ${config.key}`);
+			        }
+			    }
+			});
 
-	        onFilterApplyCallback(filterValues);
-	    });
+		    onFilterApplyCallback(filterValues);
+		});
+
 
 	    // 초기화 버튼 이벤트 등록
 	    resetButton.addEventListener('click', () => {
@@ -149,12 +200,21 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 	            endInput.value = endDate.value;
 	        }
 
-	        filterConfig.forEach(config => {
-	            const element = document.getElementById(config.key);
-	            if (element) {
-	                element.value = '';
-	            }
-	        });
+
+			filterConfig.forEach(config => {
+		        if (config.type == 'radio') {
+		            const defaultOption = config.list.find(option => option.checked);
+		            if (defaultOption) {
+		                const radio = document.getElementById(`${config.key}_${defaultOption.value}`);
+		                if (radio) radio.checked = true;
+		            }
+		        } else {
+		            const element = document.getElementById(config.key);
+		            if (element) {
+		                element.value = '';
+		            }
+		        }
+		    });
 	    });
 	}, 0);
 

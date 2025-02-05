@@ -65,11 +65,6 @@ public class Notice {
     @Column(name = "notice_md")
     private Timestamp notice_md;
     
-    @ManyToOne
-    @JoinColumn(name = "notice_wr", referencedColumnName = "employee_id", insertable = false, updatable = false)
-    private Employee employee;
-    
-    
 	// 생성자
 	public Notice() {
 	}

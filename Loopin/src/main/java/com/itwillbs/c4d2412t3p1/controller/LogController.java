@@ -50,7 +50,6 @@ public class LogController {
 	
 	@PostMapping("/select_FILTERED_LOG")
     public ResponseEntity<List<LogDTO>> filterLogs(@RequestBody LogFilterRequest filterRequest) {
-		log.info("@@@@@@@@@@@@@@@@@");
         try {
             // 필터 조건이 비어 있으면 전체 로그 반환
             if (filterRequest.isEmpty()) {
@@ -58,14 +57,6 @@ public class LogController {
                 return ResponseEntity.ok(logList);
             }
             
-            log.info(filterRequest.toString()); // 전체 필드 출력
-            log.info(filterRequest.getStartDate());
-            log.info(filterRequest.getEndDate());
-            log.info(filterRequest.getEmployee_id());
-            log.info(filterRequest.getLog_sj());
-            log.info( filterRequest.getLog_ju());
-            log.info(filterRequest.getLog_oi());
-            log.info(filterRequest.getLog_bj());
             // 필터 조건에 따른 필터링된 로그 반환
             List<LogDTO> filteredLogList = logService.select_FILTERED_LOG(filterRequest);
             

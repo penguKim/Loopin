@@ -183,8 +183,11 @@
 		setGridHeight(grid, -430);
 
 		$(window).resize(function() {
-			setElementHeight('#div_card', -105);
-			setGridHeight(grid, -430);
+			setTimeout(() => {
+				setElementHeight('#div_card', -105);
+				setGridHeight(grid, -430);
+				setGridWidth(grid, 0);
+			}, 300);
 		});
 			
 	});
