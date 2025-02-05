@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" 
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
+</style>
+
+<body>
+	<main id="main" class="main">
+
+		<!-- 그리드 및 등록 버튼 -->
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">거래처 등록</h5>
+								<div class="col-sm-12">
+									<div id="filterModule" class="mb-3"></div>
+									<div id="grid"></div>
+								</div>
+								<div class="col-sm-12">
+									<button type="button" class="btn btn-primary" id="openCreateModal" onclick="openModal('add')">등록</button>
+									<button type="button" class="btn btn-primary" id="btn_account_delete">삭제</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+		</section>
+	</main>
+	<!-- 메인 끝 -->
+</body>
+
+<script src="//t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js"></script>
+<script>
+	function openModal(mode, rowData = null) {
+		console.log("openModal 호출됨");
+		console.log("mode:", mode, "rowData:", rowData);
+		
+		// 기존 모달 및 배경 제거
+		document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+
+		// 기존 모달이 있으면 삭제
+		const existingModal = document.getElementById('modal_appointment_save');
+		if (existingModal) {
+		    console.log("기존 모달 제거");
+		    existingModal.remove();
+		}
+		
+		// 모달이 이미 존재하는지 확인 후 중복 실행 방지
+		if (document.getElementById('modal_appointment_save')) {
+		    return;
+		}
+		
+		
+		// 모달 제목 및 버튼 텍스트 설정
+		const modalTitle = mode === 'edit' ? '거래처 수정' : '거래처 등록';
+		const submitButtonText = mode === 'edit' ? '수정' : '등록';
+		
+		
+	    // 모달 HTML 코드 생성
+	    const modalHtml = `
+		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+		    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="modalTitle">${modalTitle}</h5>
+		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		            </div>
+		            <div class="modal-body">
+		                <form id="appointment_form" method="post" enctype="multipart/form-data" onsubmit="return false;">
+							<div class="row mb-3">
+						        <input type="hidden" class="form-control" id="account_cd" name="account_cd"><!-- 거래처코드 히든 -->
+						        <input type="hidden" class="form-control" id="account_em" name="account_em"><!-- 이메일 히든 -->
+						        <input type="hidden" class="form-control" id="account_ad" name="account_ad"><!-- 주소 히든 -->
+							    <div class="col-md-4">
+							        <label for="account_nm" class="form-label">거래처명<span class="text-danger"> *</span></label>
+							        <input type="text" class="form-control" id="account_nm" name="account_nm">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_dv" class="form-label">거래처구분<span class="text-danger"> *</span></label>
+							        <select class="form-select" id="account_dv" name="account_dv">
+							            <option selected>선택</option>
+							        </select>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ps" class="form-label">대표자명<span class="text-danger"> *</span></label>
+							        <input type="text" class="form-control" id="account_cp" name="account_cp">
+							    </div>
+							</div>
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="account_ps" class="form-label">담당자명<span class="text-danger"> *</span></label>
+							        <input type="text" class="form-control" id="account_ps" name="account_ps">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ph" class="form-label">연락처</label>
+							        <input type="text" class="form-control" id="account_ph" name="account_ph">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ph" class="form-label">팩스번호</label>
+							        <input type="text" class="form-control" id="account_fx" name="account_ph">
+							    </div>
+							</div>
+							
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="email_id" class="form-label">이메일 아이디</label>
+							        <input type="text" class="form-control" id="email_id" name="email_id" placeholder="아이디 입력" minlength="4" maxlength="16">
+							        <span id="email_id_check" class="text-danger"></span>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="custom_domain" class="form-label">도메인 직접 입력</label>
+							        <input type="text" class="form-control" id="custom_domain" name="custom_domain" placeholder="직접 입력">
+							        <span id="custom_domain_check" class="text-danger"></span>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="select_domain" class="form-label">도메인 선택</label>
+							        <select class="form-select" id="select_domain" name="select_domain">
+							            <option value="custom" selected>직접 입력</option>
+							            <option value="naver.com">naver.com</option>
+							            <option value="google.com">google.com</option>
+							            <option value="hanmail.net">hanmail.net</option>
+							            <option value="nate.com">nate.com</option>
+							            <option value="kakao.com">kakao.com</option>
+							        </select>
+							    </div>
+							</div>
+							
+							<div class="row mb-3">
+							    <div class="col-md-4">
+							        <label for="account_sb" class="form-label">사업자번호<span class="text-danger"> *</span></label>
+							        <input type="text" class="form-control" id="account_sb" name="account_sb">
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_uj" class="form-label">업종<span class="text-danger"> *</span></label>
+									<select class="form-select" id="account_uj" name="account_uj">
+									    <option selected>선택</option>
+									</select>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ut" class="form-label">업태<span class="text-danger"> *</span></label>
+									<select class="form-select" id="account_ut" name="account_ut">
+									    <option selected>선택</option>
+									</select>
+							    </div>
+							</div>
+							
+		                    <div class="row mb-3">
+		                        <div class="col-md-4">
+		                            <label for="account_zc" class="form-label">우편번호</label>
+		                            <input type="text" class="form-control" id="account_zc" name="zipCode" placeholder="우편번호" onclick="findAddr()" readonly>
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_sa" class="form-label">기본주소</label>
+		                            <input type="text" class="form-control" id="account_sa" name="account_sa" placeholder="도로명 주소" readonly>
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_da" class="form-label">상세주소</label>
+		                            <input type="text" class="form-control" id="account_da" name="account_da" placeholder="상세 주소">
+		                        </div>
+		                    </div>
+
+							
+							<div class="row mb-3">
+							    <div class="col-md-4">
+									<label for="account_us" class="form-label">사용여부<span class="text-danger"> *</span></label>
+									<select class="form-select" id="account_us" name="account_us">
+									    <option selected>선택</option>
+									</select>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_sd" class="form-label">거래시작일<span class="text-danger"> *</span></label>
+							        <input type="text" class="form-control" id="account_sd" name="account_sd">
+							        <div id="modal_startpicker-container"></div>
+							    </div>
+							    <div class="col-md-4">
+							        <label for="account_ed" class="form-label">거래종료일</label>
+							        <input type="text" class="form-control" id="account_ed" name="account_ed">
+							        <div id="modal_endpicker-container"></div>
+							    </div>
+							</div>
+
+		                    <div class="row mb-3">
+		                        <div class="col-md-4">
+		                            <label for="account_bk" class="form-label">은행</label>
+		                            <input type="text" class="form-control" id="account_bk" name="account_bk">
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_an" class="form-label">계좌번호</label>
+		                            <input type="text" class="form-control" id="account_an" name="account_an">
+		                        </div>
+		                        <div class="col-md-4">
+		                            <label for="account_dt" class="form-label">예금주</label>
+		                            <input type="text" class="form-control" id="account_dt" name="account_dt">
+		                        </div>
+		                    </div>
+		                    <div class="row mb-3">
+		                        <div class="col-md-12">
+		                            <label for="account_nt" class="form-label">비고</label>
+		                            <textarea class="form-control" id="account_nt" name="account_nt" rows="3" style="height: 100px"></textarea>
+		                        </div>
+		                    </div>
+		                </form>
+		            </div>
+		            <div class="modal-footer d-flex justify-content-between">
+		            	<button type="button" class="btn btn-danger" id="resetFormBtn"  style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+		            	<div>
+			                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                <button type="button" id="modal_submit_button" class="btn btn-primary">${submitButtonText}</button>
+		            	</div>
+	                </div>
+		        </div>
+		    </div>
+		</div>
+
+	    `;
+
+		
+		var useynList = window.useynList || [];
+		var ACtypeList = window.ACtypeList || [];
+		
+		
+		// 모달 HTML을 동적으로 body에 추가
+		document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+		// 모달이 추가된 후 실행
+		const modalElement = document.getElementById('modal_appointment_save');
+		if (!modalElement) {
+		    console.error("모달이 생성되지 않았습니다.");
+		    return;
+		}
+		
+		// Bootstrap Modal 객체 생성 및 실행
+		const modalInstance = new bootstrap.Modal(modalElement);
+		
+		
+		// 모달이 완전히 표시된 후 이벤트 리스너 추가
+		setTimeout(() => {
+		    modalElement.addEventListener('shown.bs.modal', function () {
+		        console.log("모달이 완전히 열림 - 초기화 시작");
+
+	            if (typeof initializeDatePickers === "function") {
+	                console.log("initializeDatePickers 실행 mode:", mode, "rowData:", rowData);
+	                initializeDatePickers(mode, rowData);
+	            } else {
+	                console.error("initializeDatePickers 함수가 존재하지 않습니다.");
+	            }
+
+		        if (typeof initializeModalHandlers === "function") {
+		            console.log("모달 핸들러 초기화 실행");
+		            initializeModalHandlers();
+		        } else {
+		            console.error("initializeModalHandlers 함수가 존재하지 않습니다.");
+		        }
+
+		        if (typeof initializeValidationHandlers === "function") {
+		            console.log("유효성 검사 초기화 실행");
+		            initializeValidationHandlers();
+		        } else {
+		            console.error("initializeValidationHandlers 함수가 존재하지 않습니다.");
+		        }
+		    });
+
+		    modalInstance.show();
+		}, 100);
+
+
+		if (mode === 'edit' && rowData) {
+
+	        $('#account_sd').val(rowData.account_sd);
+	        $('#account_ed').val(rowData.account_ed);
+	        $('#account_ed').prop('disabled', false);  // 종료일 활성화
+	        $('#resetFormBtn').hide(); // 버튼 숨기기
+	        
+	        console.log("설정된 account_sd 값:", $('#account_sd').val());
+	        console.log("설정된 account_ed 값:", $('#account_ed').val());
+			
+		    // select 요소의 값을 설정하기 위한 매핑
+		    const selectFields = {
+		        account_dv: 'text',
+		        account_uj: 'text',
+		        account_ut: 'text',
+		        account_us: 'text'
+		    };
+
+		    
+		    // 옵션이 모두 채워진 후 값을 설정
+		    setTimeout(() => {
+		        if (rowData.account_em) {
+		            const emailParts = rowData.account_em.split('@');
+		            if (emailParts.length === 2) {
+		                $('#email_id').val(emailParts[0]); // 이메일 아이디
+		                const domainMatch = $('#select_domain option').filter((_, option) => $(option).val() === emailParts[1]);
+
+		                if (domainMatch.length) {
+		                    $('#select_domain').val(emailParts[1]).trigger('change');
+		                } else {
+		                    $('#select_domain').val('custom').trigger('change');
+		                    $('#custom_domain').val(emailParts[1]);
+		                }
+		            }
+		        }
+
+
+		        // 주소 분할 처리
+		        if (rowData.account_ad) {
+		        	const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
+		        	const match = rowData.account_ad.match(regex);
+		        	
+		            if (match) {
+		                $('#account_zc').val(match[1]); // 우편번호
+		                $('#account_sa').val(match[2]); // 기본주소
+		                $('#account_da').val(match[3].trim()); // 상세주소
+		            }
+		        }
+		        
+		        Object.keys(selectFields).forEach(field => {
+		            const $select = $(`#${field}`);
+		            if ($select.length) {
+		                const textToMatch = rowData[field];
+		                const matchType = selectFields[field];
+		                const matchingOption = $select.find('option').filter((_, option) => {
+		                    return $(option).text().trim() === textToMatch.trim() || $(option).val().trim() === String(textToMatch).trim();
+		                });
+
+		                if (matchingOption.length) {
+		                    $select.val(matchingOption.val()).prop('selected', true);
+		                } else {
+		                    console.warn(`'${field}'에 '${textToMatch}' 값이 존재하지 않습니다.`);
+		                }
+		            }
+		        });
+		        
+		        
+		    }, 100);
+		    
+			
+			Object.keys(rowData).forEach(key => {
+		        const $field = $(`#${key}`);
+		        if ($field.length && $field.is('input, textarea') && $field.attr('type') !== 'file') {
+		            $field.val(rowData[key] || '');
+		        }
+			});
+
+		}
+	    
+		
+		
+		// 셀렉트 박스 관련 함수
+		function populateSelectOptions(selectId, dataList) {
+		    const selectElement = document.getElementById(selectId);
+		    if (Array.isArray(dataList) && dataList.length > 0) {
+		        dataList.forEach(item => {
+		            const option = document.createElement('option');
+		            option.value = item.common_cc;
+		            option.textContent = item.common_nm;
+		            selectElement.appendChild(option);
+		        });
+		    }
+		}
+
+		// 거래처 구분 (account_dv) 옵션 추가
+		populateSelectOptions('account_dv', window.ACtypeList);
+
+		// 사용여부 (account_us) 옵션 추가
+		populateSelectOptions('account_us', window.useynList);
+
+		// 업종 (account_uj) 옵션 추가
+		populateSelectOptions('account_uj', window.BTtypeList);
+		
+		// 업태 (account_ut) 옵션 추가
+		populateSelectOptions('account_ut', window.BItypeList);
+
+		
+		// 모달 닫힐 때 배경 제거
+		document.getElementById('modal_appointment_save').addEventListener('hidden.bs.modal', function () {
+		    document.getElementById('modal_appointment_save').remove();
+		    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+		});
+	} // openModal() 끝
+	
+	// 4. 이메일 완성 및 갱신
+	function updateFullEmail() {
+	    const username = $("#email_id").val().trim(); // 아이디 입력값
+	    const domainSelect = $("#select_domain").val(); // 선택된 도메인 값
+	    const customDomain = $("#custom_domain").val().trim(); // 직접 입력 도메인 값
+	    const domain = domainSelect === "custom" ? customDomain : domainSelect;
+	
+	    // username과 domain이 모두 비어 있는 경우, 이메일 필드를 빈 값으로 설정
+	    if (!username && !domain) {
+	        $("#account_em").val("");
+	        return;
+	    }
+	
+	    // 이메일 필드 값 설정
+	    const fullEmail = username && domain ? `${username}@${domain}` : username || domain;
+	    $("#account_em").val(fullEmail);
+	}
+
+	function initializeDatePickers(mode, rowData = null) {
+	    console.log("initializeDatePickers 실행됨, mode:", mode, "rowData:", rowData);
+
+	    const today = new Date(); // 오늘 날짜
+	    const startDate = rowData && rowData.account_sd ? new Date(rowData.account_sd) : today; // 시작일 설정
+	    const endDate = rowData && rowData.account_ed ? new Date(rowData.account_ed) : null; // 종료일 설정
+
+	    console.log("초기 설정된 시작일:", startDate);
+	    console.log("초기 설정된 종료일:", endDate);
+
+	    // 시작일과 종료일 DatePicker 초기화
+	    var startPicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: startDate,
+	            input: '#account_sd',
+	            container: '#modal_startpicker-container',
+	        },
+	        endpicker: {
+	            date: endDate,
+	            input: '#account_ed',
+	            container: '#modal_endpicker-container',
+	            disabled: mode === 'add', // 등록 모드에서는 비활성화
+	        },
+	        format: 'YYYY-MM-dd',
+	        timePicker: false,
+	    });
+
+	    if (mode === 'add') {
+	        $('#account_ed').val('').prop('disabled', true); // 등록 모드에서는 종료일 비활성화
+	    } else {
+	        $('#account_ed').prop('disabled', false); // 수정 모드에서는 활성화
+	    }
+
+	    // 시작일 선택 이벤트 처리
+	    startPicker.on('change:start', function (event) {
+	        if (event && event.date) {
+	            console.log('선택된 시작일:', event.date);
+
+	            var minEndDate = new Date(event.date);
+	            minEndDate.setDate(minEndDate.getDate() + 1);
+
+	            startPicker.getEndpicker().setOptions({
+	                date: minEndDate,
+	                disabled: false,
+	            });
+
+	            $('#account_ed').prop('disabled', false);
+	        }
+	    });
+
+	    // 모달이 닫힐 때 초기화
+	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
+	        if (mode === 'edit' && rowData) {
+	            $('#account_sd').val(rowData.account_sd);
+	            $('#account_ed').val(rowData.account_ed);
+	        } else {
+	            $('#account_sd').val(today.toISOString().split('T')[0]);
+	            $('#account_ed').val('').prop('disabled', true);
+	        }
+
+	        if (startPicker.startpicker) {
+	            startPicker.startpicker.setOptions({ date: startDate });
+	        }
+	        if (startPicker.endpicker) {
+	            startPicker.endpicker.setOptions({ date: endDate, disabled: mode === 'add' });
+	        }
+	    });
+
+	    console.log("최종 설정된 account_sd:", $('#account_sd').val());
+	    console.log("최종 설정된 account_ed:", $('#account_ed').val());
+	}
+
+	
+	
+	let currentPopup = null;
+
+	// 주소 찾기 함수
+	function findAddr() {
+	    console.log("findAddr 호출");
+
+	    // 기존 팝업 닫기
+	    if (currentPopup && !currentPopup.closed) {
+	        console.log("기존 팝업 닫기");
+	        currentPopup.close();
+	    }
+
+	    // 새로운 주소 검색 팝업 열기
+	    currentPopup = new daum.Postcode({
+	        oncomplete: function (data) {
+	            console.log("주소 검색 완료:", data);
+
+	            // 검색 결과를 입력 필드에 반영
+	            $("#account_zc").val(data.zonecode); // 우편번호
+	            $("#account_sa").val(data.roadAddress); // 기본주소
+	            $("#account_da").val("").focus(); // 상세주소 초기화
+
+	            // 통합 주소 업데이트
+	            const fullAddress = `(${data.zonecode}) ${data.roadAddress}`;
+	            $("#account_ad").val(fullAddress);
+
+	            // 팝업 창 닫기
+	            if (currentPopup) {
+	                currentPopup.close();
+	                console.log("팝업이 닫혔습니다.");
+	            }
+	        },
+	        onclose: function () {
+	            console.log("사용자가 팝업을 닫았습니다.");
+	        }
+	    }).open();
+	}
+
+	// 모달 관리 핸들러
+	function initializeModalHandlers() {
+		// 상세주소 입력 시 통합주소 갱신
+		$("#account_da").off("input").on("input", function () {
+		    const zipCode = $("#account_zc").val();
+		    const roadAddress = $("#account_sa").val();
+		    const detailAddress = $(this).val();
+
+		    // 통합 주소 갱신
+		    const fullAddress = `(${zipCode}) ${roadAddress} ${detailAddress}`;
+		    $("#account_ad").val(fullAddress);
+		});
+
+	    // 3. 이메일 도메인 선택 처리
+	    function handleDomainChange() {
+	        $("#select_domain").off("change").on("change", function () {
+	            const customDomainInput = $("#custom_domain");
+	            const selectedDomain = $(this).val();
+
+	            if (selectedDomain === "custom") {
+	                // "직접 입력" 선택 시 필드 활성화
+	                customDomainInput.prop("disabled", false).val("").attr("placeholder", "직접 입력");
+	            } else {
+	                // 다른 도메인 선택 시 필드 비활성화 및 값 설정
+	                customDomainInput.prop("disabled", true).val(selectedDomain);
+	            }
+	        });
+	    }
+
+	    // 이메일 관련 이벤트 등록
+// 	    $("#email_id").off("input").on("input", updateFullEmail);
+	    $("#select_domain").off("change").on("change", function () {
+	        handleDomainChange(); // 도메인 선택 처리
+// 	        updateFullEmail();    // 이메일 갱신
+	    });
+// 	    $("#custom_domain").off("input").on("input", updateFullEmail);
+
+	}
+
+
+	function initializeValidationHandlers() {
+	    // 1. 이메일 아이디 유효성 검사
+	    function validateEmailId() {
+	        $("#email_id").off("blur").on("blur", function () {
+	            const emailId = $(this).val().trim();
+	            const emailIdRegex = /^[a-zA-Z0-9_-]{4,20}$/; // 영어, 숫자, 하이픈(-), 밑줄(_)만 허용, 4~20자
+	            const feedbackElement = $("#email_id_check");
+
+	            if (!emailIdRegex.test(emailId)) {
+	                feedbackElement.text("이메일 아이디는 영어, 숫자, 하이픈(-), 밑줄(_)만 허용됩니다.").css("color", "red");
+	            } else {
+	                feedbackElement.text(""); // 문제 없으면 메시지 제거
+	            }
+	        });
+	    }
+
+	    // 2. 도메인 직접 입력 유효성 검사
+	    function validateCustomDomain() {
+	        $("#custom_domain").off("blur").on("blur", function () {
+	            const customDomain = $(this).val().trim();
+	            const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/; // 도메인 형식
+	            const feedbackElement = $("#custom_domain_check");
+
+	            if ($("#select_domain").val() === "custom") {
+	                // 직접 입력 도메인 유효성 검사
+	                if (!domainRegex.test(customDomain)) {
+	                    feedbackElement.text("올바른 도메인 형식이 아닙니다.").css("color", "red");
+	                } else {
+	                    feedbackElement.text(""); // 문제 없으면 메시지 제거
+	                }
+	            }
+	        });
+	    }
+
+	    // 3. 도메인 선택에 따른 유효성 메시지 및 직접 입력 필드 업데이트
+	    function handleDomainSelection() {
+	        $("#select_domain").off("change").on("change", function () {
+	            const selectedDomain = $(this).val(); // 선택된 도메인 값
+	            const feedbackElement = $("#custom_domain_check");
+
+	            if (selectedDomain === "custom") {
+	                // "직접 입력" 선택 시 필드 활성화
+	                $("#custom_domain").prop("disabled", false).val("").attr("placeholder", "직접 입력");
+	                feedbackElement.text(""); // 메시지 초기화
+	            } else {
+	                // 다른 도메인 선택 시 직접 입력 필드 비활성화 및 값 설정
+	                $("#custom_domain").prop("disabled", true).val(selectedDomain);
+	                feedbackElement.text(""); // 메시지 제거
+	            }
+	        });
+	    }
+
+	    // 유효성 검사 핸들러 등록
+	    validateEmailId();
+	    validateCustomDomain();
+	    handleDomainSelection();
+	}
+
+</script>
+
+<!-- 필터 모듈 JS File -->
+<script th:inline="javascript">
+	$(document).ready(function () {
+	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+		
+		// 사용여부, 거래처구분, 업태, 업종 리스트 불러오기 및 JSON 변환
+		window.useynList = /*[[${useyn_list != null ? useyn_list : '[]'}]]*/ [];
+		window.ACtypeList = /*[[${ACtype_list != null ? ACtype_list : '[]'}]]*/ [];
+		window.BTtypeList = /*[[${BTtype_list != null ? BTtype_list : '[]'}]]*/ [];
+		window.BItypeList = /*[[${BItype_list != null ? BItype_list : '[]'}]]*/ [];
+
+		// JSON 문자열인지 확인 후 변환
+		["useynList", "ACtypeList", "BTtypeList", "BItypeList"].forEach(key => {
+		    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
+		});
+
+
+		var userRole = /*[[${role}]]*/ 'default';
+		
+		
+		const filterConfig = [
+			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처 CD 입력',  col: 'col-3' },
+            { key: 'accountNm', label: '거래처명', type: 'text', placeholder: '거래처명 입력',  col: 'col-3' },
+            { key: 'accountPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력',  col: 'col-3' },
+            { key: 'accountDv', label: '거래처구분', type: 'text', placeholder: '거래처구분 입력',  col: 'col-3' }
+        ];
+		
+	    
+		setElementHeight('.card', -105);
+		
+		$(window).resize(function() {
+			setElementHeight('.card', -105);
+			if(grid != null) {
+				setGridHeight(grid, -430);
+			}
+		});
+
+		 $(document).on('filterToggled', function(e) {
+			 console.log(grid);
+			    if(e.detail.isVisible) {
+			        setGridHeight(grid, -460);
+			    } else {
+			        setGridHeight(grid, -390);
+			    }
+			});
+		
+		// 필터 모듈 및 그리드 로드
+		loadGridData(); 
+	    
+	    
+	    // 필터 모듈 초기화
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		    console.log('적용된 필터:', filterValues);
+		
+		    // 필터 적용 후 서버 요청 및 Grid 갱신
+		    fetch('/select_FILTERED_ACCOUNT', {
+		        method: 'POST',
+		        headers: { 'Content-Type': 'application/json',
+		        			[csrfHeader]: csrfToken
+		        },
+		        body: JSON.stringify(filterValues)
+		    })
+		    .then(response => response.json())
+		    .then(filteredData => {
+		        console.log('필터링된 데이터:', filteredData);
+		
+		        // Grid 데이터 갱신
+		        grid.resetData(filteredData);
+		    })
+		    .catch(error => console.error('필터 적용 오류:', error));
+		});
+	    
+	    // 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return;
+		    const filterValues = {};
+
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        let value = input.val();
+
+		        filterValues[config.key] = value;
+				
+				console.log('필터값:', filterValues);  // 필터링된 값 확인
+		    }
+
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/select_FILTERED_ACCOUNT',
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken,
+		        },
+		        data: JSON.stringify(filterValues),
+		        success: function(filteredData) {
+		            console.log('엔터키로 필터링된 데이터:', filteredData);
+		            grid.resetData(filteredData);
+		        },
+		        error: function(error) {
+		            console.error('엔터키 필터 적용 오류:', error);
+		        }
+		    });
+		});
+
+	    
+	    let accountList = []; // 전체 데이터
+
+	    let grid;
+
+		function loadGridData() {
+			
+			tui.Grid.setLanguage('ko');
+			tui.Grid.applyTheme('striped');
+			
+		    $.ajax({
+		        url: '/select_ACCOUNT',
+		        method: 'GET',
+		        success: function (response) {
+		            accountList = response;
+
+		            if (grid) {
+		                grid.resetData(accountList.map(row => ({
+		                    account_cd: row.account_cd,
+		                    account_nm: row.account_nm,
+		                    account_dv: row.account_dv,
+		                    account_cp: row.account_cp,
+		                    account_ps: row.account_ps,
+		                    account_ph: row.account_ph,
+		                    account_fx: row.account_fx,
+		                    account_em: row.account_em,
+		                    account_sb: row.account_sb,
+		                    account_uj: row.account_uj,
+		                    account_ut: row.account_ut,
+		                    account_ad: row.account_ad,
+		                    account_sd: row.account_sd,
+		                    account_ed: row.account_ed,
+		                    account_bk: row.account_bk,
+		                    account_an: row.account_an,
+		                    account_dt: row.account_dt,
+		                    account_us: row.account_us,
+		                    account_nt: row.account_nt,
+		                    account_wr: row.account_wr,
+		                    account_wd: row.account_wd,
+		                    account_mf: row.account_mf,
+		                    account_md: row.account_md
+		                })));
+		            } else {
+		                grid = new tui.Grid({
+		                    el: document.getElementById('grid'),
+		                    data: accountList.map(row => ({
+		                        account_cd: row.account_cd,
+		                        account_nm: row.account_nm,
+		                        account_dv: row.account_dv,
+		                        account_cp: row.account_cp,
+		                        account_ps: row.account_ps,
+		                        account_ph: row.account_ph,
+		                        account_fx: row.account_fx,
+		                        account_em: row.account_em,
+		                        account_sb: row.account_sb,
+		                        account_uj: row.account_uj,
+		                        account_ut: row.account_ut,
+		                        account_ad: row.account_ad,
+		                        account_sd: row.account_sd,
+		                        account_ed: row.account_ed,
+		                        account_bk: row.account_bk,
+		                        account_an: row.account_an,
+		                        account_dt: row.account_dt,
+		                        account_us: row.account_us,
+		                        account_nt: row.account_nt,
+		                        account_wr: row.account_wr,
+		                        account_wd: row.account_wd,
+		                        account_mf: row.account_mf,
+		                        account_md: row.account_md
+		                    })),
+		                    scrollX: true,
+		                    scrollY: true,
+		                    autoWidth: true,
+		                    rowHeight: 'auto',
+		                    bodyHeight: 'fitToParent',
+		                    rowHeaders: ['checkbox'],
+		                    zIndex: 100,
+		                    columns: [
+		                        { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+		                        { header: '거래처명', name: 'account_nm', align: 'center', sortable: true },
+		                        { header: '거래처구분', name: 'account_dv', align: 'center', sortable: true },
+		                        { header: '대표자명', name: 'account_cp', align: 'center', sortable: true },
+		                        { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
+		                        { header: '연락처', name: 'account_ph', align: 'center', sortable: true },
+		                        { header: '이메일', name: 'account_em', align: 'center', sortable: true },
+								{ header: '사용여부', name: 'account_us', align: 'center', sortable: true },
+								
+								// 숨김 컬럼
+								{ header: '팩스번호', name: 'account_fx', hidden: true },
+								{ header: '사업자번호', name: 'account_sb', hidden: true },
+								{ header: '업종', name: 'account_uj', hidden: true },
+								{ header: '업태', name: 'account_ut', hidden: true },
+								{ header: '주소', name: 'account_ad', hidden: true },
+								{ header: '거래시작일', name: 'account_sd', hidden: true },
+								{ header: '거래종료일', name: 'account_ed', hidden: true },
+								{ header: '은행', name: 'account_bk', hidden: true },
+								{ header: '계좌번호', name: 'account_an', hidden: true },
+								{ header: '예금주', name: 'account_dt', hidden: true },
+								{ header: '비고', name: 'account_nt', hidden: true },
+								{ header: '작성자', name: 'account_wr', hidden: true },
+								{ header: '작성일', name: 'account_wd', hidden: true },
+								{ header: '수정자', name: 'account_mf', hidden: true },
+								{ header: '수정일', name: 'account_md', hidden: true }
+								
+		                    ],
+							summary: {
+							    height: 40,
+							    position: 'bottom', // or 'top'
+							    columnContent: {
+							    	account_em: {
+							            template: (valueMap) => {
+							                return `총  ${valueMap.cnt} 건`
+							            }
+							        }
+							    }
+							},
+		                });
+
+		                // 그리드 클릭 이벤트 등록
+		                grid.on('click', (ev) => {
+		                    const columnName = ev.columnName;
+		                    const rowKey = ev.rowKey;
+		                    const rowData = grid.getRow(rowKey);
+		                    console.log("rowData : " + rowData);
+
+		                    // 헤더 클릭인지 확인
+		                    if (rowKey === null || rowKey === undefined) {
+		                        console.warn("헤더 클릭은 무시됩니다.");
+		                        return;
+		                    }
+		                    
+		                    if (columnName === 'account_cd' || columnName === 'account_id' || columnName === 'account_nm') {
+		                        console.log("모달에 표시할 데이터:", rowData);
+		                        openModal('edit', rowData); // 수정 모달 실행
+		                    }
+		                });
+
+		                setGridHeight(grid, -476);
+		            }
+		        },
+		        error: function (error) {
+		            console.error('데이터 로드 실패:', error);
+		        }
+		    });
+		}
+	    
+	    
+
+	    // 삭제 버튼 클릭 이벤트
+	    $('#btn_account_delete').on('click', function () {
+	        const checkedRows = grid.getCheckedRows();
+	        if (checkedRows.length === 0) {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '삭제할 거래처를 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
+	            return;
+	        }
+
+	        const account_cds = checkedRows.map(row => row.account_cd);
+
+	        Swal.fire({
+	            title: '삭제 확인',
+	            text: `선택한 거래처(${account_cds.join(', ')})을 삭제하시겠습니까?`,
+	            icon: 'warning',
+	            showCancelButton: true,
+	            confirmButtonText: '삭제',
+	            cancelButtonText: '취소',
+	            reverseButtons: true
+	        }).then((result) => {
+	            if (result.isConfirmed) {
+	                // 확인 버튼을 눌렀을 때 실행할 코드
+	                console.log(`선택한 거래처(${account_cds.join(', ')}) 삭제를 진행합니다.`);
+	                
+	    	        $.ajax({
+	    	            url: '/delete_ACCOUNT',
+	    	            method: 'POST',
+	    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	    	            data: JSON.stringify({ account_cds }),
+	    	            contentType: 'application/json',
+	    	            success: function () {
+	    		            Swal.fire({
+	    		                icon: 'success',
+	    		                title: '삭제완료!',
+	    		                text: '삭제가 완료되었습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+							loadGridData();
+	    	            },
+	    	            error: function (xhr) {
+	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+	    		            Swal.fire({
+	    		                icon: 'error',
+	    		                title: '오류발생',
+	    		                text: '삭제 중 오류가 발생했습니다.',
+	    		                confirmButtonText: '확인'
+	    		            });
+	    	            }
+	    	        });
+	                
+	                
+	            } else if (result.dismiss === Swal.DismissReason.cancel) {
+	                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+	                console.log('삭제가 취소되었습니다.');
+	            }
+	        });
+	    });
+
+	    // 모달 닫힐 때 상태 초기화
+	    $('#modal_appointment_save').on('hidden.bs.modal', function () {
+			$('#appointment_form')[0].reset(); // 폼 초기화
+			$('#account_cd').val(''); // 숨겨진 수정용 필드 초기화
+			$('#modalTitle').text(''); // 모달 제목 초기화
+			$('#modal_submit_button').text(''); // 버튼 텍스트 초기화
+	    });
+
+		
+	    $(document).on('click', '#resetFormBtn', function () {
+			console.log('리셋버튼 호출 ');
+			resetModal();
+	        
+	    });
+	    
+		// 모달 초기화 함수
+		function resetModal() {
+		    $('#appointment_form')[0].reset(); // 폼 초기화
+	        $('#appointment_form select').prop('selectedIndex', 0);
+	        $('#custom_domain_check').text('');
+	        $('#email_id_check').text('');
+			
+	        // 오늘 날짜 설정 (YYYY-MM-DD 형식)
+	        let today = new Date();
+	        let formattedDate = today.getFullYear() + '-' + 
+	                            ('0' + (today.getMonth() + 1)).slice(-2) + '-' + 
+	                            ('0' + today.getDate()).slice(-2);
+	        
+	        $('#account_sd').val(formattedDate);
+		}
+		
+		
+		// 폼 제출 이벤트 실행
+		$(document).on('click', '#modal_submit_button', function () {
+
+			console.log("등록 버튼 클릭됨!");
+			
+		    $('#appointment_form').trigger('submit'); // 폼 제출 이벤트 실행
+		});
+
+		// 폼 제출 이벤트
+		$(document).on('submit', '#appointment_form', function (event) {
+		    event.preventDefault(); // ✅ 기본 제출 동작 차단
+
+		    if (!validateForm()) {
+		        return false; // 검증 실패 시 제출 중단
+		    }
+		    
+		    const mode = $('#modal_submit_button').text().trim();
+		    const url = mode === '등록' ? '/insert_ACCOUNT' : '/update_ACCOUNT';
+
+		    updateFullEmail();
+		    
+		    const accountDTO = {
+		        account_cd: $('#account_cd').val(),
+		        account_nm: $('#account_nm').val(),
+		        account_dv: $('#account_dv').val(),
+		        account_cp: $('#account_cp').val(),
+		        account_ps: $('#account_ps').val(),
+		        account_ph: $('#account_ph').val(),
+		        account_fx: $('#account_fx').val(),
+		        account_em: $('#account_em').val(),
+		        account_sb: $('#account_sb').val(),
+		        account_uj: $('#account_uj').val(),
+		        account_ut: $('#account_ut').val(),
+		        account_ad: $('#account_ad').val(),
+		        account_sd: $('#account_sd').val(),
+		        account_ed: $('#account_ed').val(),
+		        account_bk: $('#account_bk').val(),
+		        account_an: $('#account_an').val(),
+		        account_dt: $('#account_dt').val(),
+		        account_us: $('#account_us').val(),
+		        account_nt: $('#account_nt').val(),
+		        account_wr: $('#account_wr').val(),
+		        account_wd: $('#account_wd').val(),
+		        account_mf: $('#account_mf').val(),
+		        account_md: $('#account_md').val()
+		    };
+		    
+		    
+		    $.ajax({
+		        url: url,
+		        method: 'POST',
+		        contentType: "application/json", // ✅ JSON 형식으로 변경
+		        headers: { 'X-CSRF-TOKEN': csrfToken },
+		        data: JSON.stringify(accountDTO), // JSON 직렬화 후 전송
+		        success: function () {
+		            Swal.fire({
+		                icon: 'success',
+		                title: mode === '등록' ? '등록 완료' : '수정 완료',
+		                text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+		                confirmButtonText: '확인'
+		            });
+
+		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
+		            loadGridData(); // 페이지 새로고침 없이 그리드만 업데이트
+		        },
+		        error: function (xhr) {
+		            console.error('AJAX Error:', xhr.responseText);
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '작업 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		});
+		
+		// 필수값 검증 함수
+		function validateForm() {
+		    let isValid = true;
+		    let errorField = null; // 오류 필드
+		    
+		    // 필수값 필드 목록
+		    const requiredFields = [
+		        { id: '#account_nm', message: '거래처명을 입력해주세요.' },
+		        { id: '#account_dv', message: '거래처구분을 선택해주세요.' },
+		        { id: '#account_cp', message: '대표자명을 입력해주세요.' },
+		        { id: '#account_ps', message: '담당자명을 입력해주세요.' },
+		        { id: '#account_sb', message: '사업자번호를 입력해주세요.' },
+		        { id: '#account_uj', message: '업종을 선택해주세요.' },
+		        { id: '#account_ut', message: '업태를 선택해주세요.' },
+		        { id: '#account_us', message: '사용여부를 선택해주세요.' }
+		    ];
+
+		    
+		    // 필드 검증
+		    $.each(requiredFields, function (index, field) {
+		        const inputElement = $(field.id);
+		        const isElementExist = inputElement.length > 0;
+		        const value = isElementExist ? inputElement.val().trim() : '';
+		        const isSelectBox = isElementExist && inputElement.is('select');
+
+		        // 요소가 존재하는지 확인
+		        if (inputElement.length === 0) {
+		            console.warn(`${field.id} 필드를 찾을 수 없습니다.`);
+		            return true; // 다음 필드 검사 계속 진행
+		        }
+
+		        // 셀렉트 박스: 값이 빈 문자열이거나 "선택"일 경우 유효하지 않음
+		        if (isSelectBox && (value === '' || value === '선택')) {
+					if (!errorField) errorField = inputElement;
+		        	inputElement.focus(); // 즉시 포커스 이동
+		            Swal.fire({
+		                icon: 'error',
+		                title: '입력 오류',
+		                text: field.message,
+		                confirmButtonText: '확인'
+		            });
+		            inputElement.focus(); // 해당 필드에 포커스 설정
+		            isValid = false;
+		            return false; // 검증 중단
+		        }
+
+		        // 일반 입력 필드: 값이 비어 있으면 유효하지 않음
+		        if (!isSelectBox && value === '') {
+		        	if (!errorField) errorField = inputElement;
+		        	inputElement.focus(); // 즉시 포커스 이동
+		            Swal.fire({
+		                icon: 'error',
+		                title: '입력 오류',
+		                text: field.message,
+		                confirmButtonText: '확인'
+		            });
+		            inputElement.focus(); // 해당 필드에 포커스 설정
+		            isValid = false;
+		            return false; // 검증 중단
+		        }
+		    });
+
+		    return isValid;
+		}
+
+		
+		
+    });
+	
+	
+	
+	
+	
+</script>
+</html>

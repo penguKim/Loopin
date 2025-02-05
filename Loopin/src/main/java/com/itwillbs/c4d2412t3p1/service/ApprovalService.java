@@ -6,13 +6,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
@@ -77,67 +81,92 @@ public class ApprovalService {
 	}
 
 	public List<Map<String, Object>> getApprovalsForTab(String tabType) {
-		// 현재 로그인한 사용자의 ID와 사원번호 가져오기
-		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication()
-				.getPrincipal();
-		String currentId = employeeDetails.getUsername(); // 로그인 ID
-		String currentCd = employeeDetails.getEmployee_cd(); // 사원번호
+	    // 현재 로그인한 사용자의 ID와 사원번호 가져오기
+	    EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+	    String currentId = employeeDetails.getUsername(); // 로그인 ID
+	    String currentCd = employeeDetails.getEmployee_cd(); // 사원번호
 
-		// 공통 코드 조회
-		Map<String, String> draftCodes = commonRepository.select_COMMON_list("DRAFT").stream()
-				.collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    // 공통 코드 조회
+	    Map<String, String> draftCodes = commonRepository.select_COMMON_list("DRAFT").stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
 
-		Map<String, String> approvalCodes = commonRepository.select_COMMON_list("APPROVAL").stream()
-				.collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    Map<String, String> approvalCodes = commonRepository.select_COMMON_list("APPROVAL").stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    
+	    List<Approval> approvals;
 
-		List<Approval> approvals;
+	    if ("receive".equals(tabType)) {
+	        approvals = approvalRepository.findByApprover(currentCd);
+	    } else if ("send".equals(tabType)) {
+	        approvals = approvalRepository.findByApprovalCd(currentId);
+	    } else {
+	        throw new IllegalArgumentException("Invalid tab type");
+	    }
 
-		if ("receive".equals(tabType)) {
-			// 결재수신함: 사원번호 기준으로 조회
-			approvals = approvalRepository.findByApprover(currentCd);
-		} else if ("send".equals(tabType)) {
-			// 결재발신함: 작성자 ID 기준으로 조회
-			approvals = approvalRepository.findByApprovalCd(currentId);
-			log.info("결재발신함 approvals : " + approvals.toString());
-		} else {
-			throw new IllegalArgumentException("Invalid tab type");
-		}
+	    // approval_wr (로그인 ID 기반) & approval_fa, approval_sa (사원번호 기반) 조회를 위해 Set 분리
+	    Set<String> employeeIds = new HashSet<>();
+	    Set<String> employeeCds = new HashSet<>();
 
-		// Approval 데이터를 Map으로 변환
-		return approvals.stream().map(approval -> {
-			Map<String, Object> row = new HashMap<>();
-			row.put("approval_cd", approval.getApproval_cd());
-			row.put("approval_sd", approval.getApproval_sd());
-			row.put("approval_ed", approval.getApproval_ed());
-			row.put("approval_ct", approval.getApproval_ct());
-			// 기안서 구분(DRAFT) 공통 코드 이름으로 변환
-			String draftName = draftCodes.getOrDefault(approval.getApproval_dv(), "Unknown");
-			row.put("approval_dv", draftName);
+	    approvals.forEach(approval -> {
+	        if (approval.getApproval_wr() != null) employeeIds.add(approval.getApproval_wr()); // 로그인 ID
+	        if (approval.getApproval_fa() != null) employeeCds.add(approval.getApproval_fa()); // 사원번호
+	        if (approval.getApproval_sa() != null) employeeCds.add(approval.getApproval_sa()); // 사원번호
+	    });
 
-			// 결재 상태(APPROVAL) 공통 코드 이름으로 변환
-			String approvalName = approvalCodes.getOrDefault(approval.getApproval_av(), "Unknown");
-			row.put("approval_av", approvalName);
+	    // 사원번호(employee_cd) → 사원명 변환
+	    Map<String, String> employeeMapByCd = approvalRepository.findEmployeesByEmployeeCd(employeeCds).stream()
+	            .collect(Collectors.toMap(emp -> emp.getEmployee_cd(), emp -> emp.getEmployee_nm() + "(" + emp.getEmployee_cd() + ")"));
 
-			row.put("approval_av_cc", approval.getApproval_av()); // 공통 코드 값 추가
+	    // 로그인 ID(employee_id) → 사원명 변환
+	    Map<String, String> employeeMapById = approvalRepository.findEmployeesByEmployeeId(employeeIds).stream()
+	            .collect(Collectors.toMap(emp -> emp.getEmployee_id(), emp -> emp.getEmployee_nm() + "(" + emp.getEmployee_cd() + ")"));
 
-			row.put("approval_tt", approval.getApproval_tt());
-			row.put("approval_fa", approval.getApproval_fa());
-			row.put("approval_sa", approval.getApproval_sa());
+	    // Approval 데이터를 Map으로 변환
+	    return approvals.stream().map(approval -> {
+	        Map<String, Object> row = new HashMap<>();
+	        row.put("approval_cd", approval.getApproval_cd());
+	        row.put("approval_sd", approval.getApproval_sd());
+	        row.put("approval_ed", approval.getApproval_ed());
+	        row.put("approval_ct", approval.getApproval_ct());
 
-			// 현재 사용자가 1차 결재권자인지, 2차 결재권자인지 추가
-			row.put("is_first_approver", currentCd.equals(approval.getApproval_fa())); // 1차 여부
-			row.put("is_second_approver", currentCd.equals(approval.getApproval_sa())); // 2차 여부
+	        // 기안서 구분(DRAFT) 공통 코드 이름으로 변환
+	        String draftName = draftCodes.getOrDefault(approval.getApproval_dv(), "Unknown");
+	        row.put("approval_dv", draftName);
+	        row.put("approval_dv_cc", approval.getApproval_dv());
 
-			return row;
-		}).collect(Collectors.toList());
+	        // 결재 상태(APPROVAL) 공통 코드 이름으로 변환
+	        String approvalName = approvalCodes.getOrDefault(approval.getApproval_av(), "Unknown");
+	        row.put("approval_av", approvalName);
+	        row.put("approval_av_cc", approval.getApproval_av()); // 공통 코드 값 추가
+
+	        row.put("approval_tt", approval.getApproval_tt());
+
+	        // approval_wr (로그인 ID → 사원명 + 사원번호 변환)
+	        row.put("approval_wr", employeeMapById.getOrDefault(approval.getApproval_wr(), approval.getApproval_wr()));
+
+	        // approval_fa (1차 결재권자 사원번호 → 사원명 + 사원번호 변환)
+	        row.put("approval_fa_parse", employeeMapByCd.getOrDefault(approval.getApproval_fa(), approval.getApproval_fa()));
+	        row.put("approval_fa", approval.getApproval_fa());
+	        
+	        // approval_sa (2차 결재권자 사원번호 → 사원명 + 사원번호 변환)
+	        row.put("approval_sa_parse", employeeMapByCd.getOrDefault(approval.getApproval_sa(), approval.getApproval_sa()));
+	        row.put("approval_sa", approval.getApproval_sa());
+
+	        // 현재 사용자가 1차 결재권자인지, 2차 결재권자인지 추가
+	        row.put("is_first_approver", currentCd.equals(approval.getApproval_fa())); // 1차 여부
+	        row.put("is_second_approver", currentCd.equals(approval.getApproval_sa())); // 2차 여부
+
+	        return row;
+	    }).collect(Collectors.toList());
 	}
 
+
 	@Transactional
-	public void handleApprovalInsert(ApprovalDTO approvalDTO) {
+	public void handleApproval(ApprovalDTO approvalDTO) {
 		// 1. 휴가 신청서 삽입
 		if (approvalDTO.getApproval_cd() == null) {
 			insert_APPROVAL(approvalDTO);
-		}else {
+		} else {
 			update_APPROVAL(approvalDTO);
 		}
 
@@ -371,6 +400,104 @@ public class ApprovalService {
 
 		log.info("상태 업데이트 완료");
 	}
+	
+	public Map<String, Object> getApprovalDataForPdf(String approval_cd) {
+	    // 1. Approval 엔티티 조회
+	    Approval approval = approvalRepository.findById(approval_cd)
+	            .orElseThrow(() -> new RuntimeException("Approval not found: " + approval_cd));
+
+	    // 2. approval_ct(JSON 문자열)을 Map으로 파싱
+	    ObjectMapper mapper = new ObjectMapper();
+	    Map<String, Object> approvalCtMap;
+	    try {
+	        approvalCtMap = mapper.readValue(approval.getApproval_ct(), new TypeReference<Map<String, Object>>() {});
+	    } catch (IOException e) {
+	        throw new RuntimeException("Error parsing approval_ct JSON", e);
+	    }
+
+	    // 3. 휴가 신청서의 경우, approvalCtMap에서 "annualtype" 값을 추출 후 공통코드 "ANNUAL"을 통해 변환
+	    String annualTypeCode = (String) approvalCtMap.get("annualtype");
+	    Map<String, String> annualCodes = commonRepository.select_COMMON_list("ANNUAL")
+	            .stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    String annualTypeName = annualCodes.getOrDefault(annualTypeCode, "Unknown");
+
+	    // 4. 기안서 구분(approval_dv): 공통코드 "DRAFT"를 통해 변환
+	    Map<String, String> draftCodes = commonRepository.select_COMMON_list("DRAFT")
+	            .stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    String draftName = draftCodes.getOrDefault(approval.getApproval_dv(), "Unknown");
+
+	    // 5. 결재 상태(approval_av): 공통코드 "APPROVAL"을 통해 변환
+	    Map<String, String> approvalCodes = commonRepository.select_COMMON_list("APPROVAL")
+	            .stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    String approvalStatusName = approvalCodes.getOrDefault(approval.getApproval_av(), "Unknown");
+
+	    // 6. 1차 결재권자(approval_fa) 변환: 사원번호 → "사원명 직급"
+	    String firstApproverInfo = "N/A";
+	    if (approval.getApproval_fa() != null && !approval.getApproval_fa().isEmpty()) {
+	        try {
+	            Employee firstApprover = getEmployeeByCd(approval.getApproval_fa());
+	            firstApproverInfo = transformEmployeeInfo(firstApprover);
+	        } catch (Exception e) {
+	            firstApproverInfo = approval.getApproval_fa();
+	        }
+	    }
+
+	    // 7. 2차 결재권자(approval_sa) 변환: 사원번호 → "사원명 직급"
+	    String secondApproverInfo = "N/A";
+	    if (approval.getApproval_sa() != null && !approval.getApproval_sa().isEmpty()) {
+	        try {
+	            Employee secondApprover = getEmployeeByCd(approval.getApproval_sa());
+	            secondApproverInfo = transformEmployeeInfo(secondApprover);
+	        } catch (Exception e) {
+	            secondApproverInfo = approval.getApproval_sa();
+	        }
+	    }
+
+	    // 8. 기안자(approval_wr) 변환: employee_id 기반 → "사원명 직급"
+	    String draftWriter = "N/A";
+	    if (approval.getApproval_wr() != null && !approval.getApproval_wr().isEmpty()) {
+	        try {
+	            Employee drafter = getEmployeeByEmployeeId(approval.getApproval_wr());
+	            draftWriter = transformEmployeeInfo(drafter);
+	        } catch (Exception e) {
+	            draftWriter = approval.getApproval_wr();
+	        }
+	    }
+
+	    // 9. 최종적으로 PDF 템플릿에 전달할 데이터를 Map에 구성
+	    Map<String, Object> pdfData = new HashMap<>();
+	    pdfData.put("approval", approval);
+	    pdfData.put("approvalCt", approvalCtMap);
+	    pdfData.put("annualTypeName", annualTypeName);
+	    pdfData.put("draftName", draftName);
+	    pdfData.put("approvalStatusName", approvalStatusName);
+	    pdfData.put("firstApproverInfo", firstApproverInfo);
+	    pdfData.put("secondApproverInfo", secondApproverInfo);
+	    pdfData.put("draftWriter", draftWriter);
+
+	    return pdfData;
+	}
+
+//	 기안자(approval_wr)가 employee_id 형태이므로, 해당 employee_id를 이용해 Employee 정보를 조회합니다.
+//	 (ApprovalRepository에 해당 메소드가 정의되어 있어야 합니다.)
+	public Employee getEmployeeByEmployeeId(String employeeId) {
+	    return approvalRepository.findByEmployeeId(employeeId)
+	            .orElseThrow(() -> new IllegalArgumentException("Employee not found for id: " + employeeId));
+	}
+
+//	 Employee 객체를 받아 "사원명 직급" 형태의 문자열로 변환합니다.
+//	 직위는 공통코드 "POSITION"을 통해 매핑됩니다.
+	private String transformEmployeeInfo(Employee employee) {
+	    Map<String, String> positionCodes = commonRepository.select_COMMON_list("POSITION")
+	            .stream()
+	            .collect(Collectors.toMap(Common_codeDTO::getCommon_cc, Common_codeDTO::getCommon_nm));
+	    String positionName = positionCodes.getOrDefault(employee.getEmployee_gd(), "미지정");
+	    return employee.getEmployee_nm() + " " + positionName;
+	}
+
 
 //    public List<Approval> select_FILTERED_APPROVAL(APPROVALFilterRequest filterRequest) {
 //    	return approvalRepository.select_FILTERED_APPROVAL(filterRequest);

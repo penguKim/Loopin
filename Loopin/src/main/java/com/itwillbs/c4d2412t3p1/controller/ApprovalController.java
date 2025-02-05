@@ -67,14 +67,14 @@ public class ApprovalController {
 		}
 	}
 
-	@PostMapping("/insert_APPROVAL")
-	public ResponseEntity<Map<String, String>> insert_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO) {
+	@PostMapping("/save_APPROVAL")
+	public ResponseEntity<Map<String, String>> save_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO) {
 		Map<String, String> response = new HashMap<>();
 
 		try {
 			// 데이터 저장 처리
 			log.info("approvalDTO : " +  approvalDTO);
-			approvalService.handleApprovalInsert(approvalDTO);
+			approvalService.handleApproval(approvalDTO);
 
 			response.put("message", "데이터가 성공적으로 저장되었습니다.");
 			return ResponseEntity.ok(response); // JSON 형식으로 반환
