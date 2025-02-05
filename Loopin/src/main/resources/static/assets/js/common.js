@@ -603,3 +603,41 @@ function gridValidationCheck(grid) {
     }
     return true;
 }
+
+/**
+ * 그리드 테마 설정
+ */
+function setGridTheme() {
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped', {
+	    outline: {
+	        border: '#e0e0e0',
+	        showVerticalBorder: true,
+	        showHorizontalBorder: true
+	    },
+		cell: {
+	        normal: {
+	            border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        header: {
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        rowHeader: {
+	        	background: '#eee',
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        summary: {
+	        	background: '#ddd',
+	        	border: '#fff',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	    },
+	});
+}
