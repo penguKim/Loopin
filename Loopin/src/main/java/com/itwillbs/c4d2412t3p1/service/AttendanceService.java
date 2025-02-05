@@ -148,6 +148,7 @@ public class AttendanceService {
 	}
 	
 	public List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params) {
+		log.info("params" + params);
 		return attendanceMapper.select_calendar_ANNUAL(params);
 	}
 

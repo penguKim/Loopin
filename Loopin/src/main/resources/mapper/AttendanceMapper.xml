@@ -151,7 +151,7 @@
 		 FROM ANNUAL_SUMMARY s
 	LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD 
 		WHERE 1=1
-			<if test="!isAdmin">
+			<if test="!isAdmin or type == 1">
 			  AND s.EMPLOYEE_CD = #{employee_cd}
 			  AND a.ANNUAL_YR = #{ANNUAL_YR}
 			</if>
@@ -208,7 +208,7 @@
 			   APPROVAL_DV
 		  FROM DATES
 		 WHERE 1=1
-			<if test="!isAdmin">
+			<if test="!isAdmin or type == 1">
 			   AND EMPLOYEE_CD = #{employee_cd}
 			</if>
 			<if test="date != null and date != ''">
