@@ -6,15 +6,6 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-<style>
-	.tui-grid-cell-summary {
-	    background-color: #ddd;
-	    border-color: #fff;
-	    border-left-width: 1px;
-	    border-right-width: 1px;
-	    color: #333;
-	}
-</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -508,7 +499,7 @@
 			warehouse_nm: modal_warehouse_nm.val().trim(),
 			warehouse_tp: modal_warehouse_tp.val(),
 			warehouse_in: modal_warehouse_in.val().trim(),
-			warehouse_us: modal_warehouse_us.val() == 1 ? true : false,
+			warehouse_us: modal_warehouse_us.val() == 1,
 			warehouse_rm: modal_warehouse_rm.val().trim(),
 		}
 		let wareareaList = modal_grid.getData();
@@ -517,9 +508,8 @@
 			wareareaList: wareareaList,
 		}
 		
-		let jsonData = JSON.stringify(data);
 		try {
-		    let ajaxData = await callAjaxPost('/insert_WAREHOUSE', jsonData);
+		    let ajaxData = await callAjaxPost('/insert_WAREHOUSE', JSON.stringify(data));
 		    // 성공 시 실행되는 코드
 			showAlert('', 'success', '등록 성공', '');
 			grid.resetData(ajaxData['list']);

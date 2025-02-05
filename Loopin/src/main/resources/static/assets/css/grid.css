@@ -1,0 +1,16 @@
+
+/* 집계 행 색상 변경 */
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
+
+/* 컬럼 ellipsis 지정 */
+.tui-grid-cell-content {
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
