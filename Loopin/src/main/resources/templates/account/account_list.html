@@ -102,23 +102,23 @@
 						        <input type="hidden" class="form-control" id="account_em" name="account_em"><!-- 이메일 히든 -->
 						        <input type="hidden" class="form-control" id="account_ad" name="account_ad"><!-- 주소 히든 -->
 							    <div class="col-md-4">
-							        <label for="account_nm" class="form-label">거래처명</label>
+							        <label for="account_nm" class="form-label">거래처명<span class="text-danger"> *</span></label>
 							        <input type="text" class="form-control" id="account_nm" name="account_nm">
 							    </div>
 							    <div class="col-md-4">
-							        <label for="account_dv" class="form-label">거래처구분</label>
+							        <label for="account_dv" class="form-label">거래처구분<span class="text-danger"> *</span></label>
 							        <select class="form-select" id="account_dv" name="account_dv">
 							            <option selected>선택</option>
 							        </select>
 							    </div>
 							    <div class="col-md-4">
-							        <label for="account_ps" class="form-label">대표자명</label>
+							        <label for="account_ps" class="form-label">대표자명<span class="text-danger"> *</span></label>
 							        <input type="text" class="form-control" id="account_cp" name="account_cp">
 							    </div>
 							</div>
 							<div class="row mb-3">
 							    <div class="col-md-4">
-							        <label for="account_ps" class="form-label">담당자명</label>
+							        <label for="account_ps" class="form-label">담당자명<span class="text-danger"> *</span></label>
 							        <input type="text" class="form-control" id="account_ps" name="account_ps">
 							    </div>
 							    <div class="col-md-4">
@@ -157,17 +157,17 @@
 							
 							<div class="row mb-3">
 							    <div class="col-md-4">
-							        <label for="account_sb" class="form-label">사업자번호</label>
+							        <label for="account_sb" class="form-label">사업자번호<span class="text-danger"> *</span></label>
 							        <input type="text" class="form-control" id="account_sb" name="account_sb">
 							    </div>
 							    <div class="col-md-4">
-							        <label for="account_uj" class="form-label">업종</label>
+							        <label for="account_uj" class="form-label">업종<span class="text-danger"> *</span></label>
 									<select class="form-select" id="account_uj" name="account_uj">
 									    <option selected>선택</option>
 									</select>
 							    </div>
 							    <div class="col-md-4">
-							        <label for="account_ut" class="form-label">업태</label>
+							        <label for="account_ut" class="form-label">업태<span class="text-danger"> *</span></label>
 									<select class="form-select" id="account_ut" name="account_ut">
 									    <option selected>선택</option>
 									</select>
@@ -192,13 +192,13 @@
 							
 							<div class="row mb-3">
 							    <div class="col-md-4">
-									<label for="account_us" class="form-label">사용여부</label>
+									<label for="account_us" class="form-label">사용여부<span class="text-danger"> *</span></label>
 									<select class="form-select" id="account_us" name="account_us">
 									    <option selected>선택</option>
 									</select>
 							    </div>
 							    <div class="col-md-4">
-							        <label for="account_sd" class="form-label">거래시작일</label>
+							        <label for="account_sd" class="form-label">거래시작일<span class="text-danger"> *</span></label>
 							        <input type="text" class="form-control" id="account_sd" name="account_sd">
 							        <div id="modal_startpicker-container"></div>
 							    </div>
@@ -990,8 +990,9 @@
 		
 		// 폼 제출 이벤트 실행
 		$(document).on('click', '#modal_submit_button', function () {
-		    console.log("등록 버튼 클릭됨!");
 
+			console.log("등록 버튼 클릭됨!");
+			
 		    $('#appointment_form').trigger('submit'); // 폼 제출 이벤트 실행
 		});
 
@@ -999,6 +1000,10 @@
 		$(document).on('submit', '#appointment_form', function (event) {
 		    event.preventDefault(); // ✅ 기본 제출 동작 차단
 
+		    if (!validateForm()) {
+		        return false; // 검증 실패 시 제출 중단
+		    }
+		    
 		    const mode = $('#modal_submit_button').text().trim();
 		    const url = mode === '등록' ? '/insert_ACCOUNT' : '/update_ACCOUNT';
 
@@ -1059,6 +1064,74 @@
 		        }
 		    });
 		});
+		
+		// 필수값 검증 함수
+		function validateForm() {
+		    let isValid = true;
+		    let errorField = null; // 오류 필드
+		    
+		    // 필수값 필드 목록
+		    const requiredFields = [
+		        { id: '#account_nm', message: '거래처명을 입력해주세요.' },
+		        { id: '#account_dv', message: '거래처구분을 선택해주세요.' },
+		        { id: '#account_cp', message: '대표자명을 입력해주세요.' },
+		        { id: '#account_ps', message: '담당자명을 입력해주세요.' },
+		        { id: '#account_sb', message: '사업자번호를 입력해주세요.' },
+		        { id: '#account_uj', message: '업종을 선택해주세요.' },
+		        { id: '#account_ut', message: '업태를 선택해주세요.' },
+		        { id: '#account_us', message: '사용여부를 선택해주세요.' }
+		    ];
+
+		    
+		    // 필드 검증
+		    $.each(requiredFields, function (index, field) {
+		        const inputElement = $(field.id);
+		        const isElementExist = inputElement.length > 0;
+		        const value = isElementExist ? inputElement.val().trim() : '';
+		        const isSelectBox = isElementExist && inputElement.is('select');
+
+		        // 요소가 존재하는지 확인
+		        if (inputElement.length === 0) {
+		            console.warn(`${field.id} 필드를 찾을 수 없습니다.`);
+		            return true; // 다음 필드 검사 계속 진행
+		        }
+
+		        // 셀렉트 박스: 값이 빈 문자열이거나 "선택"일 경우 유효하지 않음
+		        if (isSelectBox && (value === '' || value === '선택')) {
+					if (!errorField) errorField = inputElement;
+		        	inputElement.focus(); // 즉시 포커스 이동
+		            Swal.fire({
+		                icon: 'error',
+		                title: '입력 오류',
+		                text: field.message,
+		                confirmButtonText: '확인'
+		            });
+		            inputElement.focus(); // 해당 필드에 포커스 설정
+		            isValid = false;
+		            return false; // 검증 중단
+		        }
+
+		        // 일반 입력 필드: 값이 비어 있으면 유효하지 않음
+		        if (!isSelectBox && value === '') {
+		        	if (!errorField) errorField = inputElement;
+		        	inputElement.focus(); // 즉시 포커스 이동
+		            Swal.fire({
+		                icon: 'error',
+		                title: '입력 오류',
+		                text: field.message,
+		                confirmButtonText: '확인'
+		            });
+		            inputElement.focus(); // 해당 필드에 포커스 설정
+		            isValid = false;
+		            return false; // 검증 중단
+		        }
+		    });
+
+		    return isValid;
+		}
+
+		
+		
     });
 	
 	
