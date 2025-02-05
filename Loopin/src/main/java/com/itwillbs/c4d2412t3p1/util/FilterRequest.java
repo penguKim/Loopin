@@ -141,5 +141,32 @@ public class FilterRequest {
 					&& (warehouse_nm == null || warehouse_nm.isEmpty()) && (warehouse_tp == null || warehouse_tp.isEmpty());
 		}
 	}
+	
+	
+	
+	@Getter
+	@Setter
+	@ToString
+	// 공지사항 전용 필터 클래스
+	public static class AccountFilterRequest extends FilterRequest {
+		
+		private String accountCd;
+		private String accountNm;
+		private String accountPs;
+		private String accountDv;
+		
+		public AccountFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() 
+					&& (accountCd == null || accountCd.isEmpty()) && (accountNm == null || accountNm.isEmpty())
+					&& (accountPs == null || accountPs.isEmpty()) && (accountDv == null || accountDv.isEmpty());
+		}
+	}
+	
+	
 }
 
