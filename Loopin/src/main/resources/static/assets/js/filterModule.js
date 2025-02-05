@@ -122,7 +122,7 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 			    return `
 			        <div class="${config.col}">
 			            <label class="form-label">${config.label}</label>
-			            <div class="d-flex gap-3 pt-2">
+			            <div class="d-flex gap-3 pt-2" id="${config.key}">
 			                ${config.list.map(option => `
 			                    <div class="form-check">
 			                        <input type="radio" id="${config.key}_${option.value}" name="${config.key}" value="${option.value}" 
@@ -203,11 +203,10 @@ function initializeFilterModule(filterModuleId, filterConfig, onFilterApplyCallb
 
 			filterConfig.forEach(config => {
 		        if (config.type == 'radio') {
-		            const defaultOption = config.list.find(option => option.checked);
-		            if (defaultOption) {
-		                const radio = document.getElementById(`${config.key}_${defaultOption.value}`);
-		                if (radio) radio.checked = true;
-		            }
+					const defaultRadio = document.getElementById(
+					    `${config.key}_${(config.list.find(opt => opt.checked)?.value || 'ALL')}`
+					);
+					if (defaultRadio) defaultRadio.checked = true;
 		        } else {
 		            const element = document.getElementById(config.key);
 		            if (element) {

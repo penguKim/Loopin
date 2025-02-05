@@ -120,7 +120,7 @@ public class FilterRequest {
 		}
 	}
 	
-	// 출퇴근 필터 클래스
+	// 창고관리 필터 클래스
 	@Getter
 	@Setter
 	@ToString
@@ -141,5 +141,56 @@ public class FilterRequest {
 					&& (warehouse_nm == null || warehouse_nm.isEmpty()) && (warehouse_tp == null || warehouse_tp.isEmpty());
 		}
 	}
+	
+	// 제품관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class ProductFilterRequest extends FilterRequest {
+		
+		private String product_cd;
+		private String product_nm;
+		private String product_gc;
+		private String product_cc;
+		private String product_wh;
+		private String product_us;
+		
+		public ProductFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (product_cd == null || product_cd.isEmpty())
+					&& (product_nm == null || product_nm.isEmpty()) && (product_gc == null || product_gc.isEmpty())
+					&& (product_cc == null || product_cc.isEmpty()) && (product_wh == null || product_wh.isEmpty())
+					&& (product_us == null || product_us.isEmpty());
+		}
+	}
+	
+	
+	@Getter
+	@Setter
+	@ToString
+	// 공지사항 전용 필터 클래스
+	public static class AccountFilterRequest extends FilterRequest {
+		
+		private String accountCd;
+		private String accountNm;
+		private String accountPs;
+		private String accountDv;
+		
+		public AccountFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() 
+					&& (accountCd == null || accountCd.isEmpty()) && (accountNm == null || accountNm.isEmpty())
+					&& (accountPs == null || accountPs.isEmpty()) && (accountDv == null || accountDv.isEmpty());
+		}
+	}
+
 }
 

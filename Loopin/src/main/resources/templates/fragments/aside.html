@@ -110,6 +110,7 @@
 					</ul>
 				</li>
 			</div>
+			<div sec:authorize="hasAnyRole('EMPLOYEE')">
 				<li class="nav-heading">나의메뉴</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" data-bs-target="#form1s-nav" data-bs-toggle="collapse" href="#">
@@ -169,12 +170,13 @@
 						<span>공지사항</span>
 					</a>
 				</li>
+			</div>
 			<div sec:authorize="hasRole('SYS_ADMIN')">
 				<li class="nav-heading">시스템 권한</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" href="common_code">
-					<i class="bi bi-grid"></i>
-					<span>공통코드관리</span>
+						<i class="bi bi-grid"></i>
+						<span>공통코드관리</span>
 					</a>
 				</li>
 				<li class="nav-item">
@@ -184,6 +186,13 @@
 					</a>
 				</li>
 			</div>
+				<li class="nav-heading">기준정보관리</li>
+				<li class="nav-item">
+					<a class="nav-link collapsed" href="warehouse_list">
+						<i class="bi bi-grid"></i>
+						<span>창고관리</span>
+					</a>
+				</li>
 		</ul>
 
 	</aside>

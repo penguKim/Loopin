@@ -2,12 +2,9 @@ package com.itwillbs.c4d2412t3p1.domain;
 
 import java.util.List;
 
-import com.itwillbs.c4d2412t3p1.entity.Commute;
-import com.itwillbs.c4d2412t3p1.entity.Warehouse;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -21,7 +18,15 @@ public class PrimaryRequestDTO {
 	WarehouseDTO warehouse;
 	List<WareareaDTO> wareareaList;
 	List<WarehouseDTO> warehouseList;
-	
 	String warehouse_cd;
-	
+
+	// 품목관리
+	ProductFilterRequest productFilter;
+	List<ProductDTO> productList;
+	ProductDTO product;
+	List<String> sizeList;
+	List<String> colorList;
+	String product_cd;
+	String product_gc;
+	String product_cc;
 }

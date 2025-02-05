@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 import javax.script.ScriptException;
 
@@ -252,14 +255,14 @@ public class PRService {
 	    }
 	}
 
-	public List<Employee> select_empworklastmth(String premth) {
+	public List<Map<String, Object>> select_empworklastmth(String premth) {
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@premth: "+premth);
 		String iscal = prM.isCal(premth);
 		System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@iscal: "+iscal);
 		if(iscal != null && iscal.equals(premth)) {
 			return prM.select_spes(premth);
 		}else {
-			List<Employee> list = prM.select_empworklastmth();
+			List<Map<String, Object>> list = prM.select_empworklastmth();
 			return list;
 		}
 	}
@@ -359,61 +362,65 @@ public class PRService {
 	        prdetail.setEmployee_cd(employee_cd);
 	        prdetail.setEmployee_nm(employee_nm);
 	        prdetail.setPr_id(prid);
-	        prdetail.setPredetail_ch(false);
-	        prdetail.setPredetail_ta(calculatedSalary.get(0).getTA());
-	        prdetail.setPredetail_td(calculatedSalary.get(0).getTD());
-	        prdetail.setPredetail_rs(calculatedSalary.get(0).getRS());
+	        prdetail.setPrdetail_ch(false);
+	        prdetail.setPrdetail_ta(calculatedSalary.get(0).getTA());
+	        prdetail.setPrdetail_td(calculatedSalary.get(0).getTD());
+	        prdetail.setPrdetail_rs(calculatedSalary.get(0).getRS());
 	        
 	        for(PRCalDTO pd : calculatedSalary.get(0).getCalculated()) {
 	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getPrdetail_nm());
 	        	System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ 제발"+pd.getAmount());
 	        	if(pd.getPrdetail_nm().equals("BS")) {
-	        		prdetail.setPredetail_bs(pd.getAmount());
+	        		prdetail.setPrdetail_bs(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_BN")) {
-	        		prdetail.setPredetail_bn(pd.getAmount());
+	        		prdetail.setPrdetail_bn(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_HA")) {
-	        		prdetail.setPredetail_ha(pd.getAmount());
+	        		prdetail.setPrdetail_ha(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_MT")) {
-	        		prdetail.setPredetail_mt(pd.getAmount());
+	        		prdetail.setPrdetail_mt(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_NA")) {
-	        		prdetail.setPredetail_na(pd.getAmount());
+	        		prdetail.setPrdetail_na(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_OT")) {
-	        		prdetail.setPredetail_ot(pd.getAmount());
+	        		prdetail.setPrdetail_ot(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_RL")) {
-	        		prdetail.setPredetail_rl(pd.getAmount());
+	        		prdetail.setPrdetail_rl(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("B_WA")) {
-	        		prdetail.setPredetail_wa(pd.getAmount());
+	        		prdetail.setPrdetail_wa(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GG")) {
-	        		prdetail.setPredetail_gg(pd.getAmount());
+	        		prdetail.setPrdetail_gg(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GM")) {
-	        		prdetail.setPredetail_gm(pd.getAmount());
+	        		prdetail.setPrdetail_gm(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_GY")) {
-	        		prdetail.setPredetail_gy(pd.getAmount());
+	        		prdetail.setPrdetail_gy(pd.getAmount());
 	        	}
 	        	if(pd.getPrdetail_nm().equals("D_LG")) {
-	        		prdetail.setPredetail_lg(pd.getAmount());
+	        		prdetail.setPrdetail_lg(pd.getAmount());
 	        	}
 	        }
 	        
 	        prdRep.save(prdetail);
+	        Long prdetailId = prdetail.getPrdetail_id();
 	        
 	        Map<String, Object> calculatedMap = new HashMap<>();
 	        calculatedMap.put("employee_cd", employee_cd);
 	        calculatedMap.put("employee_nm", employee_nm);
+	        calculatedMap.put("pr_id", prid);
+	        calculatedMap.put("prdetail_id", prdetailId);
 	        calculatedMap.put("ta", calculatedSalary.get(0).getTA());
 	        calculatedMap.put("td", calculatedSalary.get(0).getTD());
 	        calculatedMap.put("rs", calculatedSalary.get(0).getRS());
 	        calculatedMap.put("calculated", calculatedSalary.get(0).getCalculated());
+//	        calculatedMap.put("calculated", prdetail.getPrdetail_bn());     // 이렇게 풀어서 보내주면 프론트에서 js로 데이터 전처리가 필요없다. > 묶어서 계산한거에 익숙해져서 풀어보내줄수있다는걸 생각하지 못함,, 나중에 시간되면 풀어서 보내주고 js고치기.
 	        
 	        result.add(calculatedMap);
 	    }
@@ -436,4 +443,163 @@ public class PRService {
 		return result;
 	}
 
+	public String isCal(String premth) {
+		String iscal = prM.isCal(premth);
+		return iscal;
+	}
+
+	public List<Map<String, Object>> select_worktimeforbn(List<PR_calculationMDTO> calbndata) throws ScriptException {
+		
+		PR updatepr = new PR();
+		PRDetail updatepd = new PRDetail();
+		
+		Long prid = calbndata.get(0).getPrid();
+		List<String> pdids = calbndata.get(0).getPdid();
+		String bn = calbndata.get(0).getBonus();
+		
+		List<Map<String, Object>> result = new ArrayList<>();
+		
+		if(Objects.nonNull(prid) && !pdids.isEmpty()) { // 상여계산으로 prid pdid 들고왔을때
+			
+			Optional<PR> prlist = prRep.findById(prid);
+			BigDecimal totalempta =  BigDecimal.ZERO;
+			BigDecimal totalemptd =  BigDecimal.ZERO;
+			BigDecimal totalempns =  BigDecimal.ZERO;
+			
+			String[] prwms = prlist.get().getPr_wm().split("-");
+			String prwmyear = prwms[0];
+			String premth = prwms[1];
+			
+			for(String pd : pdids) {
+				Long pdid = Long.parseLong(pd);
+				System.out.println("~~~~pdid : "+pdid);
+				Optional<PRDetail> pdlist = prdRep.findById(pdid);
+				if(pdids.size() == 1) {
+					totalempta = prlist.get().getPr_ta().subtract(pdlist.get().getPrdetail_ta());
+					totalemptd = prlist.get().getPr_td().subtract(pdlist.get().getPrdetail_td());
+					totalempns = prlist.get().getPr_ns().subtract(pdlist.get().getPrdetail_rs());
+				}
+				System.out.println("~~~~pdlist : "+pdlist);
+				List<String> employee_cdList = new ArrayList<>();
+				employee_cdList.add(pdlist.get().getEmployee_cd());
+				Map<String, Object> getwtemp = prM.getwt(employee_cdList, premth, prwmyear);
+				System.out.println("@@@@@@getwtemp : "+getwtemp);
+				System.out.println("@@@@@@getwtemp : "+getwtemp.get("NIGHTWORKINGTIME").getClass().getName());
+				
+				String employee_cd = pdlist.get().getEmployee_cd();
+				String employee_nm = pdlist.get().getEmployee_nm();
+				String BS = pdlist.get().getPrdetail_bs().multiply(new BigDecimal(12)).toString();
+				String workingtime = getwtemp.get("WORKINGTIME").toString();
+				String overworkingtime = getwtemp.get("OVERWORKINGTIME").toString();
+				String nightworkingtime = getwtemp.get("NIGHTWORKINGTIME").toString();
+				String weekendworkingtime = getwtemp.get("WEEKENDWORKINGTIME").toString();
+				String holydayworkingtime = getwtemp.get("HOLYDAYWORKINGTIME").toString();
+				String remainleave = getwtemp.get("ANNUAL_RA") == null ? "0" : getwtemp.get("ANNUAL_RA").toString();
+				String bonus = null;
+				
+				if(pdids.size() ==1) {
+					bonus = bn;
+				}else {
+					bonus = pdlist.get().getPrdetail_bn() == null ? bn : pdlist.get().getPrdetail_bn().add(new BigDecimal(bn)).toString();
+				}
+				
+				Map<String, Consumer<BigDecimal>> prDetailMap = new HashMap<>();
+				prDetailMap.put("BS", updatepd::setPrdetail_bs);
+				prDetailMap.put("B_BN", updatepd::setPrdetail_bn);
+				prDetailMap.put("B_HA", updatepd::setPrdetail_ha);
+				prDetailMap.put("B_MT", updatepd::setPrdetail_mt);
+				prDetailMap.put("B_NA", updatepd::setPrdetail_na);
+				prDetailMap.put("B_OT", updatepd::setPrdetail_ot);
+				prDetailMap.put("B_RL", updatepd::setPrdetail_rl);
+				prDetailMap.put("B_WA", updatepd::setPrdetail_wa);
+				prDetailMap.put("D_GG", updatepd::setPrdetail_gg);
+				prDetailMap.put("D_GM", updatepd::setPrdetail_gm);
+				prDetailMap.put("D_GY", updatepd::setPrdetail_gy);
+				prDetailMap.put("D_LG", updatepd::setPrdetail_lg);
+				
+				List<PRDTO> cal = calculatingMachine(employee_cd, employee_nm, BS, workingtime, overworkingtime, nightworkingtime, weekendworkingtime, holydayworkingtime, remainleave, bonus);
+				totalempta = totalempta.add(cal.get(0).getTA());
+				totalemptd = totalemptd.add(cal.get(0).getTD());
+				totalempns = totalempns.add(cal.get(0).getRS());
+				
+				updatepd.setEmployee_cd(cal.get(0).getEmployee_cd());
+				updatepd.setEmployee_nm(cal.get(0).getEmployee_nm());
+				updatepd.setPr_id(prid);
+				updatepd.setPrdetail_id(pdid);
+				updatepd.setPrdetail_ta(cal.get(0).getTA());
+				updatepd.setPrdetail_td(cal.get(0).getTD());
+				updatepd.setPrdetail_rs(cal.get(0).getRS());
+				
+				for( PRCalDTO pc : cal.get(0).getCalculated()) {
+					Consumer<BigDecimal> setter = prDetailMap.get(pc.getPrdetail_nm());
+				    if (setter != null) {
+				        setter.accept(pc.getAmount());
+				    }
+				}
+				
+				prdRep.save(updatepd);
+				
+				Map<String, Object> calculatedMap = new HashMap<>();
+		        calculatedMap.put("EMPLOYEE_CD", employee_cd);
+		        calculatedMap.put("EMPLOYEE_NM", employee_nm);
+		        calculatedMap.put("PR_ID", prid);
+		        calculatedMap.put("PRDETAIL_ID", pdid);
+		        calculatedMap.put("PRDETAIL_TA", updatepd.getPrdetail_ta());
+		        calculatedMap.put("PRDETAIL_TD", updatepd.getPrdetail_td());
+		        calculatedMap.put("PRDETAIL_RS", updatepd.getPrdetail_rs());
+		        calculatedMap.put("PRDETAIL_BS", updatepd.getPrdetail_bs());
+		        calculatedMap.put("PRDETAIL_MT", updatepd.getPrdetail_mt());
+		        calculatedMap.put("PRDETAIL_OT", updatepd.getPrdetail_ot());
+		        calculatedMap.put("PRDETAIL_NA", updatepd.getPrdetail_na());
+		        calculatedMap.put("PRDETAIL_WA", updatepd.getPrdetail_wa());
+		        calculatedMap.put("PRDETAIL_HA", updatepd.getPrdetail_ha());
+		        calculatedMap.put("PRDETAIL_RL", updatepd.getPrdetail_rl());
+		        calculatedMap.put("PRDETAIL_BN", updatepd.getPrdetail_bn());
+		        calculatedMap.put("PRDETAIL_GM", updatepd.getPrdetail_gm());
+		        calculatedMap.put("PRDETAIL_GY", updatepd.getPrdetail_gy());
+		        calculatedMap.put("PRDETAIL_GG", updatepd.getPrdetail_gg());
+		        calculatedMap.put("PRDETAIL_LG", updatepd.getPrdetail_lg());
+		        
+		        result.add(calculatedMap);
+			}
+		
+			
+			updatepr.setPr_gm(prlist.get().getPr_gm());
+			updatepr.setPr_id(prid);
+			updatepr.setPr_ns(totalempns);
+			updatepr.setPr_ta(totalempta);
+			updatepr.setPr_td(totalemptd);
+			updatepr.setPr_tp(prlist.get().getPr_tp());
+			updatepr.setPr_wd(prlist.get().getPr_wd());
+			updatepr.setPr_wr(prlist.get().getPr_wr());
+			updatepr.setPr_wm(prlist.get().getPr_wm());
+			prRep.save(updatepr);
+			if(pdids.size() != 1) {
+				System.out.println("----------- 전체상여계산");
+				return result;
+			}else {
+				System.out.println("----------- 개인상여계산");
+				return prM.select_spes(prlist.get().getPr_wm()); 
+			}
+		}else { // 추가 코드 수정 > 근태마감할때 
+			
+			return null;
+		}
+	}
+
+	public List<Map<String, Object>> select_prmodaldata(String empcd, Long prid) {
+
+		return prM.select_prmodaldata(empcd,prid);
+	}
+
+	public int update_prch(Long prid) {
+		
+		int result = prM.update_prch(prid);
+		
+//		if (result == 0) {
+//	        return 0; 
+//	    }else {
+	    	return result;
+//	    }
+	}
 }

@@ -563,8 +563,8 @@
 	                    console.error('Error:', error);
 						Swal.fire({
 							icon: "warning",
-						    title: "요청 실패",
-						    text: "데이터 저장 중 오류가 발생했습니다.",
+						    title: "등록 실패",
+						    text: "이미 등록된 공휴일입니다.",
 						});
 	                });
 	        } else if (this.readyState == 4) {
