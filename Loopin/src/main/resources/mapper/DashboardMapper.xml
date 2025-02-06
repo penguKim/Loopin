@@ -31,29 +31,12 @@
 			   LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
 			   LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
 				   WHERE 1=1
-	 <if test="isAdmin"> AND
-						   (
-							(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
-							OR 
-							(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
-						   )
-	 </if> 
-	<if test="!isAdmin"> AND e.EMPLOYEE_CD = #{currentCd}</if>) AS APPROVAL_COUNT
+						 AND e.EMPLOYEE_CD = #{currentCd}) AS APPROVAL_COUNT
 		  FROM APPROVAL a
 	 LEFT JOIN employee e ON e.employee_id = a.APPROVAL_WR
 	 LEFT JOIN COMMON_CODE c ON a.APPROVAL_AV = c.COMMON_CC AND c.COMMON_GC = 'APPROVAL'
 		 WHERE 1=1
-		 <if test="!isAdmin">
 			   AND e.EMPLOYEE_CD = #{currentCd}
-		 </if>
-		 <if test="isAdmin">
-			   AND
-			   (
-				(c.COMMON_NM = '1차 결재중' AND a.APPROVAL_FA = #{currentCd}) 
-				OR 
-				(c.COMMON_NM = '2차 결재중' AND a.APPROVAL_SA = #{currentCd})
-			   )
-		 </if>
 		 FETCH FIRST 4 ROWS ONLY
 	</select>
 	

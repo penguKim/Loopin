@@ -57,7 +57,7 @@ public class AttendanceService {
 	}
 
 	public List<Holiday> select_HOLIDAY() {
-		return holidayRepository.findAll();
+		return holidayRepository.select_HOLIDAY();
 	}
 
 	public List<Map<String, Object>> select_period_HOLIDAY(String holiday_dt1, String holiday_dt2) {
@@ -148,6 +148,7 @@ public class AttendanceService {
 	}
 	
 	public List<Map<String, Object>> select_calendar_ANNUAL(Map<String, Object> params) {
+		log.info("params" + params);
 		return attendanceMapper.select_calendar_ANNUAL(params);
 	}
 

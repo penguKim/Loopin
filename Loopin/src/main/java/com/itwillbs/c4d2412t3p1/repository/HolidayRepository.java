@@ -16,6 +16,9 @@ public interface HolidayRepository extends JpaRepository<Holiday, String> {
 	@Query("SELECT h FROM Holiday h WHERE h.holiday_dt BETWEEN :startDate AND :endDate ORDER BY h.holiday_dt")
     List<Holiday> findHolidaysInMonth(@Param("startDate") String startDate, @Param("endDate") String endDate);
 	
+	@Query(value = "SELECT * FROM HOLIDAY ORDER BY TO_NUMBER(TO_CHAR(TO_DATE(HOLIDAY_DT, 'YYYY-MM-DD'), 'YYYY')) DESC, TO_DATE(HOLIDAY_DT, 'YYYY-MM-DD') ASC", nativeQuery = true)
+	List<Holiday> select_HOLIDAY();
+	
 
 }
 

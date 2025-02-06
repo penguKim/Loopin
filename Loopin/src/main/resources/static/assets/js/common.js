@@ -280,11 +280,80 @@ function createSelectBox(el, list, title) {
 	if(title) {
 	    selectBox.append(`<option value="">${title}</option>`);		
 	}
-
     list.forEach(data => {
         selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
     });
 }
+
+/**
+ * 라디오버튼 생성
+ * @param {String} el 선택자
+ * @param {*} list 리스트
+ * @param {String} name name 값
+ * @param {boolean} flag true -> 전체 버튼 추가
+ */
+function createRadio(el, list, name, flag) {
+    const container = $(el);
+    
+    container.empty();
+    
+	if(flag) {
+	    container.append(`
+	        <div class="form-check">
+	            <input class="form-check-input" type="radio" 
+	                   name="${name}" id="${name}_ALL" value="ALL" checked>
+	            <label class="form-check-label" for="${name}_ALL">전체</label>
+	        </div>
+	    `);
+	}
+    
+    list.forEach(data => {
+        container.append(`
+			<div class="form-check">
+			    <input type="radio" id="${name}_${data.common_cc}"name="${name}" value="${data.common_cc}" 
+			        class="form-check-input">
+			    <label class="form-check-label" for="${name}_${data.common_cc}">${data.common_nm}</label>
+			</div>
+        `);
+    });
+}
+
+/**
+ * select2 생성
+ * @param {String} el 선택자
+ * @param {*} list 리스트
+ * @param {String} name name 값
+ * @param {boolean} flag true -> 전체 버튼 추가
+ */
+function createSelect2(selectId, data, placeholder, parentModal) {
+    const select = $(`${selectId}`);
+    select.select2({
+        dropdownParent: $(`#${parentModal}`),
+        placeholder: placeholder,
+        width: '100%',
+        data: data.map(item => ({
+            id: item['common_cc'],
+            text: item['common_nm']
+        }))
+    }).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId.substring(1)}">전체 선택</button>`);
+
+    $(document).on('click', `#select-all-${selectId.substring(1)}`, function() {
+        const button = $(this);
+        
+        if (select.val() && select.val().length == select.find('option').length) {
+            select.val(null);
+        } else {
+            const allOptions = select.find('option').map(function() {
+                return $(this).val();
+            }).get();
+            select.val(allOptions);
+        }
+        
+        select.trigger('change');
+    });
+}
+
+
 
 /**
  * 그리드 -> 엑셀 다운로드
@@ -410,6 +479,35 @@ function callAjaxGet(url, jsonData) {
 }
 
 /**
+ * ajax post 요청을 Promise로 처리하는 함수
+ * @param {string} url - 요청 url
+ * @param {Object} jsonData - form 데이터
+ * @returns {Promise} 응답 데이터
+ */
+function callAjaxFileUpload(url, formData) {
+	const token = $("meta[name='_csrf']").attr("content");
+	const header = $("meta[name='_csrf_header']").attr("content");
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            type: 'POST',
+            url: url,
+			processData: false,
+			contentType: false,
+            data: formData,
+			headers: {
+				[header]: token,
+		},
+            success: function(response) {
+                resolve(response);
+            },
+            error: function(xhr) {
+                reject(xhr.responseJSON);
+            }
+        });
+    });
+}
+
+/**
  * 공통코드 조회
  * @param {string} codes - 공통코드 조회할 가변 문자열
  * @returns {*} 응답 데이터
@@ -504,4 +602,42 @@ function gridValidationCheck(grid) {
         }
     }
     return true;
+}
+
+/**
+ * 그리드 테마 설정
+ */
+function setGridTheme() {
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped', {
+	    outline: {
+	        border: '#e0e0e0',
+	        showVerticalBorder: true,
+	        showHorizontalBorder: true
+	    },
+		cell: {
+	        normal: {
+	            border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        header: {
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        rowHeader: {
+	        	background: '#eee',
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        summary: {
+	        	background: '#ddd',
+	        	border: '#fff',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	    },
+	});
 }

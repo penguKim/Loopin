@@ -42,6 +42,8 @@ dependencies {
 	// 엑셀 다운로드
 	implementation 'org.apache.poi:poi-ooxml:5.2.3'
 	
+	// Flysaucer PDF 변환
+	implementation 'org.xhtmlrenderer:flying-saucer-pdf:9.1.22'
 	// ---------------- spring security ---------------------
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'

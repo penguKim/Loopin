@@ -5,9 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,7 +24,7 @@ import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 public class Approval {
 
 	@Id
-	@Column(name = "approval_cd", length = 15)
+	@Column(name = "APPROVAL_CD", length = 15)
 	private String approval_cd; // 결재코드
 
 	@Transient
@@ -111,26 +113,32 @@ public class Approval {
 	public static Approval setEmployeeEntity(Approval approval, ApprovalDTO approvalDto) {
 	    ObjectMapper objectMapper = new ObjectMapper();
 
-	    approval.setApproval_cd(approvalDto.getApproval_cd());
-	    approval.setApproval_sd(approvalDto.getApproval_sd());
-	    approval.setApproval_ed(approvalDto.getApproval_ed());
-	    approval.setApproval_dv(approvalDto.getApproval_dv());
-	    approval.setApproval_tt(approvalDto.getApproval_tt());
-
-	    // Map을 JSON 문자열로 변환하여 저장
 	    try {
-	        approval.setApproval_ct(objectMapper.writeValueAsString(approvalDto.getApproval_ct()));
-	    } catch (JsonProcessingException e) {
-	        throw new RuntimeException("Failed to serialize approval_ct", e);
+	        // DTO의 모든 필드를 순회하며 값이 null이 아닌 경우 Approval 엔티티에 반영
+	        for (Field field : ApprovalDTO.class.getDeclaredFields()) {
+	            field.setAccessible(true); // private 필드 접근 허용
+	            Object value = field.get(approvalDto); // DTO의 필드 값 가져오기
+
+	            if (value != null) {
+	                try {
+	                    Field approvalField = Approval.class.getDeclaredField(field.getName()); // 동일한 이름의 필드 가져오기
+	                    approvalField.setAccessible(true);
+
+	                    // approval_ct는 JSON 변환이 필요하므로 별도 처리
+	                    if ("approval_ct".equals(field.getName()) && value instanceof Map) {
+	                        value = objectMapper.writeValueAsString(value);
+	                    }
+
+	                    approvalField.set(approval, value); // 값 반영
+	                } catch (NoSuchFieldException ignored) {
+	                    // Approval 엔티티에 해당 필드가 없으면 무시 (추가적인 DTO 필드가 있을 수 있으므로)
+	                }
+	            }
+	        }
+	    } catch (IllegalAccessException | JsonProcessingException e) {
+	        throw new RuntimeException("Failed to map ApprovalDTO to Approval", e);
 	    }
 
-	    approval.setApproval_fa(approvalDto.getApproval_fa());
-	    approval.setApproval_sa(approvalDto.getApproval_sa());
-	    approval.setApproval_av(approvalDto.getApproval_av());
-	    approval.setApproval_wr(approvalDto.getApproval_wr());
-	    approval.setApproval_wd(approvalDto.getApproval_wd());
-	    approval.setApproval_mf(approvalDto.getApproval_mf());
-	    approval.setApproval_md(approvalDto.getApproval_md());
 	    return approval;
 	}
 
