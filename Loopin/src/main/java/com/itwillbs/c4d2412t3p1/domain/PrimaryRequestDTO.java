@@ -29,4 +29,5 @@ public class PrimaryRequestDTO {
 	String product_cd;
 	String product_gc;
 	String product_cc;
+	boolean flag; // 원자재, 제품 구분
 }

@@ -10,7 +10,15 @@
 	<main id="main" class="main">
 		<section class="section">
 			<div class="row">
-				<div class="col-lg-12">
+				<div class="col-lg-4">
+					<div class="card">
+						<div class="card-body ">
+							<h5 class="card-title">품목분류</h5>
+							<div id="group_grid"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-8">
 					<div class="card">
 						<div class="card-body">
 							<h1 class="card-title">품목 관리</h1>
@@ -24,26 +32,45 @@
 					</div>
 				</div>
 			</div>
+		
+		
+<!-- 			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">품목 관리</h1>
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-2">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div> -->
 		</section>
 	</main>
 </body>
 <script th:inline="javascript">
 	// 변수 지정
-	let grid, modal_grid, modal;
+	let grid, group_grid, modal_grid, modal;
 	let modal_product_cd, modal_product_nm, modal_product_gc, modal_product_cc, modal_product_sz
 		, modal_product_cr, modal_product_gd, modal_product_pr, modal_product_wh, modal_product_us, modal_product_rm;
 	let modalData = {}; // 모달 초기화 시 사용
+	let groupData = {};
+	let groupValue = '';
 	const btn_insert = $('#btn_insert');
 	const btn_delete = $('#btn_delete');
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const filterConfig = [
-	    { key: 'product_cd', label: '품목코드', type: 'text', placeholder: '품목코드 입력', col: 'col-2' },
-	    { key: 'product_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
-	    { key: 'product_gc', label: '품목대분류', type: 'select', list: [], col: 'col-2' },
-	    { key: 'product_cc', label: '품목소분류', type: 'select', list: [], col: 'col-2' },
-	    { key: 'product_wh', label: '보관창고', type: 'select', list: [], col: 'col-2' },
-	    { key: 'product_us', label: '사용여부', type: 'radio', list: [], col: 'col-auto' },
+	    { key: 'product_cd', label: '품목코드', type: 'text', placeholder: '품목코드 입력', col: 'col' },
+	    { key: 'product_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col' },
+	    { key: 'product_gc', label: '품목대분류', type: 'select', list: [], col: 'col' },
+	    { key: 'product_cc', label: '품목소분류', type: 'select', list: [], col: 'col' },
+	    { key: 'product_wh', label: '보관창고', type: 'select', list: [], col: 'col' },
+	    { key: 'product_us', label: '사용여부', type: 'select', list: [], col: 'col-2' },
 	];
 	let commonList = [];
 	let warehouseList = /*[[${warehouseList}]]*/[];
@@ -55,10 +82,9 @@
 	// ------------------------------
 	
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
-		
-		make_grid();
+		setGridTheme();
+		make_group_grid();
+		make_grid(false);
 		getList();
 		
 		
@@ -76,7 +102,7 @@
 
 		// 검색필터
         initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-            getGridList(filterValues);
+        	getFilterList(filterValues);
         });
 		
 		// 엑셀 버튼 추가
@@ -101,13 +127,17 @@
 		        const value = input.val();
 		        filterValues[config.key] = value;
 		    }
-		    getGridList(filterValues);
+		    getFilterList(filterValues);
 		});
 		
 		// 등록 모달 클릭
 		btn_insert.on('click', function() {
+		    if (!group_grid.getRow(group_grid.getFocusedCell()?.rowKey)) {
+		        showAlert('', 'warning', '분류 선택', '품목분류를 선택해주세요.');
+		        return;
+		    }
 			modalData = {};
-			make_modal_detail();
+			make_modal_detail('', grid['flag']);
 		});
 		
 		// 사진 컨테이너 클릭 이벤트
@@ -189,7 +219,7 @@
 		
 		// 품목 등록
 		$(document).on('click', '#btn_modal_save', function() {
-			insert_PRODUCT();
+			insert_PRODUCT(grid['flag']);
 		});
 		
 		// 품목 초기화 버튼
@@ -207,7 +237,7 @@
 		btn_delete.on('click', function() {
 			let checkedRows = grid.getCheckedRows();
 			if (!checkedRows.length) {
-				showAlert('', 'warning', '삭제 항목 체크', '삭제할 창고를 체크해주세요.');
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 품목을 체크해주세요.');
 			    return;
 			}
 			delete_PRODUCT(checkedRows);				
@@ -220,55 +250,43 @@
 	
 	// 공통코드 조회
 	async function getList() {
-		commonList = await getCommonList("USEYN", "SIZE", "SHOEGENDER", "COLOR", "UNIT", "PRDTYPE");
-		createRadio('#product_us', commonList['USEYN'], 'product_us', true);
+		commonList = await getCommonList("USE", "USEYN", "SIZE", "SHOEGENDER", "COLOR", "UNIT", "PRDTYPE");
+		// createRadio('#product_us', commonList['USEYN'], 'product_us', true);
+		createSelectBox($('#product_us'), commonList['USE'], '선택하세요.');
 		createSelectBox($('#product_gc'), commonList['PRDTYPE'], '선택하세요.');
 		createSelectBox($('#product_wh'), warehouseList, '선택하세요.');
 	}
-
-	// 그리드 생성
-	function make_grid() {
+	
+	// 분류 그리드 생성
+	function make_group_grid() {
 		const dataSource = {
-		    api: {
-		        readData: {
-		            url: '/select_PRODUCT_list',
-		            method: 'POST',
-		            contentType: 'application/json',
-		            headers: {
-		                [header]: token
-		            }
-		        }
-		    }
-		}
-		
-		grid = new tui.Grid({
-			el : document.getElementById('grid'),
+			    api: {
+			        readData: {
+			            url: '/select_PRODUCT_group',
+			            method: 'POST',
+			            contentType: 'application/json',
+			            headers: {
+			                [header]: token
+			            },
+			            initParams: {
+			            	product_gc: 'PRDTYPE'
+			            	}
+			        }
+			    }
+			}
+		group_grid = new tui.Grid({
+			el : document.getElementById('group_grid'),
 			data : dataSource,
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 600,
 			columns : [
-				{header : '품목코드', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '품목명', name : 'product_nm', sortable : true, filter: 'text'},
-				{header : '품목대분류', name : 'product_gn', sortable : true, filter: 'select'},
-				{header : '품목소분류', name : 'product_cn', sortable : true, filter: 'select'},
-				{header : '품목대분류코드', name : 'product_gc', hidden: 'true'},
-				{header : '품목소분류코드', name : 'product_cc',  hidden: 'true'},
-				{header : '기준단위', name : 'product_un', sortable : true, filter: 'select'},
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'select'},
-				{header : '컬러', name : 'product_crnm', sortable : true, filter: 'select'},
-				{header : '보관창고', name : 'warehouse_nm', sortable : true, filter: 'select'},
-				{header : '보관창고코드', name : 'product_wh', hidden: 'true'},
-				{header : '비고', name : 'product_rm', sortable : true, filter: 'text'}, 
-				{header : '사용여부', name : 'product_us', align: 'center', sortable : true, filter: 'select',
-					formatter: function({value}) {
-						return value == true ? '사용' : value == false ? '미사용' : '';
-					}
-				}, 
+				{header : '품목코드', name : 'common_cc', sortable : true, filter: 'text'},
+				{header : '품목명', name : 'common_nm', sortable : true, filter: 'text'},
+				{header : '비고', name : 'common_rm', sortable : true, filter: 'text'}, 
 			],
 			summary: {
 			    height: 40,
@@ -284,15 +302,107 @@
 
 		});
 		
-		grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			make_modal_detail('update');
-			setModalInput(row);
+		group_grid.on('click', function(ev) {
+			let row = group_grid.getRow(ev.rowKey);
+			if(groupValue == row['common_cc']) {
+				return;
+			}
+			groupValue = row['common_cc'];
+			let flag = ['HALFPRO', 'PRODUCT'].includes(row['common_cc']);
+			make_grid(row['common_cc'], flag);
+			get_PRODUCT_list(row['common_cc']);
 		});
 	}
 	
+	// 제품 조회
+	async function get_PRODUCT_list(data) {
+		console.log(data);
+		let jsonData = {
+			productFilter: {
+				product_gc: data
+			}
+		}
+	    try {
+	        let ajaxData = await callAjaxPost('/select_PRODUCT_list', JSON.stringify(jsonData));
+	        grid.resetData(ajaxData.data.contents);
+	    } catch (error) {
+	    	console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+
+	// 그리드 생성
+	function make_grid(data, flag) {
+		let baseColumns = [
+			{header : '품목코드', name : 'product_cd', sortable : true, filter: 'text'},
+			{header : '품목명', name : 'product_nm', sortable : true, filter: 'text'},
+			{header : '대분류', name : 'product_gn', sortable : true, filter: 'select'},
+			{header : '소분류', name : 'product_cn', sortable : true, filter: 'select'},
+			{header : '대분류코드', name : 'product_gc', hidden: 'true'},
+			{header : '소분류코드', name : 'product_cc',  hidden: 'true'},
+			{header : '기준단위', name : 'product_un', sortable : true, filter: 'select'},
+			];
+		let additionalColumns = [
+			{header : '사이즈', name : 'product_sz', sortable : true, filter: 'select'},
+			{header : '컬러', name : 'product_crnm', sortable : true, filter: 'select'},			
+		];
+		
+		let endColumns = [
+			{header : '보관창고', name : 'warehouse_nm', sortable : true, filter: 'select'},
+			{header : '보관창고코드', name : 'product_wh', hidden: 'true'},
+			{header : '비고', name : 'product_rm', sortable : true, filter: 'text'}, 
+			{header : '사용여부', name : 'product_us', align: 'center', sortable : true, filter: 'select',
+				formatter: ({value}) => value ? '사용' : '미사용'
+			}
+		];
+		
+		const finalColumns = [
+		    ...baseColumns,
+		    ...(flag ? additionalColumns : []),
+		    ...endColumns
+		];
+		if (grid) {
+	        grid.setColumns(finalColumns);
+	        grid.clear();
+	        grid.flag = flag;
+	    } else {
+			grid = new tui.Grid({
+				el : document.getElementById('grid'),
+				data: [],
+				scrollX : false,
+				scrollY : true,
+				rowHeaders : [
+					{type : 'rowNum',}, 
+					{type : 'checkbox',}, 
+				],
+				bodyHeight : 600,
+				columns : finalColumns,
+				summary: {
+				    height: 40,
+				    position: 'bottom', // or 'top'
+				    columnContent: {
+				    	product_us: {
+				            template: (valueMap) => {
+				                return `총  ${valueMap.cnt} 건`
+				            }
+				        }
+				    }
+				},
+			});
+			
+			grid.flag = flag;
+			grid.on('dblclick', function(ev) {
+				let row = grid.getRow(ev.rowKey);
+				make_modal_detail('update', grid.flag);
+				setModalInput(row);
+			});
+	    }
+		
+		
+	}
+	
 	// 그리드 데이터 조회
-	async function getGridList(filter) {
+	async function getFilterList(filter) {
 		let jsonData = JSON.stringify({productFilter: filter});
 		let ajaxData = await callAjaxPost('/select_PRODUCT_list', jsonData);
 		grid.resetData(ajaxData.data.contents);
@@ -300,7 +410,7 @@
 	
 	
 	// 상세 모달
-	function make_modal_detail(process) {
+	function make_modal_detail(process, flag) {
 		let text = !process ? '등록' : '수정';
 		let title = `품목 ${text}`;
 		const div_modal = 'div_PRODUCT_modal';
@@ -336,7 +446,7 @@
 									</div>
 									<div class="row mb-3">
 									<label for="modal_product_gc" class="col-4 col-form-label">품목대분류<span class="text-danger">*</span></label>
-									<div class="col-8"><select id="modal_product_gc" class="form-select"></select></div>
+									<div class="col-8"><select id="modal_product_gc" class="form-select" disabled></select></div>
 								</div>
 								</div>
 							</div>
@@ -394,6 +504,7 @@
 		
         modalElement.addEventListener('shown.bs.modal', function () {
 			createSelectBox($('#modal_product_gc'), commonList['PRDTYPE'], '선택하세요.');
+			$('#modal_product_gc').val(groupValue).trigger('change');
 			createSelectBox($('#modal_product_cc'), [], '선택하세요.');
 			createSelectBox($('#modal_product_gd'), commonList['SHOEGENDER'], '선택하세요.');
 			createSelectBox($('#modal_product_un'), commonList['UNIT'], '선택하세요.');
@@ -448,7 +559,7 @@
 	// 모달 조회
 	async function setModalInput(row) {
 		let data = {
-			procudt_cd: row['procudt_cd'],
+			procudt_cd: row['product_cd'],
 			product_cc: row['product_cc']
 		}
 		let jsonData = JSON.stringify(data);
@@ -480,7 +591,7 @@
 	}
 	
 	// 품목 등록
-	async function insert_PRODUCT() {
+	async function insert_PRODUCT(flag) {
 		let text = Object.keys(modalData).length > 0 ? '수정' : '등록';
 	    const validations = [
 	        { field: modal_product_cd, message: '품목코드를 입력해주세요.' },
@@ -528,11 +639,12 @@
 	    };
 
 	    const requestData = {
-	        product: product,
+	        product,
 	        ...($('.div_select').is(':visible') ? {
 	            sizeList: modal_product_sz.val(),
 	            colorList: modal_product_cr.val()
-	        } : {})
+	        } : {}),
+	        flag,
 	    };
 
 	    formData.append('requestData', new Blob([JSON.stringify(requestData)], {type: 'application/json'}));
@@ -557,7 +669,7 @@
 	
 	// 품목 삭제
 	async function delete_PRODUCT(checkedRows) {
-		if (!await showConfirm(`창고 삭제`, '선택한 창고를 삭제하시겠습니까?')) { 
+		if (!await showConfirm(`창고 삭제`, '선택한 품목을 삭제하시겠습니까?')) { 
 			return;
 		}
 		

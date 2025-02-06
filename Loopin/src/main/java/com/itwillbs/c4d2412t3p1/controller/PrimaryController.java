@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.MaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
@@ -179,25 +180,52 @@ public class PrimaryController {
 		
 		return "/primary/product_list";
 	}
-
+	
+	// 품목 그룹 조회
+	@ResponseBody
+	@PostMapping("/select_PRODUCT_group")
+	public Map<String, Object> select_PRODUCT_group(@RequestBody PrimaryRequestDTO primaryDTO) {
+		Map<String, Object> response = new HashMap<>(); 
+		Map<String, Object> data = new HashMap<>();
+    	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
+		System.out.println("조회하냐!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+		if (!product_cc.isEmpty()) {
+			response.put("result", true);
+			data.put("contents", product_cc.get(product_cc.keySet().iterator().next()));
+		} else {
+			response.put("result", false);
+		}
+		response.put("data", data);
+		
+		return response;
+	}
+	
+	
 	// 품목 리스트 조회
 	@ResponseBody
 	@PostMapping("/select_PRODUCT_list")
 	public Map<String, Object> select_PRODUCT_list(@RequestBody PrimaryRequestDTO primaryDTO) {
 		ProductFilterRequest filter = primaryDTO.getProductFilter();
 		Map<String, Object> response = new HashMap<>(); 
-		List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+		Map<String, Object> data = new HashMap<>();
+		System.out.println(filter);
+		if(filter.getProduct_gc().equals("HALFPRO") || filter.getProduct_gc().equals("PRODUCT")) {
+			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);			
+			data.put("contents", list);
+		} else {
+			List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);		
+			data.put("contents", list);
+		}
+		
 		
 		response.put("result", true);
-		Map<String, Object> data = new HashMap<>();
-		data.put("contents", list);
 		response.put("data", data);
 		
 		return response;
 	}
 	
 	// 품목 등록
-	// @LogActivity(value = "등록", action = "제품등록")
+	// @LogActivity(value = "등록", action = "품목등록")
 	@ResponseBody
 	@PostMapping("/insert_PRODUCT")
 	public ResponseEntity<Map<String, Object>> insert_PRODUCT(@RequestPart(value = "requestData") PrimaryRequestDTO primaryDTO,
@@ -205,15 +233,20 @@ public class PrimaryController {
 		ProductDTO product = primaryDTO.getProduct();
 		List<String> sizeList = primaryDTO.getSizeList();
 		List<String> colorList = primaryDTO.getColorList();
+		boolean flag = primaryDTO.isFlag();
 		ProductFilterRequest filter = primaryDTO.getProductFilter();
 		
 		System.out.println("사이즈는" + sizeList);
 		System.out.println("컬러는" + colorList);
+		System.out.println("flag는 : " + flag);
 		Map<String, Object> response = new HashMap<>();
 		
 	    try {
-	        
-	    	primaryService.insert_PRODUCT(product, image, sizeList, colorList);
+	        if(flag) {
+	        	primaryService.insert_PRODUCT(product, image, sizeList, colorList);	        	
+	        } else {
+	        	primaryService.insert_MATERIAL(product, image);	    
+	        }
 	    	
 			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
 			response.put("list", list);
@@ -256,9 +289,7 @@ public class PrimaryController {
 	    try {
 	    	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
 	    	if (!product_cc.isEmpty()) {
-	    	    String key = product_cc.keySet().iterator().next();
-	    	    List<Common_codeDTO> firstList = product_cc.get(key);
-	    	    response.put("product_cc", firstList);
+	    	    response.put("product_cc", product_cc.get(product_cc.keySet().iterator().next()));
 	    	}
 			
 			return ResponseEntity.ok(response);
