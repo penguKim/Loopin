@@ -50,6 +50,24 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
 
+	
+	@Query(value = """
+		    SELECT 
+		        e.employee_cd AS employee_cd,
+		        e.employee_nm AS employee_nm,
+		        c.common_nm AS employee_dp,
+		        s.common_nm AS employee_gd
+		    FROM EMPLOYEE e 
+		    LEFT JOIN COMMON_CODE c 
+		           ON e.employee_dp = c.common_cc 
+		          AND c.common_gc = 'DEPARTMENT'
+		    LEFT JOIN COMMON_CODE s 
+		           ON e.employee_gd = s.common_cc 
+		          AND s.common_gc = 'POSITION'
+		""", nativeQuery = true)
+	List<Object[]> select_CONTRACT_PS();
+
+	
 	@Query(value = """
 		    SELECT
 				c.contract_cd,

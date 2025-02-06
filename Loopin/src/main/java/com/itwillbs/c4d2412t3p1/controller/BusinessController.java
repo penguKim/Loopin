@@ -91,6 +91,23 @@ public class BusinessController {
 		}
 		
 	}
+
+	// 담당자 조회
+	@GetMapping("/select_CONTRACT_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_PS() {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_CONTRACT_PS();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
 	
 	
 	@PostMapping("/insert_CONTRACT")

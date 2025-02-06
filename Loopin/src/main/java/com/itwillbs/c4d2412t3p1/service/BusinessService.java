@@ -99,6 +99,23 @@ public class BusinessService {
 			
 		}).collect(Collectors.toList());
 	}
+	public List<Map<String, Object>> select_CONTRACT_PS() {
+		
+		List<Object[]> result;
+		
+		result = contractRepository.select_CONTRACT_PS();
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract_ps = new HashMap<>();
+			contract_ps.put("employee_cd", row[0]);
+			contract_ps.put("employee_nm", row[1]);
+			contract_ps.put("employee_dp", row[2]);
+			contract_ps.put("employee_gd", row[3]);
+			
+			return contract_ps;
+			
+		}).collect(Collectors.toList());
+	}
 	
 	@Transactional
     public void insert_CONTRACT(ContractDTO contractDto) throws IOException {

@@ -270,7 +270,8 @@
 		            headers: { 'X-CSRF-TOKEN': csrfToken },
 		            success: function () {
 		            	Swal.fire({ icon: 'success', title: '등록 완료', text: '등록이 완료되었습니다.', confirmButtonText: '확인' });
-		                modalInstance.hide();
+		            	modalInstance.hide();
+		            	make_contract_grid();
 		            },
 		            error: function () {
 		            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
@@ -442,7 +443,7 @@
 		}
 		
         
-	    // "추가" 버튼 클릭 시 거래처 선택 모달 열기
+	    // 거래처코드 클릭 시 거래처 선택 모달 열기
 		$(document).on('click', '#account_cd', function () {
 		    console.log('거래처 선택 input 클릭됨!'); // 클릭 이벤트 확인
 		    openAccountModal();
@@ -556,10 +557,125 @@
 		            });
 		        }
 		    });
-		    
-		    
-		    
-		}
+		} // 거래처 관련 끝
+        
+	    // 담당자 클릭 시 담당자 선택 모달 열기
+		$(document).on('click', '#contract_ps', function () {
+		    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
+		    openPersonModal();
+		});
+
+        
+        
+        // 거래처 선택 모달
+		function openPersonModal() {
+		    $('#personSelectModal').remove();
+		    const personModalHTML = `
+		        <div class="modal" id="personSelectModal" tabindex="-1">
+		            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+		                <div class="modal-content">
+		                    <div class="modal-header">
+		                        <h5 class="modal-title">담당자 선택</h5>
+		                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+		                    </div>
+		                    <div class="modal-body">
+		                        <div id="personSelectGrid"></div>
+		                    </div>
+		                    <div class="modal-footer">
+		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                        <button type="button" class="btn btn-primary" id="selectPersonBtn">추가</button>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>`;
+
+		    $('body').append(personModalHTML);
+
+		    const personSelectGrid = new tui.Grid({
+		        el: document.getElementById('personSelectGrid'),
+		        data: [],
+		        columns: [
+		            { header: '사원코드', name: 'employee_cd', align: 'center' },
+		            { header: '사원명', name: 'employee_nm', align: 'center' },
+		            { header: '부서', name: 'employee_dp', align: 'center' },
+		            { header: '직위', name: 'employee_gd', align: 'center' }
+		        ],
+		        rowHeaders: ['checkbox'],
+		        scrollX: false,
+		        scrollY: false,
+		        bodyHeight: 300, // 고정 높이 설정
+		        summary: {
+		            height: 40,
+		            position: 'bottom',
+		            columnContent: {
+		                account_nm: {
+		                    template: (valueMap) => {
+		                        return `총 ${valueMap.cnt} 건`;
+		                    }
+		                }
+		            }
+		        }
+		    });
+
+		    // 서버에서 데이터 가져오기
+		    $.ajax({
+		        url: '/select_CONTRACT_PS',
+		        method: 'GET',
+		        success: function (response) {
+		            // 서버 응답 데이터를 Toast UI Grid에 설정
+		            personSelectGrid.resetData(response);
+		        },
+		        error: function () {
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '담당자 정보를 가져오는 데 실패했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+
+		    const personModal = new bootstrap.Modal(document.getElementById('personSelectModal'), {
+		        backdrop: false, // 추가적인 배경 방지
+		        keyboard: false // ESC 키로 닫기 방지 (옵션)
+		    });
+
+		    personModal.show();
+
+		    // 체크박스 단일 선택 제한
+		    personSelectGrid.on('check', (ev) => {
+		        const checkedRows = personSelectGrid.getCheckedRows();
+		        if (checkedRows.length > 1) {
+		            // 마지막으로 체크된 항목 제외
+		            personSelectGrid.uncheck(ev.rowKey);
+		            Swal.fire({
+		                icon: 'warning',
+		                title: '알림',
+		                text: '한명의 사원만 선택할 수 있습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+
+		    // "추가" 버튼 클릭 시 선택 데이터 처리
+		    $('#selectPersonBtn').off('click').on('click', function () {
+		        const selectedRow = personSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
+		        console.log('선택된 행:', selectedRow);
+		        
+		        if (selectedRow) {
+		            // 선택된 담당자 데이터를 input에 설정
+		            $('#contract_ps').val(selectedRow.employee_nm);
+		            personModal.hide(); // 모달 닫기
+		        } else {
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생',
+		                text: '추가할 사원 선택하세요.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		} // 담당자 정보 끝
     });
 </script>
 
@@ -624,40 +740,109 @@
 	
     // 상단(Contract Grid) 생성 함수
     function make_contract_grid() {
-        const dataSource = {
-            api: {
-                readData: { url: '/select_CONTRACT', method: 'GET' },
-            }
-        };
+		
+        $.ajax({
+            url: '/select_CONTRACT',
+            method: 'GET',
+            success: function (response) {
+                const contractList = response;
 
-        contract_grid = new tui.Grid({
-            el: document.getElementById('contract_grid'),
-            data: dataSource,
-            scrollX: false,
-            scrollY: false,
-            rowHeaders: [
-                { type: 'rowNum' },
-                { type: 'checkbox' },
-            ],
-            selectionUnit: 'row',
-			bodyHeight: 100, // 고정 높이 설정
-            columns: [
-                { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
-                { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
-                { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
-                { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
-                { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
-                { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-                { header: '수주금액', name: 'contract_mn', align: 'center', sortable: true },
-                { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
-                
-                // 숨김 컬럼
-                { header: '비고', name: 'contract_rm', hidden: true },
-                { header: '작성자', name: 'contract_wr', hidden: true },
-                { header: '작성일', name: 'contract_wd', hidden: true },
-                { header: '수정자', name: 'contract_mf', hidden: true },
-                { header: '수정일', name: 'contract_md', hidden: true }
-            ]
+                if (contract_grid) {
+                    // 기존 그리드가 있으면 데이터만 갱신
+                    contract_grid.resetData(contractList.map(row => ({
+                        contract_cd: row.contract_cd,
+                        account_cd: row.account_cd,
+                        contract_ps: row.contract_ps,
+                        contract_sd: row.contract_sd,
+                        contract_ed: row.contract_ed,
+                        contract_am: row.contract_am,
+                        contract_mn: row.contract_mn,
+                        contract_st: row.contract_st,
+                        contract_rm: row.contract_rm,
+                        contract_wr: row.contract_wr,
+                        contract_wd: row.contract_wd,
+                        contract_mf: row.contract_mf,
+                        contract_md: row.contract_md
+                    })));
+                } else {
+                    // 처음 로드 시 새로운 그리드 생성
+                    contract_grid = new tui.Grid({
+                        el: document.getElementById('contract_grid'),
+                        data: contractList.map(row => ({
+                            contract_cd: row.contract_cd,
+                            account_cd: row.account_cd,
+                            contract_ps: row.contract_ps,
+                            contract_sd: row.contract_sd,
+                            contract_ed: row.contract_ed,
+                            contract_am: row.contract_am,
+                            contract_mn: row.contract_mn,
+                            contract_st: row.contract_st,
+                            contract_rm: row.contract_rm,
+                            contract_wr: row.contract_wr,
+                            contract_wd: row.contract_wd,
+                            contract_mf: row.contract_mf,
+                            contract_md: row.contract_md
+                        })),
+                        scrollX: true,
+                        scrollY: true,
+                        autoWidth: true,
+                        rowHeight: 'auto',
+                        bodyHeight: 'fitToParent',
+                        rowHeaders: ['checkbox'],
+                        zIndex: 100,
+                        columns: [
+                            { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+                            { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                            { header: '담당자명', name: 'contract_ps', align: 'center', sortable: true },
+                            { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
+                            { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
+                            { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
+                            { header: '수주금액', name: 'contract_mn', align: 'center', sortable: true },
+                            { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
+                            
+                            // 숨김 컬럼
+                            { header: '비고', name: 'contract_rm', hidden: true },
+                            { header: '작성자', name: 'contract_wr', hidden: true },
+                            { header: '작성일', name: 'contract_wd', hidden: true },
+                            { header: '수정자', name: 'contract_mf', hidden: true },
+                            { header: '수정일', name: 'contract_md', hidden: true }
+                        ],
+                        summary: {
+                            height: 40,
+                            position: 'bottom',
+                            columnContent: {
+                                contract_mn: {
+                                    template: (valueMap) => {
+                                        return `총 ${valueMap.sum} 원`
+                                    }
+                                }
+                            }
+                        }
+                    });
+
+                    // ✅ 그리드 클릭 이벤트 등록
+                    contract_grid.on('click', (ev) => {
+                        const columnName = ev.columnName;
+                        const rowKey = ev.rowKey;
+                        const rowData = contract_grid.getRow(rowKey);
+                        console.log("rowData : ", rowData);
+
+                        // 헤더 클릭인지 확인
+                        if (rowKey === null || rowKey === undefined) {
+                            console.warn("헤더 클릭은 무시됩니다.");
+                            return;
+                        }
+
+                        if (columnName === 'contract_cd' || columnName === 'account_cd' || columnName === 'contract_ps') {
+                            console.log("모달에 표시할 데이터:", rowData);
+                            openContractModal('edit', rowData); // 수정 모달 실행
+                        }
+                    });
+                }
+            },
+            error: function (error) {
+                console.error('수주 데이터 로드 실패:', error);
+            }
         });
     }
 
