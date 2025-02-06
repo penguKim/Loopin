@@ -39,8 +39,8 @@ public class ContractDetail {
     @Column(name = "product_cr", length = 20)
     private String product_cr;
 
-    @Column(name = "contract_am")
-    private Long contract_am;
+    @Column(name = "product_am")
+    private Long product_am;
 
     @Column(name = "contract_ct")
     private BigDecimal contract_ct;
@@ -58,7 +58,7 @@ public class ContractDetail {
 		contractDetail.setProduct_cd(contractDetailDto.getProduct_cd());
 		contractDetail.setProduct_sz(contractDetailDto.getProduct_sz());
 		contractDetail.setProduct_cr(contractDetailDto.getProduct_cr());
-		contractDetail.setContract_am(contractDetailDto.getContract_am());
+		contractDetail.setProduct_am(contractDetailDto.getProduct_am());
 		contractDetail.setContract_ct(contractDetailDto.getContract_ct());
 		contractDetail.setContract_ed(contractDetailDto.getContract_ed());
 		contractDetail.setProduct_un(contractDetailDto.getProduct_un());
