@@ -33,6 +33,9 @@ public class MaterialDTO {
 	private String material_uu;
 	private Timestamp material_ud;
 	
+	private String material_cn;
+	private String warehouse_nm;
+	
 	public MaterialDTO() {}
 	
 	

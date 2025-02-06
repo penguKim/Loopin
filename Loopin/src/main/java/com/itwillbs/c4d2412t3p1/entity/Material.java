@@ -68,22 +68,22 @@ public class Material {
 
 
 	
-	public static Material setMaterial(ProductDTO product) {
+	public static Material setMaterial(MaterialDTO material) {
 	    return Material.builder()
-	    		.material_cd(product.getProduct_cd())
-	    		.material_cc(product.getProduct_cc())
-	    		.material_gc(product.getProduct_gc())
-	    		.material_nm(product.getProduct_nm())
-	    		.material_un(product.getProduct_un())
-	    		.material_wh(product.getProduct_wh())
-	    		.material_pr(product.getProduct_pr())
-	    		.material_pc(product.getProduct_pc())
-	    		.material_rm(product.getProduct_rm())
-	    		.material_us(product.isProduct_us())
-	    		.material_ru(product.getProduct_ru())
-	    		.material_rd(product.getProduct_rd())
-	    		.material_uu(product.getProduct_uu())
-	    		.material_ud(product.getProduct_ud())
+	    		.material_cd(material.getMaterial_cd())
+	    		.material_cc(material.getMaterial_cc())
+	    		.material_gc(material.getMaterial_gc())
+	    		.material_nm(material.getMaterial_nm())
+	    		.material_un(material.getMaterial_un())
+	    		.material_wh(material.getMaterial_wh())
+	    		.material_pr(material.getMaterial_pr())
+	    		.material_pc(material.getMaterial_pc())
+	    		.material_rm(material.getMaterial_rm())
+	    		.material_us(material.isMaterial_us())
+	    		.material_ru(material.getMaterial_ru())
+	    		.material_rd(material.getMaterial_rd())
+	    		.material_uu(material.getMaterial_uu())
+	    		.material_ud(material.getMaterial_ud())
 	            .build();
 	}
 

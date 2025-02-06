@@ -32,6 +32,9 @@ public interface PrimaryMapper {
 	
 	// 품목 사진 조회
 	ProductDTO select_PRODUCT_PC(@Param("product_cd") String product_cd);
+	
+	// 자재 사진 조회
+	MaterialDTO select_MATERIAL_PC(@Param("material_cd") String material_cd);
 
 	
 }

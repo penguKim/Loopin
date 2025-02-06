@@ -23,11 +23,15 @@ public class PrimaryRequestDTO {
 	// 품목관리
 	ProductFilterRequest productFilter;
 	List<ProductDTO> productList;
+	List<MaterialDTO> materialList;
 	ProductDTO product;
+	MaterialDTO material;
 	List<String> sizeList;
 	List<String> colorList;
 	String product_cd;
 	String product_gc;
 	String product_cc;
-	boolean flag; // 원자재, 제품 구분
+	String material_cd;
+	String material_cc;
+	String material_gc;
 }

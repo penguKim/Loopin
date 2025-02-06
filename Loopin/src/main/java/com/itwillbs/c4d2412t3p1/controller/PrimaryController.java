@@ -209,15 +209,25 @@ public class PrimaryController {
 		Map<String, Object> response = new HashMap<>(); 
 		Map<String, Object> data = new HashMap<>();
 		System.out.println(filter);
-		if(filter.getProduct_gc().equals("HALFPRO") || filter.getProduct_gc().equals("PRODUCT")) {
 			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);			
 			data.put("contents", list);
-		} else {
-			List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);		
-			data.put("contents", list);
-		}
 		
+		response.put("result", true);
+		response.put("data", data);
 		
+		return response;
+	}
+	
+	// 자재 리스트 조회
+	@ResponseBody
+	@PostMapping("/select_MATERIAL_list")
+	public Map<String, Object> select_MATERIAL_list(@RequestBody PrimaryRequestDTO primaryDTO) {
+		ProductFilterRequest filter = primaryDTO.getProductFilter();
+		Map<String, Object> response = new HashMap<>(); 
+		Map<String, Object> data = new HashMap<>();
+		
+		List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);		
+		data.put("contents", list);
 		response.put("result", true);
 		response.put("data", data);
 		
@@ -233,22 +243,36 @@ public class PrimaryController {
 		ProductDTO product = primaryDTO.getProduct();
 		List<String> sizeList = primaryDTO.getSizeList();
 		List<String> colorList = primaryDTO.getColorList();
-		boolean flag = primaryDTO.isFlag();
-		ProductFilterRequest filter = primaryDTO.getProductFilter();
-		
-		System.out.println("사이즈는" + sizeList);
-		System.out.println("컬러는" + colorList);
-		System.out.println("flag는 : " + flag);
+		ProductFilterRequest filter = new ProductFilterRequest();
+		filter.setProduct_gc(product.getProduct_gc());		
 		Map<String, Object> response = new HashMap<>();
 		
 	    try {
-	        if(flag) {
-	        	primaryService.insert_PRODUCT(product, image, sizeList, colorList);	        	
-	        } else {
-	        	primaryService.insert_MATERIAL(product, image);	    
-	        }
+        	primaryService.insert_PRODUCT(product, image, sizeList, colorList);	        	
 	    	
 			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+			response.put("list", list);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 자재 등록
+	@ResponseBody
+	@PostMapping("/insert_MATERIAL")
+	public ResponseEntity<Map<String, Object>> insert_MATERIAL(@RequestPart(value = "requestData") PrimaryRequestDTO primaryDTO,
+		    @RequestPart(value = "image", required = false) MultipartFile image) {
+		MaterialDTO material = primaryDTO.getMaterial();
+		ProductFilterRequest filter = new ProductFilterRequest();
+		filter.setProduct_gc(material.getMaterial_gc());
+		Map<String, Object> response = new HashMap<>();
+		
+	    try {
+        	primaryService.insert_MATERIAL(material, image);	    
+	    	
+			List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);
 			response.put("list", list);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
@@ -268,7 +292,6 @@ public class PrimaryController {
 		
 		try {
 			boolean check = primaryService.check_PRODUCT_CD(product_cd); // 중복이면 false
-			System.out.println("cpzmsms : " + check);
 			response.put("result", check);
 			if(!check) {
 				response.put("title", "코드명 중복");
@@ -329,20 +352,74 @@ public class PrimaryController {
 		}
 	}
 	
+	// 자재 상세 조회
+	@ResponseBody
+	@PostMapping("/select_MATERIAL_detail")
+	public ResponseEntity<Map<String, Object>> select_MATERIAL_detail(@RequestBody PrimaryRequestDTO primaryDTO) {
+		Map<String, Object> response = new HashMap<>();
+		
+	    try {
+	    	ProductFilterRequest filter = new ProductFilterRequest();
+	    	filter.setProduct_cd(primaryDTO.getMaterial_cd());
+	    	filter.setProduct_cc(primaryDTO.getMaterial_cc());
+	    	List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);
+	        if (!list.isEmpty()) {
+	        	System.out.println(list.get(0).toString());
+	            response.put("material", list.get(0));
+	            Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(list.get(0).getMaterial_gc());
+		    	if (!product_cc.isEmpty()) {
+		    	    String key = product_cc.keySet().iterator().next();
+		    	    List<Common_codeDTO> firstList = product_cc.get(key);
+		    	    response.put("product_cc", firstList);
+		    	}
+	        }
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "조회에 실패했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 	// 제품 삭제
 	@ResponseBody
 	@PostMapping("/delete_PRODUCT")
 	public ResponseEntity<Map<String, Object>> delete_PRODUCT(@RequestBody PrimaryRequestDTO primaryDTO) {
 		List<ProductDTO> productList = primaryDTO.getProductList();
-		
-		
+		ProductFilterRequest filter = new ProductFilterRequest();
+		filter.setProduct_gc(primaryDTO.getProduct_gc());	
 		Map<String, Object> response = new HashMap<>();
 		
 		try {
 			primaryService.delete_PRODUCT(productList);
 			
 			
-			List<ProductDTO> list = primaryService.select_PRODUCT_list(primaryDTO.getProductFilter());
+			List<ProductDTO> list = primaryService.select_PRODUCT_list(filter);
+			response.put("list", list);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "창고 삭제 중 오류가 발생했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
+	
+	// 자재 삭제
+	@ResponseBody
+	@PostMapping("/delete_MATERIAL")
+	public ResponseEntity<Map<String, Object>> delete_MATERIAL(@RequestBody PrimaryRequestDTO primaryDTO) {
+		List<MaterialDTO> materialList = primaryDTO.getMaterialList();
+		ProductFilterRequest filter = new ProductFilterRequest();
+		filter.setProduct_gc(primaryDTO.getMaterial_gc());
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			primaryService.delete_MATERIAL(materialList);
+			
+			List<MaterialDTO> list = primaryService.select_MATERIAL_list(filter);
 			response.put("list", list);
 			
 			return ResponseEntity.ok(response);
