@@ -323,5 +323,16 @@ public class PrimaryController {
 		
 	}
 	
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
+	@GetMapping("/equipment_list")
+	public String equipment_list(Model model) {
+	    
+		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list("USE", "USEYN", "PRDTYPE");
+		
+		model.addAttribute("commonList", commonList);
+		
+		return "/primary/equipment_list";
+	}
+	
 	
 }
