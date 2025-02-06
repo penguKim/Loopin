@@ -18,6 +18,11 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface ContractRepository  extends JpaRepository<Contract, String> {
 
+	// 시퀀스 조회
+	@Query(value = "SELECT NT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	Long getNextSequenceValue();
+	
+	
 	@Query(value = """
 		    SELECT 
 		        p.product_cd AS product_cd,
@@ -44,6 +49,25 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		    FROM ACCOUNT a
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
+
+	@Query(value = """
+		    SELECT
+				c.contract_cd,
+				c.account_cd,
+				c.contract_ps,
+				c.contract_sd,
+				c.contract_ed,
+				c.contract_am,
+				c.contract_mn,
+				c.contract_st,
+				c.contract_rm,
+				c.contract_wr,
+				c.contract_wd,
+				c.contract_mf,
+				c.contract_md
+			FROM CONTRACT c
+		""", nativeQuery = true)
+	List<Object[]> select_CONTRACT();
         
         
 	    

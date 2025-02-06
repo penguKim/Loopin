@@ -243,21 +243,37 @@
 		    // 폼 submit 이벤트 처리
 		    $('#appointment_form').on('submit', function (event) {
 		        event.preventDefault();
-
-		        const formData = productGrid.getData(); // Grid 데이터 가져오기
-		        console.log('등록 데이터:', formData);
-
+		        
+			    const contractDTO = {
+			    		contract_cd: $('#contract_cd').val(),
+				        account_cd: $('#account_cd').val(),
+				        contract_ps: $('#contract_ps').val(),
+				        contract_sd: $('#contract_sd').val(),
+				        contract_ed: $('#contract_ed').val(),
+				        contract_am: $('#contract_am').val(),
+				        contract_mn: $('#contract_mn').val(),
+				        contract_st: $('#contract_st').val(),
+				        contract_rm: $('#contract_rm').val(),
+				        contract_wr: $('#contract_wr').val(),
+				        contract_wd: $('#contract_wd').val(),
+				        contract_mf: $('#contract_mf').val(),
+				        contract_md: $('#contract_md').val()
+				    };
+			    
+			    
 		        // AJAX 요청으로 데이터 전송
 		        $.ajax({
-		            url: '/your-server-endpoint',
+		            url: '/insert_CONTRACT',
 		            method: 'POST',
-		            data: { products: formData },
+		            contentType: "application/json",  // JSON 형식 지정
+		            data: JSON.stringify(contractDTO),
+		            headers: { 'X-CSRF-TOKEN': csrfToken },
 		            success: function () {
-		                showAlert(null, "success", "등록 성공", "수주 등록에 성공했습니다.");
+		            	Swal.fire({ icon: 'success', title: '등록 완료', text: '등록이 완료되었습니다.', confirmButtonText: '확인' });
 		                modalInstance.hide();
 		            },
 		            error: function () {
-		                showAlert(null, "error", "등록 실패", "수주 등록에 실패했습니다.");
+		            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
 		            }
 		        });
 		    });
@@ -549,9 +565,14 @@
 
 
 <script th:inline="javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
     // 변수 지정
     let contract_grid;
     let detail_grid;
+    
+    setGridTheme();
+    
 	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
 
 	["status_list"].forEach(key => {
@@ -563,9 +584,6 @@
     const header = $("meta[name='_csrf_header']").attr("content");
 
     $(function () {
-    	
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
     	
         // 필터 설정
         const filterConfig = [
@@ -608,7 +626,7 @@
     function make_contract_grid() {
         const dataSource = {
             api: {
-                readData: { url: '/select_contract_code', method: 'GET' },
+                readData: { url: '/select_CONTRACT', method: 'GET' },
             }
         };
 
@@ -624,12 +642,21 @@
             selectionUnit: 'row',
 			bodyHeight: 100, // 고정 높이 설정
             columns: [
-                { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
                 { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
                 { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                { header: '담당자명', name: 'account_ps', align: 'center', sortable: true },
+                { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
+                { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
                 { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
+                { header: '수주금액', name: 'contract_mn', align: 'center', sortable: true },
                 { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
+                
+                // 숨김 컬럼
+                { header: '비고', name: 'contract_rm', hidden: true },
+                { header: '작성자', name: 'contract_wr', hidden: true },
+                { header: '작성일', name: 'contract_wd', hidden: true },
+                { header: '수정자', name: 'contract_mf', hidden: true },
+                { header: '수정일', name: 'contract_md', hidden: true }
             ]
         });
     }

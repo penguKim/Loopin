@@ -47,7 +47,7 @@ public class Contract {
 	@Column(name = "account_cd", length = 15)
 	private String account_cd;
 	
-	// 수주일자
+	// 담당자명
 	@Column(name = "contract_ps", length = 20)
 	private String contract_ps;
 
