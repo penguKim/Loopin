@@ -5,10 +5,12 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -26,7 +28,7 @@ import lombok.ToString;
 @Table(name = "NOTICE")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "employee")
 @SequenceGenerator(name = "nt_sequence_generator", sequenceName = "nt_sequence", allocationSize = 1)
 public class Notice {
 	

@@ -110,7 +110,7 @@
 					</ul>
 				</li>
 			</div>
-			<div sec:authorize="hasAnyRole('EMPLOYEE')">
+			<div id="myMenu">
 				<li class="nav-heading">나의메뉴</li>
 				<li class="nav-item">
 					<a class="nav-link collapsed" data-bs-target="#form1s-nav" data-bs-toggle="collapse" href="#">
@@ -118,8 +118,13 @@
 					</a>
 					<ul id="form1s-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
 						<li>
-							<a href="employee_list">
-								<i class="bi bi-circle"></i><span>인사카드관리</span>
+							<a th:href="@{/employee_list(type=1)}">
+								<i class="bi bi-circle"></i><span>인사카드</span>
+							</a>
+						</li>
+						<li>
+							<a th:href="@{/transfer_list(type=1)}">
+								<i class="bi bi-circle"></i><span>인사발령</span>
 							</a>
 						</li>
 					</ul>
@@ -128,14 +133,14 @@
 					<a class="nav-link collapsed" data-bs-target="#form2s-nav" data-bs-toggle="collapse" href="#">
 						<i class="bi bi-calendar-check"></i><span>근태</span><i class="bi bi-chevron-down ms-auto"></i>
 					</a>
-					<ul id="form2s-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+					<ul id="form2s-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
 						<li>
-							<a href="attendance_list">
+							<a th:href="@{/attendance_list(type=1)}">
 								<i class="bi bi-circle"></i><span>휴가조회</span>
 							</a>
 						</li>
 						<li>
-							<a href="commute">
+							<a th:href="@{/commute(type=1)}">
 								<i class="bi bi-circle"></i><span>출퇴근기록부</span>
 							</a>
 						</li>
@@ -158,19 +163,19 @@
 						</li>
 					</ul>
 				</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" href="approval_list">
-						<i class="bi bi-files"></i>
-						<span>전자결재</span>
-					</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" href="notice_list">
-						<i class="bi bi-megaphone"></i>
-						<span>공지사항</span>
-					</a>
-				</li>
 			</div>
+			<li class="nav-item">
+				<a class="nav-link collapsed" href="approval_list">
+					<i class="bi bi-files"></i>
+					<span>전자결재</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link collapsed" href="notice_list">
+					<i class="bi bi-megaphone"></i>
+					<span>공지사항</span>
+				</a>
+			</li>
 			<div sec:authorize="hasRole('SYS_ADMIN')">
 				<li class="nav-heading">시스템 권한</li>
 				<li class="nav-item">
@@ -198,5 +203,8 @@
 	</aside>
 
 </body>
+<script>
 
+
+</script>
 </html>

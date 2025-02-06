@@ -13,14 +13,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itwillbs.c4d2412t3p1.domain.MaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
+import com.itwillbs.c4d2412t3p1.entity.Material;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper;
+import com.itwillbs.c4d2412t3p1.repository.MaterialRepository;
 import com.itwillbs.c4d2412t3p1.repository.ProductRepository;
 import com.itwillbs.c4d2412t3p1.repository.WareareaRepository;
 import com.itwillbs.c4d2412t3p1.repository.WarehouseRepository;
@@ -39,6 +42,7 @@ public class PrimaryService {
 	private final PrimaryMapper primaryMapper;
 	private final WarehouseRepository warehouseRepository;
 	private final ProductRepository productRepository;
+	private final MaterialRepository materialRepository;
 	private final WareareaRepository wareareaRepository;
 
 	// 창고 관리 ----------------------------------------------------------------
@@ -123,6 +127,11 @@ public class PrimaryService {
 	// 품목 조회
 	public List<ProductDTO> select_PRODUCT_list(ProductFilterRequest filter) {
 		return primaryMapper.select_PRODUCT_list(filter);
+	}
+
+	// 자재 정보 조회
+	public List<MaterialDTO> select_MATERIAL_list(ProductFilterRequest filter) {
+		return primaryMapper.select_MATERIAL_list(filter);
 	}
 
 	// 창고 목록 조회
@@ -223,6 +232,37 @@ public class PrimaryService {
 	        productRepository.saveAll(productList);
 	    }
 	}
+	
+	// 원자재, 부자재 등록
+	public void insert_MATERIAL(MaterialDTO material, MultipartFile image) throws IOException {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp time = new Timestamp(System.currentTimeMillis());
+	    
+	    // 기존 파일 처리
+	    MaterialDTO materialImage = primaryMapper.select_MATERIAL_PC(material.getMaterial_cd());
+	    if (materialImage != null && materialImage.getMaterial_cc() != null
+	        && (image == null || !image.isEmpty())) {
+	        util.deleteFile(materialImage.getMaterial_pc());
+	    }
+
+	    // 새 파일 업로드 처리
+	    if (image != null && !image.isEmpty()) {
+	        util.setFile("PRODUCT", image, material::setMaterial_pc);
+	    } else if (image == null) {
+	        material.setMaterial_pc(null);
+	    }
+	    
+        if(material.getMaterial_ru() == null) {
+        	material.setMaterial_ru(regUser);
+        	material.setMaterial_rd(time);
+        } else {
+        	material.setMaterial_uu(regUser);
+        	material.setMaterial_ud(time);
+        }
+        
+        materialRepository.save(Material.setMaterial(material));
+    }		
+
 
 	// 품목 중복 체크
 	public boolean check_PRODUCT_CD(String product_cd) {
@@ -241,6 +281,18 @@ public class PrimaryService {
 	    
 	    productRepository.deleteByProductCdIn(productCodes);
 	}
+
+	// 자재 삭제
+	@Transactional
+	public void delete_MATERIAL(List<MaterialDTO> materialList) {
+
+	    List<String> materialCodes = materialList.stream()
+		        .map(MaterialDTO::getMaterial_cd)
+		        .collect(Collectors.toList());
+	    
+	    materialRepository.deleteByMaterialCd(materialCodes);
+	}
+
 
 
 

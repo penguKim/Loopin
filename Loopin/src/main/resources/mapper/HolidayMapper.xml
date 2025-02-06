@@ -32,8 +32,8 @@
 									    WHEN TO_CHAR(TO_DATE(#{holiday_dt}, 'YYYY-MM-DD'), 'D') IN ('1', '7') THEN '1'
 								  	    ELSE '0'
 								 	    END, 
-								    'O', 
-								    'X', 
+								    'true', 
+								    'false', 
 								    #{holiday_wr}, 
 								    #{holiday_wd}, 
 								    NULL, 

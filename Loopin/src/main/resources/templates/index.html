@@ -34,9 +34,6 @@
 				<!--왼쪽 시작 -->
 				<div class="col-lg-8 ">
 					<div class="card" id="div_card" style="min-height: 400px;">
-<!--						<div class="pagetitle">-->
-<!--							<h3>나의 출퇴근 정보</h3>-->
-<!--						</div>-->
 						<div class="row">
 							<!-- 왼쪽 1번째 위 -->
 							<div class="tab-pane fade show active" id="tab_calendar" role="tabpanel" aria-labelledby="calendar-tab">
@@ -47,31 +44,6 @@
 								</div>
 								<div id="div_calendar"></div>
 							</div>
-	
-							<!-- 왼쪽 2번째 중간 -->
-	<!--						<div class="col-12">-->
-	<!--							<div class="card top-selling overflow-auto">-->
-	<!--								<div class="card-body pb-0">-->
-	<!--									<h5 class="card-title">남은 휴가</h5>-->
-	<!--									<table class="table table-borderless">-->
-	<!--										<thead>-->
-	<!--											<tr>-->
-	<!--												<th scope="col">총 휴가 일수</th>-->
-	<!--												<th scope="col">사용한 휴가 일수</th>-->
-	<!--												<th scope="col">남은 휴가 일수</th>-->
-	<!--											</tr>-->
-	<!--										</thead>-->
-	<!--										<tbody>-->
-	<!--											<tr>-->
-	<!--												<td th:text="${['ANNUAL_AA']}"></td>-->
-	<!--												<td th:text="${['ANNUAL_UA']}"></td>-->
-	<!--												<td th:text="${['ANNUAL_RA']}"></td>-->
-	<!--											</tr>-->
-	<!--										</tbody>-->
-	<!--									</table>-->
-	<!--								</div>-->
-	<!--							</div>-->
-	<!--						</div>-->
 						</div>
 					</div>
 				</div>
@@ -83,28 +55,28 @@
 						<div class="card-body justify-content-center align-items-center">
 							<!-- Card with titles, buttons, and links -->
 							<h5 class="card-title">근무 정보</h5>
-							<div class="row  ">
-								<h6 class="col-lg-5 col-md-4 label ">이름</h6>
-								<p class="col-lg-5 col-md-4 label " th:text="${['EMPLOYEE_NM']}"></p>
+							<div class="row">
+								<h6 class="col-lg-5 col-md-4 label">이름</h6>
+								<p class="col-lg-5 col-md-4 label" th:text="${['EMPLOYEE_NM']}"></p>
 							</div>
-							<div class="row  ">
-								<h6 class="col-lg-5 col-md-4 label ">부서</h6>
+							<div class="row">
+								<h6 class="col-lg-5 col-md-4 label">부서</h6>
 								<p class="col-lg-5 col-md-4 label " th:text="|${['COMMON_NM']}팀|"></p>
 							</div>
-							<div class="row  ">
-								<h6 class="col-lg-5 col-md-4 label ">오늘날짜</h6>
-								<p class="col-lg-5 col-md-4 label " id="current_day"></p>
+							<div class="row">
+								<h6 class="col-lg-5 col-md-4 label">오늘날짜</h6>
+								<p class="col-lg-5 col-md-4 label" id="current_day"></p>
 							</div>
-							<div class="row  ">
-								<h6 class="col-lg-5 col-md-4 label ">근무일정</h6>
-								<p class="col-lg-5 col-md-4 label " th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></p>
+							<div class="row">
+								<h6 class="col-lg-5 col-md-4 label">근무일정</h6>
+								<p class="col-lg-5 col-md-4 label" th:if="${WORKINGHOUR_WT != null and WORKINGHOUR_WT != '' and WORKINGHOUR_LT != null and WORKINGHOUR_LT != ''}" th:text="|${['WORKINGHOUR_WT']} - ${['WORKINGHOUR_LT']}|"></p>
 							</div>
 							<div class="d-flex justify-content-between mt-3">
 								<input type="button" id="btn_attendance" class="btn btn-primary flex-fill mx-4" value="출근하기" th:disabled="${isAttendance}">
 								<input type="button" id="btn_leave_work" class="btn btn-primary flex-fill mx-4" value="퇴근하기" th:disabled="${isLeaveWork}">
 							</div>
 						</div>
-					</div><!-- End Recent Activity -->
+					</div>
 					
 					<!-- 오른쪽 2번째 중간 -->
 					<div class="card">
@@ -138,7 +110,7 @@
 					</div>
 				</div>
 		</section>
-	</main><!-- End #main -->
+	</main>
 	
 </body>
 <script th:inline="javascript">

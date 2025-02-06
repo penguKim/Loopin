@@ -2,6 +2,7 @@ package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,7 +20,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 	// 인사코드 값으로 찾기
 	@Query("SELECT a FROM Approval a WHERE a.approval_wr = :currentId")
 	List<Approval> findByApprovalCd(@Param("currentId") String currentId);
-	
+
 //     1차 결재권자 목록 조회
 	@Query("SELECT e FROM Employee e " + "JOIN COMMON_CODE c ON e.employee_gd = c.common_cc "
 			+ "WHERE c.common_gc = 'DEPARTMENT' " + // 직위 관련 필터 추가
@@ -49,6 +50,17 @@ public interface ApprovalRepository extends JpaRepository<Approval, String> {
 
 	@Query("SELECT e FROM Employee e WHERE e.employee_cd = :employeeCd")
 	Optional<Employee> findByEmployeeCd(@Param("employeeCd") String employeeCd);
+
+	// 1. 사원번호(employee_cd) 기반으로 사원명 조회 (1차, 2차 결재자)
+	@Query(value = "SELECT * FROM EMPLOYEE WHERE employee_cd IN :employeeCds", nativeQuery = true)
+	List<Employee> findEmployeesByEmployeeCd(@Param("employeeCds") Set<String> employeeCds);
+
+	// 2. 로그인 ID(employee_id) 기반으로 사원명 조회 (approval_wr 변환)
+	@Query(value = "SELECT * FROM EMPLOYEE WHERE employee_id IN :employeeIds", nativeQuery = true)
+	List<Employee> findEmployeesByEmployeeId(@Param("employeeIds") Set<String> employeeIds);
+
+	@Query("SELECT e FROM Employee e WHERE e.employee_id = :employeeId")
+	Optional<Employee> findByEmployeeId(@Param("employeeId") String employeeId);
 
 //    @Query(value = "SELECT * FROM approval a " +
 //            "WHERE (:#{#filterRequest.approvalCd} IS NULL OR a.approval_cd = :#{#filterRequest.approvalCd}) " +
