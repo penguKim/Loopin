@@ -76,6 +76,7 @@
 	    SELECT WAREHOUSE_CD, WAREHOUSE_NM
 	    FROM WAREHOUSE
 	    WHERE WAREHOUSE_US = 1
+	    ORDER BY WAREHOUSE_IN
 	</select>
 
 	<!-- 품목 사진 조회 -->

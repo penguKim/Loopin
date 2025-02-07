@@ -166,8 +166,11 @@
 				if ($('#div_PRODUCT_modal').is(':hidden')) {
 				    return;
 				}
-				let product_cd = $(this).val();
-				let ajaxData = await callAjaxPost('/check_PRODUCT_CD', JSON.stringify({product_cd}));
+				const prefix = getPrefix(grid['flag']);
+				let data = {
+						[`${prefix}_cd`] : $(this).val()
+				}
+				let ajaxData = await callAjaxPost(`/check_${prefix.toUpperCase()}_CD`, JSON.stringify(data));
 				if(!ajaxData['result']) {
 					showToast($(this), 'error', ajaxData['title'], ajaxData['msg']);
 					setTimeout(() => {
