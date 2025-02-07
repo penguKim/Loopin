@@ -1,0 +1,243 @@
+<html lang="ko" xmln	s:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}" layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<style>
+   /* select2 드롭다운 z-index 조정 */
+   .select2-dropdown {
+       z-index: 1051 !important; /* Bootstrap modal의 z-index보다 높게 설정 */
+   }
+   
+   .select2-data-1-uz36 {
+   		width: 100%;
+   }
+</style>
+<body>
+<span id="employee_cd" sec:authentication="principal.employee_cd" style="display: none;"></span>
+<span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
+	<main id="main" class="main">
+		<div class="pagetitle"></div>
+		<div id="loadingSpinner" class="loading-overlay" style="display: none;">
+		    <div class="spinner-border text-primary" style="width: 60px; height: 60px;" role="status">
+		        <span class="visually-hidden">Loading...</span>
+		    </div>
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<div class="card" id="div_card">
+					<div class="card-body">
+						<div class="card-title d-flex">
+							<h5 id="premth"></h5>
+							<h5>공정관리</h5>
+						</div>
+						<div id="filterModule"></div>
+						<div id="grid" class="p-1"></div>
+						<!-- <div class="card-footer d-flex justify-content-start align-items-center p-2"> -->
+						<div class="d-flex justify-content-start align-items-center p-2">
+							<input type="button" id="btn_delete" class="btn btn-primary ml-3 me-2" value="삭제">
+							<input type="button" id="btn_register" class="btn btn-primary ml-3" value="등록">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	   <div class="modal" id="registermodal" tabindex="-1" data-bs-backdrop="static">
+	             <div class="modal-dialog modal-dialog-centered modal-lg">
+	               <div class="modal-content">
+	                 <div class="modal-header">
+	                   <h5 class="modal-title">공정 등록</h5>
+	                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                 </div>
+	                 <div class="modal-body">
+					<form class="row g-3">
+						<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">공정코드</label>
+		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_CD">
+		                    </div>
+		                   </div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">공정명</label>
+		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_NM">
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">품목분류</label>
+		                    	<select class="form-select" aria-label="PRODUCT_GC">
+			                      <option selected>Open this select menu</option>
+			                      <option value="1">One</option>
+			                      <option value="2">Two</option>
+			                      <option value="3">Three</option>
+			                    </select>
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">품목세부분류</label>
+		                    	<select class="form-select" aria-label="PRODUCT_CC">
+			                      <option selected>Open this select menu</option>
+			                      <option value="1">One</option>
+			                      <option value="2">Two</option>
+			                      <option value="3">Three</option>
+			                    </select>
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="modal_product_sz" class="col-3 col-form-label">설비<span class="text-danger">*</span></label>
+								<div class="col-9"><select id="PRODUCT_EQ" class="form-select" multiple>
+									<option selected>Open this select menu</option>
+			                      <option value="1">One</option>
+			                      <option value="2">Two</option>
+			                      <option value="3">Three</option>
+								</select></div>
+		                    	<!-- <label for="" class="col-sm-3 col-from-label">설비1</label>
+		                    	<select class="form-select" aria-label="PRODUCT_EQ" id="PRODUCT_EQ" multiple>
+			                      <option selected>Open this select menu</option>
+			                      <option value="1">One</option>
+			                      <option value="2">Two</option>
+			                      <option value="3">Three</option>
+			                    </select> -->
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">사용여부</label>
+		                    	<select class="form-select" aria-label="PRODUCT_US">
+			                      <option value="1">One</option>
+			                      <option value="2">Two</option>
+			                      <option value="3">Three</option>
+			                    </select>
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-12">
+		                    <div class="input-group mb-3">
+		                    	<label for="" class="col-sm-3 col-from-label">비고</label>
+		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_BG">
+		                    </div>
+		                  	</div>
+					 </form>
+	                 </div>
+                 <div class="modal-footer d-flex justify-content-between">
+                 	<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
+                 	<div>
+                    <button type="btn_close" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="btn_modalregi" class="btn btn-primary">등록</button>
+                 	</div>
+                 </div>
+               </div>
+             </div>
+         </div>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	
+	/* FETCH */
+	const fetchProcesslist = async () => {
+	  try {
+	  const response = await fetch('/selectpclist', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // [csrfHeader]: csrfToken,
+      },
+	    });
+	    const data = await response.json();
+	    console.log(data);
+	    // 사용여부 데이터 전처리 하기.
+	    grid.resetData(data);
+	  } catch (error) {
+	    console.error('공정관리 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	fetchProcesslist();
+	
+	
+	const btn_regi = document.getElementById('btn_register');
+	const modal = document.getElementById('registermodal');
+	
+	btn_regi.addEventListener('click', function(e){
+		console.log('등록버튼 눌렀다.');
+		// 모달 뜨기. 모달에서 어쩌고.
+		
+		var regimodal = new bootstrap.Modal(modal);
+		regimodal.show();
+		
+		// select2 초기화
+	    $('#PRODUCT_EQ').select2({
+	        placeholder: '설비를 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),  // 드롭다운을 모달 내에 올바르게 표시
+	        multiple:true,
+	    });
+		
+	})
+	
+	
+	
+	
+      //////////////////
+     // 카드 크기 설정 //
+	//////////////////
+	
+	setElementHeight('#div_card', -110);
+	
+	$(window).resize(function() {
+		setElementHeight('#div_card', -110);
+		if(grid != null) {
+			setGridHeight(grid, -380);
+		}
+	});
+	
+	  //////////
+	 // 필터 //
+	//////////
+	
+	const filterConfig = [
+		{key: 'PROCESS_CD', label: '공정코드', type:'text', placeholder:'공정코드 입력', col:'col-2'},
+		{key: 'PROCESS_NM', label: '공정명', type:'text', placeholder:'공정명 입력', col:'col-2'},
+		]
+	
+	 initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		 console.log('filtertest',filterValues);
+     });
+	
+	/* document.addEventlistener('filterToggled', function(e) {
+	    if(e.detail.isVisible) {
+	        setGridHeight(grid, -450);
+	    } else {
+	        setGridHeight(grid, -380);
+	    }
+	}); */
+	  
+	/* ====================
+	  ||	그리드 생성   ||
+	  ====================*/
+	  
+	  const grid = new tui.Grid({
+		  el: document.getElementById('grid'),
+		  scrollX: true,
+		  scrollY: true,
+		  columns: [
+			  {header:'공정코드', name:'PROCESS_CD', align:'center'},
+			  {header:'공정명', name:'PROCESS_NM', align:'center'},
+			  {header:'공정명', name:'PROCESS_EQ', align:'center'},
+			  {header:'공정명', name:'PROCESS_PD', align:'center'},
+			  {header:'사용여부', name:'PROCESS_US', align:'center'},
+			  {header:'비고', name:'PROCESS_BG', align:'center'},
+		  ],
+	  });
+</script>

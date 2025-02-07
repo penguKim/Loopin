@@ -4,6 +4,15 @@
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.ProcessMapper">
 
-
+	<select id="selectpclist" resultType="map">
+		SELECT 
+			pc.PROCESS_CD,
+			pc.PROCESS_NM,
+			pc.PROCESS_US,
+			pc.PROCESS_BG,
+			pc.PROCESS_EQ,
+			pc.PROCESS_PD
+		FROM PROCESS pc
+	</select>
 
 </mapper>
