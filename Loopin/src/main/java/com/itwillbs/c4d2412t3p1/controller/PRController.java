@@ -1,13 +1,10 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptException;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -132,9 +129,10 @@ public class PRController {
 
 	@GetMapping("/getempandbs")
 	@ResponseBody
-	public List<Employee> getempandbs(@RequestParam("premth") String premth) {
+	public List<Map<String, Object>> getempandbs(@RequestParam("premth") String premth) {
 		
-		List<Employee> list = prS.select_empworklastmth(premth);
+		List<Map<String, Object>> list = prS.select_empworklastmth(premth);
+//		List<Employee> list = prS.select_empworklastmth(premth);
 		
 		return list;
 	}
@@ -157,6 +155,43 @@ public class PRController {
 		List<Map<String, Object>> list = prS.calculatesalAllemp(wtdata);
 		
 		return list;
+	}
+	
+	@GetMapping("/iscal")
+	@ResponseBody
+	public String iscal(@RequestParam("premth") String premth) {
+		
+		String result = prS.isCal( premth);
+		return result;
+	}
+	
+	@PostMapping("/calwbn")
+	@ResponseBody
+	public List<Map<String, Object>> getwt(@RequestBody List<PR_calculationMDTO> calbndata ) throws ScriptException {
+		
+//		if(calbndata.get(0).getPdid().size() == 1) {
+//			List<Map<String, Object>> list = prS.select_givebnone(calbndata);
+//			return list;
+//		}else {
+			List<Map<String, Object>> list = prS.select_worktimeforbn(calbndata);
+			return list;
+//		}
+	}
+	
+	@GetMapping("/getempprdata")
+	@ResponseBody
+	public List<Map<String, Object>> getMethodName(@RequestParam("empcd") String empcd, @RequestParam("prid") Long prid) {
+		
+		List<Map<String, Object>> list = prS.select_prmodaldata(empcd,prid);
+		return list;
+	}
+	
+	@PostMapping("/sendpr")
+	@ResponseBody
+	public int updateprch(@RequestBody Map<String, Long> request) {
+		Long prid = request.get("prid");
+		int result = prS.update_prch(prid);
+		return result;
 	}
 	
 }

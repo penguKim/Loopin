@@ -36,6 +36,7 @@ import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
+import com.itwillbs.c4d2412t3p1.service.UtilService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -50,6 +51,7 @@ public class CommuteController {
 	private final CommuteService commuteService;
 	private final CommonService commonService;
 	private final EmployeeService employeeService;
+	private final UtilService util;
 	
 
 	// 출퇴근 기록부 --------------------------------------------
@@ -64,8 +66,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_calendar")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_calendar(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
@@ -90,8 +92,8 @@ public class CommuteController {
 	@ResponseBody
 	@GetMapping("/select_COMMUTE_detail")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin, commute_wd);
 		
@@ -109,7 +111,7 @@ public class CommuteController {
 	@GetMapping("/select_EMPLOYEE_grid")
 	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_grid(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
 		Map<String, Object> response = new HashMap<>(); 
-		boolean isEmp = commuteService.isAuthority("EMPLOYEE");
+		boolean isEmp = util.isAuthority("EMPLOYEE");
 		if(isEmp) {
 	        response.put("result", false);
 	        response.put("message", "관리자 권한이 필요합니다.");
@@ -131,7 +133,7 @@ public class CommuteController {
 	@PostMapping("/insert_COMMUTE_modal")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_modal(@RequestBody CommuteRequestDTO commuteRequest) {
 		CommuteDTO employee = commuteRequest.getCommute();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
@@ -163,8 +165,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
@@ -184,8 +186,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/insert_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -207,26 +209,6 @@ public class CommuteController {
 		}
 	}
 	
-	
-	@ResponseBody
-	@PostMapping("/select_COMMON_list")
-	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody List<String> list) {
-		
-		Map<String, Object> response = new HashMap<>(); 
-		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(list);
-		log.info(commonList.toString());
-
-		if(commonList.size() > 0) {
-			response.put("result", true);
-			response.put("list", commonList);
-			
-			return ResponseEntity.ok(response);
-		} else {
-			response.put("result", false);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
-		
-	}
 	
 	// 근로 관리 --------------------------------------------
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_AT_ADMIN')")
@@ -353,7 +335,7 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE(@RequestBody CommuteRequestDTO commuteRequest) {
 		boolean isAttendance = commuteRequest.isAttendance(); // 출근여부
 		Map<String, Object> response = new HashMap<>();
-		EmployeeDetails employeeDetails = commuteService.getEmployee();
+		EmployeeDetails employeeDetails = util.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		Employee employee = employeeService.findEmployeeById(employee_cd);
 		String workinghour_id = employee.getWorkinghour_id();

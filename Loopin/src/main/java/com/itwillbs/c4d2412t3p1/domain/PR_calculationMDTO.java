@@ -1,5 +1,7 @@
 package com.itwillbs.c4d2412t3p1.domain;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import groovy.transform.ToString;
@@ -42,6 +44,13 @@ public class PR_calculationMDTO {
 
     @JsonProperty("wm")
     private String wm;	
+   
     @JsonProperty("wr")
     private String wr;	
+
+    @JsonProperty("prid")
+    private long prid;	
+    
+    @JsonProperty("pdid")
+    private List<String> pdid;	
 }
