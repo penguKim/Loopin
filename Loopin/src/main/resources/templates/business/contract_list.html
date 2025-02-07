@@ -183,6 +183,7 @@
 		            { header: '제품명', name: 'product_nm', align: 'center' },
 		            { header: '색상', name: 'product_cr', align: 'center' },
 		            { header: '사이즈', name: 'product_sz', align: 'center' },
+		            { header: '기준단위', name: 'product_un', align: 'center' },
 		            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
 		            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
 		        ],
@@ -250,8 +251,8 @@
 				        contract_ps: $('#contract_ps').val(),
 				        contract_sd: $('#contract_sd').val(),
 				        contract_ed: $('#contract_ed').val(),
-				        contract_am: $('#contract_am').val(),
-				        contract_mn: $('#contract_mn').val(),
+				        contract_am: parseInt($('#contract_am').val()), // 정수형으로 변환
+				        contract_mn: parseInt($('#contract_mn').val()), // 정수형으로 변환
 				        contract_st: $('#contract_st').val(),
 				        contract_rm: $('#contract_rm').val(),
 				        contract_wr: $('#contract_wr').val(),
@@ -260,13 +261,24 @@
 				        contract_md: $('#contract_md').val()
 				    };
 			    
+			    // todo
+			    const details = productGrid.getData().map(row => ({
+			        product_cd: row.product_cd,
+			        product_sz: row.product_sz,
+			        product_cr: row.product_cr,
+			        product_am: parseInt(row.product_am), // 정수형으로 변환
+			        contract_ct: parseInt(row.contract_ct), // 정수형으로 변환
+			        contract_ed: row.contract_ed,
+			        product_un: row.product_un
+			    }));
+			    
 			    
 		        // AJAX 요청으로 데이터 전송
 		        $.ajax({
 		            url: '/insert_CONTRACT',
 		            method: 'POST',
 		            contentType: "application/json",  // JSON 형식 지정
-		            data: JSON.stringify(contractDTO),
+		            data: JSON.stringify({ contract: contractDTO, details: details }),
 		            headers: { 'X-CSRF-TOKEN': csrfToken },
 		            success: function () {
 		            	Swal.fire({ icon: 'success', title: '등록 완료', text: '등록이 완료되었습니다.', confirmButtonText: '확인' });
@@ -361,7 +373,8 @@
 		            { header: '제품코드', name: 'product_cd', align: 'center' },
 		            { header: '제품명', name: 'product_nm', align: 'center' },
 		            { header: '색상', name: 'product_cr', align: 'center' },
-		            { header: '사이즈', name: 'product_sz', align: 'center' }
+		            { header: '사이즈', name: 'product_sz', align: 'center' },
+		            { header: '기준단위', name: 'product_un', align: 'center' }
 		        ],
 		        rowHeaders: ['checkbox'],
 		        scrollX: false,
@@ -492,7 +505,7 @@
 		            columnContent: {
 		                account_nm: {
 		                    template: (valueMap) => {
-		                        return `총 ${valueMap.cnt} 건`;
+		                    	return `총  ${valueMap.cnt} 건`
 		                    }
 		                }
 		            }
@@ -811,9 +824,9 @@
                             height: 40,
                             position: 'bottom',
                             columnContent: {
-                                contract_mn: {
+                                contract_st: {
                                     template: (valueMap) => {
-                                        return `총 ${valueMap.sum} 원`
+                                        return `총 ${valueMap.sum} 건`
                                     }
                                 }
                             }

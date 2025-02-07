@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.entity.Contract;
+import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.AccountFilterRequest;
 
 import jakarta.transaction.Transactional;
@@ -22,13 +23,30 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 	@Query(value = "SELECT NT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
 	
+    // 수주 바디 저장
+    @Transactional
+    @Modifying
+    @Query(value = """
+        INSERT INTO CONTRACTDETAIL (
+            contract_cd, product_cd, product_sz, product_cr, 
+            product_am, contract_ct, contract_ed, product_un
+        ) VALUES (
+            :#{#contractDetail.contract_cd}, :#{#contractDetail.product_cd}, 
+            :#{#contractDetail.product_sz}, :#{#contractDetail.product_cr}, 
+            :#{#contractDetail.product_am}, :#{#contractDetail.contract_ct}, 
+            :#{#contractDetail.contract_ed}, :#{#contractDetail.product_un}
+        )
+    """, nativeQuery = true)
+    void saveContractDetail(@Param("contractDetail") ContractDetail contractDetail);
+	
 	
 	@Query(value = """
 		    SELECT 
 		        p.product_cd AS product_cd,
 		        p.product_nm AS product_nm,
 		        c.common_nm AS product_cr,
-		        s.common_nm AS product_sz
+		        s.common_nm AS product_sz,
+		        u.common_nm AS product_un
 		    FROM PRODUCT p
 		    LEFT JOIN COMMON_CODE c 
 		           ON p.product_cr = c.common_cc 
@@ -36,6 +54,9 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		    LEFT JOIN COMMON_CODE s 
 		           ON p.product_sz = s.common_cc 
 		          AND s.common_gc = 'SIZE'
+		    LEFT JOIN COMMON_CODE u 
+		           ON p.product_un = u.common_cc 
+		          AND u.common_gc = 'UNIT'
 	       WHERE product_gc = 'PRODUCT'
 			 AND product_cc = 'SHOES'
 		""", nativeQuery = true)

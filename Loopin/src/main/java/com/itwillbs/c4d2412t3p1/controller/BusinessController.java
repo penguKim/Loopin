@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDTO;
+import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
+import com.itwillbs.c4d2412t3p1.domain.ContractRequestDTO;
 import com.itwillbs.c4d2412t3p1.service.BusinessService;
 
 import lombok.RequiredArgsConstructor;
@@ -109,21 +111,26 @@ public class BusinessController {
 		
 	}
 	
-	
+	@ResponseBody
 	@PostMapping("/insert_CONTRACT")
 	public ResponseEntity<Map<String, String>> insert_CONTRACT(
-	    @RequestBody ContractDTO contractDto
+			@RequestBody ContractRequestDTO contractRequestDTO
 	) {
 	    Map<String, String> response = new HashMap<>();
+	    
 	    
 	    // 시큐리티 세션 값 가져오기
 	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName(); 
 	    
 	    try {
+	    	
+	    	ContractDTO contractDto = contractRequestDTO.getContract();
 	    	contractDto.setContract_wr(employee_id);
 	    	contractDto.setContract_wd(new Timestamp(System.currentTimeMillis()));
+	    	
+	    	List<ContractDetailDTO> details = contractRequestDTO.getDetails();
 
-	        businessService.insert_CONTRACT(contractDto);
+	        businessService.insert_CONTRACT(contractDto, details);
 
 	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
 	        return ResponseEntity.ok(response); // JSON 형식으로 반환
