@@ -245,13 +245,16 @@
 		setElementHeight('#div_calendar', -320);
 		
 		$(window).resize(function() {
-			setElementHeight('#div_card', -105);
-			setElementHeight('#div_calendar', -320);
-			if(grid != null) {
-				setGridHeight(grid, -430);
-			}
+			setTimeout(() => {
+				setElementHeight('#div_card', -105);
+				setElementHeight('#div_calendar', -320);
+				if(grid != null) {
+					setGridHeight(grid, -430);
+					setGridWidth(grid, 0);
+				}
+			}, 300);
 		});
-
+		
 		$(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
 		        setGridHeight(grid, -500);
@@ -938,19 +941,6 @@
 			}
 			
 		});
-		
-		
-		// 출근일자
-		/*const datepicker = new tui.DatePicker('#employee_wd_wrapper', {
-			language: 'ko',
-		    date: new Date(date),
-		    input: {
-		        element: '#input_employee_wd',
-		        format: 'yyyy-MM-dd'
-		    },
-		});*/
-		
-
 	}
 	
 	// 출근 일정 등록의 사원 선택 모달
@@ -1056,8 +1046,6 @@
 	}
 	
 	function inputDiv_commute_ld(commute_wt, commute_lt, div_commute_ld) {
-		console.log('안녕');
-		console.log(commute_lt.val());
 		if (validateTime(commute_lt.val())){
 			let workTime = commute_wt.val().replace(':', '');
 			let leaveTime = commute_lt.val().replace(':', '');
