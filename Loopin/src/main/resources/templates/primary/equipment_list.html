@@ -40,8 +40,8 @@
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const today = new Date();
 	const filterConfig = [
-	    { key: 'warehouse_cd', label: '설비코드', type: 'text', placeholder: '창고코드 입력', col: 'col-2' },
-	    { key: 'warehouse_nm', label: '모델코드', type: 'text', placeholder: '창고명 입력', col: 'col-2' },
+	    { key: 'warehouse_cd', label: '설비코드', type: 'text', placeholder: '설비코드 입력', col: 'col-2' },
+	    { key: 'warehouse_nm', label: '모델코드', type: 'text', placeholder: '모델코드 입력', col: 'col-2' },
 	    { key: 'warehouse_nm', label: '설비명', type: 'text', placeholder: '설비명 입력', col: 'col-2' },
 	    { key: 'warehouse_tp', label: '품목유형', type: 'select', list: setFilterList(protypeList), col: 'col-2' },
 	    { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(useList), col: 'col-auto' },
@@ -168,7 +168,7 @@
 			let checkedRows = grid.getCheckedRows();
 			console.log(checkedRows);
 			if (!checkedRows.length) {
-				showAlert('', 'warning', '삭제 항목 체크', '삭제할 창고를 체크해주세요.');
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 설비를 체크해주세요.');
 			    return;
 			}
 			delect_WAREHOUSE(checkedRows);				
@@ -203,17 +203,17 @@
 			],
 			bodyHeight : 600,
 			columns : [
-				{header : '창고코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
-				{header : '창고명', name : 'warehouse_nm', sortable : true, filter: 'text'},
-				{header : '창고유형', name : 'warehouse_tp', sortable : true, filter: 'text'},
-				{header : '구역수', name : 'wacount', align: 'center', filter: 'text'},
-				{header : '정렬순서', name : 'warehouse_in', align: 'center', sortable : true, filter: 'text'}, 
-				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
+				{header : '설비코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
+				{header : '모델코드', name : 'warehouse_nm', sortable : true, filter: 'text'},
+				{header : '설비명', name : 'warehouse_tp', sortable : true, filter: 'text'},
+				{header : '창고코드', name : 'wacount', align: 'center', filter: 'text'},
+				{header : '품목코드', name : 'warehouse_in', align: 'center', sortable : true, filter: 'text'}, 
 				{header : '사용여부', name : 'warehouse_us', align: 'center', sortable : true, filter: 'select',
 					formatter: function({value}) {
 						return value == true ? '사용' : value == false ? '미사용' : '';
 					}
 				}, 
+				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
 			],
 			summary: {
 			    height: 40,
@@ -451,10 +451,10 @@
 	// 창고 등록
 	async function insert_WAREHOUSE() {
 		const validations = [
-		    { field: modal_warehouse_cd, message: '창고코드를 입력해주세요.' },
-		    { field: modal_warehouse_nm, message: '창고명을 입력해주세요.' },
-		    { field: modal_warehouse_tp, message: '창고유형을 선택해주세요.' },
-		    { field: modal_warehouse_in, message: '정렬순서를 입력해주세요.' },
+		    { field: modal_warehouse_cd, message: '설비코드를 입력해주세요.' },
+		    { field: modal_warehouse_nm, message: '모델코드를 입력해주세요.' },
+		    { field: modal_warehouse_tp, message: '설비명을 선택해주세요.' },
+		    { field: modal_warehouse_in, message: '품목유형을 입력해주세요.' },
 		    { field: modal_warehouse_us, message: '사용여부를 선택해주세요.' }
 		];
 		const invalidField = validations.find(v => !v.field.val()?.trim());
@@ -472,7 +472,7 @@
 		    return;
 		}
 
-		if(!await showConfirm(`창고 등록`, `창고를 등록하시겠습니까?`)) {
+		if(!await showConfirm(`설비 등록`, `설비를 등록하시겠습니까?`)) {
 			return;
 		}
 		let warehouse = {
@@ -503,7 +503,7 @@
 	
 	// 창고 삭제
 	async function delect_WAREHOUSE(checkedRows) {
-		if (!await showConfirm(`창고 삭제`, '선택한 창고를 삭제하시겠습니까?')) { 
+		if (!await showConfirm(`설비 삭제`, '선택한 설비를 삭제하시겠습니까?')) { 
 			return;
 		}
 		
