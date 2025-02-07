@@ -2,12 +2,10 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +15,7 @@ import com.itwillbs.c4d2412t3p1.domain.MaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Material;
-import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper;
@@ -30,6 +26,9 @@ import com.itwillbs.c4d2412t3p1.repository.WarehouseRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -44,6 +43,8 @@ public class PrimaryService {
 	private final ProductRepository productRepository;
 	private final MaterialRepository materialRepository;
 	private final WareareaRepository wareareaRepository;
+	
+	private final EntityManager entityManager;
 
 	// 창고 관리 ----------------------------------------------------------------
 	public List<WarehouseDTO> select_WAREHOUSE_list(WarehouseFilterRequest filter) {
@@ -143,94 +144,78 @@ public class PrimaryService {
 	@Transactional
 	public void insert_PRODUCT(ProductDTO productDTO, MultipartFile image, List<String> sizeList, List<String> colorList) throws IOException {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
-	    Timestamp time = new Timestamp(System.currentTimeMillis());
+	    String oldFilePath = null;
 	    
-	    // 기존 파일 처리
-	    ProductDTO productImage = primaryMapper.select_PRODUCT_PC(productDTO.getProduct_cd());
-	    if (productImage != null && productImage.getProduct_pc() != null
-	        && (image == null || !image.isEmpty())) {
-	        util.deleteFile(productImage.getProduct_pc());
-	    }
+	    try {
+		    // 기존 파일 처리
+		    ProductDTO productImage = primaryMapper.select_PRODUCT_PC(productDTO.getProduct_cd());
+		    if (productImage != null && productImage.getProduct_pc() != null
+		        && (image == null || !image.isEmpty())) {
+		    	oldFilePath = productImage.getProduct_pc();
+		    }
+	
+		    // 새 파일 업로드 처리
+		    if (image != null && !image.isEmpty()) {
+		    	System.out.println("새 파일 등록");
+		        util.setFile("PRODUCT", image, productDTO::setProduct_pc);
+		    } else if (image == null) {
+		        productDTO.setProduct_pc(null);
+		    }
 
-	    // 새 파일 업로드 처리
-	    if (image != null && !image.isEmpty()) {
-	        util.setFile("PRODUCT", image, productDTO::setProduct_pc);
-	    } else if (image == null) {
-	        productDTO.setProduct_pc(null);
-	    }
-	    
-	    // 원자재거나 부자재일 경우
-	    if (productDTO.getProduct_gc().equals("MATERIALS") || productDTO.getProduct_gc().equals("SUBMAT")) {
-	    	productDTO.setProduct_sz("-");
-	    	productDTO.setProduct_cr("-");
-	        if(productDTO.getProduct_ru() == null) {
-	        	productDTO.setProduct_ru(regUser);
-	        	productDTO.setProduct_rd(time);
-	        } else {
-	        	productDTO.setProduct_uu(regUser);
-	        	productDTO.setProduct_ud(time);
+		    // 사이즈와 컬러 리스트를 문자열로 변환
+		    String sizeListStr = String.join(",", sizeList);
+		    String colorListStr = String.join(",", colorList);
+	        
+            // 저장 프로시저 호출
+	        StoredProcedureQuery query = entityManager
+	                .createStoredProcedureQuery("UPSERT_PRODUCT_BATCH")
+	                .registerStoredProcedureParameter("p_product_cd", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_nm", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_gc", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_cc", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_gd", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_un", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_pr", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_wh", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_pc", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_rm", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_product_us", Integer.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_reg_user", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_size_list", String.class, ParameterMode.IN)
+	                .registerStoredProcedureParameter("p_color_list", String.class, ParameterMode.IN);
+
+	            query.setParameter("p_product_cd", productDTO.getProduct_cd())
+	                 .setParameter("p_product_nm", productDTO.getProduct_nm())
+	                 .setParameter("p_product_gc", productDTO.getProduct_gc())
+	                 .setParameter("p_product_cc", productDTO.getProduct_cc())
+	                 .setParameter("p_product_gd", productDTO.getProduct_gd())
+	                 .setParameter("p_product_un", productDTO.getProduct_un())
+	                 .setParameter("p_product_pr", productDTO.getProduct_pr())
+	                 .setParameter("p_product_wh", productDTO.getProduct_wh())
+	                 .setParameter("p_product_pc", productDTO.getProduct_pc())
+	                 .setParameter("p_product_rm", productDTO.getProduct_rm())
+	                 .setParameter("p_product_us", productDTO.isProduct_us() ? 1 : 0)
+	                 .setParameter("p_reg_user", regUser)
+	                 .setParameter("p_size_list", sizeListStr)
+	                 .setParameter("p_color_list", colorListStr);
+
+	            query.execute();
+	        
+	        // 모든 작업 성공 후 기존 파일 삭제
+	        if (oldFilePath != null) {
+	            util.deleteFile(oldFilePath);
 	        }
-	        productRepository.save(Product.setProduct(productDTO));
-	        return;
-	    }
 
-	    productRepository.deleteBySizeOrColor(productDTO.getProduct_cd(), productDTO.getProduct_cc(), sizeList, colorList);
-	    productRepository.flush();
-
-	    List<Product> remainingProducts = productRepository.findByProductCdAndItemCd(productDTO.getProduct_cd(), productDTO.getProduct_cc());
-	    System.out.println("남아있는 목록 : " + remainingProducts.toString());
-	    
-	    List<Product> productList = new ArrayList<>();
-	    for(String size : sizeList) {
-	        for(String color : colorList) {
-	            boolean exists = remainingProducts.stream()
-	                .anyMatch(product -> 
-	                    product.getProduct_sz().equals(size) && 
-	                    product.getProduct_cr().equals(color)
-	                );
-	            if(!exists) { // 등록
-	                ProductDTO product = new ProductDTO();
-	                BeanUtils.copyProperties(productDTO, product);
-	                product.setProduct_sz(size);
-	                product.setProduct_cr(color);
-	                
-	                if(product.getProduct_ru() == null) {
-	                    product.setProduct_ru(regUser);
-	                    product.setProduct_rd(time);
-	                } else {
-	                    product.setProduct_uu(regUser);
-	                    product.setProduct_ud(time);
-	                }
-	                
-	                productList.add(Product.setProduct(product));
-	            } else { // 수정
-	                Product existingProduct = remainingProducts.stream()
-	                    .filter(product -> 
-	                        product.getProduct_sz().equals(size) && 
-	                        product.getProduct_cr().equals(color))
-	                    .findFirst()
-	                    .get();
-	                
-	                existingProduct.setProduct_nm(productDTO.getProduct_nm());
-	                existingProduct.setProduct_gd(productDTO.getProduct_gd());
-	                existingProduct.setProduct_un(productDTO.getProduct_un());
-	                existingProduct.setProduct_wh(productDTO.getProduct_wh());
-	                existingProduct.setProduct_pr(productDTO.getProduct_pr());
-	                existingProduct.setProduct_pc(productDTO.getProduct_pc());
-	                existingProduct.setProduct_rm(productDTO.getProduct_rm());
-	                existingProduct.setProduct_us(productDTO.isProduct_us());
-	                existingProduct.setProduct_uu(regUser);
-	                existingProduct.setProduct_ud(time);
-	                
-	                productList.add(existingProduct);
-	            }
+	    } catch (Exception e) {
+	        // 실패 시 신규 이미지 삭제
+	        if (productDTO.getProduct_pc() != null) {
+	            util.deleteFile(productDTO.getProduct_pc());
 	        }
-	    }
-	    
-	    if(!productList.isEmpty()) {
-	        System.out.println("저장할게 몇개인지 : " + productList.size());
-	        productRepository.saveAll(productList);
-	    }
+	        throw new RuntimeException("등록에 실패했습니다.", e);
+	        
+        } finally {
+        	entityManager.clear();
+        }
 	}
 	
 	// 원자재, 부자재 등록
@@ -268,7 +253,11 @@ public class PrimaryService {
 	public boolean check_PRODUCT_CD(String product_cd) {
 		return productRepository.findByProductCd(product_cd).isEmpty();
 	}
-
+	
+	// 자재 중복 체크
+	public boolean check_MATERIAL_CD(String material_cd) {
+		return materialRepository.findByMaterialCd(material_cd).isEmpty();
+	}
 
 	// 품목 삭제
 	@Transactional
