@@ -107,7 +107,20 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 			FROM CONTRACT c
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT();
-        
-        
-	    
+
+	
+	@Query(value = """
+			SELECT d.contract_cd, 
+			       d.product_cd, 
+			       d.product_sz, 
+			       d.product_cr,  
+			       d.product_am,
+			       d.contract_ct,
+			       d.product_un, 
+			       d.contract_ed
+			FROM CONTRACTDETAIL d
+			WHERE d.contract_cd = :contractCd
+		""", nativeQuery = true)
+	List<Object[]> select_CONTRACTDETAIL(@Param("contractCd") String contractCd);
+	
 }

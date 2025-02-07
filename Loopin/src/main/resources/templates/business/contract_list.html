@@ -251,8 +251,8 @@
 				        contract_ps: $('#contract_ps').val(),
 				        contract_sd: $('#contract_sd').val(),
 				        contract_ed: $('#contract_ed').val(),
-				        contract_am: parseInt($('#contract_am').val()), // 정수형으로 변환
-				        contract_mn: parseInt($('#contract_mn').val()), // 정수형으로 변환
+				        contract_am: parseInt($('#contract_am').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
+				        contract_mn: parseInt($('#contract_mn').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
 				        contract_st: $('#contract_st').val(),
 				        contract_rm: $('#contract_rm').val(),
 				        contract_wr: $('#contract_wr').val(),
@@ -261,7 +261,6 @@
 				        contract_md: $('#contract_md').val()
 				    };
 			    
-			    // todo
 			    const details = productGrid.getData().map(row => ({
 			        product_cd: row.product_cd,
 			        product_sz: row.product_sz,
@@ -820,27 +819,48 @@
                             { header: '수정자', name: 'contract_mf', hidden: true },
                             { header: '수정일', name: 'contract_md', hidden: true }
                         ],
-                        summary: {
-                            height: 40,
-                            position: 'bottom',
-                            columnContent: {
-                                contract_st: {
-                                    template: (valueMap) => {
-                                        return `총 ${valueMap.sum} 건`
-                                    }
-                                }
-                            }
-                        }
+        				summary: {
+        				    height: 40,
+        				    position: 'bottom', // or 'top'
+        				    columnContent: {
+        				    	contract_st: {
+        				            template: (valueMap) => {
+        				                return `총  ${valueMap.cnt} 건`
+        				            }
+        				        }
+        				    }
+        				}
                     });
 
-                    // ✅ 그리드 클릭 이벤트 등록
+                	 // 단일 클릭 이벤트: 상세 정보 표시
                     contract_grid.on('click', (ev) => {
+                        const rowKey = ev.rowKey;
+                        const rowData = contract_grid.getRow(rowKey);
+
+                        if (rowKey === null || rowKey === undefined) {
+                            console.warn("헤더 클릭은 무시됩니다.");
+                            return;
+                        }
+
+                        console.log("클릭된 행 데이터:", rowData); // 디버깅용
+                        if (!rowData) {
+                            console.error("rowData가 없습니다!");
+                            return;
+                        }
+                        if (!rowData.contract_cd) {
+                            console.error("contract_cd가 없습니다!", rowData);
+                            return;
+                        }
+                        
+                        make_detail_grid(rowData); // 하단 그리드 갱신 함수 호출
+                    });
+
+                    // 더블클릭 이벤트: 수정 모달 열기
+                    contract_grid.on('dblclick', (ev) => {
                         const columnName = ev.columnName;
                         const rowKey = ev.rowKey;
                         const rowData = contract_grid.getRow(rowKey);
-                        console.log("rowData : ", rowData);
 
-                        // 헤더 클릭인지 확인
                         if (rowKey === null || rowKey === undefined) {
                             console.warn("헤더 클릭은 무시됩니다.");
                             return;
@@ -851,6 +871,8 @@
                             openContractModal('edit', rowData); // 수정 모달 실행
                         }
                     });
+
+                    
                 }
             },
             error: function (error) {
@@ -860,30 +882,60 @@
     }
 
     // 하단(Detail Grid) 생성 함수
-    function make_detail_grid() {
-        detail_grid = new tui.Grid({
-            el: document.getElementById('detail_grid'),
-            data: [],
-            scrollX: false,
-            scrollY: false,
-            rowHeaders: [
-                { type: 'rowNum' },
-                { type: 'checkbox' },
-            ],
-            selectionUnit: 'row',
-			bodyHeight: 200, // 고정 높이 설정
-            columns: [
-                { header: '수주번호', name: 'contract_cd', sortable: true, editor: 'text' },
-                { header: '제품코드', name: 'product_cd', sortable: true, editor: 'text' },
-                { header: '제품명', name: 'contract_in', sortable: true, align: 'center', editor: 'text' },
-                { header: '사이즈', name: 'product_sz', sortable: true, editor: 'text' },
-                { header: '색상', name: 'product_cr', sortable: true, editor: 'text' },
-                { header: '제품수량', name: 'product_am', sortable: true, editor: 'text' },
-                { header: '기준단위', name: 'product_un', sortable: true, editor: 'text' },
-                { header: '단가', name: 'product_ct', sortable: true, editor: 'text' },
-                { header: '납기일', name: 'contract_ed', sortable: true, editor: 'text' }
-            ]
-        });
+	function make_detail_grid(rowData) {
+	    if (!rowData || !rowData.contract_cd) {
+	        console.warn("갱신할 데이터가 없거나, contract_cd가 없습니다.", rowData);
+	        return;
+	    }
+	
+	    console.log("선택된 계약 데이터:", rowData); // 디버깅 로그 추가
+	
+	    // 하단 상세 그리드 초기화 (초기화 시 데이터 리셋)
+	    if (!detail_grid) {
+	        detail_grid = new tui.Grid({
+	            el: document.getElementById('detail_grid'),
+	            data: [], // 초기 데이터는 비어있음
+	            scrollX: false,
+	            scrollY: false,
+	            bodyHeight: 200, // 고정 높이 설정
+	            columns: [
+	                { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+	                { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
+	                { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
+	                { header: '색상', name: 'product_cr', align: 'center', sortable: true },
+	                { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
+	                { header: '단가', name: 'product_ct', align: 'center', sortable: true },
+	                { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
+	                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
+	            ]
+	        });
+	    } else {
+	        detail_grid.resetData([]); // 기존 그리드가 있다면 먼저 초기화
+	    }
+	
+	    // AJAX로 상세 데이터 가져오기
+	    $.ajax({
+	        url: '/select_CONTRACTDETAIL',
+	        method: 'GET',
+	        data: { contract_cd: rowData.contract_cd }, // 수주번호 전달
+	        success: function (response) {
+	            console.log("서버 응답 데이터:", response); // 디버깅 로그 추가
+	
+	            if (Array.isArray(response) && response.length > 0) {
+	                detail_grid.resetData(response); 
+	                console.log("하단 그리드 갱신 완료");
+	            } else {
+	                console.warn("서버에서 데이터를 가져오지 못했습니다.");
+	                detail_grid.resetData([]); // 데이터가 없을 경우 초기화
+	            }
+	        },
+	        error: function (error) {
+	            console.error("상세 데이터를 가져오는 중 오류 발생:", error);
+	            console.error("오류 응답:", error.responseText || error.statusText); // 추가 로그
+	            detail_grid.resetData([]); // 오류 시 데이터 초기화
+	        }
+	    });
+
     }
 </script>
 

@@ -160,5 +160,27 @@ public class BusinessService {
         }
     }
 	
+    	public List<Map<String, Object>> select_CONTRACTDETAIL(String contract_cd) {
+        // Repository에서 데이터 조회
+        List<Object[]> result = contractRepository.select_CONTRACTDETAIL(contract_cd);
+
+        // Object[] 데이터를 Map<String, Object>로 변환
+        return result.stream().map(row -> {
+            Map<String, Object> detail = new HashMap<>();
+            detail.put("contract_cd", row[0]);
+            detail.put("product_cd", row[1]);
+//            detail.put("product_nm", row[2]);
+            detail.put("product_sz", row[2]);
+            detail.put("product_cr", row[3]);
+            detail.put("product_am", row[4]);
+            detail.put("product_un", row[5]);
+            detail.put("product_ct", row[6]);
+            detail.put("contract_ed", row[7]);
+
+            return detail;
+        }).collect(Collectors.toList());
+    }
+
+
 	
 }

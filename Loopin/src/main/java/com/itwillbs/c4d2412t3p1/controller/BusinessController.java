@@ -14,9 +14,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractRequestDTO;
@@ -75,6 +75,23 @@ public class BusinessController {
 			return ResponseEntity.status(500).body(null);
 		}
 		
+	}
+
+	// 수주상세 조회
+	@GetMapping("/select_CONTRACTDETAIL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACTDETAIL(
+			@RequestParam(name = "contract_cd") String contractCd) {
+		
+		try {
+			List<Map<String, Object>> details = businessService.select_CONTRACTDETAIL(contractCd);
+			
+			return ResponseEntity.ok(details);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
 	}
 
 	// 거래처 조회
@@ -140,13 +157,5 @@ public class BusinessController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
-	
-	
-	
-	
-	
-	
-	
-	
 	
 }
