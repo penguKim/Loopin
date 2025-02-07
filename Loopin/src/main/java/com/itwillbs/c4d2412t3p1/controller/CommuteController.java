@@ -1,15 +1,11 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -49,7 +45,6 @@ import oracle.jdbc.proxy.annotation.Post;
 public class CommuteController {
 	
 	private final CommuteService commuteService;
-	private final CommonService commonService;
 	private final EmployeeService employeeService;
 	private final UtilService util;
 	
