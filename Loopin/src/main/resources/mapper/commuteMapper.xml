@@ -18,7 +18,7 @@
 		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
 		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
 		WHERE 1 = 1
-	    <if test="isAdmin == false">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
+	    <if test="isAdmin == false or (isAdmin == true and type == 1)">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
 	    <if test="filter.employee_cd != null and filter.employee_cd != ''">AND CM.EMPLOYEE_CD LIKE '%${filter.employee_cd}%'</if>
 	    <if test="filter.employee_nm != null and filter.employee_nm != ''">AND EM.EMPLOYEE_NM LIKE '%${filter.employee_nm}%'</if>
 	    <if test="filter.employee_dp != null and filter.employee_dp != ''">AND CC.COMMON_NM LIKE '%${filter.employee_dp}%'</if>
@@ -64,7 +64,7 @@
 	<select id="select_COMMUTE_calendar" resultType="Commute">
 		SELECT
 			<choose>
-				<when test="isAdmin == false">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
+				<when test="isAdmin == false or (isAdmin == true and type == 1)">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
 				<otherwise>
 					CM.COMMUTE_WD,(SELECT COUNT(*) FROM EMPLOYEE EM WHERE EM.EMPLOYEE_US = 1 ) AS total_emp,
 				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late,
@@ -73,10 +73,10 @@
 				</otherwise>
 			</choose>
 		FROM COMMUTE CM
-		<if test="isAdmin == true">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
+		<if test="isAdmin == true and type != 1">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
 		WHERE COMMUTE_WD BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-	    <if test="isAdmin == false">AND EMPLOYEE_CD = #{employee_cd}</if>
-		<if test="isAdmin == true">GROUP BY CM.COMMUTE_WD</if>
+	    <if test="isAdmin == false or (isAdmin == true and type == 1)">AND EMPLOYEE_CD = #{employee_cd}</if>
+		<if test="isAdmin == true and type != 1">GROUP BY CM.COMMUTE_WD</if>
 	</select>	
 	
 	<!-- 근로시간 조회 -->

@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -65,11 +66,12 @@ public class CommuteController {
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
 		filter.setStartDate(startDate);
 		filter.setEndDate(EndDate);
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate);
+		List<CommuteDTO> list = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate, type);
 		List<Holiday> holidayList = commuteService.select_HOLIDAY_month(startDate, EndDate); // 공휴일 리스트
 		CommuteDTO commute = commuteService.selcet_COMMUTE_time(filter, employee.getEmployee_cd(), isAdmin);
 
@@ -131,6 +133,7 @@ public class CommuteController {
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
 		filter.setStartDate(startDate);
 		filter.setEndDate(EndDate);
@@ -140,7 +143,7 @@ public class CommuteController {
 			commuteService.insert_COMMUTE_modal(employee);
 			
 			List<CommuteDTO> gridList = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin,employee.getCommute_wd());
-			List<CommuteDTO> calendarList = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate );
+			List<CommuteDTO> calendarList = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate, type);
 			CommuteDTO commute = commuteService.selcet_COMMUTE_time(filter, employee.getEmployee_cd(), isAdmin);
 
 			response.put("result", true);
@@ -163,8 +166,9 @@ public class CommuteController {
 		EmployeeDetails employee = util.getEmployee();
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
+		String type = commuteRequest.getType();
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
+		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin, type);
 		CommuteDTO commute = commuteService.selcet_COMMUTE_time(filterRequest, employee.getEmployee_cd(), isAdmin);
 		log.info(list.toString());
 		
@@ -183,13 +187,14 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
 		EmployeeDetails employee = util.getEmployee();
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			commuteService.insert_COMMUTE_modal(commuteRequest.getCommute());
 			
-			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
+			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin, type);
 			CommuteDTO commute = commuteService.selcet_COMMUTE_time(filterRequest, employee.getEmployee_cd(), isAdmin);
 			
 			response.put("result", true);

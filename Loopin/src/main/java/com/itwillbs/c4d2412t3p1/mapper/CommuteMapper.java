@@ -14,9 +14,11 @@ import java.util.List;
 public interface CommuteMapper {
 	
 	// 출퇴근 캘린더 탭 조회
-	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("startDate") String startDate, @Param("endDate") String endDate);
+	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, 
+			@Param("startDate") String startDate, @Param("endDate") String endDate, @Param("type") String type);
 	// 출퇴근 그리드 탭 조회
-	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
+	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, 
+			@Param("isAdmin") boolean isAdmin, @Param("type") String type);
 	// 근로시간 조회
 	CommuteDTO selcet_COMMUTE_time(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
 	// 일자별 출퇴근 기록 조회

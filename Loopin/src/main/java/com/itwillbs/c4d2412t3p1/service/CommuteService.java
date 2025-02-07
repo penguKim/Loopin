@@ -63,7 +63,6 @@ public class CommuteService {
 	private final CommuteRepository commuteRepository;
 	private final WorkinghourRepository workinghourRepository;
 	private final HolidayRepository holidayRepository;
-	private final EmployeeRepository employeeRepository;
 	
 	private final CommuteMapper commuteMapper; 
 	private final HolidayMapper holidayMapper;
@@ -79,9 +78,8 @@ public class CommuteService {
 	// 출퇴근 기록부 --------------------------------------------
 	
     // 출퇴근 기록부 달력 조회
-	public List<CommuteDTO> select_COMMUTE_calendar(String employee_cd, boolean isAdmin, String startDate, String endDate) {
-//		return commuteRepository.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
-		return commuteMapper.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
+	public List<CommuteDTO> select_COMMUTE_calendar(String employee_cd, boolean isAdmin, String startDate, String endDate, String type) {
+		return commuteMapper.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate, type);
 	}
 	
 	// 출퇴근 기록부 달력 상세 조회
@@ -90,8 +88,8 @@ public class CommuteService {
 	}
 	
 	// 출퇴근 기록부 그리드 조회
-	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
-		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin);
+	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin, String type) {
+		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin, type);
 	}
 	
 	// 근로시간 조회
@@ -271,7 +269,6 @@ public class CommuteService {
 	}
 	
 	// 임시 전체 출근하기
-//	public Commute insert_COMMUTE_list(String employee_cd, String workinghour_id, Commute commuteEntity ) {
 	@Transactional
 	public void insert_COMMUTE_list(List<String> employee_list, String day, String time) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
