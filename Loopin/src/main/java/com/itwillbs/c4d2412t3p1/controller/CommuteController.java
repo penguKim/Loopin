@@ -2,6 +2,7 @@ package com.itwillbs.c4d2412t3p1.controller;
 
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,15 +22,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
+import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
+import com.itwillbs.c4d2412t3p1.service.AttendanceService;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
@@ -47,6 +51,7 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final EmployeeService employeeService;
+	private final AttendanceService attendanceService;
 	private final UtilService util;
 	
 
@@ -344,13 +349,24 @@ public class CommuteController {
 			response.put("msg", "근무형태를 등록해야합니다.<br>관리자에게 문의하세요.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+		LocalTime currentTime = LocalTime.now();
+		String annual = util.checkNull(commuteService.select_APPROVAL(employee_cd, today));
+		if(annual.equals("AMBN") && currentTime.isBefore(LocalTime.of(12, 0))) {
+	        response.put("msg", "오전 반차 기간입니다.<br>시간이 지난 후 출근해주세요.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		} else if(annual.equals("PMBN") && !isAttendance && currentTime.isBefore(LocalTime.of(12, 0))) {
+			response.put("msg", "아직 오후 반차 시간 이전입니다.<br>점심시간 이후 퇴근해주세요.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		} else if(annual.equals("AN")) {
+			// 연차~
+		}
 		
 		try {
-			Commute commute = commuteService.findById(employee_cd, workinghour_id, today);
-			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
+//			Commute commute = commuteService.findById(employee_cd, workinghour_id, today);
+//			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
 			
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "하였습니다.");
-			response.put("commute", commute);
+//			response.put("commute", commute);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "에 실패했습니다.");

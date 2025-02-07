@@ -25,12 +25,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
 import com.itwillbs.c4d2412t3p1.entity.ComhistoryPK;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
@@ -514,6 +516,12 @@ public class CommuteService {
 	        }
 	    }
 	    return true;
+	}
+
+	// 휴가 결재 찾기
+	public String select_APPROVAL(String employee_cd, String today) {
+		
+		return commuteMapper.select_APPROVAL(employee_cd, today);
 	}
 
 
