@@ -47,8 +47,8 @@
 	                        <div class="d-flex align-items-center justify-content-between">
 	                            <h5 class="card-title">수주 등록</h5>
 	                            <div>
-	                                <input type="button" id="btn_open_modal" class="btn btn-primary" value="등록">
-	                                <input type="button" id="btn_group_remove" class="btn btn-primary" value="삭제">
+									<button type="button" class="btn btn-primary" id="btn_contract_create" onclick="openModal('add')">등록</button>
+									<button type="button" class="btn btn-primary" id="btn_contract_delete">삭제</button>
 	                            </div>
 	                        </div>
 							<div class="col-sm-12">
@@ -69,626 +69,751 @@
 </body>
 
 <script>
-    $(document).ready(function () {
-        // 수주 등록 모달 트리거
-		$('#btn_open_modal').on('click', function () {
-		    openModal();
-		});
-
-        
-		// 동적 모달 생성 및 표시
-		function openModal() {
-		    // 기존 모달 제거
-		    $('#contractInsertModal').remove();
-
-		    // 모달 HTML 생성
-		    const modalHTML = `
-		        <div class="modal" id="contractInsertModal" tabindex="-1" aria-labelledby="contractInsertModalLabel" aria-hidden="true">
-		            <div class="modal-dialog modal-dialog-centered modal-xl">
-		                <div class="modal-content">
-		                    <div class="modal-header">
-		                        <h5 class="modal-title" id="dynamicModalLabel">수주 등록</h5>
-		                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-		                    </div>
-		                    <div class="modal-body">
-		                        <form id="appointment_form" method="post" enctype="multipart/form-data">
-		                            <input type="hidden" id="contract_cd" name="contract_cd">
-		                            <div class="row mb-3">
-		                                <div class="col-md-4">
-		                                    <label for="contract_ps" class="form-label">담당자명</label>
-		                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
-		                                </div>
-		                                <div class="col-md-4">
-		                                    <label for="account_sd" class="form-label">수주일</label>
-		                                    <input type="text" class="form-control" id="contract_sd" name="account_sd" readonly>
-		                                    <div id="modal_startpicker-container"></div>
-		                                </div>
-		                                <div class="col-md-4">
-		                                    <label for="account_ed" class="form-label">납기일</label>
-		                                    <input type="text" class="form-control" id="contract_ed" name="account_ed" readonly>
-		                                    <div id="modal_endpicker-container"></div>
-		                                </div>
-		                            </div>
-		                            <div class="row mb-3">
-		                                <div class="col-md-3">
-		                                    <label for="account_cp" class="form-label">거래처코드</label>
-		                                    <input type="text" class="form-control" id="account_cd" name="account_cd" readonly>
-		                                </div>
-										<div class="col-md-3">
-		                                    <label for="contract_st" class="form-label">수주상태</label>
-		                                    <select class="form-select" id="contract_st" name="contract_st">
-		                                        <option value="">선택</option>
-		                                    </select>
-										</div>
-										<div class="col-md-3">
-										    <label for="contract_am" class="form-label">수주수량</label>
-										    <input type="text" class="form-control" id="contract_am" name="contract_am" readonly>
-										</div>
-										<div class="col-md-3">
-										    <label for="contract_mn" class="form-label">수주금액</label>
-										    <input type="text" class="form-control" id="contract_mn" name="contract_mn" readonly>
-										</div>
-										<div class="col-sm-12">
-										    <label for="contract_rm" class="form-label">비고</label>
-											<textarea class="form-control" id="contract_rm" name="contract_rm" style="height: 200px"></textarea>
-										</div>
-		                            </div>
-		                            <div class="row mb-3">
-		                                <div class="col-sm-12 text-end">
-		                                    <button type="button" id="addProductBtn" class="btn btn-primary">추가</button>
-											<button type="button" id="deleteProductBtn" class="btn btn-danger">행 삭제</button>
-		                                </div>
-		                            </div>
-		                            <div class="row">
-		                                <div id="productGrid"></div>
-		                            </div>
-		                        </form>
-		                    </div>
-		                    <div class="modal-footer">
-		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                        <button type="submit" class="btn btn-primary" form="appointment_form">등록</button>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>`;
-
-		    // 모달을 body에 추가
-		    $('body').append(modalHTML);
-
-		    var status_list = window.status_list || [];
-		    
-			// 셀렉트 박스 관련 함수
-			function populateSelectOptions(selectId, dataList) {
-			    const selectElement = document.getElementById(selectId);
-			    if (Array.isArray(dataList) && dataList.length > 0) {
-			        dataList.forEach(item => {
-			            const option = document.createElement('option');
-			            option.value = item.common_cc;
-			            option.textContent = item.common_nm;
-			            selectElement.appendChild(option);
-			        });
-			    }
-			}
-
-			// 거래처 구분 (contract_st) 옵션 추가
-			populateSelectOptions('contract_st', window.status_list);
-		    
-		    
-		    // Toast UI Grid 초기화
-		    const productGrid = new tui.Grid({
-		        el: document.getElementById('productGrid'),
-		        data: [],
-		        columns: [
-		            { header: '제품코드', name: 'product_cd', align: 'center' },
-		            { header: '제품명', name: 'product_nm', align: 'center' },
-		            { header: '색상', name: 'product_cr', align: 'center' },
-		            { header: '사이즈', name: 'product_sz', align: 'center' },
-		            { header: '기준단위', name: 'product_un', align: 'center' },
-		            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-		            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-		        ],
-		        rowHeaders: ['checkbox'],
-		        scrollX: false,
-		        scrollY: false
-		    });
-
-		    // DatePicker 초기화
-		    initializeDatePickers();
-
-		    // Bootstrap 모달 표시
-		    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
-		    modalInstance.show();
-
-			// 행 삭제 버튼 클릭 이벤트
-			$('#deleteProductBtn').on('click', function () {
-			    const checkedRowKeys = productGrid.getCheckedRowKeys(); // 체크된 행의 rowKey 가져오기
-			    if (checkedRowKeys.length > 0) {
-			        productGrid.removeRows(checkedRowKeys); // 체크된 행 삭제
-			        updateContractSummary(productGrid); // 수주수량 및 수주금액 업데이트
-			    } else {
-			        showAlert(null, "error", "삭제 실패 알림", "삭제할 행을 선택해주세요");
-			    }
-			});
-			
-			
-			// Toast UI Grid 데이터 변경 시 수주수량 및 수주금액 업데이트
-			productGrid.on('afterChange', function (ev) {
-			    updateContractSummary(productGrid);
-			});
-
-			// 수주수량 및 수주금액 업데이트 함수
-			function updateContractSummary(grid) {
-			    const data = grid.getData();
-			    let totalQty = 0;
-			    let totalAmount = 0;
-
-			    data.forEach(row => {
-			        const qty = parseFloat(row.product_am) || 0;
-			        const money = parseFloat(row.contract_ct) || 0;
-
-			        totalQty += qty;
-			        totalAmount += qty * money;
-			    });
-
-			    $('#contract_am').val(totalQty);
-			    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
-			}
-			
-			
-			
-		    // "추가" 버튼 클릭 시 제품 선택 모달 열기
-		    $('#addProductBtn').on('click', function () {
-		        openProductModal(productGrid);
-		    });
-
-		    // 폼 submit 이벤트 처리
-		    $('#appointment_form').on('submit', function (event) {
-		        event.preventDefault();
-		        
-			    const contractDTO = {
-			    		contract_cd: $('#contract_cd').val(),
-				        account_cd: $('#account_cd').val(),
-				        contract_ps: $('#contract_ps').val(),
-				        contract_sd: $('#contract_sd').val(),
-				        contract_ed: $('#contract_ed').val(),
-				        contract_am: parseInt($('#contract_am').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
-				        contract_mn: parseInt($('#contract_mn').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
-				        contract_st: $('#contract_st').val(),
-				        contract_rm: $('#contract_rm').val(),
-				        contract_wr: $('#contract_wr').val(),
-				        contract_wd: $('#contract_wd').val(),
-				        contract_mf: $('#contract_mf').val(),
-				        contract_md: $('#contract_md').val()
-				    };
-			    
-			    const details = productGrid.getData().map(row => ({
-			        product_cd: row.product_cd,
-			        product_sz: row.product_sz,
-			        product_cr: row.product_cr,
-			        product_am: parseInt(row.product_am), // 정수형으로 변환
-			        contract_ct: parseInt(row.contract_ct), // 정수형으로 변환
-			        contract_ed: row.contract_ed,
-			        product_un: row.product_un
-			    }));
-			    
-			    
-		        // AJAX 요청으로 데이터 전송
-		        $.ajax({
-		            url: '/insert_CONTRACT',
-		            method: 'POST',
-		            contentType: "application/json",  // JSON 형식 지정
-		            data: JSON.stringify({ contract: contractDTO, details: details }),
-		            headers: { 'X-CSRF-TOKEN': csrfToken },
-		            success: function () {
-		            	Swal.fire({ icon: 'success', title: '등록 완료', text: '등록이 완료되었습니다.', confirmButtonText: '확인' });
-		            	modalInstance.hide();
-		            	make_contract_grid();
-		            },
-		            error: function () {
-		            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
-		            }
-		        });
-		    });
-		}
-
-		// DatePicker 초기화 함수
-		function initializeDatePickers() {
-		    const today = new Date(); // 오늘 날짜
-
-		    // 시작일과 종료일 DatePicker 초기화
-		    const startPicker = tui.DatePicker.createRangePicker({
-		        startpicker: {
-		            date: today,
-		            input: '#contract_sd',
-		            container: '#modal_startpicker-container',
-		        },
-		        endpicker: {
-		            date: null,
-		            input: '#contract_ed',
-		            container: '#modal_endpicker-container',
-		            disabled: true,
-		        },
-		        format: 'YYYY-MM-dd',
-		        timePicker: false,
-		    });
-
-		    // 종료일 필드 초기화 및 비활성화
-		    $('#contract_ed').val('').prop('disabled', true);
-
-		    // 시작일 선택 이벤트 처리
-		    startPicker.on('change:start', function (event) {
-		        if (event && event.date) {
-		            console.log('선택된 시작일: ', event.date);
-
-		            const minEndDate = new Date(event.date);
-		            minEndDate.setDate(minEndDate.getDate() + 1);
-
-		            startPicker.getEndpicker().setOptions({
-		                date: minEndDate,
-		                disabled: false,
-		            });
-
-		            $('#contract_ed').prop('disabled', false);
-		        }
-		    });
-
-		    // 종료일 선택 이벤트 처리
-		    startPicker.on('change:end', function (event) {
-		        if (event && event.date) {
-		            console.log('선택된 종료일: ', event.date);
-		        }
-		    });
-		}
-
-
-        // 제품 선택 모달 생성
-		function openProductModal(productGrid) {
-		    $('#productSelectModal').remove();
-		    const productModalHTML = `
-		        <div class="modal" id="productSelectModal" tabindex="-1">
-		            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-		                <div class="modal-content">
-		                    <div class="modal-header">
-		                        <h5 class="modal-title">제품 선택</h5>
-		                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-		                    </div>
-		                    <div class="modal-body">
-		                        <div id="productSelectGrid"></div>
-		                    </div>
-		                    <div class="modal-footer">
-		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                        <button type="button" class="btn btn-primary" id="selectProductBtn">추가</button>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>`;
-
-		    $('body').append(productModalHTML);
-
-		    const productSelectGrid = new tui.Grid({
-		        el: document.getElementById('productSelectGrid'),
-		        data: [],
-		        columns: [
-		            { header: '제품코드', name: 'product_cd', align: 'center' },
-		            { header: '제품명', name: 'product_nm', align: 'center' },
-		            { header: '색상', name: 'product_cr', align: 'center' },
-		            { header: '사이즈', name: 'product_sz', align: 'center' },
-		            { header: '기준단위', name: 'product_un', align: 'center' }
-		        ],
-		        rowHeaders: ['checkbox'],
-		        scrollX: false,
-		        scrollY: false,
-		        bodyHeight: 300, // 고정 높이 설정
-				summary: {
-				    height: 40,
-				    position: 'bottom', // or 'top'
-				    columnContent: {
-				    	product_sz: {
-				            template: (valueMap) => {
-				                return `총  ${valueMap.cnt} 건`
-				            }
-				        }
-				    }
-				}
-		    });
-
-		    // 서버에서 데이터 가져오기
-		    $.ajax({
-		        url: '/select_RPODUCT', // 서버 API 엔드포인트
-		        method: 'GET',
-		        success: function (response) {
-		            // 서버 응답 데이터를 Toast UI Grid에 설정
-		            productSelectGrid.resetData(response);
-		        },
-		        error: function () {
-		            Swal.fire({
-		                icon: 'error',
-		                title: '오류 발생!',
-		                text: '제품 데이터를 가져오는 데 실패했습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
-		    
-		    
-			const productModal = new bootstrap.Modal(document.getElementById('productSelectModal'), {
-			    backdrop: false,    // 추가적인 배경 방지
-			    keyboard: false     // ESC 키로 닫기 방지 (옵션)
-			});
-
-		    productModal.show();
-
-		    // "추가" 버튼 클릭 시 선택 데이터 처리
-			$('#selectProductBtn').on('click', function () {
-			    const selectedRows = productSelectGrid.getCheckedRows();
-
-			    if (selectedRows.length > 0) {
-			        // 기존 데이터와 중복 체크
-			        const existingData = productGrid.getData();
-			        const newRows = [];
-
-			        selectedRows.forEach(row => {
-			            const isDuplicate = existingData.some(existingRow => existingRow.product_cd === row.product_cd);
-			            if (!isDuplicate) {
-			                newRows.push(row); // 중복이 아닐 경우만 추가
-			            } else {
-				            showAlert(null, "error", "오류 발생", `이미 등록된 제품입니다: ${row.product_cd}`);
-			            }
-			        });
-
-			        // 중복이 아닌 데이터만 추가
-			        if (newRows.length > 0) {
-			            productGrid.resetData([...existingData, ...newRows]);
-
-			            // 첫 번째 새로 추가된 행의 수량 셀에 포커스 이동
-			            const rowIndex = existingData.length; // 새로 추가된 첫 번째 행의 인덱스
-			            productGrid.focus(rowIndex, 'product_am'); // 'qty' 필드에 포커스 이동
-			            productGrid.startEditing(rowIndex, 'product_am'); // 수량 필드를 바로 편집 상태로 설정
-			        }
-			    } else {
-		            showAlert(null, "error", "오류 발생", "추가할 제품을 선택하세요.");
-		            return
-			    }
-
-			    productModal.hide();
-			});
+	// 수주 상세 정보 불러오기 함수 (수정 모드에서 사용)
+	function fetchContractDetails(contract_cd) {
+	    console.log(`🔍 fetchContractDetails 호출: contract_cd=${contract_cd}`); // 디버깅 로그 추가
+		
+		if (!contract_cd) {
+		    console.error("유효하지 않은 contract_cd입니다:", contract_cd);
+		    return;
 		}
 		
-        
-	    // 거래처코드 클릭 시 거래처 선택 모달 열기
-		$(document).on('click', '#account_cd', function () {
-		    console.log('거래처 선택 input 클릭됨!'); // 클릭 이벤트 확인
-		    openAccountModal();
+	    $.ajax({
+	        url: `/get_CONTRACT?contract_cd=${contract_cd}`,
+	        method: 'GET',
+	        success: function (response) {
+	            console.log("서버 응답 데이터:", response); // 응답 데이터 확인
+
+				// 수주 데이터 검증
+				if (!response || !response.contract || !response.contract.contract_cd) {
+				    console.error("응답 데이터가 유효하지 않습니다:", response);
+				    Swal.fire({
+				        icon: 'error',
+				        title: '오류 발생!',
+				        text: '수정할 데이터를 가져올 수 없습니다.',
+				        confirmButtonText: '확인'
+				    });
+				    return;
+				}
+				
+				// 수주 데이터와 상세 데이터 전달하여 모달 열기
+				openModal('edit', response);
+	        },
+	        error: function (xhr) {
+				window.isFetchingDetails = false; // 플래그 해제
+	            console.error("서버 요청 오류:", xhr.status, xhr.responseText);
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '수주 데이터를 불러오는 데 실패했습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+	}
+
+		
+		
+	// 동적 모달 생성 및 표시
+	function openModal(mode, rowData = null) {
+		
+		console.log("openModal 호출됨", "mode:", mode, "rowData:", rowData);
+		
+		// 수정 모드에서 데이터 유효성 검사
+		if (mode === 'edit') {
+			if (!rowData || !rowData.contract || !rowData.contract.contract_cd) {
+			    console.error("rowData가 유효하지 않거나 contract_cd가 없습니다.", rowData);
+			    Swal.fire({
+			        icon: 'error',
+			        title: '오류 발생!',
+			        text: '수정할 데이터를 가져올 수 없습니다.',
+			        confirmButtonText: '확인'
+			    });
+			    return;
+			}
+		}
+
+		console.log("모달 초기화 성공:", rowData);
+
+	    // 기존 모달 제거
+	    $('#contractInsertModal').remove();
+
+				// 모달 제목 및 버튼 텍스트 설정
+		const modalTitle = mode === 'edit' ? '수주 수정' : '수주 등록';
+		const submitButtonText = mode === 'edit' ? '수정' : '등록';
+			
+	    // 모달 HTML 생성
+	    const modalHtml = `
+	        <div class="modal" id="contractInsertModal" tabindex="-1" aria-labelledby="contractInsertModalLabel" aria-hidden="true">
+	            <div class="modal-dialog modal-dialog-centered modal-xl">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title" id="dynamicModalLabel">${modalTitle}</h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <form id="appointment_form" method="post" enctype="multipart/form-data">
+	                            <input type="hidden" id="contract_cd" name="contract_cd">
+	                            <div class="row mb-3">
+	                                <div class="col-md-4">
+	                                    <label for="contract_ps" class="form-label">담당자명</label>
+	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
+	                                </div>
+	                                <div class="col-md-4">
+	                                    <label for="account_sd" class="form-label">수주일</label>
+	                                    <input type="text" class="form-control" id="contract_sd" name="account_sd" readonly>
+	                                    <div id="modal_startpicker-container"></div>
+	                                </div>
+	                                <div class="col-md-4">
+	                                    <label for="account_ed" class="form-label">납기일</label>
+	                                    <input type="text" class="form-control" id="contract_ed" name="account_ed" readonly>
+	                                    <div id="modal_endpicker-container"></div>
+	                                </div>
+	                            </div>
+	                            <div class="row mb-3">
+	                                <div class="col-md-3">
+	                                    <label for="account_cp" class="form-label">거래처코드</label>
+	                                    <input type="text" class="form-control" id="account_cd" name="account_cd" readonly>
+	                                </div>
+									<div class="col-md-3">
+	                                    <label for="contract_st" class="form-label">수주상태</label>
+	                                    <select class="form-select" id="contract_st" name="contract_st">
+	                                        <option value="">선택</option>
+	                                    </select>
+									</div>
+									<div class="col-md-3">
+									    <label for="contract_am" class="form-label">수주수량</label>
+									    <input type="text" class="form-control" id="contract_am" name="contract_am" readonly>
+									</div>
+									<div class="col-md-3">
+									    <label for="contract_mn" class="form-label">수주금액</label>
+									    <input type="text" class="form-control" id="contract_mn" name="contract_mn" readonly>
+									</div>
+									<div class="col-sm-12">
+									    <label for="contract_rm" class="form-label">비고</label>
+										<textarea class="form-control" id="contract_rm" name="contract_rm" style="height: 200px"></textarea>
+									</div>
+	                            </div>
+	                            <div class="row mb-3">
+	                                <div class="col-sm-12 text-end">
+	                                    <button type="button" id="addProductBtn" class="btn btn-primary">추가</button>
+										<button type="button" id="deleteProductBtn" class="btn btn-danger">행 삭제</button>
+	                                </div>
+	                            </div>
+	                            <div class="row">
+	                                <div id="productGrid"></div>
+	                            </div>
+	                        </form>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+	                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>`;
+
+	    var status_list = window.status_list || [];
+
+		// 모달 HTML을 동적으로 body에 추가
+		document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+		// 모달이 추가된 후 실행
+		const modalElement = document.getElementById('contractInsertModal');
+		if (!modalElement) {
+		    console.error("모달이 생성되지 않았습니다.");
+		    return;
+		}
+		
+	    
+		// 셀렉트 박스 관련 함수
+		function populateSelectOptions(selectId, dataList) {
+		    const selectElement = document.getElementById(selectId);
+		    if (Array.isArray(dataList) && dataList.length > 0) {
+		        dataList.forEach(item => {
+		            const option = document.createElement('option');
+		            option.value = item.common_cc;
+		            option.textContent = item.common_nm;
+		            selectElement.appendChild(option);
+		        });
+		    }
+		}
+
+		// 거래처 구분 (contract_st) 옵션 추가
+		populateSelectOptions('contract_st', window.status_list);
+		    
+	    // Bootstrap 모달 표시
+	    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
+	    modalInstance.show();
+		    
+	    // Toast UI Grid 초기화
+	    const productGrid = new tui.Grid({
+	        el: document.getElementById('productGrid'),
+	        data: [],
+	        columns: [
+	            { header: '제품코드', name: 'product_cd', align: 'center' },
+	            //{ header: '제품명', name: 'product_nm', align: 'center' },
+	            { header: '색상', name: 'product_cr', align: 'center' },
+	            { header: '사이즈', name: 'product_sz', align: 'center' },
+	            { header: '기준단위', name: 'product_un', align: 'center' },
+	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false
+	    });
+
+	    // DatePicker 초기화
+	    initializeDatePickers();
+		
+		// 수정 모드일 경우, 데이터를 서버에서 불러오기
+//		if (mode === 'edit' && rowData && rowData.contract_cd) {
+//		    fetchContractDetails(rowData.contract_cd);
+//		}
+			
+		// 수정 모드 데이터 반영
+		if (mode === 'edit' && rowData) {
+		    console.log("🔄 모달에 데이터 반영");
+			$('#contract_cd').val(rowData.contract.contract_cd || '');
+			$('#account_cd').val(rowData.contract.account_cd || '');
+			$('#contract_ps').val(rowData.contract.contract_ps || '');
+			$('#contract_sd').val(rowData.contract.contract_sd || '');
+			$('#contract_ed').val(rowData.contract.contract_ed || '');
+			$('#contract_am').val(rowData.contract.contract_am?.toLocaleString() || '');
+			$('#contract_mn').val(rowData.contract.contract_mn?.toLocaleString() || '');
+			$('#contract_st').val(rowData.contract.contract_st || '');
+			$('#contract_rm').val(rowData.contract.contract_rm || '');
+		
+		    // 상세 데이터 `productGrid`에 적용
+		    if (rowData.details && Array.isArray(rowData.details)) {
+		        productGrid.resetData(rowData.details);
+		    }
+		}
+		
+		// 행 삭제 버튼 클릭 이벤트
+		$('#deleteProductBtn').on('click', function () {
+		    const checkedRowKeys = productGrid.getCheckedRowKeys(); // 체크된 행의 rowKey 가져오기
+		    if (checkedRowKeys.length > 0) {
+		        productGrid.removeRows(checkedRowKeys); // 체크된 행 삭제
+		        updateContractSummary(productGrid); // 수주수량 및 수주금액 업데이트
+		    } else {
+		        showAlert(null, "error", "삭제 실패 알림", "삭제할 행을 선택해주세요");
+		    }
+		});
+		
+		
+		// Toast UI Grid 데이터 변경 시 수주수량 및 수주금액 업데이트
+		productGrid.on('afterChange', function (ev) {
+		    updateContractSummary(productGrid);
 		});
 
-        
-        
-        // 거래처 선택 모달
-		function openAccountModal() {
-		    $('#accountSelectModal').remove();
-		    const accountModalHTML = `
-		        <div class="modal" id="accountSelectModal" tabindex="-1">
-		            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-		                <div class="modal-content">
-		                    <div class="modal-header">
-		                        <h5 class="modal-title">거래처 선택</h5>
-		                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-		                    </div>
-		                    <div class="modal-body">
-		                        <div id="accountSelectGrid"></div>
-		                    </div>
-		                    <div class="modal-footer">
-		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                        <button type="button" class="btn btn-primary" id="selectAccountBtn">추가</button>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>`;
+		// 수주수량 및 수주금액 업데이트 함수
+		function updateContractSummary(grid) {
+		    const data = grid.getData();
+		    let totalQty = 0;
+		    let totalAmount = 0;
 
-		    $('body').append(accountModalHTML);
+		    data.forEach(row => {
+		        const qty = parseFloat(row.product_am) || 0;
+		        const money = parseFloat(row.contract_ct) || 0;
 
-		    const accountSelectGrid = new tui.Grid({
-		        el: document.getElementById('accountSelectGrid'),
-		        data: [],
-		        columns: [
-		            { header: '거래처코드', name: 'account_cd', align: 'center' },
-		            { header: '거래처명', name: 'account_nm', align: 'center' }
-		        ],
-		        rowHeaders: ['checkbox'],
-		        scrollX: false,
-		        scrollY: false,
-		        bodyHeight: 300, // 고정 높이 설정
-		        summary: {
-		            height: 40,
-		            position: 'bottom',
-		            columnContent: {
-		                account_nm: {
-		                    template: (valueMap) => {
-		                    	return `총  ${valueMap.cnt} 건`
-		                    }
-		                }
-		            }
-		        }
+		        totalQty += qty;
+		        totalAmount += qty * money;
 		    });
 
-		    // 서버에서 데이터 가져오기
-		    $.ajax({
-		        url: '/select_ACCOUNT_CONTRACT',
-		        method: 'GET',
-		        success: function (response) {
-		            // 서버 응답 데이터를 Toast UI Grid에 설정
-		            accountSelectGrid.resetData(response);
-		        },
-		        error: function () {
-		            Swal.fire({
-		                icon: 'error',
-		                title: '오류 발생!',
-		                text: '거래처 데이터를 가져오는 데 실패했습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
+		    $('#contract_am').val(totalQty);
+		    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
+		}
+			
+			
+			
+	    // "추가" 버튼 클릭 시 제품 선택 모달 열기
+	    $('#addProductBtn').on('click', function () {
+	        openProductModal(productGrid);
+	    });
 
-		    const accountModal = new bootstrap.Modal(document.getElementById('accountSelectModal'), {
-		        backdrop: false, // 추가적인 배경 방지
-		        keyboard: false // ESC 키로 닫기 방지 (옵션)
-		    });
+		
+		// 버튼 클릭 시 폼 제출 실행 (중복 방지)
+		$(document).off('click', '#modal_submit_button').on('click', '#modal_submit_button', function () {
+		    console.log("등록 버튼 클릭됨!");
 
-		    accountModal.show();
+		    // 중복 클릭 방지 (버튼 비활성화)
+		    $(this).prop('disabled', true);
 
-		    // 체크박스 단일 선택 제한
-		    accountSelectGrid.on('check', (ev) => {
-		        const checkedRows = accountSelectGrid.getCheckedRows();
-		        if (checkedRows.length > 1) {
-		            // 마지막으로 체크된 항목 제외
-		            accountSelectGrid.uncheck(ev.rowKey);
-		            Swal.fire({
-		                icon: 'warning',
-		                title: '알림',
-		                text: '하나의 거래처만 선택할 수 있습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
+		    // 폼이 존재하는지 확인 후 제출 실행
+		    if ($('#appointment_form').length > 0) {
+		        $('#appointment_form').trigger('submit');  // 폼 제출 실행
+		    } else {
+		        console.error("오류: #appointment_form 요소를 찾을 수 없음!");
+		        $(this).prop('disabled', false);  // 버튼 다시 활성화
+		    }
+		});
+		
+		
+		// 폼 제출 이벤트
+		$(document).off('submit', '#appointment_form').on('submit', '#appointment_form', function (event) {
+			
+	        event.preventDefault();
+	        
+			const mode = $('#modal_submit_button').text().trim();
+			const url = mode === '등록' ? '/insert_CONTRACT' : '/update_CONTRACT';
+			console.log("폼 제출 시 mode:", mode, "요청 URL:", url);
+			
+		    const contractDTO = {
+					contract_cd: $('#contract_cd').val(),
+			        account_cd: $('#account_cd').val(),
+			        contract_ps: $('#contract_ps').val(),
+			        contract_sd: $('#contract_sd').val(),
+			        contract_ed: $('#contract_ed').val(),
+			        contract_am: parseInt($('#contract_am').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
+			        contract_mn: parseInt($('#contract_mn').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
+			        contract_st: $('#contract_st').val(),
+			        contract_rm: $('#contract_rm').val(),
+			        contract_wr: $('#contract_wr').val(),
+			        contract_wd: $('#contract_wd').val(),
+			        contract_mf: $('#contract_mf').val(),
+			        contract_md: $('#contract_md').val()
+			    };
+		    
+		    const details = productGrid.getData().map(row => ({
+		        product_cd: row.product_cd,
+		        product_sz: row.product_sz,
+		        product_cr: row.product_cr,
+		        product_am: parseInt(row.product_am), // 정수형으로 변환
+		        contract_ct: parseInt(row.contract_ct), // 정수형으로 변환
+		        contract_ed: row.contract_ed,
+		        product_un: row.product_un
+		    }));
+		    
+			console.log("보낼 데이터:", { contract: contractDTO, details: details });
+		    
+	        // AJAX 요청으로 데이터 전송
+	        $.ajax({
+	            url: url,
+	            method: 'POST',
+	            contentType: "application/json",  // JSON 형식 지정
+	            data: JSON.stringify({ contract: contractDTO, details: details }),
+	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	            success: function () {
+	            	Swal.fire({ icon: 'success',
+								title: mode === '등록' ? '등록 완료' : '수정 완료',
+								text: mode === '등록' ? '등록이 완료되었습니다.' : '수정이 완료되었습니다.',
+								confirmButtonText: '확인' 
+							});
+					
+	            	modalInstance.hide();
+	            	make_contract_grid();
+					if (mode === 'edit') {
+					    make_detail_grid({ contract_cd: contractDTO.contract_cd });
+					}
+	            },
+	            error: function () {
+	            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	            }
+	        });
+	    });
+	}
 
-		    // "추가" 버튼 클릭 시 선택 데이터 처리
-		    $('#selectAccountBtn').off('click').on('click', function () {
-		        const selectedRow = accountSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
-		        console.log('선택된 행:', selectedRow);
-		        
-		        if (selectedRow) {
-		            // 선택된 거래처 데이터를 input에 설정
-		            $('#account_cd').val(selectedRow.account_cd);
-		            accountModal.hide(); // 모달 닫기
-		        } else {
-		            Swal.fire({
-		                icon: 'error',
-		                title: '오류 발생',
-		                text: '추가할 거래처를 선택하세요.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
-		} // 거래처 관련 끝
-        
-	    // 담당자 클릭 시 담당자 선택 모달 열기
-		$(document).on('click', '#contract_ps', function () {
-		    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
-		    openPersonModal();
+	// DatePicker 초기화 함수
+	function initializeDatePickers() {
+	    const today = new Date(); // 오늘 날짜
+
+	    // 시작일과 종료일 DatePicker 초기화
+	    const startPicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: today,
+	            input: '#contract_sd',
+	            container: '#modal_startpicker-container',
+	        },
+	        endpicker: {
+	            date: null,
+	            input: '#contract_ed',
+	            container: '#modal_endpicker-container',
+	            disabled: true,
+	        },
+	        format: 'YYYY-MM-dd',
+	        timePicker: false,
+	    });
+
+	    // 종료일 필드 초기화 및 비활성화
+	    $('#contract_ed').val('').prop('disabled', true);
+
+	    // 시작일 선택 이벤트 처리
+	    startPicker.on('change:start', function (event) {
+	        if (event && event.date) {
+	            console.log('선택된 시작일: ', event.date);
+
+	            const minEndDate = new Date(event.date);
+	            minEndDate.setDate(minEndDate.getDate() + 1);
+
+	            startPicker.getEndpicker().setOptions({
+	                date: minEndDate,
+	                disabled: false,
+	            });
+
+	            $('#contract_ed').prop('disabled', false);
+	        }
+	    });
+
+	    // 종료일 선택 이벤트 처리
+	    startPicker.on('change:end', function (event) {
+	        if (event && event.date) {
+	            console.log('선택된 종료일: ', event.date);
+	        }
+	    });
+	}
+
+
+    // 제품 선택 모달 생성
+	function openProductModal(productGrid) {
+	    $('#productSelectModal').remove();
+	    const productModalHTML = `
+	        <div class="modal" id="productSelectModal" tabindex="-1">
+	            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title">제품 선택</h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <div id="productSelectGrid"></div>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+	                        <button type="button" class="btn btn-primary" id="selectProductBtn">추가</button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>`;
+
+	    $('body').append(productModalHTML);
+
+	    const productSelectGrid = new tui.Grid({
+	        el: document.getElementById('productSelectGrid'),
+	        data: [],
+	        columns: [
+	            { header: '제품코드', name: 'product_cd', align: 'center' },
+	            { header: '제품명', name: 'product_nm', align: 'center' },
+	            { header: '색상', name: 'product_cr', align: 'center' },
+	            { header: '사이즈', name: 'product_sz', align: 'center' },
+	            { header: '기준단위', name: 'product_un', align: 'center' }
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false,
+	        bodyHeight: 300, // 고정 높이 설정
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	product_sz: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			}
+	    });
+
+	    // 서버에서 데이터 가져오기
+	    $.ajax({
+	        url: '/select_RPODUCT', // 서버 API 엔드포인트
+	        method: 'GET',
+	        success: function (response) {
+	            // 서버 응답 데이터를 Toast UI Grid에 설정
+	            productSelectGrid.resetData(response);
+	        },
+	        error: function () {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '제품 데이터를 가져오는 데 실패했습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+	    
+	    
+		const productModal = new bootstrap.Modal(document.getElementById('productSelectModal'), {
+		    backdrop: false,    // 추가적인 배경 방지
+		    keyboard: false     // ESC 키로 닫기 방지 (옵션)
 		});
 
-        
-        
-        // 거래처 선택 모달
-		function openPersonModal() {
-		    $('#personSelectModal').remove();
-		    const personModalHTML = `
-		        <div class="modal" id="personSelectModal" tabindex="-1">
-		            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-		                <div class="modal-content">
-		                    <div class="modal-header">
-		                        <h5 class="modal-title">담당자 선택</h5>
-		                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-		                    </div>
-		                    <div class="modal-body">
-		                        <div id="personSelectGrid"></div>
-		                    </div>
-		                    <div class="modal-footer">
-		                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-		                        <button type="button" class="btn btn-primary" id="selectPersonBtn">추가</button>
-		                    </div>
-		                </div>
-		            </div>
-		        </div>`;
+	    productModal.show();
 
-		    $('body').append(personModalHTML);
+	    // "추가" 버튼 클릭 시 선택 데이터 처리
+		$('#selectProductBtn').on('click', function () {
+		    const selectedRows = productSelectGrid.getCheckedRows();
 
-		    const personSelectGrid = new tui.Grid({
-		        el: document.getElementById('personSelectGrid'),
-		        data: [],
-		        columns: [
-		            { header: '사원코드', name: 'employee_cd', align: 'center' },
-		            { header: '사원명', name: 'employee_nm', align: 'center' },
-		            { header: '부서', name: 'employee_dp', align: 'center' },
-		            { header: '직위', name: 'employee_gd', align: 'center' }
-		        ],
-		        rowHeaders: ['checkbox'],
-		        scrollX: false,
-		        scrollY: false,
-		        bodyHeight: 300, // 고정 높이 설정
-		        summary: {
-		            height: 40,
-		            position: 'bottom',
-		            columnContent: {
-		                account_nm: {
-		                    template: (valueMap) => {
-		                        return `총 ${valueMap.cnt} 건`;
-		                    }
-		                }
+		    if (selectedRows.length > 0) {
+		        // 기존 데이터와 중복 체크
+		        const existingData = productGrid.getData();
+		        const newRows = [];
+
+		        selectedRows.forEach(row => {
+		            const isDuplicate = existingData.some(existingRow => existingRow.product_cd === row.product_cd);
+		            if (!isDuplicate) {
+		                newRows.push(row); // 중복이 아닐 경우만 추가
+		            } else {
+			            showAlert(null, "error", "오류 발생", `이미 등록된 제품입니다: ${row.product_cd}`);
 		            }
+		        });
+
+		        // 중복이 아닌 데이터만 추가
+		        if (newRows.length > 0) {
+		            productGrid.resetData([...existingData, ...newRows]);
+
+		            // 첫 번째 새로 추가된 행의 수량 셀에 포커스 이동
+		            const rowIndex = existingData.length; // 새로 추가된 첫 번째 행의 인덱스
+		            productGrid.focus(rowIndex, 'product_am'); // 'qty' 필드에 포커스 이동
+		            productGrid.startEditing(rowIndex, 'product_am'); // 수량 필드를 바로 편집 상태로 설정
 		        }
-		    });
+		    } else {
+	            showAlert(null, "error", "오류 발생", "추가할 제품을 선택하세요.");
+	            return
+		    }
 
-		    // 서버에서 데이터 가져오기
-		    $.ajax({
-		        url: '/select_CONTRACT_PS',
-		        method: 'GET',
-		        success: function (response) {
-		            // 서버 응답 데이터를 Toast UI Grid에 설정
-		            personSelectGrid.resetData(response);
-		        },
-		        error: function () {
-		            Swal.fire({
-		                icon: 'error',
-		                title: '오류 발생!',
-		                text: '담당자 정보를 가져오는 데 실패했습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
+		    productModal.hide();
+		});
+	}
+		
+        
+    // 거래처코드 클릭 시 거래처 선택 모달 열기
+	$(document).on('click', '#account_cd', function () {
+	    console.log('거래처 선택 input 클릭됨!'); // 클릭 이벤트 확인
+	    openAccountModal();
+	});
 
-		    const personModal = new bootstrap.Modal(document.getElementById('personSelectModal'), {
-		        backdrop: false, // 추가적인 배경 방지
-		        keyboard: false // ESC 키로 닫기 방지 (옵션)
-		    });
+    
+    
+    // 거래처 선택 모달
+	function openAccountModal() {
+	    $('#accountSelectModal').remove();
+	    const accountModalHTML = `
+	        <div class="modal" id="accountSelectModal" tabindex="-1">
+	            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title">거래처 선택</h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <div id="accountSelectGrid"></div>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+	                        <button type="button" class="btn btn-primary" id="selectAccountBtn">추가</button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>`;
 
-		    personModal.show();
+	    $('body').append(accountModalHTML);
 
-		    // 체크박스 단일 선택 제한
-		    personSelectGrid.on('check', (ev) => {
-		        const checkedRows = personSelectGrid.getCheckedRows();
-		        if (checkedRows.length > 1) {
-		            // 마지막으로 체크된 항목 제외
-		            personSelectGrid.uncheck(ev.rowKey);
-		            Swal.fire({
-		                icon: 'warning',
-		                title: '알림',
-		                text: '한명의 사원만 선택할 수 있습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
+	    const accountSelectGrid = new tui.Grid({
+	        el: document.getElementById('accountSelectGrid'),
+	        data: [],
+	        columns: [
+	            { header: '거래처코드', name: 'account_cd', align: 'center' },
+	            { header: '거래처명', name: 'account_nm', align: 'center' }
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false,
+	        bodyHeight: 300, // 고정 높이 설정
+	        summary: {
+	            height: 40,
+	            position: 'bottom',
+	            columnContent: {
+	                account_nm: {
+	                    template: (valueMap) => {
+	                    	return `총  ${valueMap.cnt} 건`
+	                    }
+	                }
+	            }
+	        }
+	    });
 
-		    // "추가" 버튼 클릭 시 선택 데이터 처리
-		    $('#selectPersonBtn').off('click').on('click', function () {
-		        const selectedRow = personSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
-		        console.log('선택된 행:', selectedRow);
-		        
-		        if (selectedRow) {
-		            // 선택된 담당자 데이터를 input에 설정
-		            $('#contract_ps').val(selectedRow.employee_nm);
-		            personModal.hide(); // 모달 닫기
-		        } else {
-		            Swal.fire({
-		                icon: 'error',
-		                title: '오류 발생',
-		                text: '추가할 사원 선택하세요.',
-		                confirmButtonText: '확인'
-		            });
-		        }
-		    });
-		} // 담당자 정보 끝
-    });
+	    // 서버에서 데이터 가져오기
+	    $.ajax({
+	        url: '/select_ACCOUNT_CONTRACT',
+	        method: 'GET',
+	        success: function (response) {
+	            // 서버 응답 데이터를 Toast UI Grid에 설정
+	            accountSelectGrid.resetData(response);
+	        },
+	        error: function () {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '거래처 데이터를 가져오는 데 실패했습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+
+	    const accountModal = new bootstrap.Modal(document.getElementById('accountSelectModal'), {
+	        backdrop: false, // 추가적인 배경 방지
+	        keyboard: false // ESC 키로 닫기 방지 (옵션)
+	    });
+
+	    accountModal.show();
+
+	    // 체크박스 단일 선택 제한
+	    accountSelectGrid.on('check', (ev) => {
+	        const checkedRows = accountSelectGrid.getCheckedRows();
+	        if (checkedRows.length > 1) {
+	            // 마지막으로 체크된 항목 제외
+	            accountSelectGrid.uncheck(ev.rowKey);
+	            Swal.fire({
+	                icon: 'warning',
+	                title: '알림',
+	                text: '하나의 거래처만 선택할 수 있습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+
+	    // "추가" 버튼 클릭 시 선택 데이터 처리
+	    $('#selectAccountBtn').off('click').on('click', function () {
+	        const selectedRow = accountSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
+	        console.log('선택된 행:', selectedRow);
+	        
+	        if (selectedRow) {
+	            // 선택된 거래처 데이터를 input에 설정
+	            $('#account_cd').val(selectedRow.account_cd);
+	            accountModal.hide(); // 모달 닫기
+	        } else {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생',
+	                text: '추가할 거래처를 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+	} // 거래처 관련 끝
+    
+		
+		
+    // 담당자 클릭 시 담당자 선택 모달 열기
+	$(document).on('click', '#contract_ps', function () {
+	    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
+	    openPersonModal();
+	});
+
+    
+    
+    // 거래처 선택 모달
+	function openPersonModal() {
+	    $('#personSelectModal').remove();
+	    const personModalHTML = `
+	        <div class="modal" id="personSelectModal" tabindex="-1">
+	            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title">담당자 선택</h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <div id="personSelectGrid"></div>
+	                    </div>
+	                    <div class="modal-footer">
+	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+	                        <button type="button" class="btn btn-primary" id="selectPersonBtn">추가</button>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>`;
+
+	    $('body').append(personModalHTML);
+
+	    const personSelectGrid = new tui.Grid({
+	        el: document.getElementById('personSelectGrid'),
+	        data: [],
+	        columns: [
+	            { header: '사원코드', name: 'employee_cd', align: 'center' },
+	            { header: '사원명', name: 'employee_nm', align: 'center' },
+	            { header: '부서', name: 'employee_dp', align: 'center' },
+	            { header: '직위', name: 'employee_gd', align: 'center' }
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false,
+	        bodyHeight: 300, // 고정 높이 설정
+	        summary: {
+	            height: 40,
+	            position: 'bottom',
+	            columnContent: {
+	                account_nm: {
+	                    template: (valueMap) => {
+	                        return `총 ${valueMap.cnt} 건`;
+	                    }
+	                }
+	            }
+	        }
+	    });
+
+	    // 서버에서 데이터 가져오기
+	    $.ajax({
+	        url: '/select_CONTRACT_PS',
+	        method: 'GET',
+	        success: function (response) {
+	            // 서버 응답 데이터를 Toast UI Grid에 설정
+	            personSelectGrid.resetData(response);
+	        },
+	        error: function () {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '담당자 정보를 가져오는 데 실패했습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+
+	    const personModal = new bootstrap.Modal(document.getElementById('personSelectModal'), {
+	        backdrop: false, // 추가적인 배경 방지
+	        keyboard: false // ESC 키로 닫기 방지 (옵션)
+	    });
+
+	    personModal.show();
+
+	    // 체크박스 단일 선택 제한
+	    personSelectGrid.on('check', (ev) => {
+	        const checkedRows = personSelectGrid.getCheckedRows();
+	        if (checkedRows.length > 1) {
+	            // 마지막으로 체크된 항목 제외
+	            personSelectGrid.uncheck(ev.rowKey);
+	            Swal.fire({
+	                icon: 'warning',
+	                title: '알림',
+	                text: '한명의 사원만 선택할 수 있습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+
+	    // "추가" 버튼 클릭 시 선택 데이터 처리
+	    $('#selectPersonBtn').off('click').on('click', function () {
+	        const selectedRow = personSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
+	        console.log('선택된 행:', selectedRow);
+	        
+	        if (selectedRow) {
+	            // 선택된 담당자 데이터를 input에 설정
+	            $('#contract_ps').val(selectedRow.employee_nm);
+	            personModal.hide(); // 모달 닫기
+	        } else {
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생',
+	                text: '추가할 사원 선택하세요.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+	} // 담당자 정보 끝
 </script>
 
 
@@ -698,7 +823,7 @@
     // 변수 지정
     let contract_grid;
     let detail_grid;
-    
+	
     setGridTheme();
     
 	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
@@ -855,24 +980,6 @@
                         make_detail_grid(rowData); // 하단 그리드 갱신 함수 호출
                     });
 
-                    // 더블클릭 이벤트: 수정 모달 열기
-                    contract_grid.on('dblclick', (ev) => {
-                        const columnName = ev.columnName;
-                        const rowKey = ev.rowKey;
-                        const rowData = contract_grid.getRow(rowKey);
-
-                        if (rowKey === null || rowKey === undefined) {
-                            console.warn("헤더 클릭은 무시됩니다.");
-                            return;
-                        }
-
-                        if (columnName === 'contract_cd' || columnName === 'account_cd' || columnName === 'contract_ps') {
-                            console.log("모달에 표시할 데이터:", rowData);
-                            openContractModal('edit', rowData); // 수정 모달 실행
-                        }
-                    });
-
-                    
                 }
             },
             error: function (error) {
@@ -902,16 +1009,38 @@
 	                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
 	            ]
 	        });
+			
+			// 수정 모달 호출을 위한 클릭 이벤트
+			detail_grid.on('click', (ev) => {
+			    const rowKey = ev.rowKey;
+				const clickedRowData = detail_grid.getRow(rowKey);
+
+				if (!clickedRowData || !clickedRowData.contract_cd) {
+				    console.error("유효하지 않은 rowData입니다:", clickedRowData);
+				    Swal.fire({
+				        icon: 'error',
+				        title: '오류 발생!',
+				        text: '유효하지 않은 데이터를 선택했습니다.',
+				        confirmButtonText: '확인'
+				    });
+				    return;
+				}
+				
+				console.log("수주 상세 클릭됨, contract_cd:", clickedRowData.contract_cd);
+
+				fetchContractDetails(clickedRowData.contract_cd);
+			});
+			
 	    }
 	
-	    // rowData가 없으면 빈 데이터 유지 (초기 상태)
-	    if (!rowData || !rowData.contract_cd) {
-	        console.warn("초기화 상태이거나, 갱신할 데이터가 없습니다.");
-	        detail_grid.resetData([]); // 빈 데이터 유지
-	        return;
-	    }
-	
-	    console.log("선택된 계약 데이터:", rowData); // 디버깅 로그 추가
+		// 초기 또는 유효하지 않은 데이터일 경우 빈 데이터로 초기화
+		if (!rowData || !rowData.contract_cd) {
+		    console.warn("rowData가 유효하지 않아 빈 데이터로 초기화합니다.");
+		    detail_grid.resetData([]); // 빈 데이터로 초기화
+		    return;
+		}
+		
+	    console.log("선택된 수주 데이터:", rowData); // 디버깅 로그 추가
 	
 	    // 기존 데이터 초기화 후 AJAX 요청
 	    detail_grid.resetData([]);
@@ -923,18 +1052,29 @@
 	        success: function (response) {
 	            console.log("서버 응답 데이터:", response); // 디버깅 로그 추가
 	
-	            if (Array.isArray(response) && response.length > 0) {
-	                detail_grid.resetData(response);
-	                console.log("하단 그리드 갱신 완료");
-	            } else {
-	                console.warn("서버에서 데이터를 가져오지 못했습니다.");
-	                detail_grid.resetData([]); // 데이터가 없을 경우 초기화
-	            }
-	        },
-	        error: function (error) {
-	            console.error("상세 데이터를 가져오는 중 오류 발생:", error);
-	            console.error("오류 응답:", error.responseText || error.statusText); // 추가 로그
-	            detail_grid.resetData([]); // 오류 시 데이터 초기화
+			    if (Array.isArray(response) && response.length > 0) {
+			        detail_grid.resetData(response);
+			        console.log("하단 그리드 갱신 완료");
+			    } else {
+			        console.warn("서버에서 데이터를 가져오지 못했습니다.");
+			        Swal.fire({
+			            icon: 'warning',
+			            title: '데이터 없음',
+			            text: '수주 상세 데이터를 가져올 수 없습니다.',
+			            confirmButtonText: '확인'
+			        });
+			        detail_grid.resetData([]); // 데이터가 없을 경우 초기화
+			    }
+			},
+			error: function (error) {
+			    console.error("상세 데이터를 가져오는 중 오류 발생:", error);
+			    Swal.fire({
+			        icon: 'error',
+			        title: '오류 발생!',
+			        text: '수주 상세 데이터를 가져오는 데 실패했습니다.',
+			        confirmButtonText: '확인'
+			    });
+			    detail_grid.resetData([]); // 오류 시 데이터 초기화
 	        }
 	    });
 

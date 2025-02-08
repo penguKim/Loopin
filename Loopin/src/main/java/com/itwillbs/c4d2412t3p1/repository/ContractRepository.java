@@ -123,4 +123,32 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACTDETAIL(@Param("contractCd") String contractCd);
 	
+	
+    @Query(value = """
+            SELECT
+                c.contract_cd,
+                c.account_cd,
+                c.contract_ps,
+                c.contract_sd,
+                c.contract_ed,
+                c.contract_am,
+                c.contract_mn,
+                c.contract_st,
+                c.contract_rm,
+                c.contract_wr,
+                c.contract_wd,
+                c.contract_mf,
+                c.contract_md
+            FROM CONTRACT c
+            WHERE c.contract_cd = :contractCd
+        """, nativeQuery = true)
+    List<Object[]> findContractByCd(@Param("contractCd") String contractCd);
+	
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM CONTRACTDETAIL WHERE contract_cd = :contractCd", nativeQuery = true)
+    void deleteContractDetailsByContractCd(@Param("contractCd") String contractCd);
+
+	
+	
 }

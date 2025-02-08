@@ -157,5 +157,58 @@ public class BusinessController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+
+	@GetMapping("/get_CONTRACT")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> getContractDetails(@RequestParam(name = "contract_cd") String contractCd) {
+	    try {
+	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        Map<String, Object> contractData = businessService.getContractDetails(contractCd);
+
+	        if (contractData.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Map.of("error", "계약 데이터를 찾을 수 없습니다."));
+	        }
+
+	        return ResponseEntity.ok(contractData);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Map.of("error", "데이터 조회 중 오류 발생"));
+	    }
+	}
+
+	@ResponseBody
+	@PostMapping("/update_CONTRACT")
+	public ResponseEntity<Map<String, String>> update_CONTRACT(
+	        @RequestBody ContractRequestDTO contractRequestDTO
+	) {
+	    Map<String, String> response = new HashMap<>();
+
+	    // 시큐리티 세션 값 가져오기
+	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+
+	    try {
+	        ContractDTO contractDto = contractRequestDTO.getContract();
+	        
+	        contractDto.setContract_mf(employee_id); // 수정자 설정
+	        contractDto.setContract_md(new Timestamp(System.currentTimeMillis())); // 수정 시간 설정
+
+	        List<ContractDetailDTO> details = contractRequestDTO.getDetails();
+
+	        // 수정 서비스 호출
+	        businessService.update_CONTRACT(contractDto, details);
+
+	        response.put("message", "수정이 성공적으로 완료되었습니다.");
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        log.severe("수정 실패: " + e.getMessage());
+	        response.put("message", "수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+
+	
 	
 }
