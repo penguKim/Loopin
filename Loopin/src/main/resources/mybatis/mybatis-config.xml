@@ -10,5 +10,6 @@
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.EmployeeDTO" alias="Employee"/>
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.WarehouseDTO" alias="Warehouse"/>
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.ProductDTO" alias="Product"/>
+        <typeAlias type="com.itwillbs.c4d2412t3p1.domain.MaterialDTO" alias="Material"/>
     </typeAliases>
 </configuration>
