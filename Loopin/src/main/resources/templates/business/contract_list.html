@@ -554,7 +554,12 @@
 		        const newRows = [];
 
 		        selectedRows.forEach(row => {
-		            const isDuplicate = existingData.some(existingRow => existingRow.product_cd === row.product_cd);
+					const isDuplicate = existingData.some(existingRow =>
+					    existingRow.product_cd === row.product_cd &&
+					    existingRow.product_cr === row.product_cr && // 색상 비교
+					    existingRow.product_sz === row.product_sz   // 사이즈 비교
+					);
+					
 		            if (!isDuplicate) {
 		                newRows.push(row); // 중복이 아닐 경우만 추가
 		            } else {
@@ -1001,14 +1006,14 @@
 	            scrollY: false,
 	            bodyHeight: 200, // 고정 높이 설정
 	            columns: [
-	                { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
-	                { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
-	                { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
-	                { header: '색상', name: 'product_cr', align: 'center', sortable: true },
-	                { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
-	                { header: '단가', name: 'product_ct', align: 'center', sortable: true },
-	                { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
-	                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
+					 { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+					 { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
+					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
+					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
+					 { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
+					 { header: '단가', name: 'contract_ct', align: 'center', sortable: true },
+					 { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
+					 { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
 	            ],
 				summary: {
 				    height: 40,

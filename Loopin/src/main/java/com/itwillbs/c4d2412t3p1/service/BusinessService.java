@@ -135,7 +135,8 @@ public class BusinessService {
 					.product_am(detail.getProduct_am())
 					.contract_ct(detail.getContract_ct())
 					.contract_ed(detail.getContract_ed())
-					.product_un(detail.getProduct_un()).build();
+					.product_un(detail.getProduct_un())
+					.build();
 
 			contractRepository.saveContractDetail(contractDetail);
 		}
@@ -203,8 +204,8 @@ public class BusinessService {
 			detail.put("product_sz", row[2]);
 			detail.put("product_cr", row[3]);
 			detail.put("product_am", row[4]);
-			detail.put("product_un", row[5]);
-			detail.put("product_ct", row[6]);
+			detail.put("contract_ct", row[5]);
+			detail.put("product_un", row[6]);
 			detail.put("contract_ed", row[7]);
 
 			return detail;
