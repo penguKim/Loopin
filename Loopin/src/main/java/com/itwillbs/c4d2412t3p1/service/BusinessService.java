@@ -118,24 +118,10 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
-//	@Transactional
-//    public String insert_CONTRACT(ContractDTO contractDto) throws IOException {
-//        
-//        // 시퀀스 값 가져오기
-//        Long sequenceValue = contractRepository.getNextSequenceValue();
-//        System.out.println("Next Sequence Value: " + sequenceValue);
-//
-//        Contract contract = Contract.createContract(contractDto, sequenceValue);
-//        
-//        contractRepository.save(contract);
-//        
-//        return contract.getContract_cd();
-//    }
-
 	@Transactional
 	public void insert_CONTRACT(ContractDTO contractDto, List<ContractDetailDTO> details) throws IOException {
 
-		// 1. 시퀀스를 통해 contract_cd 생성 및 헤드 저장
+		// 시퀀스를 통해 contract_cd 생성 및 헤드 저장
 		Long sequenceValue = contractRepository.getNextSequenceValue();
 		Contract contract = Contract.createContract(contractDto, sequenceValue);
 		contractRepository.save(contract);
@@ -195,7 +181,7 @@ public class BusinessService {
 	            .product_cr(detail.getProduct_cr())
 	            .product_am(detail.getProduct_am())
 	            .contract_ct(detail.getContract_ct())
-	            .contract_ed(detail.getContract_ed())
+	            .contract_ed(contractDto.getContract_ed()) // CONTRACTDETAIL의 contract_ed를 CONTRACT의 값으로 설정
 	            .product_un(detail.getProduct_un())
 	            .build();
 
@@ -214,7 +200,6 @@ public class BusinessService {
 			Map<String, Object> detail = new HashMap<>();
 			detail.put("contract_cd", row[0]);
 			detail.put("product_cd", row[1]);
-//            detail.put("product_nm", row[2]);
 			detail.put("product_sz", row[2]);
 			detail.put("product_cr", row[3]);
 			detail.put("product_am", row[4]);
@@ -231,6 +216,7 @@ public class BusinessService {
 
 		// 수주 정보 조회
 		List<Object[]> contractList = contractRepository.findContractByCd(contractCd);
+		
 		if (!contractList.isEmpty()) {
 			Object[] row = contractList.get(0); // 단일 계약이므로 첫 번째 행 사용
 			Map<String, Object> contract = new HashMap<>();
@@ -262,7 +248,7 @@ public class BusinessService {
 			detail.put("product_am", row[4]);
 			detail.put("contract_ct", row[5]);
 			detail.put("product_un", row[6]);
-			detail.put("contract_ed", row[7]);
+			detail.put("detail_contract_ed", row[7]); // CONTRACTDETAIL의 contract_ed
 			return detail;
 		}).collect(Collectors.toList());
 

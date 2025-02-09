@@ -117,7 +117,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 			       d.product_am,
 			       d.contract_ct,
 			       d.product_un, 
-			       d.contract_ed
+			       d.contract_ed AS detail_contract_ed
 			FROM CONTRACTDETAIL d
 			WHERE d.contract_cd = :contractCd
 		""", nativeQuery = true)

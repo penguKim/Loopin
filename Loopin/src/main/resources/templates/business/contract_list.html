@@ -71,7 +71,7 @@
 <script>
 	// 수주 상세 정보 불러오기 함수 (수정 모드에서 사용)
 	function fetchContractDetails(contract_cd) {
-	    console.log(`🔍 fetchContractDetails 호출: contract_cd=${contract_cd}`); // 디버깅 로그 추가
+	    console.log(`fetchContractDetails 호출: contract_cd=${contract_cd}`); // 디버깅 로그 추가
 		
 		if (!contract_cd) {
 		    console.error("유효하지 않은 contract_cd입니다:", contract_cd);
@@ -138,7 +138,7 @@
 	    // 기존 모달 제거
 	    $('#contractInsertModal').remove();
 
-				// 모달 제목 및 버튼 텍스트 설정
+		// 모달 제목 및 버튼 텍스트 설정
 		const modalTitle = mode === 'edit' ? '수주 수정' : '수주 등록';
 		const submitButtonText = mode === 'edit' ? '수정' : '등록';
 			
@@ -160,13 +160,13 @@
 	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
 	                                </div>
 	                                <div class="col-md-4">
-	                                    <label for="account_sd" class="form-label">수주일</label>
-	                                    <input type="text" class="form-control" id="contract_sd" name="account_sd" readonly>
+	                                    <label for="contract_sd" class="form-label">수주일</label>
+	                                    <input type="text" class="form-control" id="contract_sd" name="contract_sd" readonly>
 	                                    <div id="modal_startpicker-container"></div>
 	                                </div>
 	                                <div class="col-md-4">
-	                                    <label for="account_ed" class="form-label">납기일</label>
-	                                    <input type="text" class="form-control" id="contract_ed" name="account_ed" readonly>
+	                                    <label for="contract_ed" class="form-label">납기일</label>
+	                                    <input type="text" class="form-control" id="contract_ed" name="contract_ed" readonly>
 	                                    <div id="modal_endpicker-container"></div>
 	                                </div>
 	                            </div>
@@ -267,28 +267,32 @@
 	    // DatePicker 초기화
 	    initializeDatePickers();
 		
-		// 수정 모드일 경우, 데이터를 서버에서 불러오기
-//		if (mode === 'edit' && rowData && rowData.contract_cd) {
-//		    fetchContractDetails(rowData.contract_cd);
-//		}
 			
 		// 수정 모드 데이터 반영
 		if (mode === 'edit' && rowData) {
-		    console.log("🔄 모달에 데이터 반영");
+			
+			console.log("rowData.contract:", rowData.contract); // CONTRACT 데이터 디버깅
+			console.log("rowData.details:", rowData.details);   // CONTRACTDETAIL 데이터 디버깅
+			
 			$('#contract_cd').val(rowData.contract.contract_cd || '');
 			$('#account_cd').val(rowData.contract.account_cd || '');
 			$('#contract_ps').val(rowData.contract.contract_ps || '');
 			$('#contract_sd').val(rowData.contract.contract_sd || '');
-			$('#contract_ed').val(rowData.contract.contract_ed || '');
+			   $('#contract_ed').val(rowData.contract.contract_ed || '').prop('disabled', false); // 값 설정 후 활성화
 			$('#contract_am').val(rowData.contract.contract_am?.toLocaleString() || '');
 			$('#contract_mn').val(rowData.contract.contract_mn?.toLocaleString() || '');
 			$('#contract_st').val(rowData.contract.contract_st || '');
 			$('#contract_rm').val(rowData.contract.contract_rm || '');
 		
-		    // 상세 데이터 `productGrid`에 적용
-		    if (rowData.details && Array.isArray(rowData.details)) {
-		        productGrid.resetData(rowData.details);
-		    }
+			if (rowData.details && Array.isArray(rowData.details)) {
+			    // 첫 번째 상세 데이터의 납기일을 바인딩
+			    if (rowData.details.length > 0) {
+			        $('#detail_contract_ed').val(rowData.details[0].detail_contract_ed || '').prop('disabled', false); // 첫 번째 상세 데이터의 납기일 활성화
+			    }
+
+			    // 상세 데이터 `productGrid`에 적용
+			    productGrid.resetData(rowData.details);
+			}
 		}
 		
 		// 행 삭제 버튼 클릭 이벤트
@@ -404,9 +408,7 @@
 					
 	            	modalInstance.hide();
 	            	make_contract_grid();
-					if (mode === 'edit') {
-					    make_detail_grid({ contract_cd: contractDTO.contract_cd });
-					}
+				    make_detail_grid({ contract_cd: contractDTO.contract_cd });
 	            },
 	            error: function () {
 	            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
@@ -1007,7 +1009,18 @@
 	                { header: '단가', name: 'product_ct', align: 'center', sortable: true },
 	                { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
 	                { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
-	            ]
+	            ],
+				summary: {
+				    height: 40,
+				    position: 'bottom', // or 'top'
+				    columnContent: {
+				    	contract_ed: {
+				            template: (valueMap) => {
+				                return `총  ${valueMap.cnt} 건`
+				            }
+				        }
+				    }
+				}
 	        });
 			
 			// 수정 모달 호출을 위한 클릭 이벤트
@@ -1015,17 +1028,13 @@
 			    const rowKey = ev.rowKey;
 				const clickedRowData = detail_grid.getRow(rowKey);
 
-				if (!clickedRowData || !clickedRowData.contract_cd) {
-				    console.error("유효하지 않은 rowData입니다:", clickedRowData);
-				    Swal.fire({
-				        icon: 'error',
-				        title: '오류 발생!',
-				        text: '유효하지 않은 데이터를 선택했습니다.',
-				        confirmButtonText: '확인'
-				    });
-				    return;
+				// 클릭된 부분이 유효한 데이터인지 확인
+				if (!clickedRowData || Object.keys(clickedRowData).length === 0 || !clickedRowData.contract_cd) {
+				    console.warn("데이터가 없는 셀이 클릭되었습니다. 클릭된 데이터:", clickedRowData);
+				    return; // 데이터가 없는 경우 아무 작업도 하지 않음
 				}
 				
+				// 유효한 데이터가 있을 경우
 				console.log("수주 상세 클릭됨, contract_cd:", clickedRowData.contract_cd);
 
 				fetchContractDetails(clickedRowData.contract_cd);
@@ -1042,9 +1051,7 @@
 		
 	    console.log("선택된 수주 데이터:", rowData); // 디버깅 로그 추가
 	
-	    // 기존 데이터 초기화 후 AJAX 요청
-	    detail_grid.resetData([]);
-	
+		
 	    $.ajax({
 	        url: '/select_CONTRACTDETAIL',
 	        method: 'GET',
