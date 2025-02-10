@@ -50,9 +50,7 @@
 	// ------------------------------
 	
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
-		
+		setGridTheme();
 		make_grid();
 
 		// 창크기
@@ -67,26 +65,6 @@
 			}, 300);
 		});
 
-		// 검색필터
-		/*
-		(async () => {
-		    commonList = await getCommonList("USE", "USEYN", "WHTYPE");
-		    if(commonList) {
-		        filterConfig = [
-		            { key: 'warehouse_cd', label: '창고코드', type: 'text', placeholder: '창고코드 입력', col: 'col-2' },
-		            { key: 'warehouse_nm', label: '창고명', type: 'text', placeholder: '창고명 입력', col: 'col-2' },
-		            { key: 'warehouse_tp', label: '창고유형', type: 'select', list: setFilterList(commonList['WHTYPE']), col: 'col-2' },
-		            { key: 'warehouse_us', label: '사용여부', type: 'radio', list: setFilterList(commonList['USE']), col: 'col-auto' },
-		        ];
-		        
-		        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-		            // getGridList(filterValues);
-		        });
-				// 엑셀 버튼 추가
-				addExcelButton(grid, '창고관리');
-		    }
-		})();
-		*/
         initializeFilterModule('filterModule', filterConfig, (filterValues) => {
             getGridList(filterValues);
         });
@@ -139,16 +117,26 @@
 			}
 		});
 		
+		// 구역추가 이벤트
+		$(document).on('change', '#modal_warehouse_tp', function() {
+			let isProcess = $(this).val() === 'PROCESS';
+			$('#div_area').toggle(!isProcess);
+			if (isProcess && modal_grid) {
+				modal_grid.destroy();
+				modal_grid = null;
+			}
+			if (!isProcess && !modal_grid) {
+				make_modal_grid();
+			}
+		});
+		
 		// 창고 구역 행 추가
 		$(document).on('click', '#btn_area_add', function() {
-			modal_grid.appendRow(
-			        {
-			            "common_cc": '',
-			            "common_nm": '',
-			            "common_us": '',
-			        },
-			        { focus: true }
-			    );
+			if(!$('#modal_warehouse_tp').val()) {
+				showAlert('', 'warning', '창고 유형 체크', '창고 유형을 선택해주세요.');
+				return;
+			}
+			modal_grid.appendRow({}, { focus: true });
 		});
 		
 		// 그룹코드 삭제
@@ -224,7 +212,8 @@
 			columns : [
 				{header : '창고코드', name : 'warehouse_cd', sortable : true, filter: 'text'},
 				{header : '창고명', name : 'warehouse_nm', sortable : true, filter: 'text'},
-				{header : '창고유형', name : 'warehouse_tp', sortable : true, filter: 'text'},
+				{header : '창고유형', name : 'warehouse_tpnm', sortable : true, filter: 'text'},
+				{header : '창고유형코드', name : 'warehouse_tp', hidden: true},
 				{header : '구역수', name : 'wacount', align: 'center', filter: 'text'},
 				{header : '정렬순서', name : 'warehouse_in', align: 'center', sortable : true, filter: 'text'}, 
 				{header : '비고', name : 'warehouse_rm', sortable : true, filter: 'text'}, 
@@ -250,7 +239,7 @@
 		
 		grid.on('dblclick', function(ev) {
 			let row = grid.getRow(ev.rowKey);
-			make_modal_detail('update');
+			make_modal_detail('update', row['warehouse_tp']);
 			setModalInput(row);
 		});
 	}
@@ -263,7 +252,8 @@
 	}
 	
 	// 상세 모달
-	function make_modal_detail(process) {
+	function make_modal_detail(process, type) {
+		console.log('type', type);
 		let text = !process ? '등록' : '수정';
 		let title = `창고 ${text}`;
 		const div_modal = 'div_WAREHOUSE_modal';
@@ -287,7 +277,7 @@
 							</div>
 							<div class="row mb-3">
 								<label for="modal_warehouse_tp" class="col-2 col-form-label">창고유형<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_warehouse_tp" class="form-select"></select></div>
+								<div class="col-4"><select id="modal_warehouse_tp" class="form-select" ${!process ? '' : 'disabled'}></select></div>
 								<label for="modal_warehouse_in" class="col-2 col-form-label">정렬순서<span class="text-danger">*</span></label>
 								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_in"></div>
 							</div>
@@ -297,7 +287,7 @@
 								<label for="modal_warehouse_rm" class="col-2 col-form-label">비고</label>
 								<div class="col-4"><input type="text" class="form-control" id="modal_warehouse_rm"></div>
 							</div>
-							<div class="row mb-3">
+							<div class="row mb-3" id="div_area" ${type !== 'PROCESS' ? '' : 'style="display: none;"'}>
 								<div class="d-flex justify-content-between mb-1">
 									<div>구역지정<span class="text-danger">*</span></div>
 									<div>
@@ -329,7 +319,9 @@
 
 		
         modalElement.addEventListener('shown.bs.modal', function () {
-			make_modal_grid();
+        	if (type != 'PROCESS') {
+        		make_modal_grid();
+        	}
 			createSelectBox($('#modal_warehouse_tp'), whtypeList, '선택하세요.');
 			createSelectBox($('#modal_warehouse_us'), /*[[${commonList['USEYN']}]]*/ [], '선택하세요.');
 			$('#modal_warehouse_cd').mask('Z'.repeat(10), {
@@ -406,17 +398,15 @@
 						type: 'select',
 						options: {
 							listItems : [
-								{text : '사용', value : 'true'},
-								{text : '미사용', value : 'false'}
+								{text : '사용', value : true},
+								{text : '미사용', value : false}
 							]
 						}
 					},
 					validation: {
 						required: true,
 					},
-					formatter: function({value}) {
-						return value == true ? '사용' : value == false ? '미사용' : '';
-					}
+					formatter: ({value}) => ({ "true": '사용', "false": '미사용' }[value + ""] || '')
 				}, 
 				{header : '비고', name : 'warearea_rm', sortable : true, filter: 'text', editor: 'text',}
 			],
@@ -424,20 +414,13 @@
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			    	warehouse_us: {
+			    	warearea_rm: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }
 			        }
 			    }
 			},
-
-		});
-		
-		modal_grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			// make_modal_detail('update');
-			// setModalInput(row);
 		});
 	}
 	
@@ -463,6 +446,7 @@
 			
 			setModalValues(modalData);
 		} catch (error) {
+			console.log(error);
 			showAlert('', 'error', '조회 실패', error.msg);
 		}
 	}
@@ -482,12 +466,12 @@
 		    return;
 		}
 		
-		if(!modal_grid.getData().length) {
+		if(modal_grid && !modal_grid.getData().length) {
 			showAlert('', 'warning', '구역 확인', '최소 1개 이상의 구역을 등록해주세요.');
 			return;
 		}
 		
-		if(!gridValidationCheck(modal_grid)) {
+		if(modal_grid && !gridValidationCheck(modal_grid)) {
 		    return;
 		}
 
@@ -502,10 +486,11 @@
 			warehouse_us: modal_warehouse_us.val() == 1,
 			warehouse_rm: modal_warehouse_rm.val().trim(),
 		}
-		let wareareaList = modal_grid.getData();
 		let data = {
 			warehouse: warehouse,
-			wareareaList: wareareaList,
+	        ...($('#div_area').is(':visible') ? {
+				wareareaList: modal_grid.getData(),
+	        } : {}),
 		}
 		
 		try {
@@ -539,13 +524,16 @@
 
 	// 인풋 입력
 	function setModalValues(data) {
+		if(data['warehouse_tp'] != 'PROCESS') {
+			modal_grid.resetData(data.warearea);
+		}
 	    modal_warehouse_cd.val(data.warehouse_cd);
 	    modal_warehouse_nm.val(data.warehouse_nm);
 	    modal_warehouse_tp.val(data.warehouse_tp);
 	    modal_warehouse_in.val(data.warehouse_in);
 	    modal_warehouse_us.val(data.warehouse_us);
 	    modal_warehouse_rm.val(data.warehouse_rm);
-		modal_grid.resetData(data.warearea);
+
 	}
 	
 	// 검색 인풋 초기화
