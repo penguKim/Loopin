@@ -10,7 +10,7 @@
        z-index: 1051 !important; /* Bootstrap modal의 z-index보다 높게 설정 */
    }
    
-   .select2-data-1-uz36 {
+   .select2 select2-container select2-container--default {
    		width: 100%;
    }
 </style>
@@ -54,46 +54,45 @@
 					<form class="row g-3">
 						<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="" class="col-sm-3 col-from-label">공정코드</label>
+		                    	<label for="" class="col-sm-3 col-from-label">공정코드<span class="text-danger">*</span></label>
 		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_CD">
 		                    </div>
 		                   </div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="" class="col-sm-3 col-from-label">공정명</label>
+		                    	<label for="" class="col-sm-3 col-from-label">공정명<span class="text-danger">*</span></label>
 		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_NM">
 		                    </div>
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="" class="col-sm-3 col-from-label">품목분류</label>
-		                    	<select class="form-select" aria-label="PRODUCT_GC">
-			                      <option selected>Open this select menu</option>
-			                      <option value="1">One</option>
-			                      <option value="2">Two</option>
-			                      <option value="3">Three</option>
+		                    	<label for="" class="col-sm-3 col-from-label">품목분류<span class="text-danger">*</span></label>
+		                    	<select class="form-select" aria-label="PRODUCT_GC" id="PRODUCT_GC">
+			                      <option selected></option>
 			                    </select>
 		                    </div>
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="" class="col-sm-3 col-from-label">품목세부분류</label>
-		                    	<select class="form-select" aria-label="PRODUCT_CC">
-			                      <option selected>Open this select menu</option>
-			                      <option value="1">One</option>
-			                      <option value="2">Two</option>
-			                      <option value="3">Three</option>
+		                    	<label for="" class="col-sm-3 col-from-label">품목세부<span class="text-danger">*</span></label>
+		                    	<select class="form-select" aria-label="PRODUCT_CC" id="PRODUCT_CC">
 			                    </select>
 		                    </div>
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="modal_product_sz" class="col-3 col-form-label">설비<span class="text-danger">*</span></label>
-								<div class="col-9"><select id="PRODUCT_EQ" class="form-select" multiple>
-									<option selected>Open this select menu</option>
-			                      <option value="1">One</option>
-			                      <option value="2">Two</option>
-			                      <option value="3">Three</option>
+		                    	<label for="registermodal" class="col-3 col-form-label">적용품목<span class="text-danger">*</span></label>
+								<div class="col-9"><select id="PRODUCT_PD" class="form-select1" style="width: 100%;" multiple>
+								</select></div>
+		                    </div>
+		                  	</div>
+		                  	<div class="col-md-6">
+		                    <div class="input-group mb-3">
+		                    	<label for="registermodal" class="col-3 col-form-label">설비</label>
+								<div class="col-9"><select id="PRODUCT_EQ" class="form-select2" style="width: 100%;" multiple>
+			                      <option value="1">설비One</option>
+			                      <option value="2">설비Two</option>
+			                      <option value="3">설비Three</option>
 								</select></div>
 		                    	<!-- <label for="" class="col-sm-3 col-from-label">설비1</label>
 		                    	<select class="form-select" aria-label="PRODUCT_EQ" id="PRODUCT_EQ" multiple>
@@ -106,15 +105,14 @@
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
-		                    	<label for="" class="col-sm-3 col-from-label">사용여부</label>
+		                    	<label for="" class="col-sm-3 col-from-label">사용여부<span class="text-danger">*</span></label>
 		                    	<select class="form-select" aria-label="PRODUCT_US">
-			                      <option value="1">One</option>
-			                      <option value="2">Two</option>
-			                      <option value="3">Three</option>
+			                      <option value="0" selected>Y</option>
+			                      <option value="1">N</option>
 			                    </select>
 		                    </div>
 		                  	</div>
-		                  	<div class="col-md-12">
+		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
 		                    	<label for="" class="col-sm-3 col-from-label">비고</label>
 		                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_BG">
@@ -125,8 +123,8 @@
                  <div class="modal-footer d-flex justify-content-between">
                  	<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
                  	<div>
-                    <button type="btn_close" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-                    <button type="btn_modalregi" class="btn btn-primary">등록</button>
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                    <button type="button" class="btn btn-primary" id="btn_modalregi">등록</button>
                  	</div>
                  </div>
                </div>
@@ -139,8 +137,13 @@
 <script type="text/javascript">
 	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    const PRDTYPE = 'PRDTYPE'
+    let selgc = null;
+    let selcc = null;
 	
 	/* FETCH */
+	
+	// 처음 로딩
 	const fetchProcesslist = async () => {
 	  try {
 	  const response = await fetch('/selectpclist', {
@@ -165,6 +168,52 @@
 	
 	fetchProcesslist();
 	
+	// 모달 품목분류 패치
+	const fetchpdgclist = async (COMMON_GC) => {
+	  try {
+	  const response = await fetch(`/selectpdgclist?COMMOM_GC=${COMMON_GC}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // [csrfHeader]: csrfToken,
+      },
+	    });
+	    const data = await response.json();
+	    console.log(data);
+	    if(COMMON_GC === PRDTYPE){
+		    updateSelectOptions(data);
+	    }else{
+		    updatePDGCSelectOptions(data);
+	    }
+	  } catch (error) {
+	    console.error('품목분류 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	// 품목분류 셀렉트 업데이트
+	const updateSelectOptions = (options) => {
+	  const selectElement = document.querySelector('#PRODUCT_GC');
+	  
+	// 기존 옵션을 모두 삭제
+	  selectElement.innerHTML = '<option selected>품목분류</option>';
+	  
+	  // 새로운 옵션 추가
+	  options.forEach(option => {
+	    const optionElement = document.createElement('option');
+	    optionElement.value = option.COMMON_CC;
+	    optionElement.textContent = option.COMMON_NM;
+	    selectElement.appendChild(optionElement);
+	  });
+	};
+	
+      //////////////
+     // 모달 설정 //
+	///////////////
 	
 	const btn_regi = document.getElementById('btn_register');
 	const modal = document.getElementById('registermodal');
@@ -180,15 +229,135 @@
 	    $('#PRODUCT_EQ').select2({
 	        placeholder: '설비를 선택하세요',
 	        allowClear: true,
-	        dropdownParent: $('#registermodal'),  // 드롭다운을 모달 내에 올바르게 표시
+	        dropdownParent: $('#registermodal'),
 	        multiple:true,
 	    });
 		
-	})
+	    $('#PRODUCT_PD').select2({
+	        placeholder: '품목을 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+		
+	});
 	
+	//품목분류 선택
+	const pdgChange = async () => {
+		const gcvalue = document.querySelector('#PRODUCT_GC').value;
+		console.log('품목선택',gcvalue);
+		console.log('품목분류선택',typeof gcvalue);
+		selgc = gcvalue;
+		fetchpdgclist(gcvalue);
+	};
 	
+   const updatePDGCSelectOptions = (options) => {
+ 	  const selectElement = document.querySelector('#PRODUCT_CC');
+	    
+	  selectElement.innerHTML = '<option selected>품목세부</option>';
+	    
+	  options.forEach(option => {
+	    const optionElement = document.createElement('option');
+	    optionElement.value = option.COMMON_CC;
+	    optionElement.textContent = option.COMMON_NM;
+	    selectElement.appendChild(optionElement);
+	  });
+    };
 	
+    //품목세부 선택
+	const pdcChange = async () => {
+		const ccvalue = document.querySelector('#PRODUCT_CC').value;
+		console.log('세부품목선택',ccvalue);
+		console.log('세부품목분류선택',typeof ccvalue);
+		selcc = ccvalue;
+		console.log('이러면?!',selgc);
+		try {
+		
+		  const response = await fetch(`/selectpdcclist?pdcc=${selcc}&pdgc=${selgc}`, {
+	      method: 'GET',
+	      headers: {
+	        'Content-Type': 'application/json',
+	        // [csrfHeader]: csrfToken,
+	      },
+    	});
+		  
+	    const ccdata = await response.json();
+	    console.log('ccdata',ccdata);
+	    if(selgc === 'HALFPRO' || selgc === 'PRODUCT' ){
+			updatePDSelectOptions(ccdata);
+	    }else{
+			updatePDSelectOptions2(ccdata);
+	    }
+	    
+	  } catch (error) {
+	    console.error('세부품목 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	};
 	
+	 const updatePDSelectOptions = (options) => {
+	    const selectElement = document.querySelector('#PRODUCT_PD');
+	    
+	    selectElement.innerHTML = '<option></option>';
+	    
+	    options.forEach(option => {
+	      const optionElement = document.createElement('option');
+	      optionElement.value = option.PRODUCT_CD;
+	      optionElement.textContent = option.PRODUCT_NM;
+	      selectElement.appendChild(optionElement);
+	    });
+	  };
+	  
+	 const updatePDSelectOptions2 = (options) => {
+	    const selectElement = document.querySelector('#PRODUCT_PD');
+	    
+	    selectElement.innerHTML = '<option></option>';
+	    
+	    options.forEach(option => {
+	      const optionElement = document.createElement('option');
+	      optionElement.value = option.MATERIAL_CD;
+	      optionElement.textContent = option.MATERIAL_NM;
+	      selectElement.appendChild(optionElement);
+	    });
+	  };
+	
+	  const pdChange = async () => {
+			const pdvalue = document.querySelector('#PRODUCT_PD').value;
+			console.log('세부품목선택',pdvalue);
+			console.log('세부품목분류선택',typeof pdvalue);
+			try {
+			// 설비 가져와서 뿌리기 + 품목 여러개일때 어떻게 들고오는지 확인
+			  const response = await fetch(`/?pd=${pdvalue}`, {
+		      method: 'GET',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        // [csrfHeader]: csrfToken,
+		      },
+	    	});
+			  
+		    const eqdata = await response.json();
+		    console.log('ccdata',eqdata);
+		    
+		  } catch (error) {
+		    console.error('세부품목 데이터를 불러오는데 실패했습니다.', error);
+		    swal.fire({
+		      title: "데이터 로드에 실패했습니다.",
+		      text: "관리자에게 문의하세요.",
+		      icon: "error",
+		    });
+		  }
+		};
+	  
+	document.querySelector('#PRODUCT_GC').addEventListener('change', pdgChange);
+	document.querySelector('#PRODUCT_CC').addEventListener('change', pdcChange);
+	document.querySelector('#PRODUCT_PD').addEventListener('change', pdChange);
+	
+	fetchpdgclist(PRDTYPE);
+// 모달 초기화 버튼 & 닫으면 내용 초기화 	
       //////////////////
      // 카드 크기 설정 //
 	//////////////////

@@ -15,4 +15,62 @@
 		FROM PROCESS pc
 	</select>
 
+	<select id="selectpdgclist" resultType="map">
+		<choose>
+	    <when test="COMMON_GC == 'PRDTYPE'">
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM 
+	      FROM COMMON_CODE cc 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	      ORDER BY cc.COMMON_NM
+	    </when>
+	    
+	    <when test="COMMON_GC == 'MATERIALS' or COMMON_GC == 'SUBMAT'">
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM 
+	      FROM COMMON_CODE cc 
+	      JOIN MATERIAL mt ON cc.COMMON_CC = mt.MATERIAL_CC 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	    </when>
+	    
+	    <otherwise>
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM  
+	      FROM COMMON_CODE cc 
+	      JOIN PRODUCT pd ON cc.COMMON_CC = pd.PRODUCT_CC 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	    </otherwise>
+	  </choose>
+	</select>
+	
+	<select id="selectpdcclist" resultType="map">
+		  SELECT DISTINCT
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        mt.MATERIAL_CD, mt.MATERIAL_NM
+		      </when>
+		      <otherwise>
+		        pd.PRODUCT_CD, pd.PRODUCT_NM
+		      </otherwise>
+		    </choose>
+		  FROM 
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        MATERIAL mt
+		      </when>
+		      <otherwise>
+		        PRODUCT pd
+		      </otherwise>
+		    </choose>
+		  WHERE 
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        mt.MATERIAL_CC = #{pdcc}
+		      </when>
+		      <otherwise>
+		        pd.PRODUCT_CC = #{pdcc}
+		      </otherwise>
+		    </choose>
+	</select>
+
 </mapper>
