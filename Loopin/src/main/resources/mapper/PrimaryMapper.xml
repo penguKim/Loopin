@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PrimaryMapper">
+<!-- //////////////////////////////////////////////////////////// 창고 관리 //////////////////////////////////////////////////////////// -->
+	<!-- 창고 조회 -->
+	<select id="select_WAREHOUSE_list" resultType="Warehouse">
+		WITH WAREAREALIST AS (
+			SELECT WAREHOUSE_CD, COUNT(*) WACOUNT
+			  FROM WAREAREA 
+			 GROUP BY WAREHOUSE_CD
+		)
+		SELECT WH.WAREHOUSE_CD, WH.WAREHOUSE_NM, CC.COMMON_NM WAREHOUSE_TP, WH.WAREHOUSE_IN, 
+			   WH.WAREHOUSE_RM, WH.WAREHOUSE_US, NVL(WA.WACOUNT, 0) WACOUNT
+		  FROM WAREHOUSE WH
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC ='WHTYPE' AND CC.COMMON_CC = WH.WAREHOUSE_TP
+		  LEFT OUTER JOIN WAREAREALIST WA ON WA.WAREHOUSE_CD = WH.WAREHOUSE_CD
+		 WHERE 1 = 1
+		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND WH.WAREHOUSE_CD LIKE '%${filter.warehouse_cd}%'</if>
+		 <if test="filter.warehouse_nm != null and filter.warehouse_nm != ''">AND WH.WAREHOUSE_NM LIKE '%${filter.warehouse_nm}%'</if>
+		 <if test="filter.warehouse_tp != null and filter.warehouse_tp != ''">AND WH.WAREHOUSE_TP = #{filter.warehouse_tp}</if>
+		 <if test="filter.warehouse_us != null and filter.warehouse_us != 'ALL'">AND WH.WAREHOUSE_US = #{filter.warehouse_us}</if>
+		 ORDER BY WH.WAREHOUSE_IN
+	</select>
+<!-- //////////////////////////////////////////////////////////// 제품 관리 //////////////////////////////////////////////////////////// -->
+	<!-- 제품 조회 -->
+	<select id="select_PRODUCT_list" resultType="Product">
+		SELECT PR.PRODUCT_CD, PR.PRODUCT_GC, CC2.COMMON_NM PRODUCT_GN, PR.PRODUCT_CC, CC3.COMMON_NM PRODUCT_CN, PR.PRODUCT_NM,
+			   CASE WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT PR.PRODUCT_SZ, ', ') WITHIN GROUP (ORDER BY PR.PRODUCT_SZ) END AS PRODUCT_SZ,
+	    	   CASE WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT PR.PRODUCT_CR, ', ') WITHIN GROUP (ORDER BY PRODUCT_CR) END AS PRODUCT_CR,
+	    	   CASE  WHEN PR.PRODUCT_GC IN ('MATERIALS', 'SUBMAT') THEN NULL 
+	           ELSE LISTAGG(DISTINCT CC.COMMON_NM, ', ') WITHIN GROUP (ORDER BY CC.COMMON_NM) END AS PRODUCT_CRNM,
+		       PR.PRODUCT_GD, PR.PRODUCT_UN, PR.PRODUCT_WH, WH.WAREHOUSE_NM, PR.PRODUCT_PR, PR.PRODUCT_PC, PR.PRODUCT_RM, PR.PRODUCT_US
+		  FROM PRODUCT PR
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'COLOR' AND PR.PRODUCT_CR = CC.COMMON_CC
+		  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND PR.PRODUCT_GC = CC2.COMMON_CC
+		  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PR.PRODUCT_GC AND PR.PRODUCT_CC = CC3.COMMON_CC
+		  LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = PR.PRODUCT_WH
+		 WHERE 1 = 1
+		 <if test="filter.product_cd != null and filter.product_cd != ''">AND PR.PRODUCT_CD LIKE UPPER('%${filter.product_cd}%')</if>
+		 <if test="filter.product_nm != null and filter.product_nm != ''">AND PR.PRODUCT_NM LIKE '%${filter.product_nm}%'</if>
+		 <if test="filter.product_gc != null and filter.product_gc != ''">AND PR.PRODUCT_GC = #{filter.product_gc}</if>
+		 <if test="filter.product_cc != null and filter.product_cc != ''">AND PR.PRODUCT_CC = #{filter.product_cc}</if>
+		 <if test="filter.product_wh != null and filter.product_wh != ''">AND PR.PRODUCT_WH = #{filter.product_wh}</if>
+		 <if test="filter.product_us != null and filter.product_us != 'ALL'">AND PR.PRODUCT_US = #{filter.product_us}</if>
+		 GROUP BY PR.PRODUCT_CD, PR.PRODUCT_GC, CC2.COMMON_NM, PR.PRODUCT_CC, CC3.COMMON_NM, PR.PRODUCT_NM, PR.PRODUCT_GD, 
+		 		  PR.PRODUCT_UN, PR.PRODUCT_WH, WH.WAREHOUSE_NM, PR.PRODUCT_PR, PR.PRODUCT_PC, PR.PRODUCT_RM, PR.PRODUCT_US
+		 ORDER BY PR.PRODUCT_NM
+	</select>
+	
+	<!-- 자재 조회 -->
+	<select id="select_MATERIAL_list" resultType="Material">
+ 		SELECT MR.MATERIAL_CD, MR.MATERIAL_NM, MR.MATERIAL_GC, MR.MATERIAL_CC, CC.COMMON_NM MATERIAL_CN, MR.MATERIAL_UN, 
+ 			   MR.MATERIAL_WH, WH.WAREHOUSE_NM, MR.MATERIAL_PR, MR.MATERIAL_PC, MR.MATERIAL_RM, MR.MATERIAL_US 
+		  FROM MATERIAL MR
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = MR.MATERIAL_GC AND MR.MATERIAL_CC = CC.COMMON_CC
+		  LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = MR.MATERIAL_WH
+		 WHERE 1 = 1
+ 		 <if test="filter.product_cd != null and filter.product_cd != ''">AND MR.MATERIAL_CD LIKE UPPER('%${filter.product_cd}%')</if>
+		 <if test="filter.product_nm != null and filter.product_nm != ''">AND MR.MATERIAL_NM LIKE '%${filter.product_nm}%'</if>
+		 <if test="filter.product_gc != null and filter.product_gc != ''">AND MR.MATERIAL_GC = #{filter.product_gc}</if>
+		 <if test="filter.product_cc != null and filter.product_cc != ''">AND MR.MATERIAL_CC = #{filter.product_cc}</if>
+		 <if test="filter.product_wh != null and filter.product_wh != ''">AND MR.MATERIAL_WH = #{filter.product_wh}</if>
+		 <if test="filter.product_us != null and filter.product_us != 'ALL'">AND MR.MATERIAL_US = #{filter.product_us}</if>
+	</select>
+	
+	<!-- 창고 목록 조회 -->
+	<resultMap id="warehouseMap" type="map">
+	    <result column="WAREHOUSE_CD" property="common_cc"/>
+	    <result column="WAREHOUSE_NM" property="common_nm"/>
+	</resultMap>
+	<select id="select_WAREHOUSE_code" resultMap="warehouseMap">
+	    SELECT WAREHOUSE_CD, WAREHOUSE_NM
+	    FROM WAREHOUSE
+	    WHERE WAREHOUSE_US = 1
+	    ORDER BY WAREHOUSE_IN
+	</select>
+
+	<!-- 품목 사진 조회 -->
+	<select id="select_PRODUCT_PC" resultType="Product">
+		SELECT PR.PRODUCT_CD, PR.PRODUCT_PC
+		FROM PRODUCT PR
+		WHERE PR.PRODUCT_CD = #{product_cd}
+		GROUP BY PR.PRODUCT_CD, PR.PRODUCT_PC
+	</select>
+	
+	<!-- 자재 사진 조회 -->
+	<select id="select_MATERIAL_PC" resultType="Material">
+		SELECT MATERIAL_CD, MATERIAL_PC
+		FROM MATERIAL
+		WHERE MATERIAL_CD = #{material_cd}
+	</select>
+</mapper>

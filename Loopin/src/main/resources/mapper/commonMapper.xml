@@ -9,10 +9,16 @@
         <choose>
         	<when test="code == null or code == ''">
 		        WHERE COMMON_GC = '00'
+	            <if test="filter != null and filter != ''">
+	                AND (COMMON_CC LIKE '%${filter}%' OR COMMON_NM LIKE '%${filter}%')
+	            </if>
 		        ORDER BY COMMON_NM
         	</when>
         	<otherwise>
         		WHERE COMMON_GC = #{code}
+	            <if test="filter != null and filter != ''">
+	                AND (COMMON_CC LIKE '%${filter}%' OR COMMON_NM LIKE '%${filter}%')
+	            </if>
 		        ORDER BY COMMON_IN
         	</otherwise>
         </choose>

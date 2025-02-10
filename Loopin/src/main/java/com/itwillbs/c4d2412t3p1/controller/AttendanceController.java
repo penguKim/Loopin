@@ -232,6 +232,8 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		
+		
+		
 	}
 	
 	@LogActivity(value = "입력", action = "회사휴일등록")
@@ -309,7 +311,7 @@ public class AttendanceController {
 	    return response;
 	}
 	
-	/* TODO
+	
 	@ResponseBody
 	@PostMapping("/select_APPROVAL_ANNUAL")
 	public ResponseEntity<Map<String, Object>> select_APPROVAL_ANNUAL(@RequestBody Map<String, Object> params) {
@@ -322,8 +324,8 @@ public class AttendanceController {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			// TODO
-//			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
+			
+			List<Map<String, Object>> annuals = attendanceService.select_APPROVAL_ANNUAL(params);
 			response.put("result", true);
 			response.put("data", annuals);
 			
@@ -339,7 +341,14 @@ public class AttendanceController {
 	@PostMapping("/select_calendar_ANNUAL")
 	public ResponseEntity<Map<String, Object>> select_calendar_ANNUAL(@RequestBody Map<String, Object> params) {
 		
+		log.info("type"+params);
+//		
+//		if(type == 1) {
+//			params.put("type", 1);
+//		}
+		
 		EmployeeDetails employee = commuteService.getEmployee();
+		
 		List<Map<String, Object>> holidayList = attendanceService.select_period_HOLIDAY((String)params.get("holiday_dt1"),(String)params.get("holiday_dt2"));
 		
 		
@@ -365,14 +374,14 @@ public class AttendanceController {
 	
 	@ResponseBody
 	@GetMapping("/select_detail_ANNUAL")
-	public ResponseEntity<Map<String, Object>> select_detail_ANNUAL(@RequestParam("date") String date) {
+	public ResponseEntity<Map<String, Object>> select_detail_ANNUAL(@RequestParam Map<String, Object> params) {
 		
 		EmployeeDetails employee = commuteService.getEmployee();
-		Map<String, Object> params = new HashMap<>();
 		
 		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN"));
 		params.put("employee_cd", employee.getEmployee_cd());		
-		params.put("date", date);		
+		
+		log.info("type"+params);
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
@@ -381,7 +390,6 @@ public class AttendanceController {
 			data.put("contents", list);
 			response.put("result", true);
 			response.put("data", data);
-			//response.put("holidayList", holidayList);
 			return ResponseEntity.ok(response);
 			
 		} catch (Exception e) {
@@ -391,5 +399,5 @@ public class AttendanceController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-	*/
+	
 }

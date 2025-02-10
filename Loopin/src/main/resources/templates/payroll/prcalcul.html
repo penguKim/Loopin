@@ -146,7 +146,19 @@ const grid = new tui.Grid({
 	scrollX: true,
 	scrollY: true,
 	columns: [
-		{header: '기본급', name: 'BS', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
+		{header: '기본급', 
+		name: 'BS', 
+		resizable: true, 
+		editor: 'text',validation:{required:true,dataType:'number',min:0},
+		formatter: function(value){
+			if (value.value != null) {
+                // value.value가 숫자가 아니라면 숫자로 변환
+                const numericValue = Number(value.value);
+                return `${numericValue.toLocaleString('kr-KR')}원`;
+            }
+            return '';
+		},
+		},
 		{header: '근무시간', name: 'workingtime', resizable: true, hidden: true},
 		{header: '연장시간', name: 'overworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
 		{header: '야근시간', name: 'nightworkingtime', resizable: true, editor: 'text',validation:{required:true,dataType:'number',min:0}},
@@ -186,63 +198,138 @@ const grid_cal = new tui.Grid({
      columns: [
 			{
 				header : '실지급액',
-				name : 'rs'
+				name : 'rs',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '총지급액',
-				name : 'ta'
+				name : 'ta',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '기본급',
-				name : 'BS'
+				name : 'BS',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '식대',
-				name : 'B_MT'
+				name : 'B_MT',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '연장수당',
-				name : 'B_OT'
+				name : 'B_OT',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '야근수당',
-				name : 'B_NA'
+				name : 'B_NA',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '주말근무수당',
-				name : 'B_WA'
+				name : 'B_WA',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '휴일수당',
-				name : 'B_HA'
+				name : 'B_HA',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '연차수당',
-				name : 'B_RL'
+				name : 'B_RL',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '상여',
-				name : 'B_BN'
+				name : 'B_BN',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '총공제액',
-				name : 'td'
+				name : 'td',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '국민연금',
-				name : 'D_GM'
+				name : 'D_GM',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '고용보험',
-				name : 'D_GY'
+				name : 'D_GY',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '건강보험',
-				name : 'D_GG'
+				name : 'D_GG',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
 			{
 				header : '장기요양',
-				name : 'D_LG'
+				name : 'D_LG',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
 			}, 
      ],
 	 columnOptions:{

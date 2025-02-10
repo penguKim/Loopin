@@ -1,15 +1,11 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -36,6 +32,7 @@ import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
+import com.itwillbs.c4d2412t3p1.service.UtilService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import lombok.RequiredArgsConstructor;
@@ -48,8 +45,8 @@ import oracle.jdbc.proxy.annotation.Post;
 public class CommuteController {
 	
 	private final CommuteService commuteService;
-	private final CommonService commonService;
 	private final EmployeeService employeeService;
+	private final UtilService util;
 	
 
 	// 출퇴근 기록부 --------------------------------------------
@@ -64,8 +61,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_calendar")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_calendar(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
@@ -90,8 +87,8 @@ public class CommuteController {
 	@ResponseBody
 	@GetMapping("/select_COMMUTE_detail")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_detail(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin, commute_wd);
 		
@@ -109,7 +106,7 @@ public class CommuteController {
 	@GetMapping("/select_EMPLOYEE_grid")
 	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_grid(@RequestParam(name = "commute_wd", defaultValue = "") String commute_wd) {
 		Map<String, Object> response = new HashMap<>(); 
-		boolean isEmp = commuteService.isAuthority("EMPLOYEE");
+		boolean isEmp = util.isAuthority("EMPLOYEE");
 		if(isEmp) {
 	        response.put("result", false);
 	        response.put("message", "관리자 권한이 필요합니다.");
@@ -131,7 +128,7 @@ public class CommuteController {
 	@PostMapping("/insert_COMMUTE_modal")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_modal(@RequestBody CommuteRequestDTO commuteRequest) {
 		CommuteDTO employee = commuteRequest.getCommute();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
@@ -163,8 +160,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/select_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
@@ -184,8 +181,8 @@ public class CommuteController {
 	@ResponseBody
 	@PostMapping("/insert_COMMUTE_grid")
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
-		EmployeeDetails employee = commuteService.getEmployee();
-		boolean isAdmin = commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		EmployeeDetails employee = util.getEmployee();
+		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		Map<String, Object> response = new HashMap<>(); 
@@ -207,26 +204,6 @@ public class CommuteController {
 		}
 	}
 	
-	
-	@ResponseBody
-	@PostMapping("/select_COMMON_list")
-	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody List<String> list) {
-		
-		Map<String, Object> response = new HashMap<>(); 
-		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(list);
-		log.info(commonList.toString());
-
-		if(commonList.size() > 0) {
-			response.put("result", true);
-			response.put("list", commonList);
-			
-			return ResponseEntity.ok(response);
-		} else {
-			response.put("result", false);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-		}
-		
-	}
 	
 	// 근로 관리 --------------------------------------------
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_AT_ADMIN')")
@@ -353,7 +330,7 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE(@RequestBody CommuteRequestDTO commuteRequest) {
 		boolean isAttendance = commuteRequest.isAttendance(); // 출근여부
 		Map<String, Object> response = new HashMap<>();
-		EmployeeDetails employeeDetails = commuteService.getEmployee();
+		EmployeeDetails employeeDetails = util.getEmployee();
 		String employee_cd = employeeDetails.getEmployee_cd();
 		Employee employee = employeeService.findEmployeeById(employee_cd);
 		String workinghour_id = employee.getWorkinghour_id();
@@ -405,23 +382,35 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_chartList(@RequestBody CommuteRequestDTO commuteRequest) {
 		CommuteFilterRequest filter = commuteRequest.getCommuteFilter();
 		Map<String, Object> response = new HashMap<>();
+		String sort = "";
 		
-		System.out.println("---------------------컨트롤러");
 		try {
-//			List<CommuteDTO> commuteChart = commuteService.select_COMMUTE_commuteChart(filter);
-//			response.put("commuteList", commuteChart);
 			
-			
-	        List<CommuteDTO> commuteData = commuteService.select_COMMUTE_commuteChart(filter);
-	        Map<String, Object> chartData = new HashMap<>();
+			// 일자별 근로시간 차트 ------------------------------------------
+	        List<CommuteDTO> dayCommuteData = commuteService.select_COMMUTE_dayCommuteChart(filter);
+	        Map<String, Object> dayCommuteChart = new HashMap<>();
 	        
-	        // categories
-	        List<String> categories = commuteData.stream()
+	        List<String> dayCommuteCategories = dayCommuteData.stream()
 	            .map(CommuteDTO::getCommute_wd)
 	            .collect(Collectors.toList());
 	            
-	        // series - 근무 유형별 데이터 한번에 생성
-	        List<Map<String, Object>> series = Arrays.asList(
+	        List<Map<String, Object>> dayCommuteSeries = Arrays.asList(
+        		commuteService.createSeriesData("일반근무", CommuteDTO::getCommute_ig, dayCommuteData),
+        		commuteService.createSeriesData("연장근무", CommuteDTO::getCommute_eg, dayCommuteData),
+        		commuteService.createSeriesData("야간근무", CommuteDTO::getCommute_yg, dayCommuteData),
+        		commuteService.createSeriesData("주말근무", CommuteDTO::getCommute_jg, dayCommuteData),
+        		commuteService.createSeriesData("휴일근무", CommuteDTO::getCommute_hg, dayCommuteData)
+	        );
+	        
+	        dayCommuteChart.put("categories", dayCommuteCategories);
+	        dayCommuteChart.put("series", dayCommuteSeries);
+	        response.put("dayCommuteChart", dayCommuteChart);
+	        
+	        // 근로시간 차트 ------------------------------------------	
+	        List<CommuteDTO> commuteData = commuteService.select_COMMUTE_commuteChart(filter);
+	        Map<String, Object> commuteChart = new HashMap<>();
+	        List<String> commuteCategories = Arrays.asList("근무시간");		            
+	        List<Map<String, Object>> commuteSeries = Arrays.asList(
         		commuteService.createSeriesData("일반근무", CommuteDTO::getCommute_ig, commuteData),
         		commuteService.createSeriesData("연장근무", CommuteDTO::getCommute_eg, commuteData),
         		commuteService.createSeriesData("야간근무", CommuteDTO::getCommute_yg, commuteData),
@@ -429,12 +418,46 @@ public class CommuteController {
         		commuteService.createSeriesData("휴일근무", CommuteDTO::getCommute_hg, commuteData)
 	        );
 	        
-	        chartData.put("categories", categories);
-	        chartData.put("series", series);
-	        response.put("chartData", chartData);
-			
-			
-			
+	        commuteChart.put("categories", commuteCategories);
+	        commuteChart.put("series", commuteSeries);
+	        response.put("commuteChart", commuteChart);
+	        
+	        // 직급별 바 차트 ------------------------------------------
+	        sort = "POSITION";
+	        List<CommuteDTO> gradeData = commuteService.select_COMMUTE_barChart(sort, filter);
+	        Map<String, Object> gradeChart = new HashMap<>();
+	        
+	        List<String> gradeCategories = gradeData.stream()
+	            .map(CommuteDTO::getEmployee_gd)
+	            .collect(Collectors.toList());
+	            
+	        List<Map<String, Object>> gradeSeries = Arrays.asList(
+	        		commuteService.createSeriesData("정상출근", CommuteDTO::getNormal, gradeData),
+	        		commuteService.createSeriesData("지각", CommuteDTO::getLate, gradeData)
+	        );
+	        
+	        gradeChart.put("categories", gradeCategories);
+	        gradeChart.put("series", gradeSeries);
+	        response.put("gradeChart", gradeChart);
+	        
+	        // 부서별 바 차트 ------------------------------------------
+	        sort = "DEPARTMENT";
+	        List<CommuteDTO> deptData = commuteService.select_COMMUTE_barChart(sort, filter);
+	        Map<String, Object> deptChart = new HashMap<>();
+	        System.out.println("DEPARTMENT : " + deptData.toString());
+	        List<String> deptCategories = deptData.stream()
+	            .map(CommuteDTO::getEmployee_gd)
+	            .collect(Collectors.toList());
+	            
+	        List<Map<String, Object>> deptSeries = Arrays.asList(
+	        		commuteService.createSeriesData("정상출근", CommuteDTO::getNormal, deptData),
+	        		commuteService.createSeriesData("지각", CommuteDTO::getLate, deptData)
+	        );
+	        
+	        deptChart.put("categories", deptCategories);
+	        deptChart.put("series", deptSeries);
+	        response.put("deptChart", deptChart);
+	        
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("msg", e.getMessage());

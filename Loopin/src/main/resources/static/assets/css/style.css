@@ -1241,3 +1241,105 @@ h6 {
   font-size: 13px;
   color: #012970;
 }
+
+.toast-grid-container {
+    width: 100%;
+    height: auto;
+    /* 그리드 컨테이너가 화면 크기에 맞게 크기를 조정 */
+}
+
+
+.btn-primary {
+    --bs-btn-color: #fff;
+    --bs-btn-bg: #997af3;
+    --bs-btn-border-color: #997af3;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #774df1;
+    --bs-btn-hover-border-color: #774df1;
+    --bs-btn-focus-shadow-rgb: 49, 132, 253;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #774df1;
+    --bs-btn-active-border-color: #774df1;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #b9a8e6;
+    --bs-btn-disabled-border-color: #b9a8e6;
+}
+
+.btn-danger {
+   -bs-btn-color: #fff;
+    --bs-btn-bg: #f55d6c;
+    --bs-btn-border-color: #f55d6c;
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: #e53546;
+    --bs-btn-hover-border-color: #e53546;
+    --bs-btn-focus-shadow-rgb: 225, 83, 97;
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: #e53546;
+    --bs-btn-active-border-color: #e53546;
+    --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    --bs-btn-disabled-color: #fff;
+    --bs-btn-disabled-bg: #dc3545;
+    --bs-btn-disabled-border-color: #dc3545;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* 반투명 배경 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/*--------------------------------------------------------------
+# 탭버튼
+--------------------------------------------------------------*/
+.nav-pills .nav-link.active {
+    background-color: #997af3;
+}
+.nav-pills .nav-link.active:hover {
+    background-color: #774df1;
+}
+.nav-link, .nav-link:hover {
+	color: #000;
+}
+.nav-link:hover {
+    color: #997af3;
+}
+
+/*--------------------------------------------------------------
+# 이미지파일 관련
+--------------------------------------------------------------*/
+.photoContainer {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    border-radius: 8px;
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: 2px dashed #ccc;
+}
+
+.photoPreview {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    object-fit: cover;
+    display: none;
+}
+
+.uploadText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+    font-weight: bold;
+    color: #aaa;
+    text-align: center;
+}

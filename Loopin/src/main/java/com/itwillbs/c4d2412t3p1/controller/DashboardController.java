@@ -1,11 +1,18 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
@@ -64,6 +71,25 @@ public class DashboardController {
 	    model.addAttribute("isLeaveWork", isLeaveWork);
 		
 		return "/index";
+	}
+	
+	@GetMapping("/select_EMPLOYEE_APPROVAL")
+	public ResponseEntity<Map<String, Object>> select_EMPLOYEE_APPROVAL() {
+		Map<String, Object> params = new HashMap<>();
+		EmployeeDetails employee = commuteService.getEmployee();
+		params.put("isAdmin", commuteService.isAuthority("SYS_ADMIN", "AT_ADMIN", "PR_ADMIN", "HR_ADMIN"));
+		params.put("currentCd", employee.getEmployee_cd());
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> approval = dashboardService.select_EMPLOYEE_APPROVAL(params);
+			response.put("data", approval);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
 	}
 
 

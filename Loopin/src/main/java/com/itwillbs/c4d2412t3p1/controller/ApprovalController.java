@@ -60,21 +60,21 @@ public class ApprovalController {
 	public ResponseEntity<List<Map<String, Object>>> getApprovalData(@RequestParam("tabType") String tabType) {
 		try {
 			List<Map<String, Object>> response = approvalService.getApprovalsForTab(tabType);
+			log.info("%%%%%%%%%" + response.toString());
 			return ResponseEntity.ok(response);
 		} catch (IllegalArgumentException e) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 		}
 	}
 
-	@PostMapping("/insert_APPROVAL")
-	public ResponseEntity<Map<String, String>> insert_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO // DTO
-																													// 받기
-	) {
+	@PostMapping("/save_APPROVAL")
+	public ResponseEntity<Map<String, String>> save_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO) {
 		Map<String, String> response = new HashMap<>();
 
 		try {
 			// 데이터 저장 처리
-			approvalService.handleApprovalInsert(approvalDTO);
+			log.info("approvalDTO : " +  approvalDTO);
+			approvalService.handleApproval(approvalDTO);
 
 			response.put("message", "데이터가 성공적으로 저장되었습니다.");
 			return ResponseEntity.ok(response); // JSON 형식으로 반환
@@ -108,32 +108,31 @@ public class ApprovalController {
 
 	@PostMapping("/update_approval_process")
 	public ResponseEntity<String> update_approval_process(@RequestBody Map<String, String> request) {
-		System.out.println("요청 데이터: " + request);
 		EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication()
 				.getPrincipal();
 
 		String currentUserCd = employeeDetails.getEmployee_cd();
 		String approvalCd = request.get("approvalCd");
-        String actionType = request.get("actionType");
+		String actionType = request.get("actionType");
 
-        if (approvalCd == null || actionType == null || currentUserCd == null) {
-            return ResponseEntity.badRequest().body("결재 코드, 동작 유형 및 사용자 ID는 필수입니다.");
-        }
+		if (approvalCd == null || actionType == null || currentUserCd == null) {
+			return ResponseEntity.badRequest().body("결재 코드, 동작 유형 및 사용자 ID는 필수입니다.");
+		}
 
-        try {
-            if ("approve".equalsIgnoreCase(actionType)) {
-                approvalService.processApproval(approvalCd, currentUserCd, true); // 승인 처리
-            } else if ("reject".equalsIgnoreCase(actionType)) {
-                approvalService.processApproval(approvalCd, currentUserCd, false); // 반려 처리
-            } else {
-                return ResponseEntity.badRequest().body("올바르지 않은 동작 유형입니다.");
-            }
+		try {
+			if ("approve".equalsIgnoreCase(actionType)) {
+				approvalService.processApproval(approvalCd, currentUserCd, true); // 승인 처리
+			} else if ("reject".equalsIgnoreCase(actionType)) {
+				approvalService.processApproval(approvalCd, currentUserCd, false); // 반려 처리
+			} else {
+				return ResponseEntity.badRequest().body("올바르지 않은 동작 유형입니다.");
+			}
 
-            return ResponseEntity.ok("결재가 " + ("approve".equalsIgnoreCase(actionType) ? "승인" : "반려") + "되었습니다.");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생: " + e.getMessage());
-        }
-    }
+			return ResponseEntity.ok("결재가 " + ("approve".equalsIgnoreCase(actionType) ? "승인" : "반려") + "되었습니다.");
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("오류 발생: " + e.getMessage());
+		}
+	}
 
 //	@PostMapping("/update_APPROVAL")
 //	public ResponseEntity<Map<String, String>> update_APPROVAL(@RequestPart("ApprovalDTO") ApprovalDTO approvalDTO// DTO

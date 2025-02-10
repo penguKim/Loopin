@@ -81,14 +81,6 @@
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const holiday_wr = document.getElementById('name');
 	const { year, month, day, hours, minutes, seconds } = formatDate();
-	const filterConfig = [
-		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
-		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:'2025-01-01' },
-		{ key: 'holiday_nm', label: '휴일명', type: 'text', placeholder: '휴일명 입력', col: 'col-2' },
-		{ key: 'holiday_aa', label: '유급휴가 여부', type: 'text', placeholder: '유급휴가 여부', col: 'col-2' },
-		{ key: 'holiday_ma', label: '수정가능 여부', type: 'text', placeholder: '수정가능 여부', col: 'col-2' },
-	];
-	
 		
 	// 로딩 데이터
 	$(function() {
@@ -96,12 +88,6 @@
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		$("#current_year").text(`${year}년 휴일 등록`);
-		
-		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-            console.log('적용된 필터:', filterValues);
-
-
-        });
 		
 		make_grid();
 		
@@ -415,26 +401,38 @@
 						showClearBrn: true 
 					}
 				}, 
-				{header : '유급휴가 여부', name : 'holiday_aa', sortable : true, editor: 'text', align: 'center',
-					validation: {
-						required: true,
-						regExp: /^[XO]$/,
+				{header : '유급휴가 여부', name : 'holiday_aa', sortable : true, align: 'center', 
+					editor: {
+						type: 'select',
+						options: {
+							listItems : [
+								{text : 'O', value : 'true'},
+								{text : 'X', value : 'false'}
+							]
+						}
 					},
-					filter: {
-						type: 'text',
-						showApplyBtn: true,
-						showClearBrn: true
+					validation: {
+						required: true
+					},
+					formatter: function({value}) {
+						return value == 'true' ? 'O' : value == 'false' ? 'X' : '';
 					}
-				}, 
-				{header : '수정가능 여부', name : 'holiday_ma', sortable : true, editor: 'text', align: 'center',
-					validation: {
-						required: true,
-						regExp: /^[XO]$/,
+				},
+				{header : '수정가능 여부', name : 'holiday_ma', sortable : true, align: 'center', 
+					editor: {
+						type: 'select',
+						options: {
+							listItems : [
+								{text : 'O', value : 'true'},
+								{text : 'X', value : 'false'}
+							]
+						}
 					},
-					filter: {
-						type: 'text',
-						showApplyBtn: true,
-						showClearBrn: true 
+					validation: {
+						required: true
+					},
+					formatter: function({value}) {
+						return value == 'true' ? 'O' : value == 'false' ? 'X' : '';
 					}
 				},
 			],
@@ -563,8 +561,8 @@
 	                    console.error('Error:', error);
 						Swal.fire({
 							icon: "warning",
-						    title: "요청 실패",
-						    text: "데이터 저장 중 오류가 발생했습니다.",
+						    title: "등록 실패",
+						    text: "이미 등록된 공휴일입니다.",
 						});
 	                });
 	        } else if (this.readyState == 4) {

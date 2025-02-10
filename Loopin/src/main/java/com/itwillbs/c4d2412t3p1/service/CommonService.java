@@ -31,36 +31,12 @@ public class CommonService {
 	
 	
 	
-	public List<Common_codeDTO> select_common_code(String code) {
-		List<Common_codeDTO> list = commonMapper.select_common_code(code);
+	public List<Common_codeDTO> select_common_code(String code, String filter) {
+		List<Common_codeDTO> list = commonMapper.select_common_code(code, filter);
 		
 		return list;
 	}
 
-
-// MyBatis INSERT
-//	public int save(List<Common_codeDTO> createdRows, String code) {
-//		String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
-//		int count = 0;
-//		for (Common_codeDTO data : createdRows) {
-//			
-//			if(code == null || code.equals("")) {
-//				data.setCommon_gc("00");
-//			} else {
-//				data.setCommon_gc(code);
-//			}
-//
-//			data.setCommon_ct("");
-//			data.setCommon_us("true");
-//			data.setCommon_ru(regUser);
-//			data.setCommon_rd(new Timestamp(System.currentTimeMillis()));
-//			
-//			int result = commonMapper.insertCommonCode(data) == 1 ? count++ : count;
-//			count += result;
-//			
-//		}
-//		return count;
-//	}
 	
 	@Transactional
 	public Map<String, Object> insert_common_code(List<Common_codeDTO> createdRows, List<Common_codeDTO> updatedRows, String code) {
@@ -174,5 +150,11 @@ public class CommonService {
 		
 	}
 	
-
+	public Map<String, List<Common_codeDTO>> select_COMMON_list(String... arr) {
+	    Map<String, List<Common_codeDTO>> commonList = new HashMap<>();
+	    for(String data : arr) {
+	        commonList.put(data, commonRepository.select_COMMON_list(data));
+	    }
+	    return commonList;
+	}
 }

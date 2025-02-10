@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -20,6 +21,9 @@ public class DashboardService {
 		
 		Map<String, Object> employee = dashboardMapper.select_total_EMPLOYEE(currentCd);
 		return employee;
+	}
+	public List<Map<String, Object>> select_EMPLOYEE_APPROVAL(Map<String, Object> params) {
+		return dashboardMapper.select_EMPLOYEE_APPROVAL(params);
 	}
 	
 }
