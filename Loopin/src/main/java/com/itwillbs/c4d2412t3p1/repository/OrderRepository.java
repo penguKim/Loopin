@@ -1,0 +1,141 @@
+package com.itwillbs.c4d2412t3p1.repository;
+
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
+import com.itwillbs.c4d2412t3p1.entity.Order;
+import com.itwillbs.c4d2412t3p1.entity.OrderDetail;
+
+import jakarta.transaction.Transactional;
+
+@Repository
+public interface OrderRepository  extends JpaRepository<Order, String> {
+
+	// 시퀀스 조회
+	@Query(value = "SELECT OD_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	Long getNextSequenceValue();
+	
+    // 발주 바디 저장
+    @Transactional
+    @Modifying
+    @Query(value = """
+        INSERT INTO ORDERDETAIL (
+            order_cd, material_cd, material_am, order_ct, order_ed, material_un
+        ) VALUES (
+            :#{#orderDetail.order_cd}, :#{#orderDetail.material_cd}, 
+            :#{#orderDetail.material_am}, :#{#orderDetail.order_ct}, 
+            :#{#orderDetail.order_ed}, :#{#orderDetail.material_un}
+        )
+    """, nativeQuery = true)
+    void saveOrderDetail(@Param("orderDetail") OrderDetail orderDetail);
+	
+	
+	@Query(value = """
+		    SELECT 
+		        m.material_cd AS material_cd,
+		        m.material_nm AS material_nm,
+		        u.common_nm AS material_un
+		    FROM MATERIAL m
+		    LEFT JOIN COMMON_CODE u 
+		           ON m.material_un = u.common_cc 
+		          AND u.common_gc = 'UNIT'
+		""", nativeQuery = true)
+	List<Object[]> select_MATERIAL();
+
+	
+	@Query(value = """
+		SELECT 
+		    a.account_cd AS account_cd,
+		    a.account_nm AS account_nm
+		FROM ACCOUNT a
+		WHERE a.account_dv IN ('BOTH', 'ORDER')
+		""", nativeQuery = true)
+	List<Object[]> select_ACCOUNT_ORDER();
+
+	
+	@Query(value = """
+		    SELECT 
+		        e.employee_cd AS employee_cd,
+		        e.employee_nm AS employee_nm,
+		        c.common_nm AS employee_dp,
+		        s.common_nm AS employee_gd
+		    FROM EMPLOYEE e 
+		    LEFT JOIN COMMON_CODE c 
+		           ON e.employee_dp = c.common_cc 
+		          AND c.common_gc = 'DEPARTMENT'
+		    LEFT JOIN COMMON_CODE s 
+		           ON e.employee_gd = s.common_cc 
+		          AND s.common_gc = 'POSITION'
+		""", nativeQuery = true)
+	List<Object[]> select_ORDER_PS();
+
+	
+	@Query(value = """
+		    SELECT
+				o.order_cd,
+				o.account_cd,
+				o.order_ps,
+				o.order_sd,
+				o.order_ed,
+				o.order_am,
+				o.order_mn,
+				o.order_st,
+				o.order_rm,
+				o.order_wr,
+				o.order_wd,
+				o.order_mf,
+				o.order_md
+			FROM ORDERS o
+		""", nativeQuery = true)
+	List<Object[]> select_ORDER();
+
+	
+	@Query(value = """
+			SELECT d.order_cd, 
+			       d.material_cd, 
+			       d.material_am, 
+			       d.order_ct,  
+			       d.material_un,
+			       d.order_ed AS detail_order_ed
+			FROM ORDERDETAIL d
+			WHERE d.order_cd = :orderCd
+		""", nativeQuery = true)
+	List<Object[]> select_ORDERDETAIL(@Param("orderCd") String orderCd);
+	
+	
+    @Query(value = """
+            SELECT
+				o.order_cd,
+				o.account_cd,
+				o.order_ps,
+				o.order_sd,
+				o.order_ed,
+				o.order_am,
+				o.order_mn,
+				o.order_st,
+				o.order_rm,
+				o.order_wr,
+				o.order_wd,
+				o.order_mf,
+				o.order_md
+            FROM ORDERS o
+            WHERE o.order_cd = :orderCd
+        """, nativeQuery = true)
+    List<Object[]> findOrderByCd(@Param("orderCd") String orderCd);
+	
+    @Transactional
+    @Modifying
+    @Query(value = "DELETE FROM ORDERDETAIL WHERE order_cd = :orderCd", nativeQuery = true)
+    void deleteOrderDetailsByOrderCd(@Param("orderCd") String orderCd);
+
+
+	
+	
+}
