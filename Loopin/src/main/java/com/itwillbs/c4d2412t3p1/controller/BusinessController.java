@@ -141,7 +141,7 @@ public class BusinessController {
 	    
 	    try {
 	    	
-	    	OrderDTO orderDto = orderRequestDTO.getContract();
+	    	OrderDTO orderDto = orderRequestDTO.getOrder();
 	    	orderDto.setOrder_wr(employee_id);
 	    	orderDto.setOrder_wd(new Timestamp(System.currentTimeMillis()));
 	    	
@@ -189,7 +189,7 @@ public class BusinessController {
 	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
 
 	    try {
-	        OrderDTO orderDto = orderRequestDTO.getContract();
+	        OrderDTO orderDto = orderRequestDTO.getOrder();
 	        
 	        orderDto.setOrder_mf(employee_id); // 수정자 설정
 	        orderDto.setOrder_md(new Timestamp(System.currentTimeMillis())); // 수정 시간 설정

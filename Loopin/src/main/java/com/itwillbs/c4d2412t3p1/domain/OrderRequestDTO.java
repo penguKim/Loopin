@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderRequestDTO {
-    private OrderDTO contract; // 수주 헤드 데이터
+    private OrderDTO order; // 수주 헤드 데이터
     private List<OrderDetailDTO> details; // 수주 바디 데이터
 }

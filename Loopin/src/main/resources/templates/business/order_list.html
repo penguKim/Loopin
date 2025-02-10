@@ -79,7 +79,7 @@
 		}
 		
 	    $.ajax({
-	        url: `/get_order?order_cd=${order_cd}`,
+	        url: `/get_ORDER?order_cd=${order_cd}`,
 	        method: 'GET',
 	        success: function (response) {
 	            console.log("서버 응답 데이터:", response); // 응답 데이터 확인
@@ -359,7 +359,7 @@
 	        event.preventDefault();
 	        
 			const mode = $('#modal_submit_button').text().trim();
-			const url = mode === '등록' ? '/insert_order' : '/update_order';
+			const url = mode === '등록' ? '/insert_ORDER' : '/update_ORDER';
 			console.log("폼 제출 시 mode:", mode, "요청 URL:", url);
 			
 		    const orderDTO = {
@@ -1031,7 +1031,7 @@
 				// 유효한 데이터가 있을 경우
 				console.log("발주 상세 클릭됨, order_cd:", clickedRowData.order_cd);
 
-				fetchorderDetails(clickedRowData.order_cd);
+				fetchOrderDetails(clickedRowData.order_cd);
 			});
 			
 	    }
