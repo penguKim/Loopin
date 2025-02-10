@@ -22,8 +22,11 @@ import com.itwillbs.c4d2412t3p1.entity.Material;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.mapper.DashboardMapper;
+import com.itwillbs.c4d2412t3p1.mapper.EquipmentMapper;
 import com.itwillbs.c4d2412t3p1.repository.EquipmentRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.EquipmentFilterRequest;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -34,12 +37,16 @@ public class EquipmentService {
 	
 	private final UtilService util;
 	private final EquipmentRepository equipmentRepository;
+	private final EquipmentMapper equipmentMapper;
 	
-	public List<Equipment> findAll() {
-		return equipmentRepository.findAll();
+	private final EntityManager entityManager;
+	
+	// 설비 조회
+	public List<EquipmentDTO> select_EQUIPMENT(EquipmentFilterRequest filter) {
+		return equipmentMapper.select_EQUIPMENT(filter);
 	}
 	
-	// 원자재, 부자재 등록
+	// 설비 등록, 수정
 	public void insert_EQUIPMENT(EquipmentDTO equipment, MultipartFile image) throws IOException {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
@@ -52,7 +59,6 @@ public class EquipmentService {
 				try {
 					util.deleteFile(ex.getEquipment_pc());
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			});
@@ -76,6 +82,10 @@ public class EquipmentService {
         }
         
         equipmentRepository.save(Equipment.setEquipment(equipment));
-    }	
+    }
+
+	
+	
+	
 	
 }

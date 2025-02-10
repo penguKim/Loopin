@@ -54,18 +54,20 @@ public class EquipmentController {
 		return "/primary/equipment_list";
 	}
 	
-//	@ResponseBody
-//	@PostMapping("/select_EQUIPMENT")
-//	public Map<String, Object> select_EQUIPMENT() {
-//		
-//		Map<String, List<Equipment>> equipmentList = equipmentService.findAll();
-//		Map<String, Object> response = new HashMap<>();
-//		Map<String, Object> data = new HashMap<>();
-//		log.info("equipmentList" + equipmentList);
-//		data.put("contents", equipmentList);
-//		response.put("data", data);
-//		return response;
-//	}
+	@ResponseBody
+	@PostMapping("/select_EQUIPMENT")
+	public Map<String, Object> select_EQUIPMENT(@RequestBody EquipmentRequestDTO equipmentDTO) {
+		
+		EquipmentFilterRequest filter = equipmentDTO.getEquipmentFilter();
+		log.info(equipmentDTO+"들어옴?");
+		List<EquipmentDTO> equipmentList = equipmentService.select_EQUIPMENT(filter);
+		Map<String, Object> response = new HashMap<>();
+		Map<String, Object> data = new HashMap<>();
+		data.put("contents", equipmentList);
+		response.put("data", data);
+		log.info(response+"나옴?");
+		return response;
+	}
 
 	// 설비 등록
 	@LogActivity(value = "등록", action = "설비등록")
@@ -74,14 +76,14 @@ public class EquipmentController {
 	public ResponseEntity<Map<String, Object>> insert_EQUIPMENT(@RequestPart(value = "requestData") EquipmentRequestDTO equipmentDTO,
 		    @RequestPart(value = "image", required = false) MultipartFile image) {
 		EquipmentDTO equipment = equipmentDTO.getEquipment();
-		//EquipmentFilterRequest filter = new EquipmentFilterRequest();
+		EquipmentFilterRequest filter = new EquipmentFilterRequest();
 		Map<String, Object> response = new HashMap<>();
 		
 	    try {
 	    	equipmentService.insert_EQUIPMENT(equipment, image);
 	    	
-			//List<EquipmentDTO> list = equipmentService.select_EQUIPMENT_list(filter);
-			//response.put("list", list);
+			List<EquipmentDTO> list = equipmentService.select_EQUIPMENT(filter);
+			response.put("list", list);
 	    	response.put("success", true);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {

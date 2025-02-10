@@ -246,7 +246,6 @@
 		        }
 		    }
 		}
-		
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
 			data : dataSource,
@@ -286,14 +285,16 @@
 		grid.on('dblclick', function(ev) {
 			let row = grid.getRow(ev.rowKey);
 			make_modal_detail('update');
-			//setModalInput(row);
+			setModalInput(row);
 		});
 	}
 	
 	// 그리드 데이터 조회
 	async function getGridList(filter) {
-		let jsonData = JSON.stringify({warehouseFilter: filter});
-		let ajaxData = await callAjaxPost('/select_WAREHOUSE_list', jsonData);
+		console.log("안뜨냐");
+		let jsonData = JSON.stringify({equipmentFilter: filter});
+		let ajaxData = await callAjaxPost('/select_EQUIPMENT', jsonData);
+		console.log("안뜨냐" + ajaxData.data.contents);
 		grid.resetData(ajaxData.data.contents);
 	}
 	
@@ -397,87 +398,6 @@
 	}
 	
 	
-	// 모달 그리드 생성
-	function make_modal_grid() {
-		
-		modal_grid = new tui.Grid({
-			el : document.getElementById('modal_grid'),
-			data : [],
-			scrollX : false,
-			scrollY : true,
-			rowHeaders : [
-				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
-			],
-			bodyHeight : 200,
-			columns : [
-				{header : '구역코드', name : 'warearea_cd', sortable : true, filter: 'text', editor: 'text',
-					validation: {
-						required: true,
-						regExp: /^[^ㄱ-ㅎㅏ-ㅣ가-힣]*$/
-					}},
-				{header : '구역명', name : 'warearea_nm', sortable : true, filter: 'text', editor: 'text',
-					validation: {
-						required: true,
-					},
-				},
-				{header : '최대적재량', name : 'warearea_cp', sortable : true, filter: 'text', editor: 'text',
-					validation: {
-						required: true,
-						dataType: 'number',
-						min: 0,
-						regExp: /^\d*$/ // 숫자만 허용
-					}
-				},
-				{header : '정렬순서', name : 'warearea_in', align: 'center', sortable : true, filter: 'text', 
-					editor: 'text',
-					validation: {
-						required: true,
-						dataType: 'number',
-						min: 0,
-						regExp: /^\d*$/ // 숫자만 허용
-					}
-				},
-				{header : '사용여부', name : 'warearea_us', align: 'center', sortable : true, filter: 'select',
-					editor: {
-						type: 'select',
-						options: {
-							listItems : [
-								{text : '사용', value : 'true'},
-								{text : '미사용', value : 'false'}
-							]
-						}
-					},
-					validation: {
-						required: true,
-					},
-					formatter: function({value}) {
-						return value == true ? '사용' : value == false ? '미사용' : '';
-					}
-				}, 
-				{header : '비고', name : 'warearea_rm', sortable : true, filter: 'text', editor: 'text',}
-			],
-			summary: {
-			    height: 40,
-			    position: 'bottom', // or 'top'
-			    columnContent: {
-			    	equipment_us: {
-			            template: (valueMap) => {
-			                return `총  ${valueMap.cnt} 건`
-			            }
-			        }
-			    }
-			},
-
-		});
-		
-		modal_grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			// make_modal_detail('update');
-			// setModalInput(row);
-		});
-	}
-	
 	/*
 	 모달 조회
 	async function setModalInput(row) {
@@ -567,7 +487,7 @@
 		    let ajaxData = await callAjaxFileUpload('/insert_EQUIPMENT', formData);
 		    // 성공 시 실행되는 코드
 			showAlert('', 'success', '등록 성공', '');
-			//grid.resetData(ajaxData['list']);
+			grid.resetData(ajaxData['list']);
 			resetSearchInput();
 			modal.hide();
 		} catch (error) {

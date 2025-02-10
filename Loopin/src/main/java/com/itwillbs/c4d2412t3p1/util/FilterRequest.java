@@ -201,6 +201,7 @@ public class FilterRequest {
 		private String equipment_cd;
 		private String model_cd;
 		private String equipment_nm;
+		private String warehouse_cd;
 		private String product_cd;
 		private String equipment_us;
 		
@@ -212,7 +213,8 @@ public class FilterRequest {
 		public boolean isEmpty() {
 			return super.isEmpty() && (equipment_cd == null || equipment_cd.isEmpty())
 					&& (model_cd == null || model_cd.isEmpty()) && (equipment_nm == null || equipment_nm.isEmpty())
-					&& (product_cd == null || product_cd.isEmpty()) && (equipment_us == null || equipment_us.isEmpty());
+					&& (product_cd == null || product_cd.isEmpty()) && (equipment_us == null || equipment_us.isEmpty()
+					&& (warehouse_cd == null || warehouse_cd.isEmpty()));
 		}
 	}
 

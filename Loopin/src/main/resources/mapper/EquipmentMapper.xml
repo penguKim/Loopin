@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.EquipmentMapper">
+	
+	<!-- 설비 조회(필터) -->
+	<select id="select_EQUIPMENT" resultType="Equipment">
+		 SELECT EQ.EQUIPMENT_CD
+			    , EQ.MODEL_CD
+			    , EQ.EQUIPMENT_NM
+			    , EQ.WAREHOUSE_CD
+			    , EQ.PRODUCT_CD
+			    , EQ.EQUIPMENT_US
+		   FROM EQUIPMENT EQ
+		  WHERE 1=1
+		  <if test="filter.equipment_cd != null and filter.equipment_cd != ''">AND EQ.EQUIPMENT_CD LIKE '%${filter.equipment_cd}%'</if>
+		  <if test="filter.model_cd != null and filter.model_cd != ''">AND EQ.MODEL_CD LIKE '%${filter.model_cd}%'</if>
+		  <if test="filter.equipment_nm != null and filter.equipment_nm != ''">AND EQ.EQUIPMENT_NM LIKE '%${filter.equipment_nm}%'</if>
+		  <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND EQ.WAREHOUSE_CD LIKE '%${filter.warehouse_cd}%'</if>
+		  <if test="filter.product_cd != null and filter.product_cd != ''">AND EQ.PRODUCT_CD = ${filter.product_cd}</if>
+		  <if test="filter.equipment_us != null and filter.equipment_us != 'ALL'">AND EQ.EQUIPMENT_US = #{filter.equipment_us}</if>
+		  ORDER BY EQ.EQUIPMENT_CD
+	</select>
+</mapper>
