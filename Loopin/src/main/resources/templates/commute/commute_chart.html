@@ -54,18 +54,18 @@
 								<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
 									<div class="row mb-3">
 										<div class="col-sm-6">
-											<div id="commute_line"></div>
+											<div id="dayCommute_line"></div>
 										</div>
 										<div class="col-sm-6">
-											<div id="chart-dept"></div>
+											<div id="commute_column"></div>
 										</div>
 									</div>
-									<div class="row mb-3">
+									<div class="row">
 										<div class="col-sm-6">
-											<div id="chart-posi"></div>
+											<div id="grade_bar"></div>
 										</div>
 										<div class="col-sm-6">
-											<div id="chart-hdrd"></div>
+											<div id="dept_bar"></div>
 										</div>
 									</div>
 								</div>
@@ -96,7 +96,7 @@
     const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-	let grid, lineChart;
+	let grid, lineChart, commuteChart, gradeChart, deptChart;
 	
 	let date = new Date();
 	const oneMonthAgo = new Date();
@@ -322,45 +322,39 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function(response) {
-				if(!lineChart) {
-					commuteLineChart(response);
-				}
-				
-				
+				commuteLineChart(response['dayCommuteChart']);
+				commuteColumnChart(response['commuteChart']);
+				gradeBarChart(response['gradeChart']);
+				deptBarChart(response['deptChart']);
 			},
 			error : function(xhr, textStatus, errorThrown) {
+				console.log(xhr);
 				showAlert('', 'error', '차트 조회 실패' , '차트 조회에 실패하였습니다.<br>다시 접속해주세요.');
 			}
 		});
 	}
 	
-	function commuteLineChart(response) {
-	    const el = document.getElementById('commute_line');
+	// 일자별 근무시간 차트
+	function commuteLineChart(commuteChart) {
+		if(lineChart) {
+			lineChart.destroy();
+		}
+		
+	    const el = document.getElementById('dayCommute_line');
 		const parentElement = el.parentElement;
-	    let chart;
 	    
 	    const data = {
-	        categories: response.chartData.categories,
-	        series: response.chartData.series.map(series => ({
+	        categories: commuteChart.categories,
+	        series: commuteChart.series.map(series => ({
 	            name: series.name,
 	            data: series.data.map(value => parseFloat(value) || 0)
 	        }))
 	    };
 	    
-	    // 차트 크기를 계산하는 함수
-	    function getChartSize() {
-	        return {
-	            // width: window.innerWidth - 1200,
-				width: parentElement.clientWidth-100,
-	            height: window.innerHeight - 630
-				// height: parentElement.clientHeight
-	        };
-	    }
-	    
 	    const options = {
 	        chart: { 
-	            title: '출퇴근 현황',
-	            ...getChartSize()
+	            title: '근무시간 현황',
+	            ...getChartSize(parentElement)
 	        },
 	        xAxis: {
 	            title: '날짜'
@@ -385,19 +379,174 @@
 	        }
 	    };
 
-	    chart = toastui.Chart.lineChart({ el, data, options });
+	    lineChart = toastui.Chart.lineChart({ el, data, options });
 	    
 	    // resize 이벤트 핸들러
 	    window.addEventListener('resize', () => {
-	        const { width, height } = getChartSize();
-	        chart.resize({ width, height });
+	        const { width, height } = getChartSize(parentElement);
+	        lineChart.resize({ width, height });
+	    });
+	}
+	
+	// 근무시간 차트
+	function commuteColumnChart(columnChart) {
+		if(commuteChart) {
+			commuteChart.destroy();
+		}
+		
+	    const el = document.getElementById('commute_column');
+		const parentElement = el.parentElement;
+	    
+	    const data = {
+	        categories: columnChart.categories,
+	        series: columnChart.series.map(series => ({
+	            name: series.name,
+	            data: series.data.map(value => parseFloat(value) || 0)
+	        }))
+	    };
+	    
+	    const options = {
+	            chart: { 
+	                title: '근무시간 현황',
+	                ...getChartSize(parentElement)
+	            },
+	            xAxis: {
+	                title: '근무유형'
+	            },
+	            yAxis: {
+	                title: '시간'
+	            },
+	            tooltip: {
+	                formatted: (value) => `${value}시간`
+	            },
+	            legend: {
+	                align: 'bottom'
+	            },
+	            series: {
+	                dataLabels: {
+	                    visible: true,
+	                    formatter: (value) => `${value}시간`
+	                }
+	            },
+	            theme: {
+	                series: {
+	                    colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96c93d', '#7950f2']
+	                }
+	            }
+	        };
+
+
+	    commuteChart = toastui.Chart.columnChart({ el, data, options });
+	    
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(parentElement);
+	        commuteChart.resize({ width, height });
+	    });
+	}
+
+	// 직급별 출퇴근 차트
+	function gradeBarChart(chart) {
+		if(gradeChart) {
+			gradeChart.destroy();
+		}
+		
+		const el = document.getElementById('grade_bar');
+		const parentElement = el.parentElement;
+	    
+	    const data = {
+		        categories: chart.categories,
+		        series: chart.series.map(series => ({
+		            name: series.name,
+		            data: series.data.map(value => parseFloat(value) || 0)
+		        }))
+		    };
+
+		const options = {
+		    chart: { 
+		        title: '직급별 출퇴근 현황',
+		        ...getChartSize(parentElement)
+		    },
+		    legend: {
+		        align: 'bottom'
+		    },
+		    series: {
+		        stack: true,
+		        dataLabels: {
+		            visible: true
+		        }
+		    },
+		    theme: {
+		        series: {
+		            colors: ['#4ecdc4', '#ff6b6b']
+		        }
+		    }
+		};
+
+		gradeChart = toastui.Chart.barChart({ el, data, options });
+
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(parentElement);
+	        gradeChart.resize({ width, height });
+	    });
+	}
+	
+	// 부서별 출퇴근 차트
+	function deptBarChart(chart) {
+		if(deptChart) {
+			deptChart.destroy();
+		}
+		
+		const el = document.getElementById('dept_bar');
+		const parentElement = el.parentElement;
+	    
+	    const data = {
+		        categories: chart.categories,
+		        series: chart.series.map(series => ({
+		            name: series.name,
+		            data: series.data.map(value => parseFloat(value) || 0)
+		        }))
+		    };
+
+		const options = {
+		    chart: { 
+		        title: '부서별 출퇴근 현황',
+		        ...getChartSize(parentElement)
+		    },
+		    legend: {
+		        align: 'bottom'
+		    },
+		    series: {
+		        stack: true,
+		        dataLabels: {
+		            visible: true
+		        }
+		    },
+		    theme: {
+		        series: {
+		            colors: ['#4ecdc4', '#ff6b6b']
+		        }
+		    }
+		};
+
+		deptChart = toastui.Chart.barChart({ el, data, options });
+
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(parentElement);
+	        deptChart.resize({ width, height });
 	    });
 	}
 
 
-
-
-
+    // 차트 크기를 계산하는 함수
+    function getChartSize(el) {
+        return {
+			width: el.clientWidth-100,
+            height: window.innerHeight - 640
+        };
+    }
 
 </script>
 

@@ -5,14 +5,15 @@ import java.sql.Timestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
-import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
