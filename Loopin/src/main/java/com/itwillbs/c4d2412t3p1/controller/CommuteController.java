@@ -1,15 +1,11 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -49,7 +45,6 @@ import oracle.jdbc.proxy.annotation.Post;
 public class CommuteController {
 	
 	private final CommuteService commuteService;
-	private final CommonService commonService;
 	private final EmployeeService employeeService;
 	private final UtilService util;
 	
@@ -387,23 +382,35 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> select_COMMUTE_chartList(@RequestBody CommuteRequestDTO commuteRequest) {
 		CommuteFilterRequest filter = commuteRequest.getCommuteFilter();
 		Map<String, Object> response = new HashMap<>();
+		String sort = "";
 		
-		System.out.println("---------------------컨트롤러");
 		try {
-//			List<CommuteDTO> commuteChart = commuteService.select_COMMUTE_commuteChart(filter);
-//			response.put("commuteList", commuteChart);
 			
-			
-	        List<CommuteDTO> commuteData = commuteService.select_COMMUTE_commuteChart(filter);
-	        Map<String, Object> chartData = new HashMap<>();
+			// 일자별 근로시간 차트 ------------------------------------------
+	        List<CommuteDTO> dayCommuteData = commuteService.select_COMMUTE_dayCommuteChart(filter);
+	        Map<String, Object> dayCommuteChart = new HashMap<>();
 	        
-	        // categories
-	        List<String> categories = commuteData.stream()
+	        List<String> dayCommuteCategories = dayCommuteData.stream()
 	            .map(CommuteDTO::getCommute_wd)
 	            .collect(Collectors.toList());
 	            
-	        // series - 근무 유형별 데이터 한번에 생성
-	        List<Map<String, Object>> series = Arrays.asList(
+	        List<Map<String, Object>> dayCommuteSeries = Arrays.asList(
+        		commuteService.createSeriesData("일반근무", CommuteDTO::getCommute_ig, dayCommuteData),
+        		commuteService.createSeriesData("연장근무", CommuteDTO::getCommute_eg, dayCommuteData),
+        		commuteService.createSeriesData("야간근무", CommuteDTO::getCommute_yg, dayCommuteData),
+        		commuteService.createSeriesData("주말근무", CommuteDTO::getCommute_jg, dayCommuteData),
+        		commuteService.createSeriesData("휴일근무", CommuteDTO::getCommute_hg, dayCommuteData)
+	        );
+	        
+	        dayCommuteChart.put("categories", dayCommuteCategories);
+	        dayCommuteChart.put("series", dayCommuteSeries);
+	        response.put("dayCommuteChart", dayCommuteChart);
+	        
+	        // 근로시간 차트 ------------------------------------------	
+	        List<CommuteDTO> commuteData = commuteService.select_COMMUTE_commuteChart(filter);
+	        Map<String, Object> commuteChart = new HashMap<>();
+	        List<String> commuteCategories = Arrays.asList("근무시간");		            
+	        List<Map<String, Object>> commuteSeries = Arrays.asList(
         		commuteService.createSeriesData("일반근무", CommuteDTO::getCommute_ig, commuteData),
         		commuteService.createSeriesData("연장근무", CommuteDTO::getCommute_eg, commuteData),
         		commuteService.createSeriesData("야간근무", CommuteDTO::getCommute_yg, commuteData),
@@ -411,12 +418,46 @@ public class CommuteController {
         		commuteService.createSeriesData("휴일근무", CommuteDTO::getCommute_hg, commuteData)
 	        );
 	        
-	        chartData.put("categories", categories);
-	        chartData.put("series", series);
-	        response.put("chartData", chartData);
-			
-			
-			
+	        commuteChart.put("categories", commuteCategories);
+	        commuteChart.put("series", commuteSeries);
+	        response.put("commuteChart", commuteChart);
+	        
+	        // 직급별 바 차트 ------------------------------------------
+	        sort = "POSITION";
+	        List<CommuteDTO> gradeData = commuteService.select_COMMUTE_barChart(sort, filter);
+	        Map<String, Object> gradeChart = new HashMap<>();
+	        
+	        List<String> gradeCategories = gradeData.stream()
+	            .map(CommuteDTO::getEmployee_gd)
+	            .collect(Collectors.toList());
+	            
+	        List<Map<String, Object>> gradeSeries = Arrays.asList(
+	        		commuteService.createSeriesData("정상출근", CommuteDTO::getNormal, gradeData),
+	        		commuteService.createSeriesData("지각", CommuteDTO::getLate, gradeData)
+	        );
+	        
+	        gradeChart.put("categories", gradeCategories);
+	        gradeChart.put("series", gradeSeries);
+	        response.put("gradeChart", gradeChart);
+	        
+	        // 부서별 바 차트 ------------------------------------------
+	        sort = "DEPARTMENT";
+	        List<CommuteDTO> deptData = commuteService.select_COMMUTE_barChart(sort, filter);
+	        Map<String, Object> deptChart = new HashMap<>();
+	        System.out.println("DEPARTMENT : " + deptData.toString());
+	        List<String> deptCategories = deptData.stream()
+	            .map(CommuteDTO::getEmployee_gd)
+	            .collect(Collectors.toList());
+	            
+	        List<Map<String, Object>> deptSeries = Arrays.asList(
+	        		commuteService.createSeriesData("정상출근", CommuteDTO::getNormal, deptData),
+	        		commuteService.createSeriesData("지각", CommuteDTO::getLate, deptData)
+	        );
+	        
+	        deptChart.put("categories", deptCategories);
+	        deptChart.put("series", deptSeries);
+	        response.put("deptChart", deptChart);
+	        
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("msg", e.getMessage());
