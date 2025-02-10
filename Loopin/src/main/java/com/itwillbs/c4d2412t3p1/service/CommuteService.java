@@ -445,20 +445,25 @@ public class CommuteService {
 	    return true;
 	}
 
-	// 출퇴근 차트
+	// 일자별 근로시간 차트
+	public List<CommuteDTO> select_COMMUTE_dayCommuteChart(CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_dayCommuteChart(filter);
+	}
+	// 근로시간 차트
 	public List<CommuteDTO> select_COMMUTE_commuteChart(CommuteFilterRequest filter) {
-		System.out.println("---------------------서비스");
-
 		return commuteMapper.select_COMMUTE_commuteChart(filter);
 	}
-	
-	public Map<String, Object> createSeriesData(String name, Function<CommuteDTO, Object> mapper, List<CommuteDTO> data) {
-	    Map<String, Object> series = new HashMap<>();
-	    series.put("name", name);
-	    series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
-	    return series;
+	// 직급, 부서별 차트
+	public List<CommuteDTO> select_COMMUTE_barChart(String sort, CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_gradeChart(sort, filter);
 	}
 
+	public Map<String, Object> createSeriesData(String name, Function<CommuteDTO, Object> mapper, List<CommuteDTO> data) {
+		Map<String, Object> series = new HashMap<>();
+		series.put("name", name);
+		series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
+		return series;
+	}
 
 
 

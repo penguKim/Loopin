@@ -28,7 +28,6 @@ import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.PrimaryService;
-import com.itwillbs.c4d2412t3p1.service.UtilService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
@@ -235,7 +234,7 @@ public class PrimaryController {
 	}
 	
 	// 품목 등록
-	// @LogActivity(value = "등록", action = "품목등록")
+	@LogActivity(value = "등록", action = "품목등록")
 	@ResponseBody
 	@PostMapping("/insert_PRODUCT")
 	public ResponseEntity<Map<String, Object>> insert_PRODUCT(@RequestPart(value = "requestData") PrimaryRequestDTO primaryDTO,
@@ -260,6 +259,7 @@ public class PrimaryController {
 	}
 	
 	// 자재 등록
+	@LogActivity(value = "등록", action = "자재등록")
 	@ResponseBody
 	@PostMapping("/insert_MATERIAL")
 	public ResponseEntity<Map<String, Object>> insert_MATERIAL(@RequestPart(value = "requestData") PrimaryRequestDTO primaryDTO,
@@ -281,8 +281,6 @@ public class PrimaryController {
 		}
 	}
 	
-
-	
 	// 품목코드 중복 체크
 	@ResponseBody
 	@PostMapping("/check_PRODUCT_CD")
@@ -292,6 +290,27 @@ public class PrimaryController {
 		
 		try {
 			boolean check = primaryService.check_PRODUCT_CD(product_cd); // 중복이면 false
+			response.put("result", check);
+			if(!check) {
+				response.put("title", "코드명 중복");
+				response.put("msg", "이미 사용중인 코드입니다.");
+			}
+		} catch (Exception e) {
+			response.put("msg", "체크에 실패했습니다.");
+		}
+		return response;
+	}
+	
+	// 자재코드 중복 체크
+	@ResponseBody
+	@PostMapping("/check_MATERIAL_CD")
+	public Map<String, Object> check_MATERIAL_CD(@RequestBody PrimaryRequestDTO primaryDTO) {
+		String material_cd = primaryDTO.getMaterial_cd();
+		System.out.println("zhemsms : " + material_cd);
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			boolean check = primaryService.check_MATERIAL_CD(material_cd); // 중복이면 false
 			response.put("result", check);
 			if(!check) {
 				response.put("title", "코드명 중복");
@@ -383,6 +402,7 @@ public class PrimaryController {
 	}
 	
 	// 제품 삭제
+	@LogActivity(value = "삭제", action = "제품삭제")
 	@ResponseBody
 	@PostMapping("/delete_PRODUCT")
 	public ResponseEntity<Map<String, Object>> delete_PRODUCT(@RequestBody PrimaryRequestDTO primaryDTO) {
@@ -408,6 +428,7 @@ public class PrimaryController {
 	}
 	
 	// 자재 삭제
+	@LogActivity(value = "삭제", action = "자재삭제")
 	@ResponseBody
 	@PostMapping("/delete_MATERIAL")
 	public ResponseEntity<Map<String, Object>> delete_MATERIAL(@RequestBody PrimaryRequestDTO primaryDTO) {
