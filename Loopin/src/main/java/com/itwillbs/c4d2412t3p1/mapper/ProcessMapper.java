@@ -15,4 +15,6 @@ public interface ProcessMapper {
 
 	List<Map<String, Object>> selectpdcclist(@Param("pdcc") String pdcc, @Param("pdgc") String pdgc);
 
+	List<Map<String, Object>> selecteqlist(String pd);
+
 }

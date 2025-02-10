@@ -73,4 +73,11 @@
 		    </choose>
 	</select>
 
+	<select id="selecteqlist" resultType="map">
+		SELECT DISTINCT eq.EQUIPMENT_CD, EQ.EQUIPMENT_NM  
+		FROM EQUIPMENT eq
+		JOIN PRODUCT pd ON EQ.PRODUCT_CD  = PD.PRODUCT_CD 
+		WHERE EQ.PRODUCT_CD = #{pd}
+		AND EQ.EQUIPMENT_US = 1
+	</select>
 </mapper>

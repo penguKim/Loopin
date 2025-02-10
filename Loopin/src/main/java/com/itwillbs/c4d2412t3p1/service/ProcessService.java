@@ -38,5 +38,10 @@ public class ProcessService {
 		return list;
 	}
 
+	public List<Map<String, Object>> selecteqlist(String pd) {
+		List<Map<String, Object>> list = pcM.selecteqlist(pd);
+		return list;
+	}
+
 
 }

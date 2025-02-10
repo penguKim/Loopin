@@ -53,7 +53,13 @@ public class ProcessController {
 		return list;
 	}
 	
-	
-	
+	@GetMapping("/selecteqlist")
+	@ResponseBody
+	public List<Map<String,Object>> selecteqlist (@RequestParam("pd") String pd) {
+		
+		List<Map<String,Object>> list = pcS.selecteqlist(pd); 
+		
+		return list;
+	}
 	
 }

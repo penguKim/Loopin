@@ -83,32 +83,24 @@
 		                    <div class="input-group mb-3">
 		                    	<label for="registermodal" class="col-3 col-form-label">적용품목<span class="text-danger">*</span></label>
 								<div class="col-9"><select id="PRODUCT_PD" class="form-select1" style="width: 100%;" multiple>
-								</select></div>
+								</select>
+								</div>
 		                    </div>
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
 		                    	<label for="registermodal" class="col-3 col-form-label">설비</label>
 								<div class="col-9"><select id="PRODUCT_EQ" class="form-select2" style="width: 100%;" multiple>
-			                      <option value="1">설비One</option>
-			                      <option value="2">설비Two</option>
-			                      <option value="3">설비Three</option>
-								</select></div>
-		                    	<!-- <label for="" class="col-sm-3 col-from-label">설비1</label>
-		                    	<select class="form-select" aria-label="PRODUCT_EQ" id="PRODUCT_EQ" multiple>
-			                      <option selected>Open this select menu</option>
-			                      <option value="1">One</option>
-			                      <option value="2">Two</option>
-			                      <option value="3">Three</option>
-			                    </select> -->
+								</select>
+							</div>
 		                    </div>
 		                  	</div>
 		                  	<div class="col-md-6">
 		                    <div class="input-group mb-3">
 		                    	<label for="" class="col-sm-3 col-from-label">사용여부<span class="text-danger">*</span></label>
 		                    	<select class="form-select" aria-label="PRODUCT_US">
-			                      <option value="0" selected>Y</option>
-			                      <option value="1">N</option>
+			                      <option value="1" selected>Y</option>
+			                      <option value="0">N</option>
 			                    </select>
 		                    </div>
 		                  	</div>
@@ -155,7 +147,6 @@
 	    });
 	    const data = await response.json();
 	    console.log(data);
-	    // 사용여부 데이터 전처리 하기.
 	    grid.resetData(data);
 	  } catch (error) {
 	    console.error('공정관리 데이터를 불러오는데 실패했습니다.', error);
@@ -326,32 +317,45 @@
 	  };
 	
 	  const pdChange = async () => {
-			const pdvalue = document.querySelector('#PRODUCT_PD').value;
-			console.log('세부품목선택',pdvalue);
-			console.log('세부품목분류선택',typeof pdvalue);
-			try {
-			// 설비 가져와서 뿌리기 + 품목 여러개일때 어떻게 들고오는지 확인
-			  const response = await fetch(`/?pd=${pdvalue}`, {
-		      method: 'GET',
-		      headers: {
-		        'Content-Type': 'application/json',
-		        // [csrfHeader]: csrfToken,
-		      },
-	    	});
-			  
-		    const eqdata = await response.json();
-		    console.log('ccdata',eqdata);
-		    
-		  } catch (error) {
-		    console.error('세부품목 데이터를 불러오는데 실패했습니다.', error);
-		    swal.fire({
-		      title: "데이터 로드에 실패했습니다.",
-		      text: "관리자에게 문의하세요.",
-		      icon: "error",
-		    });
-		  }
-		};
-	  
+		var selectedProductValues = $('#PRODUCT_PD').val(); // 다중 선택이므로 배열로 반환됨
+		console.log('선택된 적용품목들:', selectedProductValues);
+		try {
+		// 설비 가져와서 뿌리기 + 품목 여러개일때 어떻게 들고오는지 확인
+		  const response = await fetch(`/selecteqlist?pd=${pdvalue}`, {
+	      method: 'GET',
+	      headers: {
+	        'Content-Type': 'application/json',
+	        // [csrfHeader]: csrfToken,
+	      },
+    	});
+		  
+	    const eqdata = await response.json();
+	    console.log('eqdata',eqdata);
+	    
+	  } catch (error) {
+	    console.error('세부품목 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	// PRODUCT_PD (적용품목) 선택이 변경되었을 때
+	$('#PRODUCT_PD').on('change', function() {
+	  var selectedProductValues = $(this).val();
+	  console.log('선택된 적용품목:', selectedProductValues);
+	  // 선택된 값에 따라 추가적인 작업 수행 가능
+	});
+
+	// PRODUCT_EQ (설비) 선택이 변경되었을 때
+	$('#PRODUCT_EQ').on('change', function() {
+	  var selectedEqValues = $(this).val();
+	  console.log('선택된 설비:', selectedEqValues);
+	  // 선택된 값에 따라 추가적인 작업 수행 가능
+	});
+
 	document.querySelector('#PRODUCT_GC').addEventListener('change', pdgChange);
 	document.querySelector('#PRODUCT_CC').addEventListener('change', pdcChange);
 	document.querySelector('#PRODUCT_PD').addEventListener('change', pdChange);
