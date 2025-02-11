@@ -53,6 +53,8 @@
 	$(function() {
 		setGridTheme();
 		make_grid();
+		get_STOCK_list();
+		
 		
 		setElementHeight('.card', -105);
 		setGridHeight(grid, -380);
@@ -158,22 +160,23 @@
 		let sizeList = /*[[${commonList['SIZE']}]]*/ [];
 		
 		let baseColumns = [
-		    {header: '품목코드', name: 'stock_cd', sortable: true, filter: 'text'},
-		    {header: '품목명', name: 'stock_nm', sortable: true, filter: 'text'},
+		    {header: '품목코드', name: 'ITEM_CD', sortable: true, filter: 'text'},
+		    {header: '품목명', name: 'ITEM_NM', sortable: true, filter: 'text'},
+		    {header: '품목대분류', name: 'product_gc', sortable: true, filter: 'select'},
 		    {header: '품목분류', name: 'product_cc', sortable: true, filter: 'select'},
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
 		    // {header: '품목분류코드', name: 'stock_cd', hidden: true},
-		    {header: '단위', name: 'stock_un', align: 'center', sortable: true, filter: 'select'},
-		    {header: '보관창고', name: 'warehouse_nm', sortable: true, filter: 'select'},
-		    {header: '보관구역', name: 'warearea_nm', sortable: true, filter: 'select'},
-		    {header: '색상', name: 'product_cr', sortable: true, filter: 'select'},
-		    {header: '총 수량', name: 'stock_aq', align: 'center', sortable: true, filter: 'select'},
+		    {header: '단위', name: 'ITEM_UN', align: 'center', sortable: true, filter: 'select'},
+		    {header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
+		    {header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
+		    {header: '색상', name: 'COLOR', sortable: true, filter: 'select'},
+		    {header: '총 수량', name: 'STOCK_AQ', align: 'center', sortable: true, filter: 'select'},
 		];
 		let additionalColumns = [];
 		
 		for(let i = 0; i <sizeList.length; i++) {
 			let temp = sizeList[i];
-			let column = {header : `${temp['common_cc']}`, name : `${temp['common_cc']}`, width: '50'};
+			let column = {header : `${temp['common_cc']}`, name : `SIZE_${temp['common_cc']}`, width: '50'};
 			additionalColumns.push(column);
 		}
 		
@@ -202,7 +205,7 @@
 					{
 						header: '사이즈',
 						name: 'size',
-						childNames: sizeList.map(item => item.common_cc)
+						childNames: sizeList.map(item => `size_${item.common_cc}`)
 					}
 				]
 			},
@@ -384,19 +387,16 @@
 	}
 	
 	// 제품 조회
-	async function get_PRODUCT_list(filter = {}, group) {
-		console.log('group', group);
-		const prefix = getPrefix(grid['flag']);
-		
+	async function get_STOCK_list(filter = {}, group) {
 	    try {
 	        const jsonData = {
-	            productFilter: {
-	                ...filter,
-	                product_gc: group
-	            }
+	            // productFilter: {
+	               //  ...filter,
+	                // product_gc: group
+	           //  }
 	        };
 	        
-	        const ajaxData = await callAjaxPost(`/select_${prefix.toUpperCase()}_list`, JSON.stringify(jsonData));
+	        const ajaxData = await callAjaxPost(`/select_STOCK_list`, JSON.stringify(jsonData));
 	        grid.resetData(ajaxData.data.contents);
 	    } catch (error) {
 	        console.log(error);

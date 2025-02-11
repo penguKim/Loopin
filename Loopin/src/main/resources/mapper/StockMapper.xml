@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.StockMapper">
+	<select id="select_STOCK_list" resultType="map">
+	  WITH product_data AS (
+	    SELECT
+	      PD.PRODUCT_NM AS ITEM_NM,
+	      WH.WAREHOUSE_NM,
+	      WA.WAREAREA_NM,
+	      CC.COMMON_NM AS COLOR_NM,
+	      ST.WAREHOUSE_CD,
+	      ST.WAREAREA_CD,
+	      ST.STOCK_AQ,
+	      ST.STOCK_TP,
+	      PD.PRODUCT_UN AS ITEM_UN,
+	      SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) AS ITEM_CD,
+	      SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) AS COLOR,
+	      SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) AS "SIZE"
+	    FROM STOCK ST
+	    LEFT OUTER JOIN PRODUCT PD 
+	      ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
+	     AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+	     AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
+	    LEFT OUTER JOIN WAREHOUSE WH 
+	      ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	    LEFT OUTER JOIN WAREAREA WA 
+	      ON WA.WAREAREA_CD = ST.WAREAREA_CD 
+	     AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	    LEFT OUTER JOIN COMMON_CODE CC 
+	      ON CC.COMMON_GC = 'COLOR' 
+	     AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+	    WHERE STOCK_TP = 'Y'
+	  ),
+	  pivot_data AS (
+	    SELECT *
+	    FROM product_data
+	    PIVOT (
+	      SUM(STOCK_AQ)
+	      FOR "SIZE" IN 
+	      <foreach collection="sizeList.SIZE" item="size" open="(" close=")" separator=",">
+	         '${size.common_cc}' AS "${size.common_cc}"
+	      </foreach>
+	    )
+	  )
+	  SELECT 
+	    PVT.ITEM_NM,
+	    PVT.WAREHOUSE_NM,
+	    PVT.WAREAREA_NM,
+	    PVT.COLOR_NM,
+	    PVT.ITEM_UN,
+	    PVT.ITEM_CD,
+	    PVT.COLOR,
+	    PVT.WAREHOUSE_CD,
+	    PVT.WAREAREA_CD,
+	    PVT.STOCK_TP,
+	    <!-- 동적 NVL 구문 생성 -->
+	    <foreach collection="sizeList.SIZE" item="size" separator=",">
+	         NVL(PVT."${size.common_cc}", 0) AS SIZE_${size.common_cc}
+	    </foreach>
+	  FROM pivot_data PVT
+	  UNION ALL
+	  SELECT
+	    ST.ITEM_NM,
+	    ST.WAREHOUSE_NM,
+	    ST.WAREAREA_NM,
+	    NULL,
+	    ST.ITEM_UN,
+	    ST.ITEM_CD,
+	    NULL,
+	    ST.WAREHOUSE_CD,
+	    ST.WAREAREA_CD,
+	    ST.STOCK_TP,
+	    <foreach collection="sizeList.SIZE" item="size" separator=",">
+	         0 AS SIZE_${size.common_cc}
+	    </foreach>
+	  FROM (
+	    SELECT 
+	      MR.MATERIAL_NM AS ITEM_NM,
+	      WH.WAREHOUSE_NM,
+	      WA.WAREAREA_NM,
+	      MR.MATERIAL_UN ITEM_UN,
+	      ST.ITEM_CD,
+	      ST.WAREHOUSE_CD,
+	      ST.WAREAREA_CD,
+	      ST.STOCK_TP
+	    FROM STOCK ST
+	    LEFT OUTER JOIN MATERIAL MR 
+	      ON MR.MATERIAL_CD = ST.ITEM_CD
+	    LEFT OUTER JOIN WAREHOUSE WH 
+	      ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	    LEFT OUTER JOIN WAREAREA WA 
+	      ON WA.WAREAREA_CD = ST.WAREAREA_CD 
+	     AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	    WHERE ST.STOCK_TP = 'N'
+	  ) ST
+	</select>
+</mapper>
