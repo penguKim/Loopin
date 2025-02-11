@@ -13,6 +13,7 @@ import com.itwillbs.c4d2412t3p1.entity.Account;
 import com.itwillbs.c4d2412t3p1.entity.Contract;
 import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.AccountFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
 
 import jakarta.transaction.Transactional;
 
@@ -172,5 +173,32 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
     int delete_CONTRACTDETAIL(@Param("contractCds") List<String> contractCds);
 	
+    
+    @Query(value = """
+			SELECT
+                c.contract_cd,
+                c.account_cd,
+                c.contract_ps,
+                c.contract_sd,
+                c.contract_ed,
+                c.contract_am,
+                c.contract_mn,
+                c.contract_st,
+                c.contract_rm,
+                c.contract_wr,
+                c.contract_wd,
+                c.contract_mf,
+                c.contract_md
+            FROM CONTRACT c
+			WHERE (:#{#filterRequest.contractCd} IS NULL OR c.contract_cd LIKE %:#{#filterRequest.contractCd}%) 
+			  AND (:#{#filterRequest.accountCd} IS NULL OR c.account_cd LIKE %:#{#filterRequest.accountCd}%)
+			  AND (:#{#filterRequest.contractPs} IS NULL OR c.contract_ps LIKE %:#{#filterRequest.contractPs}%)
+			  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL
+			   OR c.contract_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate})
+        """, nativeQuery = true)
+    List<Object[]> select_FILTERED_CONTRACT(@Param("filterRequest") ContractFilterRequest filterRequest);
+    
+    
+    
 	
 }

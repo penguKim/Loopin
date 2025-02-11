@@ -19,6 +19,7 @@ import com.itwillbs.c4d2412t3p1.repository.AccountRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.ContractRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.AccountFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -264,5 +265,35 @@ public class BusinessService {
         contractRepository.delete_CONTRACT(contractCds); // 그 후에 수주 데이터 삭제
     }
 	
+    
+    
+	// 거래처 필터 데이터 조회
+	public List<Map<String, Object>> select_FILTERED_CONTRACT(ContractFilterRequest filterRequest) {
+		
+		List<Object[]> result;
+		
+		result = contractRepository.select_FILTERED_CONTRACT(filterRequest);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_ps", row[2]);
+			contract.put("contract_sd", row[3]);
+			contract.put("contract_ed", row[4]);
+			contract.put("contract_am", row[5]);
+			contract.put("contract_mn", row[6]);
+			contract.put("contract_st", row[7]);
+			contract.put("contract_rm", row[8]);
+			contract.put("contract_wr", row[9]);
+			contract.put("contract_wd", row[10]);
+			contract.put("contract_mf", row[11]);
+			contract.put("contract_md", row[12]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+    
 
 }

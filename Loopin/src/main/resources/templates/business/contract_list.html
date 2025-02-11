@@ -952,11 +952,46 @@
         });
 
         // 상단(Contract Grid) 생성
-        make_contract_grid();
+		make_contract_grid();
         // 하단(Detail Grid) 생성
-        make_detail_grid();
+		make_detail_grid();
+        
+	    // 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return;
+		    const filterValues = {};
+	
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        let value = input.val();
+	
+		        filterValues[config.key] = value;
+				
+				console.log('필터값:', filterValues);  // 필터링된 값 확인
+		    }
+	
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/select_FILTERED_CONTRACT',
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken,
+		        },
+		        data: JSON.stringify(filterValues),
+		        success: function(filteredData) {
+		        	console.log('엔터키로 필터링된 데이터:', filteredData);
+		        	contract_grid.resetData(filteredData); // 그리드 데이터 갱신
+		        },
+		        error: function(error) {
+		            console.error('엔터키 필터 적용 오류:', error);
+		        }
+		    });
+		});
     });
 
+
+    
     
     // 상단(Contract Grid) 생성 함수
     function make_contract_grid() {

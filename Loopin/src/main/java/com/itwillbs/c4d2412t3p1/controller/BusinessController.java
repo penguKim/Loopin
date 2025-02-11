@@ -21,6 +21,7 @@ import com.itwillbs.c4d2412t3p1.domain.ContractDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractRequestDTO;
 import com.itwillbs.c4d2412t3p1.service.BusinessService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -229,5 +230,25 @@ public class BusinessController {
 		}
 	}
 	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_CONTRACT")
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_CONTRACT(@RequestBody ContractFilterRequest filterRequest) {
+
+	    try {
+            // 필터 조건이 비어 있으면 전체 수주정보 반환
+            if (filterRequest.isEmpty()) {
+                List<Map<String, Object>> contracts = businessService.select_CONTRACT();
+                log.info("contracts : "+ contracts);
+                return ResponseEntity.ok(contracts);
+            }
+
+            // 필터 조건에 따른 필터링된 수주정보 반환
+            List<Map<String, Object>> filteredContractList = businessService.select_FILTERED_CONTRACT(filterRequest);
+            log.info("filteredContractList : "+ filteredContractList);
+            return ResponseEntity.ok(filteredContractList);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+    }
 	
 }
