@@ -38,8 +38,14 @@ public class ProcessService {
 		return list;
 	}
 
-	public List<Map<String, Object>> selecteqlist(String pd) {
+	public List<Map<String, Object>> selecteqlist(List pd) {
 		List<Map<String, Object>> list = pcM.selecteqlist(pd);
+		return list;
+	}
+
+	public List<Map<String, Object>> postprocess(Map<String, Object> regidata) {
+		regidata.put("process_wd", System.currentTimeMillis());
+		List<Map<String, Object>> list = pcR.save(regidata);
 		return list;
 	}
 

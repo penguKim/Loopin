@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -55,11 +57,32 @@ public class ProcessController {
 	
 	@GetMapping("/selecteqlist")
 	@ResponseBody
-	public List<Map<String,Object>> selecteqlist (@RequestParam("pd") String pd) {
+	public List<Map<String,Object>> selecteqlist (@RequestParam("pd") List pd) {
+		
+		System.out.println("&로 넘어오지?"+ pd);
 		
 		List<Map<String,Object>> list = pcS.selecteqlist(pd); 
 		
 		return list;
 	}
+	
+	@PostMapping("postprocess")
+	@ResponseBody
+	public List<Map<String,Object>> postprocess(@RequestBody Map<String,Object> regidata) {
+		
+		System.out.println("말해바"+ regidata.get("process_cd"));
+		System.out.println("말해바"+ regidata.get("process_nm"));
+		System.out.println("말해바"+ regidata.get("process_gc"));
+		System.out.println("말해바"+ regidata.get("process_cc"));
+		System.out.println("말해바"+ regidata.get("process_pd"));
+		System.out.println("말해바"+ regidata.get("process_eq"));
+		System.out.println("말해바"+ regidata.get("process_wr"));
+		System.out.println("말해바"+ regidata.get("process_bg"));
+		
+		List<Map<String,Object>> result = pcS.postprocess(regidata);
+		
+		return null;
+	}
+	
 	
 }
