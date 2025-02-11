@@ -162,7 +162,7 @@
 		let baseColumns = [
 		    {header: '품목코드', name: 'ITEM_CD', sortable: true, filter: 'text'},
 		    {header: '품목명', name: 'ITEM_NM', sortable: true, filter: 'text'},
-		    {header: '품목대분류', name: 'product_gc', sortable: true, filter: 'select'},
+		    {header: '품목대분류', name: 'product_sc', sortable: true, filter: 'select'},
 		    {header: '품목분류', name: 'product_cc', sortable: true, filter: 'select'},
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
 		    // {header: '품목분류코드', name: 'stock_cd', hidden: true},
@@ -204,8 +204,8 @@
 		        complexColumns: [
 					{
 						header: '사이즈',
-						name: 'size',
-						childNames: sizeList.map(item => `size_${item.common_cc}`)
+						name: 'SIZE',
+						childNames: sizeList.map(item => `SIZE_${item.common_cc}`)
 					}
 				]
 			},
