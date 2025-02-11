@@ -39,7 +39,7 @@ public class Contract {
 	    if (this.contract_cd == null && this.sequenceValue != null) {
 	        String currentYear = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
 	        String formattedSequence = String.format("%04d", this.sequenceValue);
-	        this.contract_cd = "ct" + currentYear + "-" + formattedSequence;
+	        this.contract_cd = "CT" + currentYear + "-" + formattedSequence;
 	    }
 	}
     

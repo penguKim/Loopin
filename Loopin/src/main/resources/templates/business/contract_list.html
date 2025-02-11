@@ -821,6 +821,82 @@
 	        }
 	    });
 	} // 담당자 정보 끝
+	
+    // 삭제 버튼 클릭 이벤트
+    $('#btn_contract_delete').on('click', function () {
+        const checkedRows = contract_grid.getCheckedRows();
+        if (checkedRows.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: '오류 발생!',
+                text: '삭제할 수주를 선택하세요.',
+                confirmButtonText: '확인'
+            });
+            return;
+        }
+
+        const waitContracts = checkedRows.filter(row => row.contract_st === 'WAIT');
+        const contract_cds = waitContracts.map(row => row.contract_cd);
+
+        if (contract_cds.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: '삭제 불가!',
+                text: '대기중인 수주만 삭제가 가능합니다.',
+                confirmButtonText: '확인'
+            });
+            return;
+        }
+        
+        Swal.fire({
+            title: '삭제 확인',
+            text: `선택한 수주(${contract_cds.join(', ')})을 삭제하시겠습니까?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '삭제',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // 확인 버튼을 눌렀을 때 실행할 코드
+                console.log(`선택한 거래처(${contract_cds.join(', ')}) 삭제를 진행합니다.`);
+                
+    	        $.ajax({
+    	            url: '/delete_CONTRACT',
+    	            method: 'POST',
+    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+    	            data: JSON.stringify({ contract_cds }),
+    	            contentType: 'application/json',
+    	            success: function () {
+    		            Swal.fire({
+    		                icon: 'success',
+    		                title: '삭제완료!',
+    		                text: '삭제가 완료되었습니다.',
+    		                confirmButtonText: '확인'
+    		            });
+    		            make_contract_grid();
+    		            make_detail_grid();
+    	            },
+    	            error: function (xhr) {
+    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+    		            Swal.fire({
+    		                icon: 'error',
+    		                title: '오류발생',
+    		                text: '삭제 중 오류가 발생했습니다.',
+    		                confirmButtonText: '확인'
+    		            });
+    	            }
+    	        });
+                
+                
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+                console.log('삭제가 취소되었습니다.');
+            }
+        });
+    });
+	
+	
 </script>
 
 
@@ -849,9 +925,9 @@
         const filterConfig = [
             { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
             { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
-            { key: 'contractCd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-2' },
-            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-2' },
-            { key: 'contractPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-2' },
+            { key: 'contractCd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
+            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-4' },
+            { key: 'contractPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-4' },
         ];
 
         // 필터 모듈 초기화
@@ -881,7 +957,7 @@
         make_detail_grid();
     });
 
-	
+    
     // 상단(Contract Grid) 생성 함수
     function make_contract_grid() {
 		

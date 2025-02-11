@@ -20,7 +20,7 @@ import jakarta.transaction.Transactional;
 public interface ContractRepository  extends JpaRepository<Contract, String> {
 
 	// 시퀀스 조회
-	@Query(value = "SELECT NT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	@Query(value = "SELECT CT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
 	
     // 수주 바디 저장
@@ -68,6 +68,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		        a.account_cd AS account_cd,
 		        a.account_nm AS account_nm
 		    FROM ACCOUNT a
+    		WHERE a.account_dv IN ('BOTH', 'CONTRACT')
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
 
@@ -149,6 +150,27 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     @Query(value = "DELETE FROM CONTRACTDETAIL WHERE contract_cd = :contractCd", nativeQuery = true)
     void deleteContractDetailsByContractCd(@Param("contractCd") String contractCd);
 
+    
+    @Modifying
+    @Query(value = """
+    		DELETE
+    		  FROM 
+    		  	CONTRACT c 
+		  	 WHERE 
+		  	 	c.contract_cd IN :contractCds 
+	  	 	   AND c.contract_st = 'WAIT'
+		""", nativeQuery = true)
+    int delete_CONTRACT(@Param("contractCds") List<String> contractCds);
+
+    @Modifying
+    @Query(value = """
+    		DELETE
+    		  FROM 
+    		  	CONTRACT c 
+		  	 WHERE 
+		  	 	c.contract_cd IN :contractCds 
+		""", nativeQuery = true)
+    int delete_CONTRACTDETAIL(@Param("contractCds") List<String> contractCds);
 	
 	
 }

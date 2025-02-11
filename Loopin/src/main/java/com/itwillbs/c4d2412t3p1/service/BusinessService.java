@@ -258,5 +258,11 @@ public class BusinessService {
 		return result;
 	}
 
+    @Transactional
+    public void delete_ContractAndDetails(List<String> contractCds) {
+        contractRepository.delete_CONTRACTDETAIL(contractCds); // 디테일 먼저 삭제 처리
+        contractRepository.delete_CONTRACT(contractCds); // 그 후에 수주 데이터 삭제
+    }
+	
 
 }

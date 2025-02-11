@@ -208,7 +208,26 @@ public class BusinessController {
 	    }
 	}
 
+	//	수주 삭제
+	@PostMapping("/delete_CONTRACT")
+	public ResponseEntity<Map<String, Object>> delete_CONTRACT(@RequestBody Map<String, List<String>> request) {
+		
+		List<String> contractCds  = request.get("contract_cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
+		
+		Map<String, Object> response = new HashMap<>();
 
+		try {
+            businessService.delete_ContractAndDetails(contractCds);
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
 	
 	
 }
