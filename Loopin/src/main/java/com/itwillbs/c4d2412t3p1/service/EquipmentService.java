@@ -2,26 +2,20 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.EquipmentDTO;
-import com.itwillbs.c4d2412t3p1.domain.MaterialDTO;
-import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
-import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
+import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
+import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Equipment;
-import com.itwillbs.c4d2412t3p1.entity.Holiday;
-import com.itwillbs.c4d2412t3p1.entity.Material;
-import com.itwillbs.c4d2412t3p1.entity.Warearea;
-import com.itwillbs.c4d2412t3p1.entity.Warehouse;
-import com.itwillbs.c4d2412t3p1.mapper.DashboardMapper;
 import com.itwillbs.c4d2412t3p1.mapper.EquipmentMapper;
 import com.itwillbs.c4d2412t3p1.repository.EquipmentRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.EquipmentFilterRequest;
@@ -42,6 +36,12 @@ public class EquipmentService {
 	private final EntityManager entityManager;
 	
 	// 설비 조회
+	public List<Common_codeDTO> select_PRODUCT_list() {
+		return equipmentRepository.select_PRODUCT_list();
+		
+	}
+	
+	// 설비 조회
 	public List<EquipmentDTO> select_EQUIPMENT(EquipmentFilterRequest filter) {
 		return equipmentMapper.select_EQUIPMENT(filter);
 	}
@@ -50,10 +50,15 @@ public class EquipmentService {
 	public void insert_EQUIPMENT(EquipmentDTO equipment, MultipartFile image) throws IOException {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
-	    String cd = equipment.getEquipment_cd();
+	    
+	 // 시퀀스에서 ID 가져오기
+	    if (equipment.getEquipment_cd() == null || equipment.getEquipment_cd().isEmpty()) {
+	    	String sequenceNumber = equipmentRepository.nextEquipment_cd(); // '0001'
+            equipment.setEquipment_cd("EQ-" + sequenceNumber); // 'EQ-0001'
+	    }
 	    
 	    // 기존 파일 처리
-	    Optional<Equipment> equipmentImage = equipmentRepository.findById(cd);
+	    Optional<Equipment> equipmentImage = equipmentRepository.findById(equipment.getEquipment_cd());
 	    if (equipmentImage.isPresent() && (image == null || image.isEmpty())) {
 	        equipmentImage.ifPresent(ex -> {
 				try {
@@ -64,7 +69,9 @@ public class EquipmentService {
 			});
 	    }
 	    
-	    equipment.setEquipment_cd(equipmentRepository.nextEquipment_cd());
+//	    log.info("equipmentRepository.nextEquipment_cd()" + equipmentRepository.nextEquipment_cd());
+//	    equipment.setEquipment_cd(equipmentRepository.nextEquipment_cd());
+//	    log.info("equipment.getEquipment_cd()" + equipment.getEquipment_cd());
 
 	    // 새 파일 업로드 처리
 	    if (image != null && !image.isEmpty()) {
@@ -83,8 +90,6 @@ public class EquipmentService {
         
         equipmentRepository.save(Equipment.setEquipment(equipment));
     }
-
-	
 	
 	
 	

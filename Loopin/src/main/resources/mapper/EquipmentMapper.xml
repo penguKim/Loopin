@@ -10,10 +10,12 @@
 			    , EQ.MODEL_CD
 			    , EQ.EQUIPMENT_NM
 			    , EQ.WAREHOUSE_CD
-			    , EQ.PRODUCT_CD
+			    , cc.COMMON_NM PRODUCT_CD
 			    , EQ.EQUIPMENT_US
 		   FROM EQUIPMENT EQ
+	  LEFT JOIN COMMON_CODE cc ON cc.COMMON_CC = eq.PRODUCT_CD
 		  WHERE 1=1
+		  		AND EQ.EQUIPMENT_US = 1
 		  <if test="filter.equipment_cd != null and filter.equipment_cd != ''">AND EQ.EQUIPMENT_CD LIKE '%${filter.equipment_cd}%'</if>
 		  <if test="filter.model_cd != null and filter.model_cd != ''">AND EQ.MODEL_CD LIKE '%${filter.model_cd}%'</if>
 		  <if test="filter.equipment_nm != null and filter.equipment_nm != ''">AND EQ.EQUIPMENT_NM LIKE '%${filter.equipment_nm}%'</if>
