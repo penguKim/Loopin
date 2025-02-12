@@ -259,7 +259,18 @@
 	        ],
 	        rowHeaders: ['checkbox'],
 	        scrollX: false,
-	        scrollY: false
+	        scrollY: false,
+			summary: {
+			    height: 40,
+			    position: 'bottom',
+			    columnContent: {
+			    	contract_ct: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			}
 	    });
 
 	    // DatePicker 초기화
@@ -360,6 +371,12 @@
 			
 	        event.preventDefault();
 	        
+		    if (!validateForm()) {
+		        console.log("폼 검증 실패, 버튼 다시 활성화");
+		        $('#modal_submit_button').prop('disabled', false);
+		        return false; // 검증 실패 시 제출 중단
+		    }
+	        
 			const mode = $('#modal_submit_button').text().trim();
 			const url = mode === '등록' ? '/insert_CONTRACT' : '/update_CONTRACT';
 			console.log("폼 제출 시 mode:", mode, "요청 URL:", url);
@@ -416,6 +433,44 @@
 	        });
 	    });
 	}
+	
+	function validateForm() {
+	    let isValid = true;
+	    let errorMessage = "";
+
+	    // 필수값 검증할 필드 목록
+	    const requiredFields = [
+	        { id: '#contract_ps', message: '담당자명을 입력해주세요.' },
+	        { id: '#contract_sd', message: '수주일자를 입력해주세요.' },
+	        { id: '#account_cd', message: '거래처코드를 입력해주세요.' },
+	        { id: '#contract_st', message: '수주상태를 선택해주세요.' },
+	        { id: '#contract_am', message: '수주수량을 입력해주세요.' },
+	        { id: '#contract_mn', message: '수주금액을 입력해주세요.' }
+	    ];
+
+	    requiredFields.forEach(field => {
+	        const value = $(field.id).val()?.trim();
+	        if (!value) {
+	            errorMessage = field.message;
+	            isValid = false;
+	            return false; // 첫 번째 오류에서 중단
+	        }
+	    });
+
+	    if (!isValid) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: '입력 오류',
+	            text: errorMessage,
+	            confirmButtonText: '확인'
+	        });
+	        return false;
+	    }
+
+	    return true; // 모든 필수값이 입력된 경우 true 반환
+	}
+
+	
 
 	// DatePicker 초기화 함수
 	function initializeDatePickers() {
@@ -958,14 +1013,8 @@
     // 변수 지정
     let contract_grid;
     let detail_grid;
-	
-    setGridTheme();
     
-// 	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
-
-// 	["status_list"].forEach(key => {
-// 	    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
-// 	});
+    setGridTheme();
     
     
     const token = $("meta[name='_csrf']").attr("content");
