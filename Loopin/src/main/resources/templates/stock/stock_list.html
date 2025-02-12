@@ -6,16 +6,208 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
 <body>
 	<main id="main" class="main">
 		<section class="section">
-			<div class="row">
+<!--			<div class="row">
 				<div class="col">
 					<div class="card">
 						<div class="card-body ">
 							<h5 class="card-title">재고관리</h5>
 							<div id="filterModule" class="mb-3"></div>
 							<div id="grid"></div>
+						</div>
+					</div>
+				</div>
+			</div>-->
+			
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">재고관리</h1>
+							<!-- 탭 헤드 -->
+							<div class="d-flex justify-content-between">
+								<div class="">
+									<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
+										<li class="nav-item" role="presentation">
+											<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+											type="button" role="tab" aria-controls="tab_grid" aria-selected="false">그리드</button>
+										</li>
+										<li class="nav-item" role="presentation">
+											<button class="nav-link" id="btn_calendar_tab" data-bs-toggle="pill" data-bs-target="#tab_calendar" 
+											type="button" role="tab" aria-controls="tab_calendar" aria-selected="true">트리</button>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<!-- 탭 바디 -->
+							<div class="tab-content pt-2" id="myTabContent">
+								<!-- 그리드 탭 -->
+								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
+									<div id="filterModule" class="mb-3"></div>
+									<div id="grid"></div>
+								</div>
+								<!-- 달력 탭 -->
+								<div class="tab-pane fade" id="tab_calendar" role="tabpanel" aria-labelledby="calendar-tab">
+									<div id="treeMap"></div>
+
+									<script>
+										$(function(){
+											test();
+											
+										});
+										
+										async function test () {
+											try {
+											    const ajaxData = await callAjaxPost(`/select_STOCK`, JSON.stringify({}));
+												
+												let resultData = ajaxData['list'];
+												
+												
+												let treeObjs = [];
+												 let warehouseMap = {};
+												 
+												 // resultData를 순회하면서 창고 → 구역 → 색상 → 사이즈계층으로 노드를 생성
+												 resultData.forEach(row => {
+													console.log(row);
+												   let whId = row.WAREHOUSE_CD;   // 예: WH003
+												   let whName = row.WAREHOUSE_NM;   // 예: 제품보관창고
+												   let areaId = row.WAREAREA_CD;    // 예: A, B
+												   let areaName = row.WAREAREA_NM;    // 예: A, B
+												   let color = row.COLOR;           // 예: WHITE, BLACK
+												   let size = row.SIZE;             // 예: 220, 230, ...
+												   let qty = row.STOCK_AQ;          // 수량
+												   
+												   // 창고 노드 생성
+												   if (!warehouseMap[whId]) {
+												     warehouseMap[whId] = {
+												       id: whId,
+												       parent: '',
+												       name: whName,
+												       children: {}
+												     };
+												     treeObjs.push(warehouseMap[whId]);
+												   }
+												   let whNode = warehouseMap[whId];
+												   
+												   // 구역 노드 생성 (창고별 그룹)
+												   if (!whNode.children[areaId]) {
+												     whNode.children[areaId] = {
+												       id: `${whId}-${areaId}`,
+												       parent: whId,
+												       name: areaName,
+												       children: {}
+												     };
+												   }
+												   let areaNode = whNode.children[areaId];
+												   
+												   // 색상 노드 생성 (구역별 그룹)
+												   if (!areaNode.children[color]) {
+												     areaNode.children[color] = {
+												       id: `${whId}-${areaId}-${color}`,
+												       parent: areaNode.id,
+												       name: color,
+												       children: {}
+												     };
+												   }
+												   let colorNode = areaNode.children[color];
+												   
+												   // 사이즈 노드 생성 (최종 노드)
+												   // 여기서는 사이즈별로 노드를 만들고, 해당 수량을 표시합니다.
+												   let sizeNode = {
+												     id: `${whId}-${areaId}-${color}-${size}`,
+												     parent: colorNode.id,
+												     name: `${size} (${qty}개)`
+												   };
+												   // 사이즈 노드는 자식이 없으므로 바로 할당
+												   colorNode.children[size] = sizeNode;
+												 });
+												 
+												 // 중첩된 트리구조를 평면 배열(flat array)로 변환하는 함수
+												 const flatData = [];
+												 function flattenTree(node) {
+												   flatData.push({ id: node.id, parent: node.parent, name: node.name });
+												   if (node.children) {
+												     for (let key in node.children) {
+												       flattenTree(node.children[key]);
+												     }
+												   }
+												 }
+												 treeObjs.forEach(n => flattenTree(n));
+												
+												
+												 Highcharts.chart('treeMap', {
+												     chart: {
+												         height: 600,  // 차트 전체 높이 조정
+												         spacingTop: 30,
+												         spacingBottom: 30
+												     },
+												     title: {
+												         text: 'JORDAN001 재고 현황'
+												     },
+												     series: [{
+												         type: 'treegraph',
+												         data: flatData,
+												         tooltip: {
+												             pointFormat: '{point.name}'
+												         },
+												         marker: {
+												             symbol: 'rect',
+												 			width: '10%',
+												 			height: '5%'
+												         },
+												 		nodeWidth: 'auto',
+												         borderRadius: 10,
+												         dataLabels: {
+												             style: {
+												                 fontSize: '14px',
+												                 fontWeight: 'bold',
+												                 textOutline: '1px contrast'  // 텍스트 가독성 향상
+												             },
+												         },
+												         levels: [{
+												             level: 1,
+												             levelIsConstant: false,
+												 			nodeDistance: '50%',
+												             dataLabels: {
+												                 style: { fontSize: '18px' }
+												             }
+												         }, {
+												             level: 2,
+												             colorByPoint: true,
+												             dataLabels: {
+												                 style: { fontSize: '16px' }
+												             }
+												         }, {
+												             level: 3,
+												             colorVariation: {
+												                 key: 'brightness',
+												                 to: -0.5
+												             }
+												         }, {
+												             level: 4,
+												             colorVariation: {
+												                 key: 'brightness',
+												                 to: 0.5
+												             }
+												         }]
+												     }]
+												 });
+												
+												
+											} catch (error) {
+											    console.log(error);
+											    showAlert('', 'error', '조회 실패', error.msg);
+											}
+										}
+
+
+
+									</script>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -53,7 +245,7 @@
 	$(function() {
 		setGridTheme();
 		make_grid();
-		get_STOCK_list();
+		getGridlist();
 		
 		
 		setElementHeight('.card', -105);
@@ -160,6 +352,8 @@
 		let sizeList = /*[[${commonList['SIZE']}]]*/ [];
 		
 		let baseColumns = [
+			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
+			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
 		    {header: '품목코드', name: 'ITEM_CD', sortable: true, filter: 'text'},
 		    {header: '품목명', name: 'ITEM_NM', sortable: true, filter: 'text'},
 		    {header: '품목대분류', name: 'product_sc', sortable: true, filter: 'select'},
@@ -167,8 +361,6 @@
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
 		    // {header: '품목분류코드', name: 'stock_cd', hidden: true},
 		    {header: '단위', name: 'ITEM_UN', align: 'center', sortable: true, filter: 'select'},
-		    {header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
-		    {header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
 		    {header: '색상', name: 'COLOR', sortable: true, filter: 'select'},
 		    {header: '총 수량', name: 'STOCK_AQ', align: 'center', sortable: true, filter: 'select'},
 		];
@@ -229,154 +421,7 @@
 			// setModalInput(row, getPrefix(grid['flag']));
 		});
     }
-	
-	// 상세 모달
-	function make_modal_detail(process, flag) {
-		let text = !process ? '등록' : '수정';
-		let title = `품목 ${text}`;
-		const div_modal = 'div_PRODUCT_modal';
-		let modalElement = document.getElementById('#${div_modal}');
-		
-		if(!modalElement) {
-			let modalHtml = `
-			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-				<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
-		            <div class="modal-content">
-						<div class="modal-header">
-		            		<h5 class="modal-title">${title}</h5>
-		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div class="row">
-								<label for="product_pc" class="col-2 col-form-label">사진등록</label>
-								<div class="col-4">
-							        <div class="photoContainer">
-							            <img class="photoPreview" src=""  alt="사진 미리보기">
-							            <div class="uploadText">사진 등록</div>
-							        </div>
-							        <input type="file" id="product_pc" class="d-none" accept="image/*">
-								</div>
-								<div class="col">
-									<div class="row mb-3">
-										<label for="modal_product_cd" class="col-4 col-form-label">품목코드<span class="text-danger">*</span></label>
-										<div class="col-8"><input type="text" class="form-control" id="modal_product_cd" ${!process ? '' : 'disabled'}></div>
-									</div>
-									<div class="row mb-3">
-										<label for="modal_product_nm" class="col-4 col-form-label">품목명<span class="text-danger">*</span></label>
-										<div class="col-8"><input type="text" class="form-control" id="modal_product_nm"></div>
-									</div>
-									<div class="row mb-3">
-									<label for="modal_product_gc" class="col-4 col-form-label">품목대분류<span class="text-danger">*</span></label>
-									<div class="col-8"><select id="modal_product_gc" class="form-select" disabled></select></div>
-								</div>
-								</div>
-							</div>
-							<div class="row d-flex justify-content-end mb-3">
-								<div class="col-4 offset-2">
-									<button id="btn_image_remove" class="btn btn-danger d-none">삭제</button>
-								</div>
-								<label for="modal_product_cc" class="col-2 col-form-label">품목소분류<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_cc" class="form-select"></select></div>
-							</div>
-							<div class="row mb-3 div_select" style="display: none;">
-								<label for="modal_product_sz" class="col-2 col-form-label">사이즈<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_sz" class="form-select" multiple></select></div>
-								<label for="modal_product_cr" class="col-2 col-form-label">색상<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_cr" class="form-select" multiple></select></div>
-							</div>
-							<div class="row mb-3 div_select" style="display: none;">
-								<label for="modal_product_gd" class="col-2 col-form-label">성별<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_gd" class="form-select"></select></div>
-							</div>
-							<div class="row mb-3">
-								<label for="modal_product_un" class="col-2 col-form-label">기준단위<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_un" class="form-select"></select></div>
-								<label for="modal_product_pr" class="col-2 col-form-label">기준단가(원)<span class="text-danger">*</span></label>
-								<div class="col-4"><input type="text" class="form-control" id="modal_product_pr"></div>
-							</div>
-							<div class="row mb-3">
-								<label for="modal_product_wh" class="col-2 col-form-label">보관창고<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_wh" class="form-select"></select></div>
-								<label for="modal_product_us" class="col-2 col-form-label">사용여부<span class="text-danger">*</span></label>
-								<div class="col-4"><select id="modal_product_us" class="form-select"></select></div>
-							</div>
-							<div class="row mb-3">
-								<label for="modal_product_rm" class="col-2 col-form-label">비고</label>
-								<div class="col-4"><input type="text" class="form-control" id="modal_product_rm"></div>
-							</div>
-						</div>
-						<div class="modal-footer d-flex justify-content-between">
-							<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
-							<div>
-								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-								<button type="submit" id="btn_modal_save" class="btn btn-primary">${text}</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			`;
-			
-			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
-			
-			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
-		}
-		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
-		
-        modalElement.addEventListener('shown.bs.modal', function () {
-			createSelectBox($('#modal_product_gc'), commonList['PRDTYPE'], '선택하세요.');
-			$('#modal_product_gc').val(groupValue).trigger('change');
-			createSelectBox($('#modal_product_cc'), [], '선택하세요.');
-			createSelectBox($('#modal_product_gd'), commonList['SHOEGENDER'], '선택하세요.');
-			createSelectBox($('#modal_product_un'), commonList['UNIT'], '선택하세요.');
-			createSelectBox('#modal_product_wh', warehouseList, '선택하세요.');
-			createSelectBox($('#modal_product_us'), commonList['USEYN'], '선택하세요.');
-			
-			createSelect2('#modal_product_sz', commonList['SIZE'], '사이즈를 선택하세요.', div_modal);
-			createSelect2('#modal_product_cr', commonList['COLOR'], '색상을 선택하세요.', div_modal);
 
-			// 품목코드 마스킹
-			$('#modal_product_cd').mask('Z'.repeat(10), {
-		        translation: {'Z': {pattern: /[A-Za-z0-9]/}},
-		    })
-		    .on('input', function() {
-		        $(this).val($(this).val().toUpperCase());
-		    });
-			
-			// 기준단가 마스킹
-			$('#modal_product_pr').mask('000,000,000', {
-			    reverse: true,
-			});
-				
-			modal_product_cd = $('#modal_product_cd');
-			modal_product_nm = $('#modal_product_nm');
-			modal_product_gc = $('#modal_product_gc');
-			modal_product_cc = $('#modal_product_cc');
-			modal_product_sz = $('#modal_product_sz');
-			modal_product_cr = $('#modal_product_cr');
-			modal_product_gd = $('#modal_product_gd');
-			modal_product_un = $('#modal_product_un');
-			modal_product_pr = $('#modal_product_pr');
-			modal_product_wh = $('#modal_product_wh');
-			modal_product_us = $('#modal_product_us');
-			modal_product_rm = $('#modal_product_rm');
-			
-        });
-		
-		modalElement.addEventListener('hidden.bs.modal', function () {
- 			$('button, input, select, textarea').each(function () {
-                $(this).blur();
-            });
-			$('#modal_product_sz').select2('destroy');
-			$('#modal_product_cr').select2('destroy');
-			modalData = {};
-			modalElement.remove();
-		});
-		
-		modal.show();
-		
-	}
-	
 	// ajax 함수 --------------------
 	// 공통코드 조회
 	async function getList() {
@@ -387,7 +432,7 @@
 	}
 	
 	// 제품 조회
-	async function get_STOCK_list(filter = {}, group) {
+	async function getGridlist(filter = {}, group) {
 	    try {
 	        const jsonData = {
 	            // productFilter: {
@@ -553,6 +598,7 @@
 			showAlert('', 'error', '삭제 실패', error['msg']);
 		}
 	}
+
 
 	
 </script>

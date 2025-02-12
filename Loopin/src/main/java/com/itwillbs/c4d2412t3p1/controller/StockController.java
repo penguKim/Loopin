@@ -20,6 +20,7 @@ import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.StockDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
+import com.itwillbs.c4d2412t3p1.entity.Stock;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.StockService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
@@ -59,6 +60,24 @@ public class StockController {
 		Map<String, Object> data = new HashMap<>();
 		data.put("contents", list);
 		response.put("data", data);
+		
+		return response;
+	}
+	
+	// 재고 조회
+	@ResponseBody
+	@PostMapping("/select_STOCK")
+	public Map<String, Object> select_STOCK(@RequestBody StockDTO stock) {
+		Map<String, Object> response = new HashMap<>(); 
+		
+		// Map<String, List<Common_codeDTO>> sizeList =  commonService.select_COMMON_list("SIZE");
+		// List<Map<String, Object>> list = stockService.select_STOCK_list(sizeList);
+
+		List<Map<String, Object>> list = stockService.select_TEST();
+		System.out.println("------------------리스트");
+		System.out.println(list.toString());
+		
+		response.put("list", list);
 		
 		return response;
 	}
