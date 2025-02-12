@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
@@ -21,5 +22,8 @@ public interface EquipmentRepository extends JpaRepository<Equipment, String> {
 	
 	@Query(value = "SELECT C.COMMON_CC, C.COMMON_NM FROM COMMON_CODE C WHERE COMMON_GC = 'HALFPRO' OR COMMON_GC = 'MATERIALS' OR COMMON_GC = 'SUBMAT' OR COMMON_GC = 'PRODUCT'", nativeQuery = true)
 	List<Common_codeDTO> select_PRODUCT_list();
+
+//	@Query("SELECT p.process_eq FROM Process p WHERE p.process_us = 1")
+//	List<String> findAllProcessEq();
 	
 }

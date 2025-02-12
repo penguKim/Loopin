@@ -5,7 +5,9 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,6 +22,7 @@ import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Equipment;
 import com.itwillbs.c4d2412t3p1.mapper.EquipmentMapper;
 import com.itwillbs.c4d2412t3p1.repository.EquipmentRepository;
+import com.itwillbs.c4d2412t3p1.repository.ProcessRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.EquipmentFilterRequest;
 
 import jakarta.persistence.EntityManager;
@@ -88,10 +91,11 @@ public class EquipmentService {
     }
 
 	public void delete_EQUIPMENT(List<EquipmentDTO> equipmentList) {
+		
 		List<String> equipmentCds = equipmentList.stream()
 			.map(EquipmentDTO::getEquipment_cd)
 			.collect(Collectors.toList());
-	    
+
 		equipmentRepository.deleteAllById(equipmentCds);
 	}
 
