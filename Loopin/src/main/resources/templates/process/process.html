@@ -1,0 +1,559 @@
+<html lang="ko" xmln	s:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}" layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<style>
+   /* select2 드롭다운 z-index 조정 */
+   .select2-dropdown {
+       z-index: 1051 !important; /* Bootstrap modal의 z-index보다 높게 설정 */
+   }
+   
+   .select2 select2-container select2-container--default {
+   		width: 100%;
+   }
+</style>
+<body>
+<span id="employee_cd" sec:authentication="principal.employee_cd" style="display: none;"></span>
+<span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
+	<main id="main" class="main">
+		<div class="pagetitle"></div>
+		<div id="loadingSpinner" class="loading-overlay" style="display: none;">
+		    <div class="spinner-border text-primary" style="width: 60px; height: 60px;" role="status">
+		        <span class="visually-hidden">Loading...</span>
+		    </div>
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<div class="card" id="div_card">
+					<div class="card-body">
+						<div class="card-title d-flex">
+							<h5 id="premth"></h5>
+							<h5>공정관리</h5>
+						</div>
+						<div id="filterModule"></div>
+						<div id="grid" class="p-1"></div>
+						<!-- <div class="card-footer d-flex justify-content-start align-items-center p-2"> -->
+						<div class="d-flex justify-content-start align-items-center p-2">
+							<input type="button" id="btn_delete" class="btn btn-primary ml-3 me-2" value="삭제">
+							<input type="button" id="btn_register" class="btn btn-primary ml-3" value="등록">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	   <div class="modal" id="registermodal" tabindex="-1" data-bs-backdrop="static">
+	             <div class="modal-dialog modal-dialog-centered modal-lg">
+	               <div class="modal-content">
+	                 <div class="modal-header">
+	                   <h5 class="modal-title">공정 등록</h5>
+	                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                 </div>
+	                 <div class="modal-body">
+					 	<form class="row g-3">
+							<div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="registermodal" class="col-sm-3 col-from-label">공정코드</label>
+			                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_CD">
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="" class="col-sm-3 col-from-label">공정명<span class="text-danger">*</span></label>
+			                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_NM">
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="" class="col-sm-3 col-from-label">품목분류<span class="text-danger">*</span></label>
+			                    	<select class="form-select" aria-label="PRODUCT_GC" id="PRODUCT_GC">
+				                      <option selected></option>
+				                    </select>
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="" class="col-sm-3 col-from-label">품목세부<span class="text-danger">*</span></label>
+			                    	<select class="form-select" aria-label="PRODUCT_CC" id="PRODUCT_CC">
+				                    </select>
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="registermodal" class="col-3 col-form-label">적용품목<span class="text-danger">*</span></label>
+									<div class="col-9"><select id="PRODUCT_PD" class="form-select1" style="width: 100%;" multiple>
+									</select>
+									</div>
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+		                    	<label for="registermodal" class="col-3 col-form-label">설비</label>
+								<div class="col-9"><select id="PRODUCT_EQ" class="form-select2" style="width: 100%;" multiple></select></div>
+		                   	   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="registermodal" class="col-sm-3 col-from-label">사용여부<span class="text-danger">*</span></label>
+			                    	<select class="form-select" aria-label="PROCESS_US" id="PROCESS_US" >
+				                      <option value="1" selected>Y</option>
+				                      <option value="0">N</option>
+				                    </select>
+			                   </div>
+		                   </div>
+		                   <div class="col-md-6">
+			                   <div class="input-group mb-3">
+			                    	<label for="registermodal" class="col-sm-3 col-from-label">비고</label>
+			                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_BG">
+			                   </div>
+		                   </div>
+				 	   </form>
+	                   </div>
+		               <div class="modal-footer d-flex justify-content-between">
+		                 	<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
+		                 	<div>
+		                    <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                    <button type="button" class="btn btn-primary" id="btn_modalregi">등록</button>
+		                 	</div>
+	                   </div>
+	               </div>
+             </div>
+         </div>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	var empcd = document.getElementById('employee_cd').textContent;
+    const PRDTYPE = 'PRDTYPE'
+    let selgc = null;
+    let selcc = null;
+    let selpd = null;
+    let seleq = null;
+    let selus = null;
+    let pccd = null;
+    let pcnm = null;
+    let pcbg = null;
+	
+	/* FETCH */
+	
+	// 처음 로딩
+	const fetchProcesslist = async () => {
+	  try {
+	  const response = await fetch('/selectpclist', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // [csrfHeader]: csrfToken,
+      },
+	    });
+	    const data = await response.json();
+	    console.log(data);
+	    grid.resetData(data);
+	  } catch (error) {
+	    console.error('공정관리 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	fetchProcesslist();
+	
+	// 모달 품목분류 패치
+	const fetchpdgclist = async (COMMON_GC) => {
+	  try {
+	  const response = await fetch(`/selectpdgclist?COMMOM_GC=${COMMON_GC}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // [csrfHeader]: csrfToken,
+      },
+	    });
+	    const data = await response.json();
+	    console.log(data);
+	    if(COMMON_GC === PRDTYPE){
+		    updateSelectOptions(data);
+	    }else{
+		    updatePDGCSelectOptions(data);
+	    }
+	  } catch (error) {
+	    console.error('품목분류 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	// 품목분류 셀렉트 업데이트
+	const updateSelectOptions = (options) => {
+	  const selectElement = document.querySelector('#PRODUCT_GC');
+	  
+	// 기존 옵션을 모두 삭제
+	  selectElement.innerHTML = '<option selected>품목분류</option>';
+	  
+	  // 새로운 옵션 추가
+	  options.forEach(option => {
+	    const optionElement = document.createElement('option');
+	    optionElement.value = option.COMMON_CC;
+	    optionElement.textContent = option.COMMON_NM;
+	    selectElement.appendChild(optionElement);
+	  });
+	};
+	
+      //////////////
+     // 모달 설정 //
+	///////////////
+	
+	const btn_regi = document.getElementById('btn_register');
+	const modal = document.getElementById('registermodal');
+	
+	btn_regi.addEventListener('click', function(e){
+		console.log('등록버튼 눌렀다.');
+		// 모달 뜨기. 모달에서 어쩌고.
+		
+		var regimodal = new bootstrap.Modal(modal);
+		regimodal.show();
+		
+		// select2 초기화
+	    $('#PRODUCT_EQ').select2({
+	        placeholder: '설비를 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+		
+	    $('#PRODUCT_PD').select2({
+	        placeholder: '품목을 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+		
+	});
+	
+	/* // 공정코드 입력
+	pccd = document.getElementById('PROCESS_CD').value;
+	const changeCD = ()=>{
+		const cdvalue = document.getElementById('PROCESS_CD').value;
+		console.log('code',cdvalue);
+		pccd = cdvalue;
+	} 
+
+	// 공정명 입력
+	pcnm = document.getElementById('PROCESS_NM').value;
+	const changeNM = ()=>{
+		const nmvalue = document.getElementById('PROCESS_NM').value;
+		console.log('name',nmvalue);
+		pcnm = nmvalue;
+	}  */
+	
+	//품목분류 선택
+	const pdgChange = async () => {
+		const gcvalue = document.querySelector('#PRODUCT_GC').value;
+		console.log('품목선택',gcvalue);
+		console.log('품목분류선택',typeof gcvalue);
+		selgc = gcvalue;
+		fetchpdgclist(gcvalue);
+	};
+	
+   const updatePDGCSelectOptions = (options) => {
+ 	  const selectElement = document.querySelector('#PRODUCT_CC');
+	    
+	  selectElement.innerHTML = '<option selected>품목세부</option>';
+	    
+	  options.forEach(option => {
+	    const optionElement = document.createElement('option');
+	    optionElement.value = option.COMMON_CC;
+	    optionElement.textContent = option.COMMON_NM;
+	    selectElement.appendChild(optionElement);
+	  });
+    };
+	
+    //품목세부 선택
+	const pdcChange = async () => {
+		const ccvalue = document.querySelector('#PRODUCT_CC').value;
+		console.log('세부품목선택',ccvalue);
+		console.log('세부품목분류선택',typeof ccvalue);
+		selcc = ccvalue;
+		console.log('이러면?!',selgc);
+		try {
+		
+		  const response = await fetch(`/selectpdcclist?pdcc=${selcc}&pdgc=${selgc}`, {
+	      method: 'GET',
+	      headers: {
+	        'Content-Type': 'application/json',
+	        // [csrfHeader]: csrfToken,
+	      },
+    	});
+		  
+	    const ccdata = await response.json();
+	    console.log('ccdata',ccdata);
+	    if(selgc === 'HALFPRO' || selgc === 'PRODUCT' ){
+			updatePDSelectOptions(ccdata);
+	    }else{
+			updatePDSelectOptions2(ccdata);
+	    }
+	    
+	  } catch (error) {
+	    console.error('적용품목 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	};
+	
+	 const updatePDSelectOptions = (options) => {
+	    const selectElement = document.querySelector('#PRODUCT_PD');
+	    
+	    selectElement.innerHTML = '<option></option>';
+	    
+	    options.forEach(option => {
+	      const optionElement = document.createElement('option');
+	      optionElement.value = option.PRODUCT_CC;
+	      optionElement.textContent = option.PRODUCT_NM;
+	      selectElement.appendChild(optionElement);
+	    });
+	  };
+	  
+	 const updatePDSelectOptions2 = (options) => {
+	    const selectElement = document.querySelector('#PRODUCT_PD');
+	    
+	    selectElement.innerHTML = '<option></option>';
+	    
+	    options.forEach(option => {
+	      const optionElement = document.createElement('option');
+	      optionElement.value = option.MATERIAL_CC;
+	      optionElement.textContent = option.MATERIAL_NM;
+	      selectElement.appendChild(optionElement);
+	    });
+	  };
+	
+	// PRODUCT_PD (적용품목) 선택이 변경되었을 때
+	$('#PRODUCT_PD').on('change', async function() {
+	  var pdvalue = $(this).val();
+	  console.log('선택된 적용품목:', pdvalue);
+	  console.log('선택된 적용품목:', typeof pdvalue);
+	  
+	  // 다중 선택 값이 배열일 경우, 이를 쿼리 파라미터 형식으로 변환
+    const pdvalueString = pdvalue.map(value => `pd=${encodeURIComponent(value)}`).join('&');
+    const pdvaluepost = pdvalue.map(value => `${encodeURIComponent(value)}`).join(',');
+	  console.log('어떻게 받아오는데', pdvalueString);
+	  selpd = pdvaluepost
+	  
+	  try {
+		  const response = await fetch(`/selecteqlist?${pdvalueString}`, {
+	      method: 'GET',
+	      headers: {
+	        'Content-Type': 'application/json',
+	        //'pd':pdvalues
+	        // [csrfHeader]: csrfToken,
+	      },
+    	});
+		  
+	    const eqdata = await response.json();
+	    console.log('eqdata',eqdata);
+	    
+	    updateEQSelectOptions(eqdata);
+	   
+	  } catch (error) {
+	    console.error('설비 데이터를 불러오는데 실패했습니다.', error);
+	    swal.fire({
+	      title: "데이터 로드에 실패했습니다.",
+	      text: "관리자에게 문의하세요.",
+	      icon: "error",
+	    });
+	  }
+	  
+	});
+
+	const updateEQSelectOptions = (options) => {
+	    const selectElement = document.querySelector('#PRODUCT_EQ');
+	    
+	    selectElement.innerHTML = '';
+	    
+	    if (options && options.length > 0) {
+	        options.forEach(option => {
+	            const optionElement = document.createElement('option');
+	            optionElement.value = option.EQUIPMENT_CD;
+	            optionElement.textContent = option.EQUIPMENT_NM;
+	            selectElement.appendChild(optionElement);
+	        });
+	    } else {
+	    	selectElement.value = '';
+	    	selectElement.textContent = '사용가능한 설비가 없습니다.';
+	    	selectElement.disabled = true;
+	        console.log('설비가 없습니다 옵션 추가됨');
+	    }
+	 };
+	
+	// PRODUCT_EQ (설비) 선택이 변경되었을 때
+	$('#PRODUCT_EQ').on('change', function() {
+	  var eqvalue = $(this).val();
+	  console.log('선택된 설비:', eqvalue);
+	  
+	  const eqvalueString = eqvalue.map(value => `eq=${encodeURIComponent(value)}`).join(',');
+	  console.log('설비어케 가져옴:', eqvalueString);
+	  console.log('설비어케 가져옴:', typeof eqvalueString);
+	  seleq = eqvalueString;
+		
+	});
+
+	// 사용여부선택
+	selus = document.querySelector('#PROCESS_US').value;
+	const changeUs = ()=>{
+		const usvalue = document.querySelector('#PROCESS_US').value;
+		selus = usvalue;
+	} 
+		
+	// 비고입력
+	pcbg = document.getElementById('PROCESS_BG').value;
+	const changeBG = ()=>{
+		const bgvalue = document.getElementById('PROCESS_BG').value;
+		console.log('비고',bgvalue);
+		pcbg = bgvalue;
+	} 
+	
+	
+	// 공정코드 입력
+	
+// 	$("#PROCESS_CD").on("keyup", (e) => {
+// 		console.log("확인 : " + $("#PROCESS_CD").val());
+// 	});
+	const changeCD = (e)=>{
+		const cdvalue = e.target.value;
+		console.log('code',cdvalue);
+		pccd = cdvalue;
+	}
+
+	// 공정명 입력
+	const changeNM = (e)=>{
+		const nmvalue = e.target.value;
+		console.log('이름', nmvalue);
+		pcnm = nmvalue;
+	} 
+	
+	document.getElementById('PROCESS_CD').addEventListener('input', changeCD);
+	document.getElementById('PROCESS_NM').addEventListener('input', changeNM);
+	document.querySelector('#PRODUCT_GC').addEventListener('change', pdgChange);
+	document.querySelector('#PRODUCT_CC').addEventListener('change', pdcChange);
+	document.querySelector('#PROCESS_US').addEventListener('change', changeUs);
+	document.getElementById('PROCESS_BG').addEventListener('input', changeBG);
+	
+	
+	fetchpdgclist(PRDTYPE);
+	
+// 모달 초기화 버튼 & 닫으면 내용 초기화 	
+	
+	const btn_mregi = document.getElementById('btn_modalregi');
+	
+	btn_mregi.addEventListener('click',async function(e){
+		console.log('모달 등록버튼 누름')
+		
+// 		pccd = document.getElementById('PROCESS_CD');
+// 		pcnm = document.getElementById('PROCESS_NM');
+// 		pcbg = document.getElementById('PROCESS_BG');
+		console.log('pccd등록',pccd);
+		console.log('pcnm등록',pcnm);
+		console.log('pcbg등록',pcbg);
+		
+		console.log('등록누르면 가져와',selgc+selcc+selpd+seleq);
+		console.log('등록누르면 가져와',typeof seleq);
+		
+		const regidata = JSON.stringify({
+			process_cd: pccd,
+			process_nm: pcnm,
+			process_gc: selgc,
+			process_cc: selcc,
+			process_pd: selpd,
+			process_eq: seleq,
+			process_us: selus,
+			process_bg: pcbg,
+			process_wr: empcd
+		})
+		console.log('어덕게 보임',regidata);
+		
+		try {
+			  const response = await fetch(`/postprocess`, {
+		      method: 'POST',
+		      headers: {
+		        'Content-Type': 'application/json',
+		        [csrfHeader]: csrfToken,
+		      },
+		      body: regidata
+	    	});
+			  
+		    const data = await response.json();
+		    console.log('등록',data);
+		    
+		   
+		 } catch (error) {
+		    console.error('공정등록에 실패했습니다.', error);
+		    swal.fire({
+		      title: "데이터 로드에 실패했습니다.",
+		      text: "관리자에게 문의하세요.",
+		      icon: "error",
+		    });
+		 }
+	});
+
+      //////////////////
+     // 카드 크기 설정 //
+	//////////////////
+	
+	setElementHeight('#div_card', -110);
+	
+	$(window).resize(function() {
+		setElementHeight('#div_card', -110);
+		if(grid != null) {
+			setGridHeight(grid, -380);
+		}
+	});
+	
+	  //////////
+	 // 필터 //
+	//////////
+	
+	const filterConfig = [
+		{key: 'PROCESS_CD', label: '공정코드', type:'text', placeholder:'공정코드 입력', col:'col-2'},
+		{key: 'PROCESS_NM', label: '공정명', type:'text', placeholder:'공정명 입력', col:'col-2'},
+		]
+	
+	 initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+		 console.log('filtertest',filterValues);
+     });
+	
+	/* document.addEventlistener('filterToggled', function(e) {
+	    if(e.detail.isVisible) {
+	        setGridHeight(grid, -450);
+	    } else {
+	        setGridHeight(grid, -380);
+	    }
+	}); */
+	  
+	/* ====================
+	  ||	그리드 생성   ||
+	  ====================*/
+	  
+	  const grid = new tui.Grid({
+		  el: document.getElementById('grid'),
+		  scrollX: true,
+		  scrollY: true,
+		  columns: [
+			  {header:'공정코드', name:'PROCESS_CD', align:'center'},
+			  {header:'공정명', name:'PROCESS_NM', align:'center'},
+			  {header:'공정명', name:'PROCESS_EQ', align:'center'},
+			  {header:'공정명', name:'PROCESS_PD', align:'center'},
+			  {header:'사용여부', name:'PROCESS_US', align:'center'},
+			  {header:'비고', name:'PROCESS_BG', align:'center'},
+		  ],
+	  });
+</script>

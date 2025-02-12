@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.ProcessMapper">
+
+	<select id="selectpclist" resultType="map">
+		SELECT 
+			pc.PROCESS_CD,
+			pc.PROCESS_NM,
+			pc.PROCESS_US,
+			pc.PROCESS_BG,
+			pc.PROCESS_EQ,
+			pc.PROCESS_PD
+		FROM PROCESS pc
+	</select>
+
+	<select id="selectpdgclist" resultType="map">
+		<choose>
+	    <when test="COMMON_GC == 'PRDTYPE'">
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM 
+	      FROM COMMON_CODE cc 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	      ORDER BY cc.COMMON_NM
+	    </when>
+	    
+	    <when test="COMMON_GC == 'MATERIALS' or COMMON_GC == 'SUBMAT'">
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM 
+	      FROM COMMON_CODE cc 
+	      JOIN MATERIAL mt ON cc.COMMON_CC = mt.MATERIAL_CC 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	    </when>
+	    
+	    <otherwise>
+	      SELECT DISTINCT 
+	        cc.COMMON_CC, cc.COMMON_NM  
+	      FROM COMMON_CODE cc 
+	      JOIN PRODUCT pd ON cc.COMMON_CC = pd.PRODUCT_CC 
+	      WHERE cc.COMMON_GC = #{COMMON_GC}
+	    </otherwise>
+	  </choose>
+	</select>
+	
+	<select id="selectpdcclist" resultType="map">
+		  SELECT DISTINCT
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        mt.MATERIAL_CC, mt.MATERIAL_NM
+		      </when>
+		      <otherwise>
+		        pd.PRODUCT_CC, pd.PRODUCT_NM
+		      </otherwise>
+		    </choose>
+		  FROM 
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        MATERIAL mt
+		      </when>
+		      <otherwise>
+		        PRODUCT pd
+		      </otherwise>
+		    </choose>
+		  WHERE 
+		    <choose>
+		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
+		        mt.MATERIAL_CC = #{pdcc}
+		      </when>
+		      <otherwise>
+		        pd.PRODUCT_CC = #{pdcc}
+		      </otherwise>
+		    </choose>
+	</select>
+
+	<select id="selecteqlist" resultType="map">
+		SELECT DISTINCT eq.EQUIPMENT_CD, EQ.EQUIPMENT_NM  
+		FROM EQUIPMENT eq
+		JOIN PRODUCT pd ON EQ.PRODUCT_CD  = PD.PRODUCT_CC 
+ 		WHERE EQ.PRODUCT_CD IN 
+		<foreach item="pd" collection="pd" open="(" separator="," close=")">
+			#{pd}
+		</foreach>
+		AND EQ.EQUIPMENT_US = 1
+	</select>
+	
+	<update id="">
+		update
+	</update>
+	
+</mapper>
