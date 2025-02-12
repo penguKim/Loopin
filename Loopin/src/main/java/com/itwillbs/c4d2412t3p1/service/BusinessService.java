@@ -52,6 +52,28 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	
+	public List<Map<String, Object>> search_PRODUCT(String keyword) {
+
+	    List<Object[]> result;
+
+	    result = contractRepository.search_PRODUCT(keyword);
+
+	    return result.stream().map(row -> {
+	        Map<String, Object> product = new HashMap<>();
+	        product.put("product_cd", row[0]);
+	        product.put("product_nm", row[1]);
+	        product.put("product_cr", row[2]);
+	        product.put("product_sz", row[3]);
+	        product.put("product_un", row[4]);
+
+	        return product;
+
+	    }).collect(Collectors.toList());
+	}
+
+	
+	
 	public List<Map<String, Object>> select_CONTRACT() {
 
 		List<Object[]> result;
@@ -94,6 +116,22 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
+	
+	public List<Map<String, Object>> search_ACCOUNT_CONTRACT(String keyword) {
+		
+		List<Object[]> result;
+		
+		result = contractRepository.search_ACCOUNT_CONTRACT(keyword);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> account = new HashMap<>();
+			account.put("account_cd", row[0]);
+			account.put("account_nm", row[1]);
+			
+			return account;
+			
+		}).collect(Collectors.toList());
+	}
 
 	public List<Map<String, Object>> select_CONTRACT_PS() {
 
@@ -110,6 +148,24 @@ public class BusinessService {
 
 			return contract_ps;
 
+		}).collect(Collectors.toList());
+	}
+
+	public List<Map<String, Object>> search_CONTRACT_PS(String keyword) {
+		
+		List<Object[]> result;
+		
+		result = contractRepository.search_CONTRACT_PS(keyword);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract_ps = new HashMap<>();
+			contract_ps.put("employee_cd", row[0]);
+			contract_ps.put("employee_nm", row[1]);
+			contract_ps.put("employee_dp", row[2]);
+			contract_ps.put("employee_gd", row[3]);
+			
+			return contract_ps;
+			
 		}).collect(Collectors.toList());
 	}
 

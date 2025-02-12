@@ -58,6 +58,31 @@ public class BusinessController {
 	    
 	}
 
+	// 제품 검색 기능 추가 (제품명, 제품코드, 색상, 사이즈, 기준단위)
+	@GetMapping("/search_PRODUCT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_PRODUCT(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_RPODUCT();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_PRODUCT(keyword);
+	        }
+	        
+	        
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+
+	
+	
 	// 수주 조회
 	@GetMapping("/select_CONTRACT")
 	@ResponseBody
@@ -109,6 +134,29 @@ public class BusinessController {
 		
 	}
 
+	// 거래처 검색
+	@GetMapping("/search_ACCOUNT_CONTRACT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_CONTRACT(@RequestParam("keyword") String keyword) {
+	    try {
+	    	
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_ACCOUNT_CONTRACT();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_ACCOUNT_CONTRACT(keyword);
+	        }
+
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
 	// 담당자 조회
 	@GetMapping("/select_CONTRACT_PS")
 	@ResponseBody
@@ -124,6 +172,28 @@ public class BusinessController {
 			return ResponseEntity.status(500).body(null);
 		}
 		
+	}
+	
+	// 담당자 검색
+	@GetMapping("/search_CONTRACT_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_CONTRACT_PS(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_CONTRACT_PS();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_CONTRACT_PS(keyword);
+	        }
+	    	
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
 	}
 	
 	@ResponseBody
@@ -165,7 +235,7 @@ public class BusinessController {
 
 	        if (contractData.isEmpty()) {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                    .body(Map.of("error", "계약 데이터를 찾을 수 없습니다."));
+	                    .body(Map.of("error", "수주 데이터를 찾을 수 없습니다."));
 	        }
 
 	        return ResponseEntity.ok(contractData);

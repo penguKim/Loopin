@@ -65,6 +65,24 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 
 	
 	@Query(value = """
+		    SELECT p.product_cd, p.product_nm, c.common_nm AS product_cr,
+		           s.common_nm AS product_sz, u.common_nm AS product_un
+		    FROM PRODUCT p
+		    LEFT JOIN COMMON_CODE c ON p.product_cr = c.common_cc AND c.common_gc = 'COLOR'
+		    LEFT JOIN COMMON_CODE s ON p.product_sz = s.common_cc AND s.common_gc = 'SIZE'
+		    LEFT JOIN COMMON_CODE u ON p.product_un = u.common_cc AND u.common_gc = 'UNIT'
+		    WHERE (p.product_cd LIKE %:keyword%
+		        OR p.product_nm LIKE %:keyword%
+		        OR c.common_nm LIKE %:keyword%
+		        OR s.common_nm LIKE %:keyword%
+		        OR u.common_nm LIKE %:keyword%)
+		        AND p.product_gc = 'PRODUCT' AND p.product_cc = 'SHOES'
+		""", nativeQuery = true)
+		List<Object[]> search_PRODUCT(@Param("keyword") String keyword);
+
+	
+	
+	@Query(value = """
 		    SELECT 
 		        a.account_cd AS account_cd,
 		        a.account_nm AS account_nm
@@ -72,6 +90,17 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     		WHERE a.account_dv IN ('BOTH', 'CONTRACT')
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
+
+	@Query(value = """
+		    SELECT 
+		        a.account_cd AS account_cd,
+		        a.account_nm AS account_nm
+		    FROM ACCOUNT a
+    		WHERE a.account_dv IN ('BOTH', 'CONTRACT')
+    		 AND (a.account_cd LIKE %:keyword%
+		        OR a.account_nm LIKE %:keyword%)
+		""", nativeQuery = true)
+	List<Object[]> search_ACCOUNT_CONTRACT(@Param("keyword") String keyword);
 
 	
 	@Query(value = """
@@ -89,6 +118,27 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		          AND s.common_gc = 'POSITION'
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_PS();
+
+	
+	@Query(value = """
+		    SELECT 
+		        e.employee_cd AS employee_cd,
+		        e.employee_nm AS employee_nm,
+		        c.common_nm AS employee_dp,
+		        s.common_nm AS employee_gd
+		    FROM EMPLOYEE e 
+		    LEFT JOIN COMMON_CODE c 
+		           ON e.employee_dp = c.common_cc 
+		          AND c.common_gc = 'DEPARTMENT'
+		    LEFT JOIN COMMON_CODE s 
+		           ON e.employee_gd = s.common_cc 
+		          AND s.common_gc = 'POSITION'
+			WHERE (e.employee_cd LIKE %:keyword%
+		        OR e.employee_nm LIKE %:keyword%
+		        OR c.common_nm LIKE %:keyword%
+		        OR s.common_nm LIKE %:keyword%)
+		""", nativeQuery = true)
+	List<Object[]> search_CONTRACT_PS(@Param("keyword") String keyword);
 
 	
 	@Query(value = """
