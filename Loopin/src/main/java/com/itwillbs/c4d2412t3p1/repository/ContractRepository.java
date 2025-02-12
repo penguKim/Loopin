@@ -93,20 +93,25 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 	
 	@Query(value = """
 		    SELECT
-				c.contract_cd,
-				c.account_cd,
-				c.contract_ps,
-				c.contract_sd,
-				c.contract_ed,
-				c.contract_am,
-				c.contract_mn,
-				c.contract_st,
-				c.contract_rm,
-				c.contract_wr,
-				c.contract_wd,
-				c.contract_mf,
-				c.contract_md
-			FROM CONTRACT c
+		        c.contract_cd,
+		        c.account_cd,
+		        c.contract_ps,
+		        c.contract_sd,
+		        c.contract_ed,
+		        c.contract_am,
+		        c.contract_mn,
+		        CASE 
+		            WHEN c.contract_sd > SYSDATE THEN '대기중'
+		            WHEN c.contract_sd <= SYSDATE AND (c.contract_ed IS NULL OR c.contract_ed >= SYSDATE) THEN '진행중'
+		            WHEN c.contract_sd <= SYSDATE AND c.contract_ed < SYSDATE THEN '완료'
+		            ELSE '알 수 없음'
+		        END AS contract_st,
+		        c.contract_rm,
+		        c.contract_wr,
+		        c.contract_wd,
+		        c.contract_mf,
+		        c.contract_md
+		    FROM CONTRACT c
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT();
 
@@ -199,6 +204,20 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     List<Object[]> select_FILTERED_CONTRACT(@Param("filterRequest") ContractFilterRequest filterRequest);
     
     
+    // 수주 상태 업데이트
+    @Modifying
+    @Transactional
+    @Query(value = """
+        UPDATE CONTRACT c
+        SET c.contract_st = 
+            CASE 
+                WHEN c.contract_sd > SYSDATE THEN '대기중'
+                WHEN c.contract_sd <= SYSDATE AND (c.contract_ed IS NULL OR c.contract_ed >= SYSDATE) THEN '진행중'
+                WHEN c.contract_sd <= SYSDATE AND c.contract_ed < SYSDATE THEN '완료'
+                ELSE '알 수 없음'
+            END
+    """, nativeQuery = true)
+    void updateContractStatus();
     
 	
 }

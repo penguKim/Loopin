@@ -38,9 +38,6 @@ public class BusinessController {
 	@GetMapping("/contract_list")
 	public String contract_list(Model model) {
 		
-		// 수주상태
-		model.addAttribute("status_list", businessService.selectCommonList("STATUS"));
-		
 		return "/business/contract_list";
 	}
 	
@@ -251,4 +248,10 @@ public class BusinessController {
 	    }
     }
 	
+    // 수동으로 상태 업데이트 실행
+    @PostMapping("/updateContractStatus")
+    public String updateContractStatus() {
+        businessService.updateContractStatus(); // 상태 업데이트 실행
+        return "redirect:/contract_list"; // 상태 업데이트 후 목록 페이지로 이동
+    }
 }

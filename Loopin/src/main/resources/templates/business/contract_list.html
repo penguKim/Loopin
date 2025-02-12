@@ -177,9 +177,7 @@
 	                                </div>
 									<div class="col-md-3">
 	                                    <label for="contract_st" class="form-label">수주상태</label>
-	                                    <select class="form-select" id="contract_st" name="contract_st">
-	                                        <option value="">선택</option>
-	                                    </select>
+	                                    <input type="text" class="form-control" id="contract_st" name="contract_st" readonly>
 									</div>
 									<div class="col-md-3">
 									    <label for="contract_am" class="form-label">수주수량</label>
@@ -267,7 +265,9 @@
 	    // DatePicker 초기화
 	    initializeDatePickers();
 		
-			
+	    // 수주상태 초기화
+	    updateContractStatus();	
+	    
 		// 수정 모드 데이터 반영
 		if (mode === 'edit' && rowData) {
 			
@@ -419,8 +419,11 @@
 
 	// DatePicker 초기화 함수
 	function initializeDatePickers() {
-	    const today = new Date(); // 오늘 날짜
+		 console.log('DatePicker 초기화 시작');
+		
+		const today = new Date(); // 오늘 날짜
 
+	    
 	    // 시작일과 종료일 DatePicker 초기화
 	    const startPicker = tui.DatePicker.createRangePicker({
 	        startpicker: {
@@ -441,29 +444,78 @@
 	    // 종료일 필드 초기화 및 비활성화
 	    $('#contract_ed').val('').prop('disabled', true);
 
-	    // 시작일 선택 이벤트 처리
-	    startPicker.on('change:start', function (event) {
-	        if (event && event.date) {
-	            console.log('선택된 시작일: ', event.date);
+	    // 올바른 시작일 변경 이벤트
+	    startPicker.getStartpicker().on('change', function () {
+	        const startDate = startPicker.getStartpicker().getDate(); // 시작일 가져오기
+	        console.log('선택된 시작일:', startDate);
 
-	            const minEndDate = new Date(event.date);
-	            minEndDate.setDate(minEndDate.getDate() + 1);
-
-	            startPicker.getEndpicker().setOptions({
-	                date: minEndDate,
-	                disabled: false,
-	            });
-
-	            $('#contract_ed').prop('disabled', false);
+	        if (!startDate) {
+	            console.error('시작 날짜를 가져오지 못했습니다!');
+	            return;
 	        }
+
+	        const minEndDate = new Date(startDate);
+	        minEndDate.setDate(minEndDate.getDate() + 1);
+
+	        startPicker.getEndpicker().setDate({
+	            date: minEndDate,
+	            disabled: false,
+	        });
+
+	        updateContractStatus();
 	    });
 
-	    // 종료일 선택 이벤트 처리
-	    startPicker.on('change:end', function (event) {
-	        if (event && event.date) {
-	            console.log('선택된 종료일: ', event.date);
+	    // 올바른 종료일 변경 이벤트
+	    startPicker.getEndpicker().on('change', function () {
+	        const endDate = startPicker.getEndpicker().getDate(); // 종료일 가져오기
+	        console.log('선택된 종료일:', endDate);
+
+	        if (!endDate) {
+	            console.error('종료 날짜를 가져오지 못했습니다!');
+	            return;
 	        }
+
+	        updateContractStatus();
 	    });
+	}
+	
+	// 날짜를 YYYY-MM-DD 형식으로 변환하는 함수
+	function formatDate(date) {
+	    let year = date.getFullYear();
+	    let month = String(date.getMonth() + 1).padStart(2, '0');
+	    let day = String(date.getDate()).padStart(2, '0');
+	    return `${year}-${month}-${day}`;
+	}
+	
+	// 수주 상태 자동 설정 함수
+	function updateContractStatus() {
+	    let contractSd = $('#contract_sd').val();
+	    let contractEd = $('#contract_ed').val();
+	    let today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+	
+	    console.log("updateContractStatus 실행됨 | contract_sd:", contractSd, "contract_ed:", contractEd, "today:", today);
+	
+	    contractSd = formatDate(new Date(contractSd));
+	    contractEd = contractEd ? formatDate(new Date(contractEd)) : "";
+	    
+	    let status = "알 수 없음";
+
+	    if (contractSd > today) {
+	        status = "대기중";
+	    } 
+	    else if (contractSd <= today) {
+	        // 종료일이 없거나 오늘 이후이면 → "진행중"
+	        if (!contractEd || contractEd >= today) {
+	            status = "진행중";
+	        } 
+	        // 종료일이 오늘 이전이면 → "완료"
+	        else if (contractEd < today) {
+	            status = "완료";
+	        }
+	    }
+	
+	    console.log("계산된 수주 상태:", status);
+	    $('#contract_st').val(status);
 	}
 
 
@@ -909,11 +961,11 @@
 	
     setGridTheme();
     
-	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
+// 	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
 
-	["status_list"].forEach(key => {
-	    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
-	});
+// 	["status_list"].forEach(key => {
+// 	    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
+// 	});
     
     
     const token = $("meta[name='_csrf']").attr("content");

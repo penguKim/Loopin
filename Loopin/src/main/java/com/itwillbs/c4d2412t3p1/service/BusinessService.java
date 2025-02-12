@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
@@ -31,13 +32,6 @@ import lombok.extern.java.Log;
 public class BusinessService {
 
 	private final ContractRepository contractRepository;
-
-	private final CommonRepository commonRepository;
-
-	// 공통코드 데이터 조회
-	public List<Common_code> selectCommonList(String string) {
-		return commonRepository.selectCommonList("00", string);
-	}
 
 	public List<Map<String, Object>> select_RPODUCT() {
 
@@ -295,5 +289,13 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
     
+    // 수주 상태 업데이트 실행
+    @Transactional
+    public void updateContractStatus() {
+        System.out.println("수주 상태 업데이트 실행...");
+        contractRepository.updateContractStatus();
+        System.out.println("수주 상태 업데이트 완료!");
+    }
 
+	
 }
