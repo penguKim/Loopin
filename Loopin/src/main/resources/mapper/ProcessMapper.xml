@@ -13,6 +13,21 @@
 			pc.PROCESS_EQ,
 			pc.PROCESS_PD
 		FROM PROCESS pc
+		ORDER BY pc.PROCESS_CD
+	</select>
+	
+	<select id="selectpc" resultType="map">
+		SELECT 
+			pc.PROCESS_CD,
+			pc.PROCESS_NM,
+			pc.PROCESS_GC,
+			pc.PROCESS_CC,
+			pc.PROCESS_US,
+			pc.PROCESS_BG,
+			pc.PROCESS_EQ,
+			pc.PROCESS_PD
+		FROM PROCESS pc
+		WHERE pc.PROCESS_CD = #{pccd}
 	</select>
 
 	<select id="selectpdgclist" resultType="map">
@@ -47,10 +62,10 @@
 		  SELECT DISTINCT
 		    <choose>
 		      <when test="pdgc == 'MATERIALS' or pdgc == 'SUBMAT'">
-		        mt.MATERIAL_CC, mt.MATERIAL_NM
+		        mt.MATERIAL_CD, mt.MATERIAL_NM
 		      </when>
 		      <otherwise>
-		        pd.PRODUCT_CC, pd.PRODUCT_NM
+		        pd.PRODUCT_CD, pd.PRODUCT_NM
 		      </otherwise>
 		    </choose>
 		  FROM 
@@ -77,15 +92,37 @@
 		SELECT DISTINCT eq.EQUIPMENT_CD, EQ.EQUIPMENT_NM  
 		FROM EQUIPMENT eq
 		JOIN PRODUCT pd ON EQ.PRODUCT_CD  = PD.PRODUCT_CC 
- 		WHERE EQ.PRODUCT_CD IN 
-		<foreach item="pd" collection="pd" open="(" separator="," close=")">
-			#{pd}
-		</foreach>
+ 		WHERE EQ.PRODUCT_CD = #{pd}
 		AND EQ.EQUIPMENT_US = 1
+<!--  		WHERE EQ.PRODUCT_CD IN  -->
+<!-- 		<foreach item="pd" collection="pd" open="(" separator="," close=")"> -->
+<!-- 			#{pd} -->
+<!-- 		</foreach> -->
 	</select>
 	
-	<update id="">
-		update
-	</update>
+	<insert id="postProcess">
+		INSERT 
+		INTO PROCESS
+		(process_cd, process_nm, process_gc, process_cc, process_pd, process_eq, process_us, process_bg, process_wr, process_wd)
+		VALUES 
+		<foreach collection="regidata" item="item" separator=",">
+		(#{item.process_cd},
+		 #{item.process_nm},
+		 #{item.process_gc},
+		 #{item.process_cc},
+		 #{item.process_pd},
+		 #{item.process_eq},
+		 #{item.process_us},
+		 #{item.process_bg},
+		 #{item.process_wr},
+		 #{item.process_wd})
+		</foreach>
+	</insert>
+	
+	<select id="checkpccd" resultType="String">
+		SELECT pc.process_cd
+		FROM PROCESS pc
+		WHERE pc.PROCESS_CD = #{cdvalue}	
+	</select>
 	
 </mapper>

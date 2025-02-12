@@ -1,5 +1,7 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.security.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,14 +40,36 @@ public class ProcessService {
 		return list;
 	}
 
-	public List<Map<String, Object>> selecteqlist(List pd) {
+	public List<Map<String, Object>> selecteqlist(String pd) {
 		List<Map<String, Object>> list = pcM.selecteqlist(pd);
 		return list;
 	}
 
-	public List<Map<String, Object>> postprocess(Map<String, Object> regidata) {
-		regidata.put("process_wd", System.currentTimeMillis());
-		List<Map<String, Object>> list = pcR.save(regidata);
+	public int postProcess(List<Map<String, Object>> regidata) {
+		for (Map<String, Object> item : regidata) {
+	        item.put("process_wd", String.valueOf(System.currentTimeMillis()));
+	        if(item.get("process_eq")==null) {
+	        	item.put("process_eq","");
+	        }
+	    }
+		System.out.println("얘먼저"+regidata.get(0));
+		int list = pcM.postProcess(regidata);
+		return list;
+	}
+
+	public int checkpccd(String cdvalue) {
+		System.out.println("받아오니?"+cdvalue);
+		String result = pcM.checkpccd(cdvalue);
+		System.out.println("뭐받아오는데"+result);
+		if(result != null) {
+			return 0;
+		}else {
+			return 1;
+		}
+	}
+
+	public List<Map<String, Object>> selectpc(String pccd) {
+		List<Map<String, Object>> list = pcM.selectpc(pccd);
 		return list;
 	}
 
