@@ -24,11 +24,14 @@ public class StockDTO {
 	
 	
 	private String item_nm;
+	private String item_gn;
+	private String item_cn;
 	private String warehouse_nm;
 	private String warearea_nm;
 	private String color_nm;
 	private String item_un;
 	private String color;
+	
 	private BigDecimal size_220;
 	private BigDecimal size_230;
 	private BigDecimal size_240;

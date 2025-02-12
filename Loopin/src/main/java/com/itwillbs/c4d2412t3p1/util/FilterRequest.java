@@ -192,5 +192,29 @@ public class FilterRequest {
 		}
 	}
 
+	// 제품관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class StockFilterRequest extends FilterRequest {
+		
+		private String warehouse_cd;
+		private String warearea_cd;
+		private String item_gc;
+		private String item_cc;
+		private String item_nm;
+		
+		public StockFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (warehouse_cd == null || warehouse_cd.isEmpty())
+					&& (warearea_cd == null || warearea_cd.isEmpty()) && (item_gc == null || item_gc.isEmpty())
+					&& (item_cc == null || item_cc.isEmpty()) && (item_nm == null || item_nm.isEmpty());
+		}
+	}
+	
 }
 

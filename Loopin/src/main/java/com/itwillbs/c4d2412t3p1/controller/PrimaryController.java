@@ -331,7 +331,7 @@ public class PrimaryController {
 	    try {
 	    	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
 	    	if (!product_cc.isEmpty()) {
-	    	    response.put("product_cc", product_cc.get(product_cc.keySet().iterator().next()));
+	    	    response.put("list", product_cc.get(product_cc.keySet().iterator().next()));
 	    	}
 			
 			return ResponseEntity.ok(response);

@@ -1,0 +1,23 @@
+package com.itwillbs.c4d2412t3p1.domain;
+
+import java.util.List;
+
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.StockFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+@Getter
+@Setter
+@ToString
+public class StockRequestDTO {
+
+	StockFilterRequest stockFilter;
+	StockDTO stock;
+	
+	
+	String warehouse_cd;
+}
