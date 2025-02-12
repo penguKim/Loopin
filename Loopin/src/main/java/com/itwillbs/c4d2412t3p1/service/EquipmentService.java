@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -14,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.EquipmentDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
+import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Equipment;
 import com.itwillbs.c4d2412t3p1.mapper.EquipmentMapper;
@@ -35,10 +37,9 @@ public class EquipmentService {
 	
 	private final EntityManager entityManager;
 	
-	// 설비 조회
+	// 제품 조회
 	public List<Common_codeDTO> select_PRODUCT_list() {
 		return equipmentRepository.select_PRODUCT_list();
-		
 	}
 	
 	// 설비 조회
@@ -51,13 +52,11 @@ public class EquipmentService {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
 	    
-	 // 시퀀스에서 ID 가져오기
 	    if (equipment.getEquipment_cd() == null || equipment.getEquipment_cd().isEmpty()) {
 	    	String sequenceNumber = equipmentRepository.nextEquipment_cd(); // '0001'
             equipment.setEquipment_cd("EQ-" + sequenceNumber); // 'EQ-0001'
 	    }
 	    
-	    // 기존 파일 처리
 	    Optional<Equipment> equipmentImage = equipmentRepository.findById(equipment.getEquipment_cd());
 	    if (equipmentImage.isPresent() && (image == null || image.isEmpty())) {
 	        equipmentImage.ifPresent(ex -> {
@@ -68,10 +67,6 @@ public class EquipmentService {
 				}
 			});
 	    }
-	    
-//	    log.info("equipmentRepository.nextEquipment_cd()" + equipmentRepository.nextEquipment_cd());
-//	    equipment.setEquipment_cd(equipmentRepository.nextEquipment_cd());
-//	    log.info("equipment.getEquipment_cd()" + equipment.getEquipment_cd());
 
 	    // 새 파일 업로드 처리
 	    if (image != null && !image.isEmpty()) {
@@ -80,16 +75,26 @@ public class EquipmentService {
 	    	equipment.setEquipment_pc(null);
 	    }
 	    
-        if(equipment.getEquipment_ru() == null) {
-        	equipment.setEquipment_ru(regUser);
-        	equipment.setEquipment_rd(time);
-        } else {
+        if(equipment.getEquipment_cd() != null) {
         	equipment.setEquipment_uu(regUser);
         	equipment.setEquipment_ud(time);
+        } 
+        if(equipment.getEquipment_cd() == null) {
+        	equipment.setEquipment_ru(regUser);
+        	equipment.setEquipment_rd(time);
         }
         
         equipmentRepository.save(Equipment.setEquipment(equipment));
     }
+
+	public void delete_EQUIPMENT(List<EquipmentDTO> equipmentList) {
+		List<String> equipmentCds = equipmentList.stream()
+			.map(EquipmentDTO::getEquipment_cd)
+			.collect(Collectors.toList());
+	    
+		equipmentRepository.deleteAllById(equipmentCds);
+	}
+
 	
 	
 	

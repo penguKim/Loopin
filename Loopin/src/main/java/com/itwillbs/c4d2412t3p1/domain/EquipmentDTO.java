@@ -19,8 +19,10 @@ public class EquipmentDTO {
 	private String model_cd;
 	private String equipment_nm;
 	private String warehouse_cd;
+	private String warehouse_nm;
 	private boolean equipment_us;
 	private String product_cd;
+	private String product_nm;
 	private String equipment_rm;
 	private String equipment_pc;
 	private String equipment_ru;
