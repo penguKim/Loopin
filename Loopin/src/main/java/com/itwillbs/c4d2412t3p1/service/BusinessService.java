@@ -15,6 +15,7 @@ import com.itwillbs.c4d2412t3p1.entity.Order;
 import com.itwillbs.c4d2412t3p1.entity.OrderDetail;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.OrderRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,13 +27,6 @@ import lombok.extern.java.Log;
 public class BusinessService {
 
 	private final OrderRepository orderRepository;
-
-	private final CommonRepository commonRepository;
-
-	// 공통코드 데이터 조회
-	public List<Common_code> selectCommonList(String string) {
-		return commonRepository.selectCommonList("00", string);
-	}
 
 	// 원자재조회
 	public List<Map<String, Object>> select_MATERIAL() {
@@ -52,6 +46,23 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	public List<Map<String, Object>> search_MATERIAL(String keyword) {
+
+	    List<Object[]> result;
+
+		result = orderRepository.search_MATERIAL(keyword);
+
+		return result.stream().map(row -> {
+			Map<String, Object> material = new HashMap<>();
+			material.put("material_cd", row[0]);
+			material.put("material_nm", row[1]);
+			material.put("material_un", row[2]);
+
+	        return material;
+
+	    }).collect(Collectors.toList());
+	}
+	
 	// 발주조회
 	public List<Map<String, Object>> select_ORDER() {
 
@@ -96,6 +107,25 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
+	
+	public List<Map<String, Object>> search_ACCOUNT_ORDER(String keyword) {
+		
+		List<Object[]> result;
+		
+		result = orderRepository.search_ACCOUNT_ORDER(keyword);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> account = new HashMap<>();
+			account.put("account_cd", row[0]);
+			account.put("account_nm", row[1]);
+			
+			return account;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	
+	
 
 	// 담당자 조회
 	public List<Map<String, Object>> select_ORDER_PS() {
@@ -116,6 +146,25 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	
+	public List<Map<String, Object>> search_ORDER_PS(String keyword) {
+		
+		List<Object[]> result;
+		
+		result = orderRepository.search_ORDER_PS(keyword);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract_ps = new HashMap<>();
+			contract_ps.put("employee_cd", row[0]);
+			contract_ps.put("employee_nm", row[1]);
+			contract_ps.put("employee_dp", row[2]);
+			contract_ps.put("employee_gd", row[3]);
+			
+			return contract_ps;
+			
+		}).collect(Collectors.toList());
+	}
+	
 	// 발주 등록 처리
 	@Transactional
 	public void insert_ORDER(OrderDTO orderDto, List<OrderDetailDTO> details) throws IOException {
@@ -249,5 +298,51 @@ public class BusinessService {
 		return result;
 	}
 
+    @Transactional
+    public void delete_OrderAndDetails(List<String> orderCds) {
+    	orderRepository.delete_ORDERDETAIL(orderCds); // 디테일 먼저 삭제 처리
+    	orderRepository.delete_ORDER(orderCds); // 그 후에 수주 데이터 삭제
+    }
+	
+    
+    
+	// 발주 필터 데이터 조회
+	public List<Map<String, Object>> select_FILTERED_ORDER(OrderFilterRequest filterRequest) {
+		
+		List<Object[]> result;
+		
+		result = orderRepository.select_FILTERED_ORDER(filterRequest);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("order_cd", row[0]);
+			order.put("account_cd", row[1]);
+			order.put("order_ps", row[2]);
+			order.put("order_sd", row[3]);
+			order.put("order_ed", row[4]);
+			order.put("order_am", row[5]);
+			order.put("order_mn", row[6]);
+			order.put("order_st", row[7]);
+			order.put("order_rm", row[8]);
+			order.put("order_wr", row[9]);
+			order.put("order_wd", row[10]);
+			order.put("order_mf", row[11]);
+			order.put("order_md", row[12]);
+			
+			return order;
+			
+		}).collect(Collectors.toList());
+	}
+    
+    // 수주 상태 업데이트 실행
+    @Transactional
+    public void updateOrderStatus() {
+        System.out.println("수주 상태 업데이트 실행...");
+        orderRepository.updateOrderStatus();
+        System.out.println("수주 상태 업데이트 완료!");
+    }
+	
+	
+	
 
 }

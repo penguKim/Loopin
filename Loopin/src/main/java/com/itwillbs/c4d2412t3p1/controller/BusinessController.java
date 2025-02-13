@@ -21,6 +21,7 @@ import com.itwillbs.c4d2412t3p1.domain.OrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderRequestDTO;
 import com.itwillbs.c4d2412t3p1.service.BusinessService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -36,9 +37,6 @@ public class BusinessController {
 	// 발주관리 페이지로 이동
 	@GetMapping("/order_list")
 	public String order_list(Model model) {
-		
-		// 수주상태
-		model.addAttribute("status_list", businessService.selectCommonList("STATUS"));
 		
 		return "/business/order_list";
 	}
@@ -59,7 +57,30 @@ public class BusinessController {
 		}
 	    
 	}
-
+	
+	// 제품 검색 기능 추가 (제품명, 제품코드, 색상, 사이즈, 기준단위)
+	@GetMapping("/search_MATERIAL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_MATERIAL(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_MATERIAL();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_MATERIAL(keyword);
+	        }
+	        
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
+	
 	// 발주 조회
 	@GetMapping("/select_ORDER")
 	@ResponseBody
@@ -111,6 +132,31 @@ public class BusinessController {
 		
 	}
 
+	
+	// 거래처 검색
+	@GetMapping("/search_ACCOUNT_ORDER")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_ORDER(@RequestParam("keyword") String keyword) {
+	    try {
+	    	
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_ACCOUNT_ORDER();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_ACCOUNT_ORDER(keyword);
+	        }
+
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
+	
 	// 담당자 조회
 	@GetMapping("/select_ORDER_PS")
 	@ResponseBody
@@ -126,6 +172,28 @@ public class BusinessController {
 			return ResponseEntity.status(500).body(null);
 		}
 		
+	}
+	
+	// 담당자 검색
+	@GetMapping("/search_ORDER_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ORDER_PS(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_ORDER_PS();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_ORDER_PS(keyword);
+	        }
+	    	
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
 	}
 	
 	@ResponseBody
@@ -157,6 +225,7 @@ public class BusinessController {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 	    }
 	}
+
 
 	@GetMapping("/get_ORDER")
 	@ResponseBody
@@ -208,7 +277,53 @@ public class BusinessController {
 	    }
 	}
 
+	//	발주 삭제
+	@PostMapping("/delete_ORDER")
+	public ResponseEntity<Map<String, Object>> delete_ORDER(@RequestBody Map<String, List<String>> request) {
+		
+		List<String> orderCds  = request.get("order_cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
+		
+		Map<String, Object> response = new HashMap<>();
 
+		try {
+            businessService.delete_OrderAndDetails(orderCds);
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
 	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_ORDER")
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_ORDER(@RequestBody OrderFilterRequest filterRequest) {
+
+	    try {
+            // 필터 조건이 비어 있으면 전체 수주정보 반환
+            if (filterRequest.isEmpty()) {
+                List<Map<String, Object>> orders = businessService.select_ORDER();
+                log.info("contracts : "+ orders);
+                return ResponseEntity.ok(orders);
+            }
+
+            // 필터 조건에 따른 필터링된 수주정보 반환
+            List<Map<String, Object>> filteredOrderList = businessService.select_FILTERED_ORDER(filterRequest);
+            log.info("filteredOrderList : "+ filteredOrderList);
+            return ResponseEntity.ok(filteredOrderList);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+    }
+	
+    // 수동으로 상태 업데이트 실행
+    @PostMapping("/updateOrderStatus")
+    public String updateOrderStatus() {
+        businessService.updateOrderStatus(); // 상태 업데이트 실행
+        return "redirect:/order_list"; // 상태 업데이트 후 목록 페이지로 이동
+    }
 	
 }

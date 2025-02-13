@@ -112,7 +112,23 @@
 	    });
 	}
 
-		
+	// 발주수량 및 발주금액 업데이트 함수
+	function updateorderSummary(grid) {
+	    const data = grid.getData();
+	    let totalQty = 0;
+	    let totalAmount = 0;
+
+	    data.forEach(row => {
+	        const qty = parseFloat(row.material_am) || 0;
+	        const money = parseFloat(row.order_ct) || 0;
+
+	        totalQty += qty;
+	        totalAmount += qty * money;
+	    });
+
+	    $('#order_am').val(totalQty);
+	    $('#order_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
+	}
 		
 	// 동적 모달 생성 및 표시
 	function openModal(mode, rowData = null) {
@@ -177,9 +193,7 @@
 	                                </div>
 									<div class="col-md-3">
 	                                    <label for="order_st" class="form-label">발주상태</label>
-	                                    <select class="form-select" id="order_st" name="order_st">
-	                                        <option value="">선택</option>
-	                                    </select>
+	                                    <input type="text" class="form-control" id="order_st" name="order_st" readonly>
 									</div>
 									<div class="col-md-3">
 									    <label for="order_am" class="form-label">발주수량</label>
@@ -205,15 +219,16 @@
 	                            </div>
 	                        </form>
 	                    </div>
-	                    <div class="modal-footer">
-	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-	                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
-	                    </div>
+	                    <div class="modal-footer d-flex justify-content-between">
+	                    	<button type="button" class="btn btn-danger" id="resetFormBtn" style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+		                    <div> 
+		                    	<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
+	                    	</div>
+                        </div>
 	                </div>
 	            </div>
 	        </div>`;
-
-	    var status_list = window.status_list || [];
 
 		// 모달 HTML을 동적으로 body에 추가
 		document.body.insertAdjacentHTML('beforeend', modalHtml);
@@ -225,47 +240,19 @@
 		    return;
 		}
 		
-	    
-		// 셀렉트 박스 관련 함수
-		function populateSelectOptions(selectId, dataList) {
-		    const selectElement = document.getElementById(selectId);
-		    if (Array.isArray(dataList) && dataList.length > 0) {
-		        dataList.forEach(item => {
-		            const option = document.createElement('option');
-		            option.value = item.common_cc;
-		            option.textContent = item.common_nm;
-		            selectElement.appendChild(option);
-		        });
-		    }
-		}
-
-		// 발주 상태 (order_st) 옵션 추가
-		populateSelectOptions('order_st', window.status_list);
-		    
 	    // Bootstrap 모달 표시
 	    const modalInstance = new bootstrap.Modal(document.getElementById('orderInsertModal'));
 	    modalInstance.show();
 		    
-	    // Toast UI Grid 초기화
-	    const materialGrid = new tui.Grid({
-	        el: document.getElementById('materialGrid'),
-	        data: [],
-	        columns: [
-	            { header: '원자재코드', name: 'material_cd', align: 'center' },
-	            //{ header: '원자재명', name: 'material_nm', align: 'center' },
-	            { header: '기준단위', name: 'material_un', align: 'center' },
-	            { header: '수량', name: 'material_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'order_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	        ],
-	        rowHeaders: ['checkbox'],
-	        scrollX: false,
-	        scrollY: false
-	    });
-
+	    // 제품 그리드 초기화
+	    make_material_grid();
+	    
 	    // DatePicker 초기화
 	    initializeDatePickers();
 		
-			
+	    // 발주상태 초기화
+	    updateOrderStatus();		
+	    
 		// 수정 모드 데이터 반영
 		if (mode === 'edit' && rowData) {
 			
@@ -310,25 +297,6 @@
 		    updateorderSummary(materialGrid);
 		});
 
-		// 발주수량 및 발주금액 업데이트 함수
-		function updateorderSummary(grid) {
-		    const data = grid.getData();
-		    let totalQty = 0;
-		    let totalAmount = 0;
-
-		    data.forEach(row => {
-		        const qty = parseFloat(row.material_am) || 0;
-		        const money = parseFloat(row.order_ct) || 0;
-
-		        totalQty += qty;
-		        totalAmount += qty * money;
-		    });
-
-		    $('#order_am').val(totalQty);
-		    $('#order_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
-		}
-			
-			
 			
 	    // "추가" 버튼 클릭 시 원자재 선택 모달 열기
 	    $('#addMaterialBtn').on('click', function () {
@@ -358,6 +326,12 @@
 			
 	        event.preventDefault();
 	        
+		    if (!validateForm()) {
+		        console.log("폼 검증 실패, 버튼 다시 활성화");
+		        $('#modal_submit_button').prop('disabled', false);
+		        return false; // 검증 실패 시 제출 중단
+		    }
+	        
 			const mode = $('#modal_submit_button').text().trim();
 			const url = mode === '등록' ? '/insert_ORDER' : '/update_ORDER';
 			console.log("폼 제출 시 mode:", mode, "요청 URL:", url);
@@ -369,7 +343,7 @@
 			        order_sd: $('#order_sd').val(),
 			        order_ed: $('#order_ed').val(),
 			        order_am: parseInt($('#order_am').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
-			        order_mn: parseInt($('#order_mn').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
+			        order_mn: parseInt($('#order_mn').val().replace(/[^0-9]/g, '')) || 0,
 			        order_st: $('#order_st').val(),
 			        order_rm: $('#order_rm').val(),
 			        order_wr: $('#order_wr').val(),
@@ -412,14 +386,82 @@
 	        });
 	    });
 	}
+	
+	// todo
+	function validateForm() {
+	    let isValid = true;
+	    let errorMessage = "";
+
+	    // 필수값 검증할 필드 목록
+	    const requiredFields = [
+	        { id: '#order_ps', message: '담당자명을 입력해주세요.' },
+	        { id: '#order_sd', message: '발주일자를 입력해주세요.' },
+	        { id: '#account_cd', message: '거래처코드를 입력해주세요.' },
+	        { id: '#order_st', message: '발주상태를 선택해주세요.' },
+	        { id: '#order_am', message: '발주수량을 입력해주세요.' },
+	        { id: '#order_mn', message: '발주금액을 입력해주세요.' }
+	    ];
+
+	    requiredFields.forEach(field => {
+	        const value = $(field.id).val()?.trim();
+	        if (!value) {
+	            errorMessage = field.message;
+	            isValid = false;
+	            return false; // 첫 번째 오류에서 중단
+	        }
+	    });
+
+	    if (!isValid) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: '입력 오류',
+	            text: errorMessage,
+	            confirmButtonText: '확인'
+	        });
+	        return false;
+	    }
+
+	    return true; // 모든 필수값이 입력된 경우 true 반환
+	}
+
+	// 초기화 버튼 클릭
+    $(document).on('click', '#resetFormBtn', function () {
+		console.log('리셋버튼 호출');
+		resetModal();
+
+    });
+    
+	// 모달 초기화 함수
+	function resetModal() {
+	    $('#appointment_form')[0].reset(); // 폼 초기화
+		
+        // 오늘 날짜 설정 (YYYY-MM-DD 형식)
+        let today = new Date();
+        let formattedDate = today.getFullYear() + '-' + 
+                            ('0' + (today.getMonth() + 1)).slice(-2) + '-' + 
+                            ('0' + today.getDate()).slice(-2);
+        
+        $('#order_sd').val(formattedDate);
+        
+        // 원자재 그리드 초기화
+        make_material_grid();
+        
+        // 발주 상태 업데이트
+        updateOrderStatus();
+	}
+	
 
 	// DatePicker 초기화 함수
 	function initializeDatePickers() {
-	    const today = new Date(); // 오늘 날짜
+		 console.log('DatePicker 초기화 시작');
+		
+		const today = new Date(); // 오늘 날짜
 
+	    
 	    // 시작일과 종료일 DatePicker 초기화
 	    const startPicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
+	    	language: 'ko',
+	    	startpicker: {
 	            date: today,
 	            input: '#order_sd',
 	            container: '#modal_startpicker-container',
@@ -437,29 +479,78 @@
 	    // 종료일 필드 초기화 및 비활성화
 	    $('#order_ed').val('').prop('disabled', true);
 
-	    // 시작일 선택 이벤트 처리
-	    startPicker.on('change:start', function (event) {
-	        if (event && event.date) {
-	            console.log('선택된 시작일: ', event.date);
+	    // 올바른 시작일 변경 이벤트
+	    startPicker.getStartpicker().on('change', function () {
+	        const startDate = startPicker.getStartpicker().getDate(); // 시작일 가져오기
+	        console.log('선택된 시작일:', startDate);
 
-	            const minEndDate = new Date(event.date);
-	            minEndDate.setDate(minEndDate.getDate() + 1);
-
-	            startPicker.getEndpicker().setOptions({
-	                date: minEndDate,
-	                disabled: false,
-	            });
-
-	            $('#order_ed').prop('disabled', false);
+	        if (!startDate) {
+	            console.error('시작 날짜를 가져오지 못했습니다!');
+	            return;
 	        }
+
+	        const minEndDate = new Date(startDate);
+	        minEndDate.setDate(minEndDate.getDate() + 1);
+
+	        startPicker.getEndpicker().setDate({
+	            date: minEndDate,
+	            disabled: false,
+	        });
+
+	        updateOrderStatus();
 	    });
 
-	    // 종료일 선택 이벤트 처리
-	    startPicker.on('change:end', function (event) {
-	        if (event && event.date) {
-	            console.log('선택된 종료일: ', event.date);
+	    // 올바른 종료일 변경 이벤트
+	    startPicker.getEndpicker().on('change', function () {
+	        const endDate = startPicker.getEndpicker().getDate(); // 종료일 가져오기
+	        console.log('선택된 종료일:', endDate);
+
+	        if (!endDate) {
+	            console.error('종료 날짜를 가져오지 못했습니다!');
+	            return;
 	        }
+
+	        updateOrderStatus();
 	    });
+	}
+	
+	// 날짜를 YYYY-MM-DD 형식으로 변환하는 함수
+	function formatDate(date) {
+	    let year = date.getFullYear();
+	    let month = String(date.getMonth() + 1).padStart(2, '0');
+	    let day = String(date.getDate()).padStart(2, '0');
+	    return `${year}-${month}-${day}`;
+	}
+	
+	// 발주 상태 자동 설정 함수
+	function updateOrderStatus() {
+	    let orderSd = $('#order_sd').val();
+	    let orderEd = $('#order_ed').val();
+	    let today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+	
+	    console.log("updateOrderStatus 실행됨 | order_sd:", orderSd, "order_ed:", orderEd, "today:", today);
+	
+	    orderSd = formatDate(new Date(orderSd));
+	    orderEd = orderEd ? formatDate(new Date(orderEd)) : "";
+	    
+	    let status = "알 수 없음";
+
+	    if (orderSd > today) {
+	        status = "대기중";
+	    } 
+	    else if (orderSd <= today) {
+	        // 종료일이 없거나 오늘 이후이면 → "진행중"
+	        if (!orderEd || orderEd >= today) {
+	            status = "진행중";
+	        } 
+	        // 종료일이 오늘 이전이면 → "완료"
+	        else if (orderEd < today) {
+	            status = "완료";
+	        }
+	    }
+	
+	    console.log("계산된 발주 상태:", status);
+	    $('#order_st').val(status);
 	}
 
 
@@ -474,6 +565,11 @@
 	                        <h5 class="modal-title">원자재 선택</h5>
 	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 	                    </div>
+	                    <br>
+						<div class="col d-flex align-items-center">
+							<input type="text" id="material_search" class="form-control me-2" placeholder="검색어 입력" style="width:150px; margin-left: 15px;">
+							<input type="button" id="btn_material_search" class="btn btn-primary" value="검색">
+						</div>
 	                    <div class="modal-body">
 	                        <div id="materialSelectGrid"></div>
 	                    </div>
@@ -537,6 +633,43 @@
 
 	    materialModal.show();
 
+	    // 검색 기능 추가
+		$('#material_search').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return; 
+		
+		    const searchValue = $(this).val().trim();
+		
+		    console.log("검색 실행 - 검색어:", searchValue);
+		
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/search_MATERIAL',
+		        method: 'GET',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken, // CSRF 토큰 포함
+		        },
+		        data: {keyword: searchValue},
+		        success: function (filteredData) {
+		            console.log('서버에서 검색된 데이터:', filteredData);
+		            materialSelectGrid.resetData(filteredData); // ✅ 그리드 데이터 갱신
+		        },
+		        error: function (error) {
+		            console.error('검색 적용 오류:', error);
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '검색 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		});
+
+		$('#btn_material_search').on('click', function () {
+		    $('#material_search').trigger('keypress', { keyCode: 13 }); // Enter 키 이벤트 강제 실행
+		});
+			
 	    // "추가" 버튼 클릭 시 선택 데이터 처리
 		$('#selectMaterialBtn').on('click', function () {
 		    const selectedRows = materialSelectGrid.getCheckedRows();
@@ -582,7 +715,6 @@
 	    console.log('거래처 선택 input 클릭됨!'); // 클릭 이벤트 확인
 	    openAccountModal();
 	});
-
     
     
     // 거래처 선택 모달
@@ -596,6 +728,11 @@
 	                        <h5 class="modal-title">거래처 선택</h5>
 	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 	                    </div>
+	                    <br>
+						<div class="col d-flex align-items-center">
+							<input type="text" id="account_search" class="form-control me-2" placeholder="검색어 입력" style="width:150px; margin-left: 15px;">
+							<input type="button" id="btn_account_search" class="btn btn-primary" value="검색">
+						</div>
 	                    <div class="modal-body">
 	                        <div id="accountSelectGrid"></div>
 	                    </div>
@@ -658,21 +795,75 @@
 
 	    accountModal.show();
 
-	    // 체크박스 단일 선택 제한
-	    accountSelectGrid.on('check', (ev) => {
-	        const checkedRows = accountSelectGrid.getCheckedRows();
-	        if (checkedRows.length > 1) {
-	            // 마지막으로 체크된 항목 제외
-	            accountSelectGrid.uncheck(ev.rowKey);
-	            Swal.fire({
-	                icon: 'warning',
-	                title: '알림',
-	                text: '하나의 거래처만 선택할 수 있습니다.',
-	                confirmButtonText: '확인'
-	            });
-	        }
-	    });
-
+	    // 검색 기능 추가
+		$('#account_search').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return; 
+		
+		    const searchValue = $(this).val().trim();
+		
+		    console.log("검색 실행 - 검색어:", searchValue);
+		
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/search_ACCOUNT_ORDER',
+		        method: 'GET',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken, // CSRF 토큰 포함
+		        },
+		        data: {keyword: searchValue},
+		        success: function (filteredData) {
+		            console.log('서버에서 검색된 데이터:', filteredData);
+		            accountSelectGrid.resetData(filteredData); // 그리드 데이터 갱신
+		        },
+		        error: function (error) {
+		            console.error('검색 적용 오류:', error);
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '검색 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		});
+	    
+		$('#btn_account_search').on('click', function () {
+		    $('#account_search').trigger('keypress', { keyCode: 13 }); // Enter 키 이벤트 강제 실행
+		});
+	    
+		// 모달 실행 시 함수 실행
+		attachCheckEventAccount();
+		
+		function attachCheckEventAccount() {
+			accountSelectGrid.on('check', (ev) => {
+		        const checkedRows = accountSelectGrid.getCheckedRows();
+		        if (checkedRows.length > 1) {
+		        	accountSelectGrid.uncheck(ev.rowKey); // 마지막으로 체크된 항목 제외
+		            Swal.fire({
+		                icon: 'warning',
+		                title: '알림',
+		                text: '하나의 거래처만 선택할 수 있습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		
+		    // 체크박스 단일 선택 제한
+		    accountSelectGrid.on('check', (ev) => {
+		        const checkedRows = accountSelectGrid.getCheckedRows();
+		        if (checkedRows.length > 1) {
+		            // 마지막으로 체크된 항목 제외
+		            accountSelectGrid.uncheck(ev.rowKey);
+		            Swal.fire({
+		                icon: 'warning',
+		                title: '알림',
+		                text: '하나의 거래처만 선택할 수 있습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		}
 	    // "추가" 버튼 클릭 시 선택 데이터 처리
 	    $('#selectAccountBtn').off('click').on('click', function () {
 	        const selectedRow = accountSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
@@ -694,7 +885,6 @@
 	} // 거래처 관련 끝
     
 		
-		
     // 담당자 클릭 시 담당자 선택 모달 열기
 	$(document).on('click', '#order_ps', function () {
 	    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
@@ -702,8 +892,7 @@
 	});
 
     
-    
-    // 거래처 선택 모달
+    // 담당자 선택 모달
 	function openPersonModal() {
 	    $('#personSelectModal').remove();
 	    const personModalHTML = `
@@ -714,6 +903,11 @@
 	                        <h5 class="modal-title">담당자 선택</h5>
 	                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
 	                    </div>
+	                    <br>
+						<div class="col d-flex align-items-center">
+							<input type="text" id="person_search" class="form-control me-2" placeholder="검색어 입력" style="width:150px; margin-left: 15px;">
+							<input type="button" id="btn_person_search" class="btn btn-primary" value="검색">
+						</div>
 	                    <div class="modal-body">
 	                        <div id="personSelectGrid"></div>
 	                    </div>
@@ -744,7 +938,7 @@
 	            height: 40,
 	            position: 'bottom',
 	            columnContent: {
-	                account_nm: {
+	            	employee_gd: {
 	                    template: (valueMap) => {
 	                        return `총 ${valueMap.cnt} 건`;
 	                    }
@@ -778,6 +972,43 @@
 
 	    personModal.show();
 
+	    // 검색 기능 추가
+		$('#person_search').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return; 
+		
+		    const searchValue = $(this).val().trim();
+		
+		    console.log("검색 실행 - 검색어:", searchValue);
+		
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/search_ORDER_PS',
+		        method: 'GET',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken, // CSRF 토큰 포함
+		        },
+		        data: {keyword: searchValue},
+		        success: function (filteredData) {
+		            console.log('서버에서 검색된 데이터:', filteredData);
+		            personSelectGrid.resetData(filteredData); // 그리드 데이터 갱신
+		        },
+		        error: function (error) {
+		            console.error('검색 적용 오류:', error);
+		            Swal.fire({
+		                icon: 'error',
+		                title: '오류 발생!',
+		                text: '검색 중 오류가 발생했습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		});
+
+		$('#btn_person_search').on('click', function () {
+		    $('#person_search').trigger('keypress', { keyCode: 13 }); // Enter 키 이벤트 강제 실행
+		});
+	    
 	    // 체크박스 단일 선택 제한
 	    personSelectGrid.on('check', (ev) => {
 	        const checkedRows = personSelectGrid.getCheckedRows();
@@ -812,6 +1043,82 @@
 	        }
 	    });
 	} // 담당자 정보 끝
+	
+    // 삭제 버튼 클릭 이벤트
+    $('#btn_order_delete').on('click', function () {
+        const checkedRows = order_grid.getCheckedRows();
+        if (checkedRows.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: '오류 발생!',
+                text: '삭제할 발주를 선택하세요.',
+                confirmButtonText: '확인'
+            });
+            return;
+        }
+
+        const waitOrders = checkedRows.filter(row => row.order_st === '대기중');
+        const order_cds = waitOrders.map(row => row.order_cd);
+
+        if (order_cds.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: '삭제 불가!',
+                text: '대기중인 발주만 삭제가 가능합니다.',
+                confirmButtonText: '확인'
+            });
+            return;
+        }
+        
+        Swal.fire({
+            title: '삭제 확인',
+            text: `선택한 발주(${order_cds.join(', ')})을 삭제하시겠습니까?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '삭제',
+            cancelButtonText: '취소',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // 확인 버튼을 눌렀을 때 실행할 코드
+                console.log(`선택한 발주(${order_cds.join(', ')}) 삭제를 진행합니다.`);
+                
+    	        $.ajax({
+    	            url: '/delete_ORDER',
+    	            method: 'POST',
+    	            headers: { 'X-CSRF-TOKEN': csrfToken },
+    	            data: JSON.stringify({ order_cds }),
+    	            contentType: 'application/json',
+    	            success: function () {
+    		            Swal.fire({
+    		                icon: 'success',
+    		                title: '삭제완료!',
+    		                text: '삭제가 완료되었습니다.',
+    		                confirmButtonText: '확인'
+    		            });
+    		            make_order_grid();
+    		            make_detail_grid();
+    	            },
+    	            error: function (xhr) {
+    	                console.error('삭제 중 오류 발생:', xhr.responseText);
+    		            Swal.fire({
+    		                icon: 'error',
+    		                title: '오류발생',
+    		                text: '삭제 중 오류가 발생했습니다.',
+    		                confirmButtonText: '확인'
+    		            });
+    	            }
+    	        });
+                
+                
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                // 취소 버튼을 눌렀거나 팝업을 닫았을 때 실행할 코드
+                console.log('삭제가 취소되었습니다.');
+            }
+        });
+    });	
+	
+	
 </script>
 
 
@@ -821,15 +1128,8 @@
     // 변수 지정
     let order_grid;
     let detail_grid;
-	
+	let materialGrid;
     setGridTheme();
-    
-	window.status_list = /*[[${status_list != null ? status_list : '[]'}]]*/ [];
-
-	["status_list"].forEach(key => {
-	    window[key] = typeof window[key] === "string" ? JSON.parse(window[key]) : window[key];
-	});
-    
     
     const token = $("meta[name='_csrf']").attr("content");
     const header = $("meta[name='_csrf_header']").attr("content");
@@ -870,6 +1170,39 @@
         make_order_grid();
         // 하단(Detail Grid) 생성
         make_detail_grid();
+        
+	    // 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return;
+		    const filterValues = {};
+	
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        let value = input.val();
+	
+		        filterValues[config.key] = value;
+				
+				console.log('필터값:', filterValues);  // 필터링된 값 확인
+		    }
+	
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/select_FILTERED_ORDER',
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken,
+		        },
+		        data: JSON.stringify(filterValues),
+		        success: function(filteredData) {
+		        	console.log('엔터키로 필터링된 데이터:', filteredData);
+		        	order_grid.resetData(filteredData); // 그리드 데이터 갱신
+		        },
+		        error: function(error) {
+		            console.error('엔터키 필터 적용 오류:', error);
+		        }
+		    });
+		});
     });
 
 	
@@ -932,7 +1265,7 @@
                             { header: '발주일자', name: 'order_sd', align: 'center', sortable: true },
                             { header: '입고일자', name: 'order_ed', align: 'center', sortable: true },
                             { header: '발주수량', name: 'order_am', align: 'center', sortable: true },
-                            { header: '발주금액', name: 'order_mn', align: 'center', sortable: true },
+                            { header: '발주금액', name: 'order_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
                             { header: '발주상태', name: 'order_st', align: 'center', sortable: true },
                             
                             // 숨김 컬럼
@@ -1000,7 +1333,7 @@
 					 { header: '발주번호', name: 'order_cd', align: 'center', sortable: true },
 					 { header: '원자재코드', name: 'material_cd', align: 'center', sortable: true },
 					 { header: '원자재수량', name: 'material_am', align: 'center', sortable: true },
-					 { header: '단가', name: 'order_ct', align: 'center', sortable: true },
+					 { header: '단가', name: 'order_ct', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
 					 { header: '기준단위', name: 'material_un', align: 'center', sortable: true },
 					 { header: '입고일', name: 'order_ed', align: 'center', sortable: true },
 	            ],
@@ -1080,6 +1413,55 @@
 	    });
 
     }
+    
+    
+	// 초기화된 materialGrid를 다시 불러오는 함수
+	function make_material_grid() {
+
+	    // 기존 materialGrid 제거 (만약 존재하면)
+	    if (materialGrid) {
+	    	materialGrid.destroy(); // 그리드 완전 삭제
+	        $('#materialGrid').empty(); // HTML 요소 초기화
+	        console.log("기존 materialGrid 삭제 완료");
+	    }
+
+	    // 새로운 그리드 생성
+	    materialGrid = new tui.Grid({
+	        el: document.getElementById('materialGrid'),
+	        data: [], // 초기 데이터 없음
+	        columns: [
+	            { header: '원자재코드', name: 'material_cd', align: 'center' },
+	            { header: '기준단위', name: 'material_un', align: 'center' },
+	            { header: '수량', name: 'material_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+	            { header: '단가', name: 'order_ct', align: 'center',  editor: 'text',     formatter: ({ value }) => {
+	                const num = Number(value);
+	                if (isNaN(num)) return '₩0';
+	                return `₩${num.toLocaleString()}`;
+	            	}
+	            }
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false,
+	        summary: {
+	            height: 40,
+	            position: 'bottom',
+	            columnContent: {
+	            	order_ct: {
+	                    template: (valueMap) => {
+	                        return `총 ${valueMap.cnt} 건`
+	                    }
+	                }
+	            }
+	        }
+	    });
+	    
+	    materialGrid.on('afterChange', function () {
+	        updateOrderSummary(materialGrid);
+	    });
+	    
+	}
+    
 </script>
 
 </html>
