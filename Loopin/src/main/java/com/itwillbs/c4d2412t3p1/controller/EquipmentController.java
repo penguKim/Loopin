@@ -111,7 +111,9 @@ public class EquipmentController {
 		
 		try {
 			equipmentService.delete_EQUIPMENT(equipmentList);
+			
 			List<EquipmentDTO> list = equipmentService.select_EQUIPMENT(filter);
+			
 			response.put("list", list);
 			
 			return ResponseEntity.ok(response);
