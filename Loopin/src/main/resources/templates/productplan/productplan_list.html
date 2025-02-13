@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card" id="div_card">
+						<div class="card-body">
+							<h5 class="card-title">생산계획</h5>
+
+							<!-- General Form Elements -->
+
+							<!-- 필터 UI -->
+							<div id="filterModule" class="mb-3"></div>
+
+
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-3">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+							<br>
+
+							<!-- End General Form Elements -->
+
+							<!-- 등록/수정 모달 -->
+							<div class="modal" id="productPlanModal" tabindex="-1"
+								aria-labelledby="modalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<!-- 모달 크기 확대 -->
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modalTitle">생산계획 등록</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="productPlanForm">
+												<!-- 첫 번째 줄: 수주번호, 품목코드, 작업 시작일, 작업 종료일 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="contract_cd" class="form-label"
+															style="pointer-events: none;">수주번호</label> <input
+															type="text" class="form-control" id="contract_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="product_cd" class="form-label">품목코드</label>
+														<input type="text" class="form-control" id="product_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_sd" class="form-label">작업
+															시작일</label> <input type="date" class="form-control"
+															id="productplan_sd" required>
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_ed" class="form-label">작업
+															종료일</label> <input type="date" class="form-control"
+															id="productplan_ed" required>
+													</div>
+												</div>
+
+												<!-- 두 번째 줄: 담당자, 창고코드, 지시수량, 비고 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="productplan_dd" class="form-label">담당자</label>
+														<input type="text" class="form-control"
+															id="productplan_dd">
+													</div>
+													<div class="col-md-3">
+														<label for="warehouse_cd" class="form-label">창고코드</label>
+														<input type="text" class="form-control" id="warehouse_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_js" class="form-label">지시수량</label>
+														<input type="number" class="form-control"
+															id="productplan_js">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_bg" class="form-label">비고</label>
+														<textarea class="form-control" id="productplan_bg"
+															rows="1"></textarea>
+													</div>
+												</div>
+
+												<input type="hidden" id="modalMode" value="insert">
+											</form>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">취소</button>
+											<button type="button" class="btn btn-primary"
+												id="saveProductPlan">저장</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+							<!-- 수주번호 검색 모달 -->
+							<div class="modal" id="contractSearchModal" tabindex="-1"
+								aria-labelledby="contractSearchLabel" aria-hidden="true"
+								data-bs-backdrop="false">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="contractSearchLabel">수주번호 검색</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<!-- 검색 입력 필드 -->
+											<div class="input-group mb-3">
+												<input type="text" id="searchContractCd"
+													class="form-control" placeholder="수주번호 입력">
+												<button class="btn btn-primary" id="btnSearchContract">검색</button>
+											</div>
+											<!-- 검색 결과 GRID -->
+											<div id="contractGrid"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+						</div>
+					</div>
+
+				</div>
+
+
+			</div>
+		</section>
+
+	</main>
+
+	<div id="grid"></div>
+
+
+
+</body>
+
+<!-- 필터 모듈 JS File -->
+<script th:inline="javascript">
+
+let productCdInput;
+
+document.addEventListener("DOMContentLoaded", function () {
+    // CSRF 설정
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    // 모달 요소 확인 후 초기화
+    const contractSearchModalElement = document.getElementById("contractSearchModal");
+    if (!contractSearchModalElement) {
+        console.error("수주번호 검색 모달을 찾을 수 없습니다.");
+        return;
+    }
+    const contractSearchModal = new bootstrap.Modal(contractSearchModalElement);
+
+    // 수주번호 입력 필드 확인 후 이벤트 리스너 등록
+    const contractCdInput = document.getElementById("contract_cd");
+    if (!contractCdInput) {
+        console.error("수주번호 입력 필드를 찾을 수 없습니다.");
+        return;
+    }
+    contractCdInput.addEventListener("click", function () {
+        console.log("수주번호 입력 필드 클릭!");
+        contractSearchModal.show();
+    });
+
+    // 검색 버튼 확인 후 이벤트 리스너 등록
+    const searchContractCdInput = document.getElementById("searchContractCd");
+    const searchButton = document.getElementById("btnSearchContract");
+    if (!searchButton) {
+        console.error("검색 버튼을 찾을 수 없습니다.");
+        return;
+    }
+    searchButton.addEventListener("click", function () {
+        const searchValue = searchContractCdInput.value.trim();
+        if (!searchValue) {
+            alert("수주번호를 입력하세요.");
+            return;
+        }
+
+        fetch(`/select_CONTRACTCD_list?contract_cd=${searchValue}`, { method: "GET" })
+            .then(response => response.json())
+            .then(data => {
+                if (!data || data.length === 0) {
+                    console.warn("조회된 데이터가 없습니다.");
+                    return;
+                }
+                console.log("조회된 수주 데이터:", JSON.stringify(data, null, 2));
+                contractGrid.resetData(Array.isArray(data) ? data : data.result);
+                contractGrid.refreshLayout();
+            })
+            .catch(error => console.error("수주번호 조회 오류:", error));
+    });
+
+    const contractGrid = new tui.Grid({
+        el: document.getElementById("contractGrid"),
+        columns: [
+            { header: "수주번호", name: "contract_cd", width: 177,  align: "center"},
+            { header: "품목코드", name: "product_cd", width: 177,  align: "center"},
+            { header: "색상", name: "product_cr", width: 177,  align: "center"},
+            { header: "사이즈", name: "product_sz", width: 177,  align: "center"}
+        ],
+        scrollX: false,
+        scrollY: true,
+        rowHeaders: ["checkbox"],
+        autoResize: true
+    });
+
+
+
+
+    contractGrid.on("dblclick", (ev) => {
+        const rowData = contractGrid.getRow(ev.rowKey);
+        if (!rowData) return;
+        
+        contractCdInput.value = rowData.contract_cd;
+        if (productCdInput) {
+            productCdInput.value = rowData.product_cd;
+            console.log("설정된 product_cd:", productCdInput.value);
+        }
+        contractSearchModal.hide();
+    });
+
+
+    // 필터 모듈 설정
+    const filterConfig = [
+        { key: 'startDate', label: '시작일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+        { key: 'endDate', label: '종료일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+        { key: 'contract_cd', label: '수주번호', type: 'text', col: 'col-md-3', placeholder: '수주번호 입력' },
+        { key: 'product_cd', label: '품목코드', type: 'text', col: 'col-md-3', placeholder: '품목코드 입력' },
+        { key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3', list: [
+            { value: 'ALL', text: '전체' },
+            { value: 'PENDING', text: '대기' },
+            { value: 'IN_PROGRESS', text: '진행중' },
+            { value: 'COMPLETED', text: '완료' }
+        ]}
+    ];
+
+    // 필터 초기화 및 적용 이벤트 핸들러
+    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+        console.log('필터 적용됨:', filterValues);
+        fetchProductPlanList(filterValues);
+    });
+
+    // TOAST UI Grid (생산계획 목록)
+    const grid = new tui.Grid({
+        el: document.getElementById("grid"),
+        columns: [
+            { header: '수주번호', name: 'contract_cd' },
+            { header: '품목코드', name: 'product_cd' },
+            { header: '작업 시작일', name: 'productplan_sd' },
+            { header: '작업 종료일', name: 'productplan_ed' },
+            { header: '담당자', name: 'productplan_dd' },
+            { header: '지시수량', name: 'productplan_js' },
+            { header: '창고코드', name: 'warehouse_cd' },
+            { header: '계획상태', name: 'productplan_st' },
+            { header: '비고', name: 'productplan_bg' }
+        ],
+        data: [],
+        scrollX: false,
+        scrollY: false
+    });
+
+    // 데이터 조회 함수
+    function fetchProductPlanList(filters) {
+        fetch("/api/productplan/list", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
+            body: JSON.stringify(filters)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("불러온 데이터:", data);
+            grid.resetData(data);
+        })
+        .catch(error => console.error("데이터 조회 중 오류 발생:", error));
+    }
+
+    // 생산계획 등록 모달 관련 코드
+    const modal = new bootstrap.Modal(document.getElementById("productPlanModal"));
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMode = document.getElementById("modalMode");
+    const saveButton = document.getElementById("saveProductPlan");
+
+    productCdInput = document.getElementById("product_cd");
+    const productPlanStInput = document.getElementById("productplan_st");
+
+    function openProductPlanModal(mode, data = null) {
+        if (mode === "insert") {
+            modalTitle.textContent = "생산계획 등록";
+            modalMode.value = "insert";
+            contractCdInput.value = "";
+            productCdInput.value = "";
+            productPlanStInput.value = "PENDING";
+        } else if (mode === "update" && data) {
+            modalTitle.textContent = "생산계획 수정";
+            modalMode.value = "update";
+            contractCdInput.value = data.contract_cd;
+            productCdInput.value = data.product_cd;
+            productPlanStInput.value = data.productplan_st;
+        }
+        modal.show();
+    }
+
+    document.getElementById("btn_insert").addEventListener("click", function () {
+        openProductPlanModal("insert");
+    });
+
+    grid.on("dblclick", (ev) => {
+        const rowData = grid.getRow(ev.rowKey);
+        if (rowData) {
+            openProductPlanModal("update", rowData);
+        }
+    });
+
+    saveButton.addEventListener("click", function () {
+        const mode = modalMode.value;
+        const requestData = {
+            contract_cd: contractCdInput.value,
+            product_cd: productCdInput.value,
+            productplan_st: productPlanStInput.value
+        };
+
+        fetch(`/api/productplan/${mode === "insert" ? "" : requestData.contract_cd}`, {
+            method: mode === "insert" ? "POST" : "PUT",
+            headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
+            body: JSON.stringify(requestData)
+        })
+        .then(() => {
+            modal.hide();
+            fetchProductPlanList();
+        })
+        .catch(error => console.error("오류 발생:", error));
+    });
+});
+
+
+</script>
+
+
+</html>

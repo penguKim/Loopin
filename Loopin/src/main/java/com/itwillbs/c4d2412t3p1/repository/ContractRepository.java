@@ -270,4 +270,11 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     void updateContractStatus();
     
 	
+    
+    
+    
+    
+    // 김기렬 2025-02-13 메소드 추가
+    @Query("SELECT c FROM ContractDetail c WHERE c.contract_cd = :contractCd")
+    List<ContractDetail> findByContractCd(@Param("contractCd") String contractCd);
 }
