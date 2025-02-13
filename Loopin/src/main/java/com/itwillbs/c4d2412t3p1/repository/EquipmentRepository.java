@@ -5,9 +5,11 @@ import java.util.Map;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.EquipmentDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
@@ -21,5 +23,10 @@ public interface EquipmentRepository extends JpaRepository<Equipment, String> {
 	
 	@Query(value = "SELECT C.COMMON_CC, C.COMMON_NM FROM COMMON_CODE C WHERE COMMON_GC = 'HALFPRO' OR COMMON_GC = 'MATERIALS' OR COMMON_GC = 'SUBMAT' OR COMMON_GC = 'PRODUCT'", nativeQuery = true)
 	List<Common_codeDTO> select_PRODUCT_list();
+	
+	@Query(value = "SELECT PROCESS_EQ FROM PROCESS WHERE PROCESS_EQ IS NOT NULL", nativeQuery = true)
+	List<String> select_PROCESS_list();
+
+
 	
 }

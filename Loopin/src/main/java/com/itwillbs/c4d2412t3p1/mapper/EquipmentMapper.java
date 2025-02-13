@@ -13,4 +13,6 @@ public interface EquipmentMapper {
 	
 	List<EquipmentDTO> select_EQUIPMENT(@Param("filter") EquipmentFilterRequest filter);
 
+//	List<EquipmentDTO> select_PROCESS(List<EquipmentDTO> equipmentList);
+
 }
