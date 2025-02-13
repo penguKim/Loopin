@@ -127,7 +127,7 @@
 	    });
 
 	    $('#contract_am').val(totalQty);
-	    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
+	    $('#contract_mn').val(`₩${totalAmount.toLocaleString()}`);
 	}	
 	
 		
@@ -264,36 +264,8 @@
 	    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
 	    modalInstance.show();
 		    
-	    
+	    // 제품 그리드 초기화
 	    make_product_grid();
-	    // Toast UI Grid 초기화
-// 	    const productGrid = new tui.Grid({
-// 	        el: document.getElementById('productGrid'),
-// 	        data: [],
-// 	        columns: [
-// 	            { header: '제품코드', name: 'product_cd', align: 'center' },
-// 	            //{ header: '제품명', name: 'product_nm', align: 'center' },
-// 	            { header: '색상', name: 'product_cr', align: 'center' },
-// 	            { header: '사이즈', name: 'product_sz', align: 'center' },
-// 	            { header: '기준단위', name: 'product_un', align: 'center' },
-// 	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-// 	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-// 	        ],
-// 	        rowHeaders: ['checkbox'],
-// 	        scrollX: false,
-// 	        scrollY: false,
-// 			summary: {
-// 			    height: 40,
-// 			    position: 'bottom', // or 'top'
-// 			    columnContent: {
-// 			    	contract_ct: {
-// 			            template: (valueMap) => {
-// 			                return `총  ${valueMap.cnt} 건`
-// 			            }
-// 			        }
-// 			    }
-// 			}
-// 	    });
 
 	    // DatePicker 초기화
 	    initializeDatePickers();
@@ -390,7 +362,7 @@
 			        contract_sd: $('#contract_sd').val(),
 			        contract_ed: $('#contract_ed').val(),
 			        contract_am: parseInt($('#contract_am').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
-			        contract_mn: parseInt($('#contract_mn').val().replace(/,/g, '')) || 0, // 쉼표 제거 후 정수 변환
+			        contract_mn: parseInt($('#contract_mn').val().replace(/[^0-9]/g, '')) || 0,
 			        contract_st: $('#contract_st').val(),
 			        contract_rm: $('#contract_rm').val(),
 			        contract_wr: $('#contract_wr').val(),
@@ -508,7 +480,8 @@
 	    
 	    // 시작일과 종료일 DatePicker 초기화
 	    const startPicker = tui.DatePicker.createRangePicker({
-	        startpicker: {
+	    	language: 'ko',
+	    	startpicker: {
 	            date: today,
 	            input: '#contract_sd',
 	            container: '#modal_startpicker-container',
@@ -1127,7 +1100,7 @@
             return;
         }
 
-        const waitContracts = checkedRows.filter(row => row.contract_st === 'WAIT');
+        const waitContracts = checkedRows.filter(row => row.contract_st === '대기중');
         const contract_cds = waitContracts.map(row => row.contract_cd);
 
         if (contract_cds.length === 0) {
@@ -1338,7 +1311,7 @@
                             { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
                             { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
                             { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-                            { header: '수주금액', name: 'contract_mn', align: 'center', sortable: true },
+                            { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
                             { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
                             
                             // 숨김 컬럼
@@ -1408,7 +1381,7 @@
 					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
 					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
 					 { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
-					 { header: '단가', name: 'contract_ct', align: 'center', sortable: true },
+					 { header: '단가', name: 'contract_ct', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`}, 
 					 { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
 					 { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
 	            ],
@@ -1510,7 +1483,12 @@
 	            { header: '사이즈', name: 'product_sz', align: 'center' },
 	            { header: '기준단위', name: 'product_un', align: 'center' },
 	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}}
+	            { header: '단가', name: 'contract_ct', align: 'center',  editor: 'text',     formatter: ({ value }) => {
+	                const num = Number(value);
+	                if (isNaN(num)) return '₩0';
+	                return `₩${num.toLocaleString()}`;
+	            	}
+	            }
 	        ],
 	        rowHeaders: ['checkbox'],
 	        scrollX: false,
