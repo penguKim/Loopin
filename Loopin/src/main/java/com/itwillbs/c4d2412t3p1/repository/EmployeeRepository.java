@@ -162,6 +162,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
             + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
             + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
             + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION' \n"
+            + "ORDER BY e.employee_cd ASC"
             , nativeQuery = true)
 	List<Object[]> findAllWithDetails();
 
@@ -202,7 +203,9 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
             + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
             + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
             + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION' \n"
-			+ "WHERE e.employee_cd = :employeeCd", nativeQuery = true)
+			+ "WHERE e.employee_cd = :employeeCd"
+			+ "ORDER BY e.employee_cd ASC"
+			, nativeQuery = true)
 	List<Object[]> findAllWithDetailsCd(@Param("employeeCd") String currentCd);
 
     
@@ -240,8 +243,9 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
 	        + "LEFT JOIN common_code p ON e.employee_gd = p.common_cc AND p.common_gc = 'POSITION' \n"
 	        + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
 	        + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
-	        + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'",
-	        nativeQuery = true)
+	        + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'"
+	        + "ORDER BY e.employee_cd ASC"
+	        ,nativeQuery = true)
 	List<Object[]> select_EMPLOYEE_ALL();
 
 	
@@ -280,8 +284,9 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
 	        + "LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN' \n"
 	        + "LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE' \n"
 	        + "LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION' \n"
-	        + "WHERE (:currentCd IS NULL OR e.employee_cd = :currentCd)",
-	        nativeQuery = true)
+	        + "WHERE (:currentCd IS NULL OR e.employee_cd = :currentCd)"
+	        + "ORDER BY e.employee_cd ASC"
+	        ,nativeQuery = true)
 	List<Object[]> select_EMPLOYEE_ALL_CD(@Param("currentCd") String currentCd);
 	
 	
@@ -326,8 +331,9 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
 	        + "  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL \n"
 	        + "       OR e.employee_hd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) \n"
 	        + "  AND (:#{#filterRequest.employeeNm} IS NULL OR e.employee_nm LIKE %:#{#filterRequest.employeeNm}%) \n"
-	        + "  AND (:currentCd IS NULL OR e.employee_cd = :currentCd)", 
-	        nativeQuery = true)
+	        + "  AND (:currentCd IS NULL OR e.employee_cd = :currentCd)"
+	        + "ORDER BY e.employee_cd ASC"
+	        , nativeQuery = true)
 	List<Object[]> select_FILTERED_EMPLOYEE(@Param("filterRequest") EmployeeFilterRequest filterRequest, 
 	                                         @Param("currentCd") String currentCd);
 
@@ -374,8 +380,9 @@ List<Map<String, Object>> getEmployeePosiStatsByDate(
 	        + "  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL \n"
 	        + "       OR e.employee_hd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) \n"
 	        + "  AND (:#{#filterRequest.employeeNm} IS NULL OR e.employee_nm LIKE %:#{#filterRequest.employeeNm}%) \n"
-	        + "  AND e.employee_cd = :currentCd", // currentCd 조건
-	        nativeQuery = true)
+	        + "  AND e.employee_cd = :currentCd"
+	        + "ORDER BY e.employee_cd ASC"
+	        ,nativeQuery = true)
 	List<Object[]> select_FILTERED_EMPLOYEE_WITH_CD(@Param("filterRequest") EmployeeFilterRequest filterRequest, 
 	                                                 @Param("currentCd") String currentCd);
 
