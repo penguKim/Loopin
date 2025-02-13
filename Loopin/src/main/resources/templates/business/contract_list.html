@@ -112,7 +112,24 @@
 	    });
 	}
 
-		
+	// 수주수량 및 수주금액 업데이트 함수
+	function updateContractSummary(grid) {
+	    const data = grid.getData();
+	    let totalQty = 0;
+	    let totalAmount = 0;
+
+	    data.forEach(row => {
+	        const qty = parseFloat(row.product_am) || 0;
+	        const money = parseFloat(row.contract_ct) || 0;
+
+	        totalQty += qty;
+	        totalAmount += qty * money;
+	    });
+
+	    $('#contract_am').val(totalQty);
+	    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
+	}	
+	
 		
 	// 동적 모달 생성 및 표시
 	function openModal(mode, rowData = null) {
@@ -203,9 +220,12 @@
 	                            </div>
 	                        </form>
 	                    </div>
-	                    <div class="modal-footer">
-	                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-	                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
+	                    <div class="modal-footer  d-flex justify-content-between">
+	                    	<button type="button" class="btn btn-danger" id="resetFormBtn" style="display: flex; justify-content: flex-start; align-items: center;">초기화</button>
+		                    <div>    
+		                    	<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
+		                    </div>
 	                    </div>
 	                </div>
 	            </div>
@@ -244,34 +264,36 @@
 	    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
 	    modalInstance.show();
 		    
+	    
+	    make_product_grid();
 	    // Toast UI Grid 초기화
-	    const productGrid = new tui.Grid({
-	        el: document.getElementById('productGrid'),
-	        data: [],
-	        columns: [
-	            { header: '제품코드', name: 'product_cd', align: 'center' },
-	            //{ header: '제품명', name: 'product_nm', align: 'center' },
-	            { header: '색상', name: 'product_cr', align: 'center' },
-	            { header: '사이즈', name: 'product_sz', align: 'center' },
-	            { header: '기준단위', name: 'product_un', align: 'center' },
-	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	        ],
-	        rowHeaders: ['checkbox'],
-	        scrollX: false,
-	        scrollY: false,
-			summary: {
-			    height: 40,
-			    position: 'bottom', // or 'top'
-			    columnContent: {
-			    	contract_ct: {
-			            template: (valueMap) => {
-			                return `총  ${valueMap.cnt} 건`
-			            }
-			        }
-			    }
-			}
-	    });
+// 	    const productGrid = new tui.Grid({
+// 	        el: document.getElementById('productGrid'),
+// 	        data: [],
+// 	        columns: [
+// 	            { header: '제품코드', name: 'product_cd', align: 'center' },
+// 	            //{ header: '제품명', name: 'product_nm', align: 'center' },
+// 	            { header: '색상', name: 'product_cr', align: 'center' },
+// 	            { header: '사이즈', name: 'product_sz', align: 'center' },
+// 	            { header: '기준단위', name: 'product_un', align: 'center' },
+// 	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+// 	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+// 	        ],
+// 	        rowHeaders: ['checkbox'],
+// 	        scrollX: false,
+// 	        scrollY: false,
+// 			summary: {
+// 			    height: 40,
+// 			    position: 'bottom', // or 'top'
+// 			    columnContent: {
+// 			    	contract_ct: {
+// 			            template: (valueMap) => {
+// 			                return `총  ${valueMap.cnt} 건`
+// 			            }
+// 			        }
+// 			    }
+// 			}
+// 	    });
 
 	    // DatePicker 초기화
 	    initializeDatePickers();
@@ -282,8 +304,7 @@
 		// 수정 모드 데이터 반영
 		if (mode === 'edit' && rowData) {
 			
-			console.log("rowData.contract:", rowData.contract); // CONTRACT 데이터 디버깅
-			console.log("rowData.details:", rowData.details);   // CONTRACTDETAIL 데이터 디버깅
+			$('#resetFormBtn').hide(); // 버튼 숨기기
 			
 			$('#contract_cd').val(rowData.contract.contract_cd || '');
 			$('#account_cd').val(rowData.contract.account_cd || '');
@@ -323,25 +344,6 @@
 		    updateContractSummary(productGrid);
 		});
 
-		// 수주수량 및 수주금액 업데이트 함수
-		function updateContractSummary(grid) {
-		    const data = grid.getData();
-		    let totalQty = 0;
-		    let totalAmount = 0;
-
-		    data.forEach(row => {
-		        const qty = parseFloat(row.product_am) || 0;
-		        const money = parseFloat(row.contract_ct) || 0;
-
-		        totalQty += qty;
-		        totalAmount += qty * money;
-		    });
-
-		    $('#contract_am').val(totalQty);
-		    $('#contract_mn').val(totalAmount.toLocaleString()); // 천 단위 구분
-		}
-			
-			
 			
 	    // "추가" 버튼 클릭 시 제품 선택 모달 열기
 	    $('#addProductBtn').on('click', function () {
@@ -470,8 +472,33 @@
 	    return true; // 모든 필수값이 입력된 경우 true 반환
 	}
 
-	
+	// 초기화 버튼 클릭
+    $(document).on('click', '#resetFormBtn', function () {
+		console.log('리셋버튼 호출');
+		resetModal();
 
+    });
+    
+	// 모달 초기화 함수
+	function resetModal() {
+	    $('#appointment_form')[0].reset(); // 폼 초기화
+		
+        // 오늘 날짜 설정 (YYYY-MM-DD 형식)
+        let today = new Date();
+        let formattedDate = today.getFullYear() + '-' + 
+                            ('0' + (today.getMonth() + 1)).slice(-2) + '-' + 
+                            ('0' + today.getDate()).slice(-2);
+        
+        $('#contract_sd').val(formattedDate);
+        
+        make_product_grid();
+        
+        // 수주 상태 업데이트
+        updateContractStatus();
+	}
+	
+	
+	
 	// DatePicker 초기화 함수
 	function initializeDatePickers() {
 		 console.log('DatePicker 초기화 시작');
@@ -1171,7 +1198,7 @@
     // 변수 지정
     let contract_grid;
     let detail_grid;
-    
+    let productGrid;
     setGridTheme();
     
     
@@ -1461,6 +1488,51 @@
 	    });
 
     }
+    
+    
+	// 초기화된 productGrid를 다시 불러오는 함수
+	function make_product_grid() {
+
+	    // 기존 productGrid 제거 (만약 존재하면)
+	    if (productGrid) {
+	        productGrid.destroy(); // 그리드 완전 삭제
+	        $('#productGrid').empty(); // HTML 요소 초기화
+	        console.log("기존 productGrid 삭제 완료");
+	    }
+
+	    // 새로운 그리드 생성
+	    productGrid = new tui.Grid({
+	        el: document.getElementById('productGrid'),
+	        data: [], // 초기 데이터 없음
+	        columns: [
+	            { header: '제품코드', name: 'product_cd', align: 'center' },
+	            { header: '색상', name: 'product_cr', align: 'center' },
+	            { header: '사이즈', name: 'product_sz', align: 'center' },
+	            { header: '기준단위', name: 'product_un', align: 'center' },
+	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
+	            { header: '단가', name: 'contract_ct', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}}
+	        ],
+	        rowHeaders: ['checkbox'],
+	        scrollX: false,
+	        scrollY: false,
+	        summary: {
+	            height: 40,
+	            position: 'bottom',
+	            columnContent: {
+	                contract_ct: {
+	                    template: (valueMap) => {
+	                        return `총 ${valueMap.cnt} 건`
+	                    }
+	                }
+	            }
+	        }
+	    });
+	    
+	    productGrid.on('afterChange', function () {
+	        updateContractSummary(productGrid);
+	    });
+	    
+	}
 </script>
 
 </html>
