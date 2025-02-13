@@ -177,7 +177,7 @@
 									<select class="form-select" id="employee_us" name="employee_us" aria-label="부서장구분">
 									    <option value="" disabled selected>사용여부 구분</option>
 									    <option th:each="useyn : ${useyn_list}" th:value="${useyn.common_nm}"
-									            th:text="${useyn.common_nm == '사용중' ? '사용중' : '사용중지'}">
+									            th:text="${useyn.common_nm == '사용' ? '사용' : '미사용'}">
 									    </option>
 									</select>
 
@@ -616,7 +616,7 @@
 		});
 
 	    
-	    let employeeList = []; // 전체 발령 데이터
+	    let employeeList = []; // 전체 인사 데이터
 
 	    let grid;
 
@@ -962,18 +962,18 @@
 		
 		    const selectFields = {
 		        // 필드 이름과 매칭 기준 지정
-		        employee_gd: 'text', // 발령구분 (텍스트 매칭)
-		        employee_dp: 'text',  // 기존직위 (텍스트 매칭)
-		        employee_rl: 'text',  // 기존직위 (텍스트 매칭)
-		        employee_us: 'value',  // 기존직위 (텍스트 매칭)
-		        employee_mg: 'value'  // 기존직위 (텍스트 매칭)
+		        employee_gd: 'text', 
+		        employee_dp: 'text', 
+		        employee_rl: 'text', 
+		        employee_us: 'value',
+		        employee_mg: 'value' 
 		    };
 		
 		    Object.keys(selectFields).forEach(field => {
 		        const $select = $(`#${field}`);
 		        if ($select.length) {
-		            const textToMatch = rowData[field]; // 예: "승진", true, false
-		            const matchType = selectFields[field]; // 매칭 기준: 'text' 또는 'value'
+		            const textToMatch = rowData[field];
+		            const matchType = selectFields[field];
 		            const matchingOption = $select.find('option').filter((_, option) => {
 		                if (matchType === 'text') {
 		                    return $(option).text() === textToMatch; // 텍스트 매칭
@@ -1064,17 +1064,6 @@
  		    }
 		
 		    
-		    // 일반 입력 필드 처리
-// 		    Object.keys(rowData).forEach(key => {
-// 		        const $field = $(`#${key}`);
-// 		        if ($field.length && $field.is('input, textarea')) {
-// 		            $field.val(rowData[key] || '');
-// 		        }
-// 		    });
-		    
-// 		    const excludeKeys = ['employee_pw', 'secretField'];-->
-		
-		
 		    if (rowData.employee_ad) {
 		        const regex = /\((\d{5})\)\s*(.+?\d)\s+(.*)/;
 		        const match = rowData.employee_ad.match(regex); // 수정된 부분
@@ -1139,7 +1128,7 @@
 		    }
 
 			// 정규식으로 아이디 형식 검사
-			const regex = /^[a-zA-Z0-9]{4,16}$/;  // 6자 이상 16자 이하, 영문 대소문자, 숫자만 허용
+			const regex = /^[a-zA-Z0-9]{4,16}$/;  // 4자 이상 16자 이하, 영문 대소문자, 숫자만 허용
 			if (!regex.test(employee_id)) {
 			    $('#employee_id_check').text('아이디는 4자 이상 16자 이하이며, 영어 대소문자와 숫자만 허용됩니다.').css('color', 'red');
 			    return;
@@ -1245,7 +1234,7 @@
 
 			//  employee_us 값 처리 (사용중/사용중지)
 			let employeeUsValue = $('#employee_us').val();
-			const finalEmployeeUsValue = (employeeUsValue === "사용중" || employeeUsValue === "1") ? true : false;
+			const finalEmployeeUsValue = (employeeUsValue === "사용" || employeeUsValue === "1") ? true : false;
 
 
 			

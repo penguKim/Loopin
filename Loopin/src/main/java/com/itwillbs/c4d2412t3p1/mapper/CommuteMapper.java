@@ -38,6 +38,10 @@ public interface CommuteMapper {
 	// 현황 그리드 조회
 	List<CommuteDTO> select_COMMUTE_timeList(@Param("filter") CommuteFilterRequest filter);
 	// 일자별 근로시간 차트
+	List<CommuteDTO> select_COMMUTE_dayCommuteChart(@Param("filter") CommuteFilterRequest filter);
+	// 근로시간 차트
 	List<CommuteDTO> select_COMMUTE_commuteChart(@Param("filter") CommuteFilterRequest filter);
+	// 직위, 부서별 출근 차트
+	List<CommuteDTO> select_COMMUTE_gradeChart(@Param("sort") String sort, @Param("filter") CommuteFilterRequest filter);
     
 }

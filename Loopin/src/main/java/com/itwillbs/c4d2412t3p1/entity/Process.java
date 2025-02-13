@@ -23,11 +23,11 @@ public class Process {
 	@Column(name = "process_nm")
 	private String process_nm;
 	
-	@Column(name = "material_gc")
-	private String material_gc;
+	@Column(name = "process_gc")
+	private String process_gc;
 	
-	@Column(name = "material_cc")
-	private String material_cc;
+	@Column(name = "process_cc")
+	private String process_cc;
 	
 	@Column(name = "process_us")
 	private boolean process_us;
