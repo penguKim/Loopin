@@ -6,22 +6,21 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
-
+<style>
+/* #treeMapContainer에 스크롤은 가능하되 스크롤바는 보이지 않도록 */
+#treeMapContainer {
+    overflow: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+/* Chrome, Safari, Opera */
+#treeMapContainer::-webkit-scrollbar {
+    display: none;
+}
+</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
-<!--			<div class="row">
-				<div class="col">
-					<div class="card">
-						<div class="card-body ">
-							<h5 class="card-title">재고관리</h5>
-							<div id="filterModule" class="mb-3"></div>
-							<div id="grid"></div>
-						</div>
-					</div>
-				</div>
-			</div>-->
-			
 			<div class="row">
 				<div class="col-lg-12">
 					<div class="card">
@@ -42,24 +41,22 @@
 									</ul>
 								</div>
 							</div>
+							<div id="filterModule" class="mb-3"></div>
 							<!-- 탭 바디 -->
 							<div class="tab-content pt-2" id="myTabContent">
 								<!-- 그리드 탭 -->
 								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
-									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
+									<div id="btn_area" class="mt-2">
+										<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+										<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+									</div>
 								</div>
 								<!-- 트리 탭 -->
 								<div class="tab-pane fade" id="tab_tree" role="tabpanel" aria-labelledby="tree-tab">
-									<div id="treeMap"></div>
-
-									<script>
-										
-
-
-
-
-									</script>
+									<div id="treeMapContainer">
+									    <div id="treeMap"></div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -93,14 +90,15 @@
 		make_grid();
 		getGridList();
 		getList();
-		
 		setElementHeight('.card', -105);
-		setGridHeight(grid, -434);
+		setElementHeight('#treeMapContainer', -320);
+		setGridHeight(grid, -464);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
 				setElementHeight('.card', -105);
-				setGridHeight(grid, -434);
+				setElementHeight('#treeMapContainer', -320);
+				setGridHeight(grid, -464);
 				setGridWidth(grid, 0);
 			}, 300);
 		});
@@ -109,8 +107,13 @@
 			if(grid == null) {
 				make_grid();
 			}
-			resetSearchInput();
+			resetSearchInput(filterConfig);
 			getGridList();
+	        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	           	getGridList(filterValues);
+	        });
+			createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
+			createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
 		    if($('#btn_excel_download').length === 0) {
 		        $('#resetFilter').before(
 		        		'<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀">'
@@ -127,20 +130,17 @@
 				make_treeMap();
 			}
 			getChartList();
-		    if($('#btn_excel_download').length === 0) {
-		        $('#resetFilter').before(
-		        		'<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀">'
-		        		);
-		        
-		        $('#btn_excel_download').on('click', function() {
-		        	gridExcelDownload(grid, '출퇴근기록');
-		        });
-		    }
+	        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	        	getChartList(filterValues);
+	        });
+			createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
+			createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
+
 		});
 		
 		// 검색필터
         initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-            getGridList(filterValues);
+           	getGridList(filterValues);
         });
 		
 		// 엑셀 버튼 추가
@@ -148,14 +148,16 @@
 		
 		$(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -504);
+		        setGridHeight(grid, -534);
+		        setElementHeight('#treeMapContainer', -390);
 		    } else {
-		        setGridHeight(grid, -434);
+		    	setGridHeight(grid, -464);
+		        setElementHeight('#treeMapContainer', -320);
 		    }
 		});
 		
 		// 필터 엔터키 검색 이벤트
-		$('#filterModule').on('keypress', function(e) {
+		$(document).on('keypress', '#filterModule', function(e) {
 		    if (e.keyCode !== 13) return;
 		    
 		    const filterValues = {};
@@ -165,19 +167,17 @@
 		        const value = input.val();
 		        filterValues[config.key] = value;
 		    }
-		    getGridList(filterValues);
+		    $('#tab_grid').hasClass('active')? getGridList(filterValues) : getChartList(filterValues);
 		});
 		
-		$('#filterModule select').on('change', function(e) {
+		$(document).on('change', '#filterModule select', function(e) {
 		    const filterValues = {};
 		    
-		    // filterConfig 배열에 정의된 각 키에 대해 값을 가져옴.
 		    for (const config of filterConfig) {
 		        filterValues[config.key] = $(`#${config.key}`).val();
 		    }
 		    
-		    // select 요소 변경 시 즉시 검색 함수 호출
-		    getGridList(filterValues);
+		    $('#tab_grid').hasClass('active')? getGridList(filterValues) : getChartList(filterValues);
 		});
 
 		
@@ -208,12 +208,23 @@
 			}
 		});
 		
+		
+		// 재고 삭제
+		btn_delete.on('click', function() {
+			let checkedRows = grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 재고를 체크해주세요.');
+			    return;
+			}
+			// delete_PRODUCT(checkedRows, grid['flag']);				
+		});
+		
 	});
 	
 	//  함수 --------------------------------
 	
 	// 검색 인풋 초기화
-	function resetSearchInput(){
+	function resetSearchInput(filter){
 		$('#warehouse_cd').val('');
 		$('#warearea_cd').val('');
 		$('#item_gc').val('');
@@ -265,8 +276,8 @@
 		let sizeList = /*[[${commonList['SIZE']}]]*/ [];
 		
 		let baseColumns = [
-			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
-			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
+			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select', rowSpan: true,},
+			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select', rowSpan: true,},
 		    {header: '품목대분류', name: 'ITEM_GN', sortable: true, filter: 'select'},
 		    {header: '품목소분류', name: 'ITEM_CN', sortable: true, filter: 'select'},
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
@@ -286,7 +297,7 @@
 		}
 		
 		let endColumns = [
-		    {header: '비고', name: 'stock_rm', width: '200', sortable: true, filter: 'text'},
+		    // {header: '비고', name: 'stock_rm', width: '200', sortable: true, filter: 'text'},
 		];
 		
 		const finalColumns = [
@@ -301,6 +312,7 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
 			],
 			bodyHeight : 600,
 		    header: {
@@ -333,6 +345,204 @@
 			// setModalInput(row, getPrefix(grid['flag']));
 		});
     }
+	
+	// 트리맵 차트
+	function make_treeMap() {
+		treeMap = Highcharts.chart('treeMap', {
+	        chart: {
+	            spacingTop: 0,
+	            spacingBottom: 0,
+	            spacingLeft: 100,
+	            spacingRight: 100,
+	            events: {
+	                click: function (event) {
+	                	console.log('이벤트는', event);
+	                    const label = this.renderer.label(
+	                        'x: ' + Highcharts.numberFormat(event.xAxis[0].value, 2) +
+	                        ', y: ' + Highcharts.numberFormat(event.yAxis[0].value, 2),
+	                        event.xAxis[0].axis.toPixels(event.xAxis[0].value),
+	                        event.yAxis[0].axis.toPixels(event.yAxis[0].value)
+	                    )
+	                        .attr({
+	                            fill: Highcharts.getOptions().colors[0],
+	                            padding: 10,
+	                            r: 5,
+	                            zIndex: 8
+	                        })
+	                        .css({
+	                            color: '#FFFFFF'
+	                        })
+	                        .add();
+
+	                    setTimeout(function () {
+	                        label.fadeOut();
+	                    }, 1000);
+	                }
+	            }
+	        },
+	        title: {
+	            text: '내맘대로 할거야'
+	        },
+	        series: [{
+	            type: 'treegraph',
+	            data: [],
+	            tooltip: {
+	                pointFormat: '{point.name}'
+	            },
+	            marker: {
+	                symbol: 'rect',
+	                width: '10%',
+	                height: 30
+	            },
+	            nodeWidth: 'auto',
+	            borderRadius: 10,
+	            dataLabels: {
+	                style: {
+	                    fontSize: '14px',
+	                    fontWeight: 'bold',
+	                    textOutline: '1px contrast'
+	                }
+	            },
+	            levels: [{
+	                level: 1,
+	                levelIsConstant: false,
+	                nodeDistance: '10%',
+	                dataLabels: {
+	                    style: { fontSize: '16px' }
+	                }
+	            }, {
+	                level: 2,
+	                colorByPoint: true,
+	                dataLabels: {
+	                    style: { fontSize: '14px' }
+	                },
+	                nodeDistance: '10%'
+	            }, {
+	                level: 3,
+	                colorVariation: {
+	                    key: 'brightness',
+	                    to: -0.5,
+	                    nodeDistance: '10%'
+	                }
+	            }, {
+	                level: 4,
+	                colorVariation: {
+	                    key: 'brightness',
+	                    to: 0.5,
+	                    nodeDistance: '10%'
+	                }
+	            }],
+	        }]
+	    });
+		
+		/*
+		setTimeout(() => {
+		    const panZoom = svgPanZoom('#treeMap svg', {
+		        zoomEnabled: true, // 확대/축소 활성화
+		        // controlIconsEnabled: true, // 확대/축소 버튼 표시
+		        fit: true, // 초기 화면 맞춤
+		        center: true, // 초기 화면 중앙 정렬
+		        minZoom: 0.5, // 최소 줌 레벨
+		        maxZoom: 10, // 최대 줌 레벨
+		        zoomScaleSensitivity: 0.2 // 줌 속도 조정
+		    });
+		}, 0);
+		*/
+	}
+	
+	// 차트 데이터 설정
+	function setChartData(resultData) {
+		let treeObjs = [];
+		let warehouseMap = {};
+		
+		resultData.forEach(row => {
+	    	let whId = row.WAREHOUSE_CD;   // 창고 ID
+		    let whName = row.WAREHOUSE_NM; // 창고 이름
+		    let areaId = row.WAREAREA_CD;  // 구역 ID
+		    let areaName = row.WAREAREA_NM; // 구역 이름
+		    let itemName = row.ITEM_NM;
+		    let color = row.COLOR_NM;         // 색상
+		    let size = row.SIZE;           // 사이즈
+		    let qty = row.STOCK_AQ;        // 재고 수량
+		    let stockType = row.STOCK_TP;  // 재고 타입 (Y/N)
+		    
+		    // 창고 노드 생성
+		    if (!warehouseMap[whId]) {
+		        warehouseMap[whId] = {
+		            id: whId,
+		            parent: '',
+		            name: whName,
+		            children: {}
+		        };
+		        treeObjs.push(warehouseMap[whId]);
+		    }
+		    let whNode = warehouseMap[whId];
+		    
+		    // 구역 노드 생성
+		    if (!whNode.children[areaId]) {
+		        whNode.children[areaId] = {
+		            id: `${whId}-${areaId}`,
+		            parent: whId,
+		            name: areaName,
+		            children: {}
+		        };
+		    }
+		    let areaNode = whNode.children[areaId];
+		    
+		    if (stockType === 'Y') {
+		        // 제품 노드 생성
+		        if (!areaNode.children[itemName]) {
+		            areaNode.children[itemName] = {
+		                id: `${whId}-${areaId}-${itemName}`,
+		                parent: areaNode.id,
+		                name: `${itemName}`,
+		                children: {}
+		            };
+		        }
+		        let itemNode = areaNode.children[itemName];
+		
+		        // 색상 노드 생성
+		        if (!itemNode.children[color]) {
+		        	itemNode.children[color] = {
+		                id: `${whId}-${areaId}-${color}`,
+		                parent: itemNode.id,
+		                name: `${color}`,
+		                children: {}
+		            };
+		        }
+		        let colorNode = itemNode.children[color];
+		
+		        // 사이즈 노드 생성 (최종 노드)
+		        let sizeNode = {
+		            id: `${whId}-${areaId}-${color}-${size}`,
+		            parent: colorNode.id,
+		            name: `${size} (${qty}개)`
+		        };
+		        colorNode.children[size] = sizeNode;
+		    } else if (stockType === 'N') {
+		        // 개수 노드 생성
+		        if (!areaNode.children['count']) {
+		            areaNode.children['count'] = {
+		                id: `${whId}-${areaId}-count`,
+		                parent: areaNode.id,
+		                name: `${itemName} (${qty}개)`
+		            };
+		        }
+		    }
+		});
+		
+		const flatData = [];
+		function flattenTree(node) {
+		    flatData.push({ id: node.id, parent: node.parent, name: node.name });
+		    if (node.children) {
+		        for (let key in node.children) {
+		            flattenTree(node.children[key]);
+		        }
+		    }
+		}
+		treeObjs.forEach(n => flattenTree(n));
+		return flatData;
+	}
 
 	// ajax 함수 --------------------
 	// 공통코드 조회
@@ -342,7 +552,7 @@
 		createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
 	}
 	
-	// 제품 조회
+	// 그리드 조회
 	async function getGridList(filter = {}) {
 	    try {
 	        const jsonData = {
@@ -358,6 +568,44 @@
 	        showAlert('', 'error', '조회 실패', error.msg);
 	    }
 	}
+	
+	// 차트 조회
+	async function getChartList(filter = {}) {
+		try {
+	        const jsonData = {
+	            stockFilter: {
+					...filter,
+				}
+	        };
+			
+		    const ajaxData = await callAjaxPost(`/select_STOCK_chart`, JSON.stringify(jsonData));
+			
+			let chartList = ajaxData['list'];
+			let data = setChartData(chartList);
+			treeMap.series[0].setData(data, true);
+			let height = chartList.length * 40;
+	        $('#treeMap').css('height', (height > 100 ? height : 500) + 'px');				
+		} catch(error) {
+	        console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+		}
+		
+	}
+	
+	// 품목 대분류 선택
+	async function changeSelectBox(sourceId, targetId, api, key, rowValue) {
+		const source = sourceId && $(`${sourceId}`);
+		const value = source?.val() || rowValue;
+
+	    try {
+	        let ajaxData = await callAjaxPost(api, JSON.stringify({[key]: value}));
+	        createSelectBox($(`${targetId}`), ajaxData['list'], '선택하세요.');
+	    } catch (error) {
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+	
+	/*
 	
 	// 모달 조회
 	async function setModalInput(row, prefix) {
@@ -397,18 +645,7 @@
 		}
 	}
 	
-	// 품목 대분류 선택
-	async function changeSelectBox(sourceId, targetId, api, key, rowValue) {
-		const source = sourceId && $(`${sourceId}`);
-		const value = source?.val() || rowValue;
 
-	    try {
-	        let ajaxData = await callAjaxPost(api, JSON.stringify({[key]: value}));
-	        createSelectBox($(`${targetId}`), ajaxData['list'], '선택하세요.');
-	    } catch (error) {
-	        showAlert('', 'error', '조회 실패', error.msg);
-	    }
-	}
 	
 	// 품목 등록
 	async function insert_PRODUCT(flag) {
@@ -508,323 +745,8 @@
 			showAlert('', 'error', '삭제 실패', error['msg']);
 		}
 	}
+	
+*/
 
-	// 트리맵 생성
-	async function make_treeMap() {
-		try {
-		    const ajaxData = await callAjaxPost(`/select_STOCK`, JSON.stringify({}));
-			
-			let resultData = ajaxData['list'];
-			
-			
-			let treeObjs = [];
-			 let warehouseMap = {};
-			 
-			 resultData.forEach(row => {
-			
-			   let whId = row.WAREHOUSE_CD;
-			   let whName = row.WAREHOUSE_NM;
-			   let areaId = row.WAREAREA_CD;
-			   let areaName = row.WAREAREA_NM;
-			   let color = row.COLOR;
-			   let size = row.SIZE;
-			   let qty = row.STOCK_AQ;
-			   
-			   // 창고 노드 생성
-			   if (!warehouseMap[whId]) {
-			     warehouseMap[whId] = {
-			       id: whId,
-			       parent: '',
-			       name: whName,
-			       children: {}
-			     };
-			     treeObjs.push(warehouseMap[whId]);
-			   }
-			   let whNode = warehouseMap[whId];
-			   
-			   // 구역 노드 생성 (창고별 그룹)
-			   if (!whNode.children[areaId]) {
-			     whNode.children[areaId] = {
-			       id: `${whId}-${areaId}`,
-			       parent: whId,
-			       name: areaName,
-			       children: {}
-			     };
-			   }
-			   let areaNode = whNode.children[areaId];
-			   
-			   // 색상 노드 생성 (구역별 그룹)
-			   if (!areaNode.children[color]) {
-			     areaNode.children[color] = {
-			       id: `${whId}-${areaId}-${color}`,
-			       parent: areaNode.id,
-			       name: color,
-			       children: {}
-			     };
-			   }
-			   let colorNode = areaNode.children[color];
-			   
-			   // 사이즈 노드 생성 (최종 노드)
-			   // 여기서는 사이즈별로 노드를 만들고, 해당 수량을 표시합니다.
-			   let sizeNode = {
-			     id: `${whId}-${areaId}-${color}-${size}`,
-			     parent: colorNode.id,
-			     name: `${size} (${qty}개)`
-			   };
-			   // 사이즈 노드는 자식이 없으므로 바로 할당
-			   colorNode.children[size] = sizeNode;
-			 });
-			 
-			 // 중첩된 트리구조를 평면 배열(flat array)로 변환하는 함수
-			 const flatData = [];
-			 function flattenTree(node) {
-			   flatData.push({ id: node.id, parent: node.parent, name: node.name });
-			   if (node.children) {
-			     for (let key in node.children) {
-			       flattenTree(node.children[key]);
-			     }
-			   }
-			 }
-			 treeObjs.forEach(n => flattenTree(n));
-			
-			
-			 treeMap = Highcharts.chart('treeMap', {
-			     chart: {
-			         height: 600,  // 차트 전체 높이 조정
-			         spacingTop: 30,
-			         spacingBottom: 30
-			     },
-			     title: {
-			         text: '내맘대로 할거야'
-			     },
-			     series: [{
-			         type: 'treegraph',
-			         data: flatData,
-			         tooltip: {
-			             pointFormat: '{point.name}'
-			         },
-			         marker: {
-			             symbol: 'rect',
-			 			width: '10%',
-			 			height: '5%'
-			         },
-			 		nodeWidth: 'auto',
-			         borderRadius: 10,
-			         dataLabels: {
-			             style: {
-			                 fontSize: '14px',
-			                 fontWeight: 'bold',
-			                 textOutline: '1px contrast'
-			             },
-			         },
-			         levels: [{
-			             level: 1,
-			             levelIsConstant: false,
-			 			nodeDistance: '50%',
-			             dataLabels: {
-			                 style: { fontSize: '18px' }
-			             }
-			         }, {
-			             level: 2,
-			             colorByPoint: true,
-			             dataLabels: {
-			                 style: { fontSize: '16px' }
-			             }
-			         }, {
-			             level: 3,
-			             colorVariation: {
-			                 key: 'brightness',
-			                 to: -0.5
-			             }
-			         }, {
-			             level: 4,
-			             colorVariation: {
-			                 key: 'brightness',
-			                 to: 0.5
-			             }
-			         }]
-			     }]
-			 });
-			
-			
-		} catch (error) {
-		    console.log(error);
-		    showAlert('', 'error', '조회 실패', error.msg);
-		}
-	}
-	
-	
-	// 트리맵 차트
-	function make_treeMap() {
-		treeMap = Highcharts.chart('treeMap', {
-	        chart: {
-	            height: '42%',
-	            spacingTop: 0,
-	            spacingBottom: 0,
-	            spacingLeft: 100,
-	            spacingRight: 100,
-	            scrollablePlotArea: {
-	            	minHeight: 500, // 최소 가로 너비
-	                scrollPositionY: 1 // 스크롤 위치 초기화
-	            },
-	            zoomType: 'xy'
-	        },
-	        title: {
-	            text: '내맘대로 할거야'
-	        },
-	        series: [{
-	            type: 'treegraph',
-	            data: [],
-	            tooltip: {
-	                pointFormat: '{point.name}'
-	            },
-	            marker: {
-	                symbol: 'rect',
-	                width: '10%',
-	                height: '5%'
-	            },
-	            nodeWidth: 'auto',
-	            borderRadius: 10,
-	            dataLabels: {
-	                style: {
-	                    fontSize: '14px',
-	                    fontWeight: 'bold',
-	                    textOutline: '1px contrast'
-	                }
-	            },
-	            dataSorting: {
-	                enabled: true, // 데이터 정렬 활성화
-	                sortKey: 'name' // 정렬 기준 (id 또는 name)
-	            },
-	            levels: [{
-	                level: 1,
-	                levelIsConstant: false,
-	                nodeDistance: '50%',
-	                dataLabels: {
-	                    style: { fontSize: '16px' }
-	                }
-	            }, {
-	                level: 2,
-	                colorByPoint: true,
-	                dataLabels: {
-	                    style: { fontSize: '14px' }
-	                }
-	            }, {
-	                level: 3,
-	                colorVariation: {
-	                    key: 'brightness',
-	                    to: -0.5
-	                }
-	            }, {
-	                level: 4,
-	                colorVariation: {
-	                    key: 'brightness',
-	                    to: 0.5
-	                }
-	            }]
-	        }]
-	    });
-		
-		// SVG Pan-Zoom 초기화
-		setTimeout(() => {
-		    const panZoom = svgPanZoom('#treeMap svg', {
-		        zoomEnabled: true, // 확대/축소 활성화
-		        controlIconsEnabled: true, // 확대/축소 버튼 표시
-		        fit: true, // 초기 화면 맞춤
-		        center: true, // 초기 화면 중앙 정렬
-		        minZoom: 0.5, // 최소 줌 레벨
-		        maxZoom: 10, // 최대 줌 레벨
-		        zoomScaleSensitivity: 0.2 // 줌 속도 조정
-		    });
-
-		    // 버튼으로 제어 (선택 사항)
-		    // document.getElementById('zoom-in').addEventListener('click', () => panZoom.zoomIn());
-		    // document.getElementById('zoom-out').addEventListener('click', () => panZoom.zoomOut());
-		    // document.getElementById('reset').addEventListener('click', () => panZoom.reset());
-		}, 500);
-		
-	}
-	
-	// 차트 데이터 설정
-	function setChartData(resultData) {
-	    let treeObjs = [];
-	    let warehouseMap = {};
-	    
-	    resultData.forEach(row => {
-	        let whId   = row.WAREHOUSE_CD;   // 예: WH003
-	        let whName = row.WAREHOUSE_NM;   // 예: 제품보관창고
-	        let areaId   = row.WAREAREA_CD;   // 예: A 또는 B
-	        let areaName = row.WAREAREA_NM;   // 예: A 또는 B
-	        let color  = row.COLOR;         // 예: WHITE 또는 BLACK
-	        let size   = row.SIZE;          // 예: 220, 230, ..
-	        let qty    = row.STOCK_AQ;      // 재고 수량
-	        
-	        // 창고 노드 생성
-	        if (!warehouseMap[whId]) {
-	            warehouseMap[whId] = {
-	                id: whId,
-	                parent: '',
-	                name: whName,
-	                children: {}
-	            };
-	            treeObjs.push(warehouseMap[whId]);
-	        }
-	        let whNode = warehouseMap[whId];
-	        
-	        // 구역 노드 생성 (같은 창고 내에서)
-	        if (!whNode.children[areaId]) {
-	            whNode.children[areaId] = {
-	                id: `${whId}-${areaId}`,
-	                parent: whId,
-	                name: areaName,
-	                children: {}
-	            };
-	        }
-	        let areaNode = whNode.children[areaId];
-	        
-	        // 색상 노드 생성 (같은 구역 내에서)
-	        if (!areaNode.children[color]) {
-	            areaNode.children[color] = {
-	                id: `${whId}-${areaId}-${color}`,
-	                parent: areaNode.id,
-	                name: color,
-	                children: {}
-	            };
-	        }
-	        let colorNode = areaNode.children[color];
-	        
-	        // 사이즈 노드 생성 (최종 노드)
-	        let sizeNode = {
-	            id: `${whId}-${areaId}-${color}-${size}`,
-	            parent: colorNode.id,
-	            name: `${size} (${qty}개)`
-	        };
-	        colorNode.children[size] = sizeNode;
-	    });
-	    
-	    // 중첩 구조를 평면 배열로 펼치는 함수
-	    const flatData = [];
-	    function flattenTree(node) {
-	        flatData.push({ id: node.id, parent: node.parent, name: node.name });
-	        if (node.children) {
-	            for (let key in node.children) {
-	                flattenTree(node.children[key]);
-	            }
-	        }
-	    }
-	    treeObjs.forEach(n => flattenTree(n));
-	    return flatData;
-	}
-	
-	async function getChartList() {
-	    const ajaxData = await callAjaxPost(`/select_STOCK`, JSON.stringify({}));
-		
-		let chartList = ajaxData['list'];
-		let data = setChartData(chartList);
-		treeMap.series[0].setData(setChartData(chartList), true);
-		
-	}
-
-	
 </script>
 </html>

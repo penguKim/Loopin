@@ -29,8 +29,8 @@ public class StockService {
 		return stockMapper.select_STOCK_list(filter, sizeList);
 	}
 
-	public List<Map<String, Object>> select_TEST() {
-		return stockMapper.select_TEST();
+	public List<Map<String, Object>> select_STOCK_chart(StockFilterRequest filter) {
+		return stockMapper.select_STOCK_chart(filter);
 	}
 
 

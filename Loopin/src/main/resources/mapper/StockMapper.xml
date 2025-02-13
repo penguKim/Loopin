@@ -87,30 +87,62 @@
 		 <if test="filter.item_gc != null and filter.item_gc != ''">AND ST.ITEM_GC = #{filter.item_gc}</if>
 		 <if test="filter.item_cc != null and filter.item_cc != ''">AND ST.ITEM_CC = #{filter.item_cc}</if>
 		 <if test="filter.item_nm != null and filter.item_nm != ''">AND ST.ITEM_NM LIKE '%${filter.item_nm}%'</if>
+		ORDER BY WAREHOUSE_CD, WAREAREA_CD
 	</select>
 	
-	<select id="select_TEST" resultType="map">
-		SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN,  PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
+	<select id="select_STOCK_chart" resultType="map">
+			SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN,  PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
 				   PD.PRODUCT_NM AS ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, CC.COMMON_NM AS COLOR_NM,
-  	   			   ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, PD.PRODUCT_UN AS ITEM_UN,
+  	   			   PD.PRODUCT_UN AS ITEM_UN, ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, 
  	   			   SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) AS ITEM_CD,
   	   			   SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) AS COLOR,
   	  			   SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) AS "SIZE"
-		  FROM STOCK ST
-		  LEFT OUTER JOIN PRODUCT PD 
-		    ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
-		   AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-		   AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
-		  LEFT OUTER JOIN WAREHOUSE WH 
-			ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-		  LEFT OUTER JOIN WAREAREA WA 
-			ON WA.WAREAREA_CD = ST.WAREAREA_CD 
-		   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-		  LEFT OUTER JOIN COMMON_CODE CC 
-			ON CC.COMMON_GC = 'COLOR' 
-		   AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-		  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
-		  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
-		 WHERE STOCK_TP = 'Y'
+  			  FROM STOCK ST
+  			  LEFT OUTER JOIN PRODUCT PD 
+    			ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
+   			   AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+   			   AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
+  			  LEFT OUTER JOIN WAREHOUSE WH 
+    			ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+  			  LEFT OUTER JOIN WAREAREA WA 
+    		    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
+   			   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+  			  LEFT OUTER JOIN COMMON_CODE CC 
+    			ON CC.COMMON_GC = 'COLOR' 
+   			   AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+   			   LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
+   			   LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
+ 			 WHERE ST.STOCK_TP = 'Y'
+  		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
+		 <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
+		 <if test="filter.item_gc != null and filter.item_gc != ''">AND PD.PRODUCT_GC = #{filter.item_gc}</if>
+		 <if test="filter.item_cc != null and filter.item_cc != ''">AND PD.PRODUCT_CC = #{filter.item_cc}</if>
+		 <if test="filter.item_nm != null and filter.item_nm != ''">AND PD.PRODUCT_NM LIKE '%${filter.item_nm}%'</if>
+ 			 UNION ALL 
+		  SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN,
+		  	     ST.ITEM_NM, ST.WAREHOUSE_NM, ST.WAREAREA_NM, NULL, ST.ITEM_UN,
+	    		 ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, ST.ITEM_CD, NULL, NULL
+			FROM (
+				SELECT MR.MATERIAL_GC ITEM_GC, CC.COMMON_NM ITEM_GN, MR.MATERIAL_CC ITEM_CC, CC2.COMMON_NM ITEM_CN,
+					   MR.MATERIAL_NM AS ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, MR.MATERIAL_UN ITEM_UN,
+	      			   ST.ITEM_CD, ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_TP, ST.STOCK_AQ
+				  FROM STOCK ST
+				  LEFT OUTER JOIN MATERIAL MR 
+				    ON MR.MATERIAL_CD = ST.ITEM_CD
+				  LEFT OUTER JOIN WAREHOUSE WH 
+				    ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+				  LEFT OUTER JOIN WAREAREA WA 
+				    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
+				   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+				  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MR.MATERIAL_GC
+				  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MR.MATERIAL_GC AND CC2.COMMON_CC = MR.MATERIAL_CC
+				 WHERE ST.STOCK_TP = 'N'
+ 		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
+		 <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
+		 <if test="filter.item_gc != null and filter.item_gc != ''">AND MR.MATERIAL_GC = #{filter.item_gc}</if>
+		 <if test="filter.item_cc != null and filter.item_cc != ''">AND MR.MATERIAL_CC = #{filter.item_cc}</if>
+		 <if test="filter.item_nm != null and filter.item_nm != ''">AND MR.MATERIAL_NM LIKE '%${filter.item_nm}%'</if>
+		) ST
+		ORDER BY WAREHOUSE_CD, WAREAREA_CD
 	</select>
 </mapper>

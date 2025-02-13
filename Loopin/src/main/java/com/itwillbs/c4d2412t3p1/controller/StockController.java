@@ -77,14 +77,12 @@ public class StockController {
 	
 	// 재고 조회
 	@ResponseBody
-	@PostMapping("/select_STOCK")
-	public Map<String, Object> select_STOCK(@RequestBody StockDTO stock) {
+	@PostMapping("/select_STOCK_chart")
+	public Map<String, Object> select_STOCK_chart(@RequestBody StockRequestDTO stockRequest) {
 		Map<String, Object> response = new HashMap<>(); 
-		
-		// Map<String, List<Common_codeDTO>> sizeList =  commonService.select_COMMON_list("SIZE");
-		// List<Map<String, Object>> list = stockService.select_STOCK_list(sizeList);
+		StockFilterRequest filter = stockRequest.getStockFilter();
 
-		List<Map<String, Object>> list = stockService.select_TEST();
+		List<Map<String, Object>> list = stockService.select_STOCK_chart(filter);
 		System.out.println("------------------리스트");
 		System.out.println(list.toString());
 		

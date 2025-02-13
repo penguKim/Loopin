@@ -22,7 +22,7 @@ public interface StockMapper {
 	// 재고 조회
 	List<Map<String, Object>> select_STOCK_list(@Param("filter") StockFilterRequest filter, @Param("sizeList") Map<String, List<Common_codeDTO>> sizeList);
 
-	List<Map<String, Object>> select_TEST();
+	List<Map<String, Object>> select_STOCK_chart(@Param("filter") StockFilterRequest filter);
 
 
 
