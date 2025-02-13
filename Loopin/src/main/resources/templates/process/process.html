@@ -251,6 +251,63 @@
 		
 	});
 	
+	modal.addEventListener('hide.bs.modal',function(){
+		console.log('모달이닫힘')
+		
+		document.getElementById('PROCESS_CD').value = "";
+		document.getElementById('PROCESS_NM').value = "";
+		document.querySelector('#PROCESS_GC').selectedIndex = 0;
+		const productCC = document.querySelector('#PROCESS_CC');
+	    if (productCC) {
+	        // 기존 옵션 모두 제거
+	        productCC.innerHTML = '';
+	        
+	        // 기본 '품목세부' 옵션 추가
+	        const defaultOption = document.createElement('option');
+	        defaultOption.textContent = '품목세부';  // 기본 텍스트
+	        defaultOption.selected = true;  // 기본으로 선택된 상태
+	        productCC.appendChild(defaultOption);  // 기본 옵션 추가
+	    }
+		document.getElementById('PROCESS_BG').value = "";
+		
+	    $('#PROCESS_PD').val([]).trigger('change');  // 다중 선택 초기화
+	    $('#PROCESS_EQ').val([]).trigger('change');  // 다중 선택 초기화
+	    $('#PROCESS_PD').select2('destroy').val(null).trigger('change');
+	    $('#PROCESS_EQ').select2('destroy').val(null).trigger('change');
+	    
+		$('#PROCESS_EQ').select2({
+	        placeholder: '설비를 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	        language: {
+	            noResults: function() {
+	                return "해당설비가 없습니다."; // 옵션이 없을 때 나타날 메시지
+	            }
+	        },
+	    });
+		
+	    $('#PROCESS_PD').select2({
+	        placeholder: '품목을 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+	    
+	    document.querySelector('#PROCESS_US').selectedIndex = 0;
+	    
+	    pccd = null;
+	    pcnm = null;
+	    selgc = null;
+	    selcc = null;
+	    selpd = null;
+	    seleq = null;
+	    selus = null;
+	    pcbg = null;
+	    
+		console.log("닫아서 초기화완료");
+	})
+	
 // 공정코드 입력
 	
 // 	$("#PROCESS_CD").on("keyup", (e) => {
@@ -311,6 +368,7 @@
 	};
 	
    const updatePDCCSelectOptions = (options) => {
+	   console.log('품목세부옵션설정시작');
  	  const selectElement = document.querySelector('#PROCESS_CC');
 	    
 	  selectElement.innerHTML = '<option selected>품목세부</option>';
@@ -340,12 +398,12 @@
 	      },
     	});
 		  
-	    const ccdata = await response.json();
-	    console.log('ccdata',ccdata);
+	    const pddata = await response.json();
+	    console.log('pddata',pddata);
 	    if(selgc === 'HALFPRO' || selgc === 'PRODUCT' ){
-			updatePDSelectOptions(ccdata);
+			updatePDSelectOptions(pddata);
 	    }else{
-			updatePDSelectOptions2(ccdata);
+			updatePDSelectOptions2(pddata);
 	    }
 	    
 	  } catch (error) {
@@ -359,9 +417,12 @@
 	};
 	
 	 const updatePDSelectOptions = (options) => {
+		 console.log('공정품목옵션설정시작');
 	    const selectElement = document.querySelector('#PROCESS_PD');
+	    const selectedValues = $(selectElement).val();
+	    console.log('선택되어있는 품목'+selectedValues);
 	    
-	    selectElement.innerHTML = '<option></option>';
+	    selectElement.innerHTML = '';
 	    
 	    options.forEach(option => {
 	      const optionElement = document.createElement('option');
@@ -369,12 +430,16 @@
 	      optionElement.textContent = option.PRODUCT_NM;
 	      selectElement.appendChild(optionElement);
 	    });
+	    
+	    $(selectElement).val(selectedValues).trigger('change')
 	  };
 	  
 	 const updatePDSelectOptions2 = (options) => {
+		 console.log('공정품목옵션설정시작');
 	    const selectElement = document.querySelector('#PROCESS_PD');
-	    
-	    selectElement.innerHTML = '<option></option>';
+	    const selectedValues = $(selectElement).val();
+	    console.log('선택되어있는 품목'+selectedValues);
+	    selectElement.innerHTML = '';
 	    
 	    options.forEach(option => {
 	      const optionElement = document.createElement('option');
@@ -382,6 +447,7 @@
 	      optionElement.textContent = option.MATERIAL_NM;
 	      selectElement.appendChild(optionElement);
 	    });
+	    $(selectElement).val(selectedValues).trigger('change')
 	  };
 	
 	// PROCESS_PD (적용품목) 선택이 변경되었을 때
@@ -424,7 +490,10 @@
 	});
 
 	const updateEQSelectOptions = (options) => {
+		 console.log('설비옵션설정시작');
 	    const selectElement = document.querySelector('#PROCESS_EQ');
+	    const selectedValues = $(selectElement).val();
+		 console.log('선택되어있는 설비'+selectedValues);
 	    
 	    selectElement.innerHTML = '';
 	    
@@ -436,6 +505,7 @@
 	            selectElement.appendChild(optionElement);
 	        });
 	    }
+	    $(selectElement).val(selectedValues).trigger('change')
 	 };
 	
 	// PROCESS_EQ (설비) 선택이 변경되었을 때
@@ -706,7 +776,7 @@
 		    console.log(setdata);
 		    modaltype='edit';
 		    // 모달에 값 채우기
-	        if (setdata.length > 0) {
+	       if (setdata.length > 0) {
 		      const item = setdata[0]; // 첫 번째 데이터
 		      regimodal.show();
 // 		      $('#PROCESS_PD').select2();
@@ -732,37 +802,39 @@
 		    	  processCcElem.dispatchEvent(ev);
 		      })
 		      .then(()=>{
-		    	  processPdElem.val([]).trigger('change');
-		    	  processEqElem.val([]).trigger('change'); 
-		    	  
-		    	  processPdElem.val(processPdValue).trigger('change');
-		    	  processEqElem.val(processEqValue).trigger('change'); 
+	    	  	processPdElem.val(processPdValue).trigger('change');
+	    	  	processEqElem.val(processEqValue).trigger('change');
 
-		    	  $('#PROCESS_EQ').select2({
-		  	        placeholder: '설비를 선택하세요',
-		  	        allowClear: true,
-		  	        dropdownParent: $('#registermodal'),
-		  	        multiple:true,
-		  	        language: {
-		  	            noResults: function() {
-		  	                return "해당설비가 없습니다."; // 옵션이 없을 때 나타날 메시지
-		  	            }
-		  	        },
-		  	    });
-		  		
-		  	    $('#PROCESS_PD').select2({
-		  	        placeholder: '품목을 선택하세요',
-		  	        allowClear: true,
-		  	        dropdownParent: $('#registermodal'),
-		  	        multiple:true,
-		  	    });
+	    	    if (!$('#PROCESS_PD').hasClass('select2-hidden-accessible')) {
+	    	        $('#PROCESS_PD').select2({
+	    	            placeholder: '품목을 선택하세요',
+	    	            allowClear: true,
+	    	            dropdownParent: $('#registermodal'),
+	    	            multiple: true,
+	    	        });
+	    	    }
+
+	    	    if (!$('#PROCESS_EQ').hasClass('select2-hidden-accessible')) {
+	    	        $('#PROCESS_EQ').select2({
+	    	            placeholder: '설비를 선택하세요',
+	    	            allowClear: true,
+	    	            dropdownParent: $('#registermodal'),
+	    	            multiple: true,
+	    	            language: {
+	    	                noResults: function() {
+	    	                    return "해당설비가 없습니다.";
+	    	                }
+	    	            }
+	    	        });
+	    	    }
 		      })
-		      
-		      document.getElementById('PROCESS_CD').value = item.PROCESS_CD;  // 공정코드
-		      document.getElementById('PROCESS_NM').value = item.PROCESS_NM;  // 공정명
-		      document.getElementById('PROCESS_BG').value = item.PROCESS_BG!=null?item.PROCESS_BG:"";  // 비고
-		      document.getElementById('PROCESS_US').value = item.PROCESS_US == "사용" ? 1 : 0;
-		
+			      
+			      document.getElementById('PROCESS_CD').value = item.PROCESS_CD;  // 공정코드
+			      document.getElementById('PROCESS_NM').value = item.PROCESS_NM;  // 공정명
+			      document.getElementById('PROCESS_BG').value = item.PROCESS_BG!=null?item.PROCESS_BG:"";  // 비고
+			      document.getElementById('PROCESS_US').value = item.PROCESS_US == "사용" ? 1 : 0;
+// 		      });
+		     
 		    }
 		    
 		  } catch (error) {
