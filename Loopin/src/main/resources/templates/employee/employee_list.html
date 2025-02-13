@@ -345,6 +345,7 @@
 
  	    // 입사일 DatePicker 설정
  	    var startPicker = tui.DatePicker.createRangePicker({
+ 	    	language: 'ko',
  	        startpicker: {
  	            date: today, // 오늘 날짜로 초기화
  	            input: '#employee_hd',
@@ -519,6 +520,7 @@
 <!-- 필터 모듈 JS File -->
 <script th:inline="javascript">
 	$(document).ready(function () {
+// 		setGridTheme();
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
