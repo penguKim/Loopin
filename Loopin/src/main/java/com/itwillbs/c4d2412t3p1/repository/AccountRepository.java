@@ -101,4 +101,44 @@ public interface AccountRepository  extends JpaRepository<Account, String> {
 	    List<Object[]> select_FILTERED_ACCOUNT(@Param("filterRequest") AccountFilterRequest filterRequest);
 
 	    
+	    
+	    
+		@Query(value = """
+			    SELECT 
+			        e.employee_cd AS employee_cd,
+			        e.employee_nm AS employee_nm,
+			        c.common_nm AS employee_dp,
+			        s.common_nm AS employee_gd
+			    FROM EMPLOYEE e 
+			    LEFT JOIN COMMON_CODE c 
+			           ON e.employee_dp = c.common_cc 
+			          AND c.common_gc = 'DEPARTMENT'
+			    LEFT JOIN COMMON_CODE s 
+			           ON e.employee_gd = s.common_cc 
+			          AND s.common_gc = 'POSITION'
+			""", nativeQuery = true)
+		List<Object[]> select_ACCOUNT_PS();
+
+		
+		@Query(value = """
+			    SELECT 
+			        e.employee_cd AS employee_cd,
+			        e.employee_nm AS employee_nm,
+			        c.common_nm AS employee_dp,
+			        s.common_nm AS employee_gd
+			    FROM EMPLOYEE e 
+			    LEFT JOIN COMMON_CODE c 
+			           ON e.employee_dp = c.common_cc 
+			          AND c.common_gc = 'DEPARTMENT'
+			    LEFT JOIN COMMON_CODE s 
+			           ON e.employee_gd = s.common_cc 
+			          AND s.common_gc = 'POSITION'
+				WHERE (e.employee_cd LIKE %:keyword%
+			        OR e.employee_nm LIKE %:keyword%
+			        OR c.common_nm LIKE %:keyword%
+			        OR s.common_nm LIKE %:keyword%)
+			""", nativeQuery = true)
+		List<Object[]> search_ACCOUNT_PS(@Param("keyword") String keyword);
+	    
+	    
 }

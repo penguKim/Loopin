@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
@@ -189,5 +190,43 @@ public class AccountController {
 	    }
     }
 	
+	// 담당자 조회
+	@GetMapping("/select_ACCOUNT_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_PS() {
+		
+		try {
+			List<Map<String, Object>> response = accountService.select_ACCOUNT_PS();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+	
+	// 담당자 검색
+	@GetMapping("/search_ACCOUNT_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_PS(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = accountService.select_ACCOUNT_PS();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = accountService.search_ACCOUNT_PS(keyword);
+	        }
+	    	
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
 	
 } // 컨트롤러 끝
