@@ -15,6 +15,8 @@
 	margin-right: 5px;
 }
 
+
+
 .tui-datepicker {
 	z-index: 9999 !important;
 	overflow: visible !important;
@@ -113,7 +115,7 @@
 	}
 
 	// 발주수량 및 발주금액 업데이트 함수
-	function updateorderSummary(grid) {
+	function updateOrderSummary(grid) {
 	    const data = grid.getData();
 	    let totalQty = 0;
 	    let totalAmount = 0;
@@ -161,7 +163,7 @@
 	    // 모달 HTML 생성
 	    const modalHtml = `
 	        <div class="modal" id="orderInsertModal" tabindex="-1" aria-labelledby="orderInsertModalLabel" aria-hidden="true">
-	            <div class="modal-dialog modal-dialog-centered modal-xl">
+	            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl ">
 	                <div class="modal-content">
 	                    <div class="modal-header">
 	                        <h5 class="modal-title" id="dynamicModalLabel">${modalTitle}</h5>
@@ -209,7 +211,10 @@
 									</div>
 	                            </div>
 	                            <div class="row mb-3">
-	                                <div class="col-sm-12 text-end">
+			                        <div class="col-sm-3 text-start">
+		                            	<h5 class="modal-title">발주 제품 목록</h5>
+									</div>
+	                                <div class="col-sm-9 text-end">
 	                                    <button type="button" id="addMaterialBtn" class="btn btn-primary">추가</button>
 										<button type="button" id="deleteMaterialBtn" class="btn btn-danger">행 삭제</button>
 	                                </div>
@@ -256,8 +261,7 @@
 		// 수정 모드 데이터 반영
 		if (mode === 'edit' && rowData) {
 			
-			console.log("rowData.order:", rowData.order); // order 데이터 디버깅
-			console.log("rowData.details:", rowData.details);   // orderDETAIL 데이터 디버깅
+			$('#resetFormBtn').hide(); // 버튼 숨기기
 			
 			$('#order_cd').val(rowData.order.order_cd || '');
 			$('#account_cd').val(rowData.order.account_cd || '');
@@ -281,11 +285,11 @@
 		}
 		
 		// 행 삭제 버튼 클릭 이벤트
-		$('#deletematerialBtn').on('click', function () {
+		$('#deleteMaterialBtn').on('click', function () {
 		    const checkedRowKeys = materialGrid.getCheckedRowKeys(); // 체크된 행의 rowKey 가져오기
 		    if (checkedRowKeys.length > 0) {
 		        materialGrid.removeRows(checkedRowKeys); // 체크된 행 삭제
-		        updateorderSummary(materialGrid); // 발주수량 및 발주금액 업데이트
+		        updateOrderSummary(materialGrid); // 발주수량 및 발주금액 업데이트
 		    } else {
 		        showAlert(null, "error", "삭제 실패 알림", "삭제할 행을 선택해주세요");
 		    }
@@ -294,7 +298,7 @@
 		
 		// Toast UI Grid 데이터 변경 시 발주수량 및 발주금액 업데이트
 		materialGrid.on('afterChange', function (ev) {
-		    updateorderSummary(materialGrid);
+			updateOrderSummary(materialGrid);
 		});
 
 			
@@ -398,8 +402,8 @@
 	        { id: '#order_sd', message: '발주일자를 입력해주세요.' },
 	        { id: '#account_cd', message: '거래처코드를 입력해주세요.' },
 	        { id: '#order_st', message: '발주상태를 선택해주세요.' },
-	        { id: '#order_am', message: '발주수량을 입력해주세요.' },
-	        { id: '#order_mn', message: '발주금액을 입력해주세요.' }
+	        { id: '#order_am', message: '발주 제품을 추가해주세요.' },
+	        { id: '#order_mn', message: '발주 제품을 추가해주세요.' }
 	    ];
 
 	    requiredFields.forEach(field => {
@@ -835,6 +839,7 @@
 		// 모달 실행 시 함수 실행
 		attachCheckEventAccount();
 		
+		// 체크박스 단일 선택 제한
 		function attachCheckEventAccount() {
 			accountSelectGrid.on('check', (ev) => {
 		        const checkedRows = accountSelectGrid.getCheckedRows();
@@ -848,20 +853,16 @@
 		            });
 		        }
 		    });
-		
-		    // 체크박스 단일 선택 제한
-		    accountSelectGrid.on('check', (ev) => {
-		        const checkedRows = accountSelectGrid.getCheckedRows();
-		        if (checkedRows.length > 1) {
-		            // 마지막으로 체크된 항목 제외
-		            accountSelectGrid.uncheck(ev.rowKey);
-		            Swal.fire({
-		                icon: 'warning',
-		                title: '알림',
-		                text: '하나의 거래처만 선택할 수 있습니다.',
-		                confirmButtonText: '확인'
-		            });
-		        }
+		    
+		    // "전체 선택" 체크박스 클릭 시 단일 선택 유지
+		    accountSelectGrid.on('checkAll', () => {
+		    	accountSelectGrid.uncheckAll(); // 전체 체크 해제
+		        Swal.fire({
+		            icon: 'warning',
+		            title: '알림',
+		            text: '하나의 거래처만 선택할 수 있습니다.',
+		            confirmButtonText: '확인'
+		        });
 		    });
 		}
 	    // "추가" 버튼 클릭 시 선택 데이터 처리
@@ -1024,6 +1025,37 @@
 	        }
 	    });
 
+		// 모달 실행 시 함수 실행
+		attachCheckEventPs();
+	    
+		// 체크박스 단일 선택 제한
+		function attachCheckEventPs() {
+		    personSelectGrid.on('check', (ev) => {
+		        const checkedRows = personSelectGrid.getCheckedRows();
+		        if (checkedRows.length > 1) {
+		            personSelectGrid.uncheck(ev.rowKey); // 마지막으로 체크된 항목 제외
+		            Swal.fire({
+		                icon: 'warning',
+		                title: '알림',
+		                text: '한명의 사원만 선택할 수 있습니다.',
+		                confirmButtonText: '확인'
+		            });
+		        }
+		    });
+		    
+		    // "전체 선택" 체크박스 클릭 시 단일 선택 유지
+		    personSelectGrid.on('checkAll', () => {
+		        personSelectGrid.uncheckAll(); // 전체 체크 해제
+		        Swal.fire({
+		            icon: 'warning',
+		            title: '알림',
+		            text: '한명의 사원만 선택할 수 있습니다.',
+		            confirmButtonText: '확인'
+		        });
+		    });
+		}
+	    
+	    
 	    // "추가" 버튼 클릭 시 선택 데이터 처리
 	    $('#selectPersonBtn').off('click').on('click', function () {
 	        const selectedRow = personSelectGrid.getCheckedRows()[0]; // 선택된 한 행만 가져옴
@@ -1162,6 +1194,7 @@
             .then(filteredData => {
                 console.log('필터링된 데이터:', filteredData);
                 order_grid.resetData(filteredData); // 그리드 데이터 갱신
+                make_detail_grid(); // 필터 검색 시 발주 상세 초기화
             })
             .catch(error => console.error('필터 적용 오류:', error));
         });
@@ -1197,6 +1230,7 @@
 		        success: function(filteredData) {
 		        	console.log('엔터키로 필터링된 데이터:', filteredData);
 		        	order_grid.resetData(filteredData); // 그리드 데이터 갱신
+		        	make_detail_grid(); // 필터 검색 시 발주 상세 초기화
 		        },
 		        error: function(error) {
 		            console.error('엔터키 필터 적용 오류:', error);

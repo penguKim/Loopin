@@ -306,7 +306,7 @@ public class BusinessController {
             // 필터 조건이 비어 있으면 전체 수주정보 반환
             if (filterRequest.isEmpty()) {
                 List<Map<String, Object>> orders = businessService.select_ORDER();
-                log.info("contracts : "+ orders);
+                log.info("orders : "+ orders);
                 return ResponseEntity.ok(orders);
             }
 

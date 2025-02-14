@@ -82,7 +82,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		        a.account_cd AS account_cd,
 		        a.account_nm AS account_nm
 		    FROM ACCOUNT a
-    		WHERE a.account_dv IN ('BOTH', 'CONTRACT')
+    		WHERE a.account_dv IN ('BOTH', 'ORDER')
     		 AND (a.account_cd LIKE %:keyword%
 		        OR a.account_nm LIKE %:keyword%)
 		""", nativeQuery = true)
@@ -102,6 +102,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    LEFT JOIN COMMON_CODE s 
 		           ON e.employee_gd = s.common_cc 
 		          AND s.common_gc = 'POSITION'
+			WHERE c.common_nm = '영업'
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER_PS();
 
@@ -122,6 +123,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		        OR e.employee_nm LIKE %:keyword%
 		        OR c.common_nm LIKE %:keyword%
 		        OR s.common_nm LIKE %:keyword%)
+		        AND c.common_nm = '영업'
 		""", nativeQuery = true)
 	List<Object[]> search_ORDER_PS(@Param("keyword") String keyword);
 	
@@ -225,7 +227,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 				o.order_wd,
 				o.order_mf,
 				o.order_md
-            FROM ORDER o
+            FROM ORDERS o
 			WHERE (:#{#filterRequest.orderCd} IS NULL OR o.order_cd LIKE %:#{#filterRequest.orderCd}%) 
 			  AND (:#{#filterRequest.accountCd} IS NULL OR o.account_cd LIKE %:#{#filterRequest.accountCd}%)
 			  AND (:#{#filterRequest.orderPs} IS NULL OR o.order_ps LIKE %:#{#filterRequest.orderPs}%)
@@ -239,7 +241,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     @Modifying
     @Transactional
     @Query(value = """
-        UPDATE ORDER o
+        UPDATE ORDERS o
         SET o.order_st = 
             CASE 
                 WHEN o.order_sd > SYSDATE THEN '대기중'

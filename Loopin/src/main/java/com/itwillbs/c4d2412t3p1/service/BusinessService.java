@@ -124,8 +124,6 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 	
-	
-	
 
 	// 담당자 조회
 	public List<Map<String, Object>> select_ORDER_PS() {
@@ -154,13 +152,13 @@ public class BusinessService {
 		result = orderRepository.search_ORDER_PS(keyword);
 		
 		return result.stream().map(row -> {
-			Map<String, Object> contract_ps = new HashMap<>();
-			contract_ps.put("employee_cd", row[0]);
-			contract_ps.put("employee_nm", row[1]);
-			contract_ps.put("employee_dp", row[2]);
-			contract_ps.put("employee_gd", row[3]);
+			Map<String, Object> order_ps = new HashMap<>();
+			order_ps.put("employee_cd", row[0]);
+			order_ps.put("employee_nm", row[1]);
+			order_ps.put("employee_dp", row[2]);
+			order_ps.put("employee_gd", row[3]);
 			
-			return contract_ps;
+			return order_ps;
 			
 		}).collect(Collectors.toList());
 	}
@@ -301,7 +299,7 @@ public class BusinessService {
     @Transactional
     public void delete_OrderAndDetails(List<String> orderCds) {
     	orderRepository.delete_ORDERDETAIL(orderCds); // 디테일 먼저 삭제 처리
-    	orderRepository.delete_ORDER(orderCds); // 그 후에 수주 데이터 삭제
+    	orderRepository.delete_ORDER(orderCds); // 그 후에 발주 데이터 삭제
     }
 	
     
@@ -334,12 +332,12 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
     
-    // 수주 상태 업데이트 실행
+    // 발주 상태 업데이트 실행
     @Transactional
     public void updateOrderStatus() {
-        System.out.println("수주 상태 업데이트 실행...");
+        System.out.println("발주 상태 업데이트 실행...");
         orderRepository.updateOrderStatus();
-        System.out.println("수주 상태 업데이트 완료!");
+        System.out.println("발주 상태 업데이트 완료!");
     }
 	
 	

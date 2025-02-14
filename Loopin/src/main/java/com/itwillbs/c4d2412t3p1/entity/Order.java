@@ -38,7 +38,7 @@ public class Order {
 	    if (this.order_cd == null && this.sequenceValue != null) {
 	        String currentYear = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
 	        String formattedSequence = String.format("%04d", this.sequenceValue);
-	        this.order_cd = "od" + currentYear + "-" + formattedSequence;
+	        this.order_cd = "OD" + currentYear + "-" + formattedSequence;
 	    }
 	}
     
