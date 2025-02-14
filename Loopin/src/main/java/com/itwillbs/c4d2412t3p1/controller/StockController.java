@@ -75,7 +75,7 @@ public class StockController {
 		return response;
 	}
 	
-	// 재고 조회
+	// 차트 조회
 	@ResponseBody
 	@PostMapping("/select_STOCK_chart")
 	public Map<String, Object> select_STOCK_chart(@RequestBody StockRequestDTO stockRequest) {
