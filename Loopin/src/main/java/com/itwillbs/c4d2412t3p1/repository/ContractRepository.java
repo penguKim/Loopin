@@ -225,7 +225,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     		  	CONTRACT c 
 		  	 WHERE 
 		  	 	c.contract_cd IN :contractCds 
-	  	 	   AND c.contract_st = 'WAIT'
+	  	 	   AND c.contract_st = '대기중'
 		""", nativeQuery = true)
     int delete_CONTRACT(@Param("contractCds") List<String> contractCds);
 
