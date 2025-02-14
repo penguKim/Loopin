@@ -172,16 +172,20 @@
 	                        <form id="appointment_form" method="post" enctype="multipart/form-data">
 	                            <input type="hidden" id="contract_cd" name="contract_cd">
 	                            <div class="row mb-3">
-	                                <div class="col-md-4">
-	                                    <label for="contract_ps" class="form-label">담당자명</label>
-	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
+	                                <div class="col-md-3">
+	                                    <label for="contract_ps" class="form-label">사원코드</label>
+	                                    <input type="text" class="form-control" id="employee_cd" name="employee_cd" readonly>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
+	                                    <label for="contract_ps" class="form-label">담당자명</label>
+	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps" readonly>
+	                                </div>
+	                                <div class="col-md-3">
 	                                    <label for="contract_sd" class="form-label">수주일</label>
 	                                    <input type="text" class="form-control" id="contract_sd" name="contract_sd" readonly>
 	                                    <div id="modal_startpicker-container"></div>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
 	                                    <label for="contract_ed" class="form-label">납기일</label>
 	                                    <input type="text" class="form-control" id="contract_ed" name="contract_ed" readonly>
 	                                    <div id="modal_endpicker-container"></div>
@@ -285,6 +289,7 @@
 			
 			$('#contract_cd').val(rowData.contract.contract_cd || '');
 			$('#account_cd').val(rowData.contract.account_cd || '');
+			$('#employee_cd').val(rowData.contract.employee_cd || '');
 			$('#contract_ps').val(rowData.contract.contract_ps || '');
 			$('#contract_sd').val(rowData.contract.contract_sd || '');
 			$('#contract_ed').val(rowData.contract.contract_ed || '').prop('disabled', false); // 값 설정 후 활성화
@@ -363,6 +368,7 @@
 		    const contractDTO = {
 					contract_cd: $('#contract_cd').val(),
 			        account_cd: $('#account_cd').val(),
+			        employee_cd: $('#employee_cd').val(),
 			        contract_ps: $('#contract_ps').val(),
 			        contract_sd: $('#contract_sd').val(),
 			        contract_ed: $('#contract_ed').val(),
@@ -916,14 +922,12 @@
     
 		
 		
-    // 담당자 클릭 시 담당자 선택 모달 열기
-	$(document).on('click', '#contract_ps', function () {
-	    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
+	// 담당자명(#contract_ps) 또는 사원코드(#employee_cd) 클릭 시 담당자 선택 모달 열기
+	$(document).on('click', '#contract_ps, #employee_cd', function () {
+	    console.log('담당자 선택 input 또는 사원 코드 클릭됨!'); // 클릭 이벤트 확인
 	    openPersonModal();
 	});
-
-    
-    
+	
     // 담당자 선택 모달
 	function openPersonModal() {
 	    $('#personSelectModal').remove();
@@ -1079,6 +1083,7 @@
 	        
 	        if (selectedRow) {
 	            // 선택된 담당자 데이터를 input에 설정
+	            $('#employee_cd').val(selectedRow.employee_cd);
 	            $('#contract_ps').val(selectedRow.employee_nm);
 	            personModal.hide(); // 모달 닫기
 	        } else {
@@ -1273,6 +1278,7 @@
                     contract_grid.resetData(contractList.map(row => ({
                         contract_cd: row.contract_cd,
                         account_cd: row.account_cd,
+                        employee_cd: row.employee_cd,
                         contract_ps: row.contract_ps,
                         contract_sd: row.contract_sd,
                         contract_ed: row.contract_ed,
@@ -1292,6 +1298,7 @@
                         data: contractList.map(row => ({
                             contract_cd: row.contract_cd,
                             account_cd: row.account_cd,
+                            employee_cd: row.employee_cd,
                             contract_ps: row.contract_ps,
                             contract_sd: row.contract_sd,
                             contract_ed: row.contract_ed,
@@ -1314,6 +1321,7 @@
                         columns: [
                             { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
                             { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                            { header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
                             { header: '담당자명', name: 'contract_ps', align: 'center', sortable: true },
                             { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
                             { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },

@@ -76,17 +76,18 @@ public class BusinessService {
 			Map<String, Object> contract = new HashMap<>();
 			contract.put("contract_cd", row[0]);
 			contract.put("account_cd", row[1]);
-			contract.put("contract_ps", row[2]);
-			contract.put("contract_sd", row[3]);
-			contract.put("contract_ed", row[4]);
-			contract.put("contract_am", row[5]);
-			contract.put("contract_mn", row[6]);
-			contract.put("contract_st", row[7]);
-			contract.put("contract_rm", row[8]);
-			contract.put("contract_wr", row[9]);
-			contract.put("contract_wd", row[10]);
-			contract.put("contract_mf", row[11]);
-			contract.put("contract_md", row[12]);
+			contract.put("employee_cd", row[2]);
+			contract.put("contract_ps", row[3]);
+			contract.put("contract_sd", row[4]);
+			contract.put("contract_ed", row[5]);
+			contract.put("contract_am", row[6]);
+			contract.put("contract_mn", row[7]);
+			contract.put("contract_st", row[8]);
+			contract.put("contract_rm", row[9]);
+			contract.put("contract_wr", row[10]);
+			contract.put("contract_wd", row[11]);
+			contract.put("contract_mf", row[12]);
+			contract.put("contract_md", row[13]);
 
 			return contract;
 
@@ -197,6 +198,7 @@ public class BusinessService {
 
 	    // 기존 수주 정보 업데이트
 	    existingContract.setAccount_cd(contractDto.getAccount_cd());
+	    existingContract.setEmployee_cd(contractDto.getEmployee_cd());
 	    existingContract.setContract_ps(contractDto.getContract_ps());
 	    existingContract.setContract_sd(contractDto.getContract_sd());
 	    existingContract.setContract_ed(contractDto.getContract_ed());
@@ -266,17 +268,18 @@ public class BusinessService {
 			Map<String, Object> contract = new HashMap<>();
 			contract.put("contract_cd", row[0]);
 			contract.put("account_cd", row[1]);
-			contract.put("contract_ps", row[2]);
-			contract.put("contract_sd", row[3]);
-			contract.put("contract_ed", row[4]);
-			contract.put("contract_am", row[5]);
-			contract.put("contract_mn", row[6]);
-			contract.put("contract_st", row[7]);
-			contract.put("contract_rm", row[8]);
-			contract.put("contract_wr", row[9]);
-			contract.put("contract_wd", row[10]);
-			contract.put("contract_mf", row[11]);
-			contract.put("contract_md", row[12]);
+			contract.put("employee_cd", row[2]);
+			contract.put("contract_ps", row[3]);
+			contract.put("contract_sd", row[4]);
+			contract.put("contract_ed", row[5]);
+			contract.put("contract_am", row[6]);
+			contract.put("contract_mn", row[7]);
+			contract.put("contract_st", row[8]);
+			contract.put("contract_rm", row[9]);
+			contract.put("contract_wr", row[10]);
+			contract.put("contract_wd", row[11]);
+			contract.put("contract_mf", row[12]);
+			contract.put("contract_md", row[13]);
 
 			result.put("contract", contract);
 		}
@@ -320,17 +323,18 @@ public class BusinessService {
 			Map<String, Object> contract = new HashMap<>();
 			contract.put("contract_cd", row[0]);
 			contract.put("account_cd", row[1]);
-			contract.put("contract_ps", row[2]);
-			contract.put("contract_sd", row[3]);
-			contract.put("contract_ed", row[4]);
-			contract.put("contract_am", row[5]);
-			contract.put("contract_mn", row[6]);
-			contract.put("contract_st", row[7]);
-			contract.put("contract_rm", row[8]);
-			contract.put("contract_wr", row[9]);
-			contract.put("contract_wd", row[10]);
-			contract.put("contract_mf", row[11]);
-			contract.put("contract_md", row[12]);
+			contract.put("employee_cd", row[2]);
+			contract.put("contract_ps", row[3]);
+			contract.put("contract_sd", row[4]);
+			contract.put("contract_ed", row[5]);
+			contract.put("contract_am", row[6]);
+			contract.put("contract_mn", row[7]);
+			contract.put("contract_st", row[8]);
+			contract.put("contract_rm", row[9]);
+			contract.put("contract_wr", row[10]);
+			contract.put("contract_wd", row[11]);
+			contract.put("contract_mf", row[12]);
+			contract.put("contract_md", row[13]);
 			
 			return contract;
 			

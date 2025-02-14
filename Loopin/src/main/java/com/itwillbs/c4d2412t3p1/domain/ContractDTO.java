@@ -17,6 +17,7 @@ public class ContractDTO {
 
 	private String contract_cd;
 	private String account_cd;
+	private String employee_cd;
 	private String contract_ps;
 	private String contract_sd;
 	private String contract_ed;
