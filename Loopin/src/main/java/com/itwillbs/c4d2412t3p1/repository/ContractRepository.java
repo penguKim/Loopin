@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
 
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +20,7 @@ import jakarta.transaction.Transactional;
 
 @Repository
 public interface ContractRepository  extends JpaRepository<Contract, String> {
-
+	
 	// 시퀀스 조회
 	@Query(value = "SELECT CT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
@@ -269,12 +270,4 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     """, nativeQuery = true)
     void updateContractStatus();
     
-	
-    
-    
-    
-    
-    // 김기렬 2025-02-13 메소드 추가
-    @Query("SELECT c FROM ContractDetail c WHERE c.contract_cd = :contractCd")
-    List<ContractDetail> findByContractCd(@Param("contractCd") String contractCd);
 }
