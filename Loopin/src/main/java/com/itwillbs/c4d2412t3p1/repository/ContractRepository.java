@@ -116,6 +116,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		    LEFT JOIN COMMON_CODE s 
 		           ON e.employee_gd = s.common_cc 
 		          AND s.common_gc = 'POSITION'
+				WHERE c.common_nm = '영업'
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_PS();
 
@@ -137,6 +138,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		        OR e.employee_nm LIKE %:keyword%
 		        OR c.common_nm LIKE %:keyword%
 		        OR s.common_nm LIKE %:keyword%)
+			   AND c.common_nm = '영업'
 		""", nativeQuery = true)
 	List<Object[]> search_CONTRACT_PS(@Param("keyword") String keyword);
 
@@ -222,7 +224,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     @Query(value = """
     		DELETE
     		  FROM 
-    		  	CONTRACT c 
+    		  	CONTRACTDETAIL c 
 		  	 WHERE 
 		  	 	c.contract_cd IN :contractCds 
 		""", nativeQuery = true)

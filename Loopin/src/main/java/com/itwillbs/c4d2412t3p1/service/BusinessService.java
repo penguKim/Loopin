@@ -6,20 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
-import com.itwillbs.c4d2412t3p1.domain.AccountDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
-import com.itwillbs.c4d2412t3p1.entity.Account;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Contract;
 import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
-import com.itwillbs.c4d2412t3p1.repository.AccountRepository;
-import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.ContractRepository;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.AccountFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
 
 import jakarta.transaction.Transactional;
