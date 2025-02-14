@@ -9,7 +9,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
 import com.itwillbs.c4d2412t3p1.entity.Order;
 import com.itwillbs.c4d2412t3p1.entity.OrderDetail;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
@@ -47,6 +46,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    LEFT JOIN COMMON_CODE u 
 		           ON m.material_un = u.common_cc 
 		          AND u.common_gc = 'UNIT'
+			ORDER BY material_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> select_MATERIAL();
 
@@ -62,6 +62,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    WHERE (m.material_cd LIKE %:keyword%
 		        OR m.material_nm LIKE %:keyword%
 		        OR u.common_nm LIKE %:keyword%)
+			ORDER BY material_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> search_MATERIAL(@Param("keyword") String keyword);
 	
@@ -74,6 +75,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    a.account_nm AS account_nm
 		FROM ACCOUNT a
 		WHERE a.account_dv IN ('BOTH', 'ORDER')
+		ORDER BY account_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_ORDER();
 
@@ -85,6 +87,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     		WHERE a.account_dv IN ('BOTH', 'ORDER')
     		 AND (a.account_cd LIKE %:keyword%
 		        OR a.account_nm LIKE %:keyword%)
+			ORDER BY account_cd ASC  
 		""", nativeQuery = true)
 	List<Object[]> search_ACCOUNT_ORDER(@Param("keyword") String keyword);
 	
@@ -103,6 +106,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		           ON e.employee_gd = s.common_cc 
 		          AND s.common_gc = 'POSITION'
 			WHERE c.common_nm = '영업'
+			ORDER BY employee_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER_PS();
 
@@ -124,6 +128,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		        OR c.common_nm LIKE %:keyword%
 		        OR s.common_nm LIKE %:keyword%)
 		        AND c.common_nm = '영업'
+		        ORDER BY employee_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> search_ORDER_PS(@Param("keyword") String keyword);
 	
@@ -132,6 +137,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    SELECT
 				o.order_cd,
 				o.account_cd,
+				o.employee_cd,
 				o.order_ps,
 				o.order_sd,
 				o.order_ed,
@@ -149,6 +155,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 				o.order_mf,
 				o.order_md
 			FROM ORDERS o
+			ORDER BY order_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER();
 
@@ -162,6 +169,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 			       d.order_ed AS detail_order_ed
 			FROM ORDERDETAIL d
 			WHERE d.order_cd = :orderCd
+			ORDER BY order_cd ASC
 		""", nativeQuery = true)
 	List<Object[]> select_ORDERDETAIL(@Param("orderCd") String orderCd);
 	
@@ -170,6 +178,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
             SELECT
 				o.order_cd,
 				o.account_cd,
+				o.employee_cd,
 				o.order_ps,
 				o.order_sd,
 				o.order_ed,
@@ -183,6 +192,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 				o.order_md
             FROM ORDERS o
             WHERE o.order_cd = :orderCd
+            ORDER BY order_cd ASC
         """, nativeQuery = true)
     List<Object[]> findOrderByCd(@Param("orderCd") String orderCd);
 	
@@ -216,6 +226,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 			SELECT
 				o.order_cd,
 				o.account_cd,
+				o.employee_cd,
 				o.order_ps,
 				o.order_sd,
 				o.order_ed,
@@ -233,6 +244,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 			  AND (:#{#filterRequest.orderPs} IS NULL OR o.order_ps LIKE %:#{#filterRequest.orderPs}%)
 			  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL
 			   OR o.order_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate})
+			   ORDER BY order_cd ASC
         """, nativeQuery = true)
     List<Object[]> select_FILTERED_ORDER(@Param("filterRequest") OrderFilterRequest filterRequest);
     

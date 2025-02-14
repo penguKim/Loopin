@@ -14,6 +14,7 @@ public class OrderDTO {
 
 	private String order_cd;
 	private String account_cd;
+	private String employee_cd;
 	private String order_ps;
 	private String order_sd;
 	private String order_ed;

@@ -46,6 +46,10 @@ public class Order {
 	@Column(name = "account_cd", length = 15)
 	private String account_cd;
 	
+	// 사원코드
+    @Column(name = "employee_cd", length = 15)
+    private String employee_cd;
+	
 	// 담당자명
 	@Column(name = "order_ps", length = 20)
 	private String order_ps;
@@ -97,6 +101,7 @@ public class Order {
 	public Order(
 			String order_cd,
 			String account_cd,
+			String employee_cd,
 			String order_ps,
 			String order_sd,
 			String order_ed,
@@ -112,6 +117,7 @@ public class Order {
 	) {
 		this.order_cd = order_cd;
 		this.account_cd = account_cd;
+		this.employee_cd = employee_cd;
 		this.order_ps = order_ps;
 		this.order_sd = order_sd;
 		this.order_ed = order_ed;
@@ -129,6 +135,7 @@ public class Order {
 	public static Order setOrderEntity(Order order, OrderDTO orderDto) {
 		order.setOrder_cd(orderDto.getOrder_cd());
 		order.setAccount_cd(orderDto.getAccount_cd());
+		order.setEmployee_cd(orderDto.getEmployee_cd());
 		order.setOrder_ps(orderDto.getOrder_ps());
 		order.setOrder_sd(orderDto.getOrder_sd());
 		order.setOrder_ed(orderDto.getOrder_ed());
@@ -150,6 +157,7 @@ public class Order {
 	        return new Order(
 	            null,
 	            orderDto.getAccount_cd(),
+	            orderDto.getEmployee_cd(),
 	            orderDto.getOrder_ps(),
 	            orderDto.getOrder_sd(),
 	            orderDto.getOrder_ed(),

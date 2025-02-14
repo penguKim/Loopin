@@ -54,8 +54,8 @@ public class OrderDetail {
 		orderDetail.setMaterial_cd(orderDetailDto.getMaterial_cd());
 		orderDetail.setMaterial_am(orderDetailDto.getMaterial_am());
 		orderDetail.setOrder_ct(orderDetailDto.getOrder_ct());
-		orderDetail.setOrder_ed(orderDetailDto.getOrder_ed());
 		orderDetail.setMaterial_un(orderDetailDto.getMaterial_un());
+		orderDetail.setOrder_ed(orderDetailDto.getOrder_ed());
 		
 		return orderDetail;
     }

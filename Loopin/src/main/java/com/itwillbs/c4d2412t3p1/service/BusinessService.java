@@ -10,10 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.OrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Order;
 import com.itwillbs.c4d2412t3p1.entity.OrderDetail;
-import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.OrderRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
 
@@ -74,17 +72,18 @@ public class BusinessService {
 			Map<String, Object> order = new HashMap<>();
 			order.put("order_cd", row[0]);
 			order.put("account_cd", row[1]);
-			order.put("order_ps", row[2]);
-			order.put("order_sd", row[3]);
-			order.put("order_ed", row[4]);
-			order.put("order_am", row[5]);
-			order.put("order_mn", row[6]);
-			order.put("order_st", row[7]);
-			order.put("order_rm", row[8]);
-			order.put("order_wr", row[9]);
-			order.put("order_wd", row[10]);
-			order.put("order_mf", row[11]);
-			order.put("order_md", row[12]);
+			order.put("employee_cd", row[2]);
+			order.put("order_ps", row[3]);
+			order.put("order_sd", row[4]);
+			order.put("order_ed", row[5]);
+			order.put("order_am", row[6]);
+			order.put("order_mn", row[7]);
+			order.put("order_st", row[8]);
+			order.put("order_rm", row[9]);
+			order.put("order_wr", row[10]);
+			order.put("order_wd", row[11]);
+			order.put("order_mf", row[12]);
+			order.put("order_md", row[13]);
 
 			return order;
 
@@ -178,8 +177,8 @@ public class BusinessService {
 					.material_cd(detail.getMaterial_cd())
 					.material_am(detail.getMaterial_am())
 					.order_ct(detail.getOrder_ct())
-					.order_ed(detail.getOrder_ed())
 					.material_un(detail.getMaterial_un())
+					.order_ed(detail.getOrder_ed())
 					.build();
 
 			orderRepository.saveOrderDetail(orderDetail);
@@ -198,6 +197,7 @@ public class BusinessService {
 
 	    // 기존 발주 정보 업데이트
 	    existingOrder.setAccount_cd(orderDto.getAccount_cd());
+	    existingOrder.setEmployee_cd(orderDto.getEmployee_cd());
 	    existingOrder.setOrder_ps(orderDto.getOrder_ps());
 	    existingOrder.setOrder_sd(orderDto.getOrder_sd());
 	    existingOrder.setOrder_ed(orderDto.getOrder_ed());
@@ -245,8 +245,8 @@ public class BusinessService {
 			detail.put("material_cd", row[1]);
 			detail.put("material_am", row[2]);
 			detail.put("order_ct", row[3]);
-			detail.put("order_ed", row[4]);
-			detail.put("material_un", row[5]);
+			detail.put("material_un", row[4]);
+			detail.put("order_ed", row[5]);
 
 			return detail;
 		}).collect(Collectors.toList());
@@ -263,17 +263,18 @@ public class BusinessService {
 			Map<String, Object> order = new HashMap<>();
 			order.put("order_cd", row[0]);
 			order.put("account_cd", row[1]);
-			order.put("order_ps", row[2]);
-			order.put("order_sd", row[3]);
-			order.put("order_ed", row[4]);
-			order.put("order_am", row[5]);
-			order.put("order_mn", row[6]);
-			order.put("order_st", row[7]);
-			order.put("order_rm", row[8]);
-			order.put("order_wr", row[9]);
-			order.put("order_wd", row[10]);
-			order.put("order_mf", row[11]);
-			order.put("order_md", row[12]);
+			order.put("employee_cd", row[2]);
+			order.put("order_ps", row[3]);
+			order.put("order_sd", row[4]);
+			order.put("order_ed", row[5]);
+			order.put("order_am", row[6]);
+			order.put("order_mn", row[7]);
+			order.put("order_st", row[8]);
+			order.put("order_rm", row[9]);
+			order.put("order_wr", row[10]);
+			order.put("order_wd", row[11]);
+			order.put("order_mf", row[12]);
+			order.put("order_md", row[13]);
 
 			result.put("order", order);
 		}
@@ -315,17 +316,18 @@ public class BusinessService {
 			Map<String, Object> order = new HashMap<>();
 			order.put("order_cd", row[0]);
 			order.put("account_cd", row[1]);
-			order.put("order_ps", row[2]);
-			order.put("order_sd", row[3]);
-			order.put("order_ed", row[4]);
-			order.put("order_am", row[5]);
-			order.put("order_mn", row[6]);
-			order.put("order_st", row[7]);
-			order.put("order_rm", row[8]);
-			order.put("order_wr", row[9]);
-			order.put("order_wd", row[10]);
-			order.put("order_mf", row[11]);
-			order.put("order_md", row[12]);
+			order.put("employee_cd", row[2]);
+			order.put("order_ps", row[3]);
+			order.put("order_sd", row[4]);
+			order.put("order_ed", row[5]);
+			order.put("order_am", row[6]);
+			order.put("order_mn", row[7]);
+			order.put("order_st", row[8]);
+			order.put("order_rm", row[9]);
+			order.put("order_wr", row[10]);
+			order.put("order_wd", row[11]);
+			order.put("order_mf", row[12]);
+			order.put("order_md", row[13]);
 			
 			return order;
 			

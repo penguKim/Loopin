@@ -173,16 +173,20 @@
 	                        <form id="appointment_form" method="post" enctype="multipart/form-data">
 	                            <input type="hidden" id="order_cd" name="order_cd">
 	                            <div class="row mb-3">
-	                                <div class="col-md-4">
-	                                    <label for="order_ps" class="form-label">담당자명</label>
-	                                    <input type="text" class="form-control" id="order_ps" name="order_ps">
+	                                <div class="col-md-3">
+	                                    <label for="employee_cd" class="form-label">사원코드</label>
+	                                    <input type="text" class="form-control" id="employee_cd" name="employee_cd" readonly>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
+	                                    <label for="order_ps" class="form-label">담당자명</label>
+	                                    <input type="text" class="form-control" id="order_ps" name="order_ps" readonly>
+	                                </div>
+	                                <div class="col-md-3">
 	                                    <label for="order_sd" class="form-label">발주일</label>
 	                                    <input type="text" class="form-control" id="order_sd" name="order_sd" readonly>
 	                                    <div id="modal_startpicker-container"></div>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
 	                                    <label for="order_ed" class="form-label">입고일</label>
 	                                    <input type="text" class="form-control" id="order_ed" name="order_ed" readonly>
 	                                    <div id="modal_endpicker-container"></div>
@@ -265,6 +269,7 @@
 			
 			$('#order_cd').val(rowData.order.order_cd || '');
 			$('#account_cd').val(rowData.order.account_cd || '');
+			$('#employee_cd').val(rowData.order.employee_cd || '');
 			$('#order_ps').val(rowData.order.order_ps || '');
 			$('#order_sd').val(rowData.order.order_sd || '');
 			$('#order_ed').val(rowData.order.order_ed || '').prop('disabled', false); // 값 설정 후 활성화
@@ -343,6 +348,7 @@
 		    const orderDTO = {
 					order_cd: $('#order_cd').val(),
 			        account_cd: $('#account_cd').val(),
+			        employee_cd: $('#employee_cd').val(),
 			        order_ps: $('#order_ps').val(),
 			        order_sd: $('#order_sd').val(),
 			        order_ed: $('#order_ed').val(),
@@ -887,7 +893,7 @@
     
 		
     // 담당자 클릭 시 담당자 선택 모달 열기
-	$(document).on('click', '#order_ps', function () {
+	$(document).on('click', '#order_ps, #employee_cd', function () {
 	    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
 	    openPersonModal();
 	});
@@ -1063,6 +1069,7 @@
 	        
 	        if (selectedRow) {
 	            // 선택된 담당자 데이터를 input에 설정
+				$('#employee_cd').val(selectedRow.employee_cd);
 	            $('#order_ps').val(selectedRow.employee_nm);
 	            personModal.hide(); // 모달 닫기
 	        } else {
@@ -1254,6 +1261,7 @@
                     order_grid.resetData(orderList.map(row => ({
                         order_cd: row.order_cd,
                         account_cd: row.account_cd,
+                        employee_cd: row.employee_cd,
                         order_ps: row.order_ps,
                         order_sd: row.order_sd,
                         order_ed: row.order_ed,
@@ -1273,6 +1281,7 @@
                         data: orderList.map(row => ({
                             order_cd: row.order_cd,
                             account_cd: row.account_cd,
+                            employee_cd: row.employee_cd,
                             order_ps: row.order_ps,
                             order_sd: row.order_sd,
                             order_ed: row.order_ed,
@@ -1295,6 +1304,7 @@
                         columns: [
                             { header: '발주번호', name: 'order_cd', align: 'center', sortable: true },
                             { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                            { header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
                             { header: '담당자명', name: 'order_ps', align: 'center', sortable: true },
                             { header: '발주일자', name: 'order_sd', align: 'center', sortable: true },
                             { header: '입고일자', name: 'order_ed', align: 'center', sortable: true },
