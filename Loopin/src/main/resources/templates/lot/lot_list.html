@@ -6,35 +6,45 @@
 				layout:fragment="content">
 <meta name="_csrf" th:content="${_csrf.token}"/>
 <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.orgchart{
+		background-image: none;
+		display: flex;
+		justify-content: space-evenly;
+		align-items: center;
+		overflow: auto; /* 필요하면 스크롤 가능하도록 설정 */
+	}
+	.orgchart .node .title{
+		background-color: none !important;
+	}
+	@keyframes blink {
+	    0% { opacity: 1;}
+	    40% { opacity: 0.5;}
+	    100% { opacity: 1;}
+	}
+	
+	.blinking-node {
+	    animation: blink 2s infinite;
+	}
+</style>
 <body>
 	<main id="main" class="main">
 		<section class="section">
 			<div class="row">
-				<div class="col-lg-12">
+				<div class="col-lg-6">
 					<div class="card">
 						<div class="card-body">
-							<h1 class="card-title">로트 관리</h1>
-							<ul class="nav nav-pills mb-3" id="lot-tab" role="tablist">
-								<li class="nav-item" role="presentation">
-									<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
-									type="button" role="tab" aria-controls="tab_grid" aria-selected="true">그리드</button>
-								</li>
-								<li class="nav-item" role="presentation">
-									<button class="nav-link" id="btn_chart_tab" data-bs-toggle="pill" data-bs-target="#tab_chart" 
-									type="button" role="tab" aria-controls="tab_chart" aria-selected="false">차트</button>
-								</li>
-							</ul>
-							<div class="tab-content pt-2" id="myTabContent">
-								<!-- 달력 탭 -->
-								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="chart-tab">
-									<div id="filterModule" class="mb-3"></div>
-									<div id="chart"></div>
-								</div>
-								<!-- 그리드 탭 -->
-								<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="grid-tab">
-									<div id="grid"></div>
-								</div>
-							</div>
+							<h1 class="card-title">로트 추적</h1>
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">차트</h1>
+							<div id="chart"></div>
 						</div>
 					</div>
 				</div>
@@ -44,15 +54,23 @@
 </body>																																																																																																																																																																																																																											
 <script th:inline="javascript">
 	let grid;
+	let chart = $("#chart");
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
+	const filterConfig = [
+	    { key: 'product_cd', label: '품목코드', type: 'text', placeholder: '품목코드 입력', col: 'col' },
+	    { key: 'product_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col' },
+	    { key: 'product_cc', label: '품목분류', type: 'select', list: [], col: 'col' },
+	    { key: 'product_wh', label: '보관창고', type: 'select', list: [], col: 'col' },
+	    { key: 'product_us', label: '사용여부', type: 'radio', list: ['계획중', '진행중', '최종완료'], col: 'col' },
+	];
 	
 	// 로딩
 	$(function() {
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		make_grid();
-		make_chart();
+		setElementHeight('.card', -105);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
@@ -62,10 +80,32 @@
 			}, 300);
 		});
 		
-		$("#chartId").on("click", function() {
-			
-
+		// 검색필터
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+        	get_PRODUCT_list(filterValues, groupValue);
+        });
+		
+        $(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -450);
+		    } else {
+		        setGridHeight(grid, -380);
+		    }
 		});
+		
+		// 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		});
+		
 	});
 	
 	// ------------함수------------
@@ -73,23 +113,223 @@
 	function make_grid() {
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
-			data : [],
+			data : [
+				{
+					lot_cd: '10012',
+					contract_cd: 'Seoul',
+					product_cd: 'South Korea',
+					product_cr: 'South Korea',
+					product_sz: 'South Korea',
+					lot_st: 'South Korea',
+					workorder_st: false,
+				},
+				{
+					lot_cd: '10013',
+					contract_cd: 'Seoul',
+					product_cd: 'South Korea',
+					product_cr: 'South Korea',
+					product_sz: 'South Korea',
+					lot_st: 'South Korea',
+					workorder_st: true,
+				},
+				{
+					lot_cd: '10014',
+					contract_cd: 'Seoul',
+					product_cd: 'South Korea',
+					product_cr: 'South Korea',
+					product_sz: 'South Korea',
+					lot_st: 'South Korea',
+					workorder_st: true,
+				},
+			  ],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
 				{type : 'checkbox',}, 
 			],
-			bodyHeight : 600,
+			bodyHeight : 580,
 			columns : [
+				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
 				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
+				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
 				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
-				{header : '작업시작일', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '작업수량', name : 'lot_wq', sortable : true, filter: 'text'}, 
-				{header : '양품수량', name : 'lot_gq', sortable : true, filter: 'text'}, 
-				{header : '불량수량', name : 'lot_bq', sortable : true, filter: 'text'}, 
+				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
+				{header : '생성일자', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
+					formatter: function({value}) {
+						return value == true ? '최종완료' : value == false ? '진행중' : '';
+					}
+				}, 
+			],
+			summary: {
+				height: 40,
+				position: 'bottom', // or 'top'
+				columnContent: {
+					workorder_st: {
+						template: (valueMap) => {
+							return `총 ${valueMap.cnt} 건`
+						}
+					}
+				}
+			},
+
+		});
+		
+		
+		grid.on('dblclick', function(ev) {
+			chart.empty();
+			let row = grid.getRow(ev.rowKey);
+			if(row == null) {
+				return;
+			}
+			make_chart(row);
+			//modal_detail(row);
+		});
+	}
+	
+	// 차트 생성 함수
+	function make_chart(data){
+		var datascource = {
+			'name': '조던1', 'title': '제품', 'lot_st': 11311, 'process': '대기중', // title은 품목코드, name은 productname, processname
+			'children': [
+				{ 'name': '나염/고주파&재봉', 'title': '반제품', 'className': 'middle-level', 'lot_st': 11111, 'process': '완료',},
+				{ 'name': '파일론', 'title': '반제품', 'className': 'middle-level', 'lot_st': 1112,'process': '진행중',
+					'children': [
+						{ 'name': '미드솔', 'title': '반제품', 'className': 'rd-dept', 'lot_st': 1111, 'process': '완료',},
+						{ 'name': '아웃솔', 'title': '반제품', 'className': 'rd-dept', 'lot_st': 112212111, 'process': '완료',}
+					]
+				},
+				{ 'name': '인솔', 'title': '원자재', 'className': 'rd-dept', 'lot_st': 114511, 'process': '완료',},
+			]
+		};
+		chart.orgchart({
+			'data': datascource, // 데이터 입력
+			'nodeContent': data.lot_st, // 노드에 표시할 속성
+			'pan': true, // 패닝 활성화
+			'direction': 't2b', // 방향 설정 (bottom to top)
+			'nodeTemplate': function(data) {
+				console.log(data);
+				let background = '#997af3'; // 기본 배경색 (파란색)
+				// 직급(title)에 따라 다른 배경색 적용
+				if (data.title === '제품') {
+					background = '#ff5733'; // 주황색
+				} else if (data.title === '반제품') {
+					background = '#997af3'; // 초록색
+				} else if (data.title === '원자재') {
+					background = '#17a2b8'; // 하늘색
+				}
+	
+				return `
+					<div class="node" style="background-color: ${background}; color: white;">
+						<div class="title" style="background-color: ${background};">${data.title}</div>
+						<div class="name">${data.lot_st}</div>
+						<div class="process">${data.process}</div>
+					</div>
+				`;
+			}
+        });
+		
+		document.querySelectorAll('.orgchart .fa').forEach(el => {
+			el.style.pointerEvents = 'none'; // 클릭 이벤트 비활성화
+		});
+		
+		document.querySelectorAll('.orgchart .node').forEach(node => {
+			if(node.textContent.includes("진행중")) {
+				node.classList.add('blinking-node');
+			}
+		});
+
+	}
+	
+	// 모달 생성
+	function modal_detail(data) {
+		let text = !data ? '등록' : '수정';
+		let title = `로트 ${text}`;
+		const div_modal = 'div_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="modal_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" class="btn btn-primary" id="btn_COMMUTE_show">등록</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			
+        	make_modal_grid(date);
+			
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+		$(window).resize(function() {
+			setGridHeight(modal_grid, -600);
+		});
+	}
+	
+	// 모달 그리드 생성
+	function make_modal_grid(data) {
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : [
+				{
+					lot_cd: '10012',
+					contract_cd: 'Seoul',
+					product_cd: 'South Korea',
+					product_cr: 'South Korea',
+					product_sz: 'South Korea',
+					lot_st: 'South Korea',
+					workorder_st: true,
+				},
+			  ],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 200,
+			columns : [
+				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
+				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
+				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
+				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
+				{header : '작업시작일', name : 'lothistory_st', sortable : true, filter: 'text'}, 
+				{header : '작업종료일', name : 'lothistory_en', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'lothistory_wq', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'lothistory_bq', sortable : true, filter: 'text'}, 
 				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
 					formatter: function({value}) {
 						return value == true ? '사용' : value == false ? '미사용' : '';
@@ -100,7 +340,7 @@
 				height: 40,
 				position: 'bottom', // or 'top'
 				columnContent: {
-					equipment_us: {
+					workorder_st: {
 						template: (valueMap) => {
 							return `총 ${valueMap.cnt} 건`
 						}
@@ -110,72 +350,7 @@
 
 		});
 		
-		grid.on('dblclick', function(ev) {
-			let row = grid.getRow(ev.rowKey);
-			if(row == null) {
-				return;
-			}
-		});
 	}
 	
-	function make_chart(){
-		var datascource = {
-			'name': 'Lao Lao',
-			'title': 'general manager',
-			'children': [
-				{ 'name': 'Bo Miao', 'title': 'department manager', 'className': 'middle-level',
-					'children': [
-						{ 'name': 'Li Jing', 'title': 'senior engineer', 'className': 'product-dept' },
-						{ 'name': 'Li Xin', 'title': 'senior engineer', 'className': 'product-dept',
-							'children': [
-								{ 'name': 'To To', 'title': 'engineer', 'className': 'pipeline1' },
-								{ 'name': 'Fei Fei', 'title': 'engineer', 'className': 'pipeline1' },
-								{ 'name': 'Xuan Xuan', 'title': 'engineer', 'className': 'pipeline1' }
-							]
-						}
-					]
-				},
-				{ 'name': 'Su Miao', 'title': 'department manager', 'className': 'middle-level',
-					'children': [
-						{ 'name': 'Pang Pang', 'title': 'senior engineer', 'className': 'rd-dept' },
-						{ 'name': 'Hei Hei', 'title': 'senior engineer', 'className': 'rd-dept',
-							'children': [
-								{ 'name': 'Xiang Xiang', 'title': 'UE engineer', 'className': 'frontend1' },
-								{ 'name': 'Dan Dan', 'title': 'engineer', 'className': 'frontend1' },
-								{ 'name': 'Zai Zai', 'title': 'engineer', 'className': 'frontend1' }
-							]
-						}
-					]
-				}
-			]
-		};
-	 
-	// OrgChart 초기화
-	$('#chart').orgchart({
-		'data': datascource, // 데이터 입력
-		'nodeContent': 'title', // 노드에 표시할 속성
-		'pan': true, // 패닝 활성화
-		'zoom': false, // 줌 활성화
-		'direction': 't2b', // 방향 설정 (bottom to top)
-		'nodeTemplate': function(data) {
-			let color = '#007bff'; // 기본 배경색 (파란색)
-			// 직급(title)에 따라 다른 배경색 적용
-			if (data.title === 'CEO') {
-				color = '#ff5733'; // 주황색
-			} else if (data.title === 'Manager') {
-				color = '#28a745'; // 초록색
-			} else if (data.title === 'Engineer') {
-				color = '#17a2b8'; // 하늘색
-			}
-
-			return `
-				<div class="node" style="background-color: ${color}; color: white; border-radius: 10px; padding: 10px;">
-					<div class="title">${data.title}</div>
-					<div class="name">${data.name}</div>
-				</div>
-			`;
-		}
-	});
-	}
 </script>
 </html>

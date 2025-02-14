@@ -47,4 +47,8 @@ public class LotController {
 		
 		return "/lot/lot_list";
 	}
+	@GetMapping("/newPage")
+	public String newPage() {
+		return "/lot/newPage";
+	}
 }
