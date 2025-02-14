@@ -111,14 +111,16 @@ public class EquipmentController {
 		
 		try {
 			equipmentService.delete_EQUIPMENT(equipmentList);
+			
 			List<EquipmentDTO> list = equipmentService.select_EQUIPMENT(filter);
+			
 			response.put("list", list);
 			
 			return ResponseEntity.ok(response);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-			response.put("msg", "창고 삭제 중 오류가 발생했습니다.");
+			response.put("msg", "삭제 중 오류가 발생했습니다.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		

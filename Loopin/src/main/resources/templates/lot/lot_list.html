@@ -14,14 +14,34 @@
 					<div class="card">
 						<div class="card-body">
 							<h1 class="card-title">로트 관리</h1>
-							<div id="grid"></div>
+							<ul class="nav nav-pills mb-3" id="lot-tab" role="tablist">
+								<li class="nav-item" role="presentation">
+									<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+									type="button" role="tab" aria-controls="tab_grid" aria-selected="true">그리드</button>
+								</li>
+								<li class="nav-item" role="presentation">
+									<button class="nav-link" id="btn_chart_tab" data-bs-toggle="pill" data-bs-target="#tab_chart" 
+									type="button" role="tab" aria-controls="tab_chart" aria-selected="false">차트</button>
+								</li>
+							</ul>
+							<div class="tab-content pt-2" id="myTabContent">
+								<!-- 달력 탭 -->
+								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="chart-tab">
+									<div id="filterModule" class="mb-3"></div>
+									<div id="chart"></div>
+								</div>
+								<!-- 그리드 탭 -->
+								<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="grid-tab">
+									<div id="grid"></div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</section>
 	</main>
-</body>																																																																																																																																																																																																																											  
+</body>																																																																																																																																																																																																																											
 <script th:inline="javascript">
 	let grid;
 	const token = $("meta[name='_csrf']").attr("content")
@@ -29,10 +49,23 @@
 	
 	// 로딩
 	$(function() {
-		setElementHeight('.card', -105);
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		make_grid();
+		make_chart();
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -380);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+		
+		$("#chartId").on("click", function() {
+			
+
+		});
 	});
 	
 	// ------------함수------------
@@ -49,15 +82,15 @@
 			],
 			bodyHeight : 600,
 			columns : [
-				{header : '수주번호', name : 'model_cd', sortable : true, filter: 'text'},
-				{header : '제품명', name : 'equipment_nm', sortable : true, filter: 'text'},
-				{header : '사이즈', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '색상', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '작업시작일', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '작업수량', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '양품수량', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '불량수량', name : 'product_nm', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'equipment_us', sortable : true, filter: 'select',
+				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
+				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
+				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
+				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
+				{header : '작업시작일', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'lot_wq', sortable : true, filter: 'text'}, 
+				{header : '양품수량', name : 'lot_gq', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'lot_bq', sortable : true, filter: 'text'}, 
+				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
 					formatter: function({value}) {
 						return value == true ? '사용' : value == false ? '미사용' : '';
 					}
@@ -83,6 +116,66 @@
 				return;
 			}
 		});
+	}
+	
+	function make_chart(){
+		var datascource = {
+			'name': 'Lao Lao',
+			'title': 'general manager',
+			'children': [
+				{ 'name': 'Bo Miao', 'title': 'department manager', 'className': 'middle-level',
+					'children': [
+						{ 'name': 'Li Jing', 'title': 'senior engineer', 'className': 'product-dept' },
+						{ 'name': 'Li Xin', 'title': 'senior engineer', 'className': 'product-dept',
+							'children': [
+								{ 'name': 'To To', 'title': 'engineer', 'className': 'pipeline1' },
+								{ 'name': 'Fei Fei', 'title': 'engineer', 'className': 'pipeline1' },
+								{ 'name': 'Xuan Xuan', 'title': 'engineer', 'className': 'pipeline1' }
+							]
+						}
+					]
+				},
+				{ 'name': 'Su Miao', 'title': 'department manager', 'className': 'middle-level',
+					'children': [
+						{ 'name': 'Pang Pang', 'title': 'senior engineer', 'className': 'rd-dept' },
+						{ 'name': 'Hei Hei', 'title': 'senior engineer', 'className': 'rd-dept',
+							'children': [
+								{ 'name': 'Xiang Xiang', 'title': 'UE engineer', 'className': 'frontend1' },
+								{ 'name': 'Dan Dan', 'title': 'engineer', 'className': 'frontend1' },
+								{ 'name': 'Zai Zai', 'title': 'engineer', 'className': 'frontend1' }
+							]
+						}
+					]
+				}
+			]
+		};
+	 
+	// OrgChart 초기화
+	$('#chart').orgchart({
+		'data': datascource, // 데이터 입력
+		'nodeContent': 'title', // 노드에 표시할 속성
+		'pan': true, // 패닝 활성화
+		'zoom': false, // 줌 활성화
+		'direction': 't2b', // 방향 설정 (bottom to top)
+		'nodeTemplate': function(data) {
+			let color = '#007bff'; // 기본 배경색 (파란색)
+			// 직급(title)에 따라 다른 배경색 적용
+			if (data.title === 'CEO') {
+				color = '#ff5733'; // 주황색
+			} else if (data.title === 'Manager') {
+				color = '#28a745'; // 초록색
+			} else if (data.title === 'Engineer') {
+				color = '#17a2b8'; // 하늘색
+			}
+
+			return `
+				<div class="node" style="background-color: ${color}; color: white; border-radius: 10px; padding: 10px;">
+					<div class="title">${data.title}</div>
+					<div class="name">${data.name}</div>
+				</div>
+			`;
+		}
+	});
 	}
 </script>
 </html>
