@@ -47,8 +47,8 @@ public class LotController {
 		
 		return "/lot/lot_list";
 	}
-	@GetMapping("/newPage")
-	public String newPage() {
-		return "/lot/newPage";
+	@GetMapping("/product_result")
+	public String product_result() {
+		return "/lot/product_result";
 	}
 }
