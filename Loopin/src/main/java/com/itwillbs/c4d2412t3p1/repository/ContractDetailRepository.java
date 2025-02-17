@@ -1,0 +1,23 @@
+package com.itwillbs.c4d2412t3p1.repository;
+
+import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
+import com.itwillbs.c4d2412t3p1.entity.ContractDetalPK;
+
+public interface ContractDetailRepository extends JpaRepository<ContractDetail, ContractDetalPK> {
+
+    // 진행중 상태의 수주번호 리스트 조회
+    @Query("""
+        SELECT d FROM ContractDetail d 
+        JOIN Contract c ON d.contract_cd = c.contract_cd
+        WHERE c.contract_st = '진행중'
+        AND (:contractCd IS NULL OR d.contract_cd = :contractCd)
+    """)
+    List<ContractDetail> select_CONTRACTDETAIL_BY_STATUS_list(@Param("contractCd") String contractCd);
+}

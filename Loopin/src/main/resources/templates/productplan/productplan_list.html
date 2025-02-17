@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+
+					<div class="card" id="div_card">
+						<div class="card-body">
+							<h5 class="card-title">생산계획</h5>
+
+							<!-- General Form Elements -->
+
+							<!-- 필터 UI -->
+							<div id="filterModule" class="mb-3"></div>
+
+
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-3">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+							<br>
+
+							<!-- End General Form Elements -->
+
+							<!-- 등록/수정 모달 -->
+							<div class="modal" id="productPlanModal" tabindex="-1"
+								aria-labelledby="modalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<!-- 모달 크기 확대 -->
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modalTitle">생산계획 등록</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="productPlanForm">
+												<!-- 첫 번째 줄: 수주번호, 품목코드, 작업 시작일, 작업 종료일 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="contract_cd" class="form-label"
+															style="pointer-events: none;">수주번호</label> <input
+															type="text" class="form-control" id="contract_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="product_cd" class="form-label">품목코드</label> <input
+															type="text" class="form-control" id="product_cd">
+													</div>
+													<div class="col-md-3">
+														<label class="form-label">작업 시작일</label>
+														<!-- DatePicker가 바인딩될 input, Bootstrap .form-control 클래스만 사용 -->
+														<input id="startpicker-input" type="text"
+															class="form-control" readonly>
+														<!-- 실제 달력이 렌더링될 컨테이너 -->
+														<div id="startpicker-container"></div>
+													</div>
+													<div class="col-md-3">
+														<label class="form-label">작업 종료일</label> <input
+															id="endpicker-input" type="text" class="form-control"
+															readonly>
+														<div id="endpicker-container"></div>
+													</div>
+													<!-- 백엔드 전송용 hidden input -->
+													<input type="hidden" id="productplan_sd"> <input
+														type="hidden" id="productplan_ed">
+												</div>
+
+
+												<!-- 두 번째 줄: 담당자, 창고코드, 지시수량, 비고 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="productplan_dd" class="form-label">담당자</label>
+														<input type="text" class="form-control"
+															id="productplan_dd">
+													</div>
+													<div class="col-md-3">
+														<label for="warehouse_cd" class="form-label">창고코드</label>
+														<input type="text" class="form-control" id="warehouse_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_js" class="form-label">지시수량</label>
+														<input type="number" class="form-control"
+															id="productplan_js">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_bg" class="form-label">비고</label>
+														<textarea class="form-control" id="productplan_bg"
+															rows="1"></textarea>
+													</div>
+												</div>
+
+												<input type="hidden" id="modalMode" value="insert">
+											</form>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">취소</button>
+											<button type="button" class="btn btn-primary"
+												id="saveProductPlan">저장</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+
+							<!-- 다목적 검색 모달 -->
+							<div class="modal" id="searchModal" tabindex="-1">
+								<div
+									class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="searchModalTitle">검색 모달</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal"></button>
+										</div>
+										<br>
+										<div class="col d-flex align-items-center">
+											<input type="text" id="searchInput" class="form-control me-2"
+												placeholder="검색어 입력"
+												style="width: 150px; margin-left: 15px;"> <input
+												type="button" id="btnSearch" class="btn btn-primary"
+												value="검색">
+										</div>
+										<div class="modal-body">
+											<div id="searchGrid"></div>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">닫기</button>
+											<button type="button" class="btn btn-primary" id="selectBtn">추가</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+					</div>
+
+				</div>
+
+
+			</div>
+		</section>
+
+	</main>
+
+
+
+</body>
+
+<!-- 필터 모듈 JS File -->
+<script th:inline="javascript">
+
+let rangePicker;
+	
+document.addEventListener("DOMContentLoaded", function () {
+    // CSRF 설정
+    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+    // productPlanModal 관련 변수 (한 번만 선언)
+    const productPlanModalEl = document.getElementById("productPlanModal");
+    const productPlanModal = new bootstrap.Modal(productPlanModalEl);
+    const modalTitle = document.getElementById("modalTitle");
+    const modalMode = document.getElementById("modalMode");
+    const contractCdInput = document.getElementById("contract_cd");
+    const productCdInput = document.getElementById("product_cd");
+    const productPlanStInput = document.getElementById("productplan_st");
+	
+    const today = new Date();
+    const oneMonthLater = new Date();
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+
+    rangePicker = tui.DatePicker.createRangePicker({
+        startpicker: {
+            date: today,
+            input: '#startpicker-input',
+            container: '#startpicker-container'
+        },
+        endpicker: {
+            date: oneMonthLater,
+            input: '#endpicker-input',
+            container: '#endpicker-container'
+        },
+        format: 'yyyy-MM-dd',
+        timePicker: false
+    });
+
+ // 날짜 변경 시, hidden input 업데이트
+    rangePicker.on('change:end', function () {
+        const startDate = rangePicker.getStartDate();
+        const endDate = rangePicker.getEndDate();
+        document.getElementById('productplan_sd').value = startDate ? formatDate(startDate) : "";
+        document.getElementById('productplan_ed').value = endDate ? formatDate(endDate) : "";
+    });
+
+      // yyyy-MM-dd 형태로 변환해주는 헬퍼 함수
+      function formatDate(dateObj) {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      }
+    
+    // 검색 모달 열기 이벤트 등록
+    document.getElementById("contract_cd").addEventListener("click", () => {
+        openSearchModal("contract");
+    });
+    document.getElementById("productplan_dd").addEventListener("click", () => {
+        openSearchModal("employee");
+    });
+    document.getElementById("warehouse_cd").addEventListener("click", () => {
+        openSearchModal("warehouse");
+    });
+
+    let searchGrid; // 검색 모달에서 사용할 그리드 변수
+
+    function openSearchModal(mode) {
+        const modalTitleEl = document.getElementById('searchModalTitle');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('btnSearch');
+
+        let apiUrl = "";
+        let gridColumns = [];
+        let targetInputId = "";
+        let targetProductInputId = "";
+        let targetProductAmInputId = "";
+
+        if (mode === "contract") {
+            modalTitleEl.textContent = "수주번호 검색";
+            apiUrl = "/select_CONTRACTCD_list";
+            targetInputId = "contract_cd";
+            targetProductInputId = "product_cd";
+            targetProductAmInputId = "productplan_js";
+            gridColumns = [
+                { header: "수주번호", name: "contract_cd", align: "center" },
+                { header: "품목코드", name: "product_cd", align: "center" },
+                { header: "색상", name: "product_cr", align: "center" },
+                { header: "사이즈", name: "product_sz", align: "center" }
+            ];
+        } else if (mode === "employee") {
+            modalTitleEl.textContent = "담당자 검색";
+            apiUrl = "/select_EMPLOYEE_list";
+            targetInputId = "productplan_dd";
+            gridColumns = [
+                { header: "사원번호", name: "employee_cd", align: "center" },
+                { header: "담당자명", name: "employee_nm", align: "center" },
+                { header: "부서", name: "departmentName", align: "center" },
+                { header: "직급", name: "positionName", align: "center" }
+            ];
+        } else if (mode === "warehouse") {
+            modalTitleEl.textContent = "담당자 검색";
+            apiUrl = "/select_WAREHOUSE_list";
+            targetInputId = "warehouse_cd";
+            gridColumns = [
+                { header: "창고코드", name: "warehouse_cd", align: "center" },
+                { header: "창고명", name: "warehouse_nm", align: "center" },
+                { header: "창고유형", name: "warehouseName", align: "center" },
+                { header: "비고", name: "warehouse_rm", align: "center" }
+            ];
+        }
+
+        // 기존 그리드 제거 후 새 그리드 생성
+        const searchGridContainer = document.getElementById('searchGrid');
+        searchGridContainer.innerHTML = '';
+        searchGrid = new tui.Grid({
+            el: searchGridContainer,
+            columns: gridColumns,
+            scrollX: false,
+            scrollY: true,
+            rowHeaders: ["checkbox"],
+            autoResize: true
+        });
+
+        // 전체 리스트 로드
+        fetchSearchList(apiUrl, searchGrid);
+
+        // 검색 버튼 클릭 시
+        searchBtn.onclick = () => fetchSearchListWithInput(apiUrl, searchGrid);
+
+        // 기존 더블클릭 이벤트 제거 후 새로 등록
+        searchGrid.off("dblclick");
+        searchGrid.on("dblclick", (ev) => {
+            const rowData = searchGrid.getRow(ev.rowKey);
+            if (rowData) {
+                if (mode === "contract") {
+                    contractCdInput.value = rowData.contract_cd;
+                    if (targetProductInputId) {
+                        productCdInput.value = rowData.product_cd;
+                    }
+                    if (targetProductAmInputId) {
+                        document.getElementById(targetProductAmInputId).value = rowData.product_am;
+                    }
+                } else if(mode === "employee"){
+                    document.getElementById(targetInputId).value = rowData.employee_cd;
+                }else if(mode === "warehouse"){
+                    document.getElementById(targetInputId).value = rowData.warehouse_cd;
+                }
+                // 검색 모달 닫기
+                bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+                // 이미 productPlanModal이 열려 있다면, 값이 유지되도록 함
+                productPlanModal.show();
+            }
+        });
+
+        // 검색 모달 열기
+        const searchModal = new bootstrap.Modal(document.getElementById("searchModal"));
+        searchModal.show();
+    }
+
+    function fetchSearchList(apiUrl, grid) {
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+
+        fetch(apiUrl, { method: "GET" })
+            .then(response => {
+                if (!response.ok) throw new Error(`서버 응답 실패: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                let filteredData;
+                if (apiUrl.includes("CONTRACTCD")) {
+                    filteredData = data.filter(item => item.contract_cd && item.contract_cd !== "");
+                } else if (apiUrl.includes("EMPLOYEE")) {
+                    filteredData = data.filter(item => item.employee_cd && item.employee_cd !== "");
+                } else {
+                    filteredData = data;
+                }
+                console.log("전체 리스트 조회 결과:", filteredData);
+                if (filteredData.length === 0) {
+                    alert("검색 결과가 없습니다.");
+                } else {
+                    grid.resetData(filteredData);
+                    grid.refreshLayout();
+                }
+            })
+            .catch(error => {
+                console.error("검색 오류:", error);
+                alert("검색 중 문제가 발생했습니다.");
+            })
+            .finally(() => {
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            });
+    }
+
+    function fetchSearchListWithInput(apiUrl, grid) {
+        const searchValue = document.getElementById("searchInput").value.trim();
+        if (!searchValue) {
+            alert("검색어를 입력하세요.");
+            return;
+        }
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        if (loadingIndicator) loadingIndicator.style.display = 'block';
+
+        // 검색 모달 종류에 따라 파라미터 이름을 설정합니다.
+        let paramName = "";
+        if (apiUrl.includes("CONTRACTCD")) {
+            paramName = "contract_cd";
+        } else if (apiUrl.includes("EMPLOYEE")) {
+            // 예: 인사 검색은 사원명으로 검색할 경우
+            paramName = "employee_cd";
+            // 만약 사원번호로 검색하고 싶다면 "employee_cd"로 변경
+        } else if (apiUrl.includes("WAREHOUSE")) {
+            paramName = "warehouse_cd";
+        } else {
+            paramName = "searchValue";
+        }
+
+        fetch(`${apiUrl}?${paramName}=${encodeURIComponent(searchValue)}`, { method: "GET" })
+            .then(response => {
+                if (!response.ok) throw new Error(`서버 응답 실패: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                let filteredData;
+                if (apiUrl.includes("CONTRACTCD")) {
+                    filteredData = data.filter(item => item.contract_cd && item.contract_cd !== "");
+                } else if (apiUrl.includes("EMPLOYEE")) {
+                    filteredData = data.filter(item => item.employee_cd && item.employee_cd !== "");
+                } else if (apiUrl.includes("WAREHOUSE")) {
+                    filteredData = data.filter(item => item.warehouse_cd && item.warehouse_cd !== "");
+                } else {
+                    filteredData = data;
+                }
+                console.log("검색 결과:", filteredData);
+                if (filteredData.length === 0) {
+                    alert("검색 결과가 없습니다.");
+                } else {
+                    grid.resetData(filteredData);
+                    grid.refreshLayout();
+                }
+            })
+            .catch(error => {
+                console.error("검색 오류:", error);
+                alert("검색 중 문제가 발생했습니다.");
+            })
+            .finally(() => {
+                if (loadingIndicator) loadingIndicator.style.display = 'none';
+            });
+    }
+
+
+    // 필터 모듈 초기화 (initializeFilterModule는 별도 정의된 함수라고 가정)
+    const filterConfig = [
+        { key: 'startDate', label: '시작일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+        { key: 'endDate', label: '종료일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+        { key: 'contract_cd', label: '수주번호', type: 'text', col: 'col-md-3', placeholder: '수주번호 입력' },
+        { key: 'product_cd', label: '품목코드', type: 'text', col: 'col-md-3', placeholder: '품목코드 입력' },
+        { key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3', list: [
+            { value: 'ALL', text: '전체' },
+            { value: 'PENDING', text: '대기' },
+            { value: 'IN_PROGRESS', text: '진행중' },
+            { value: 'COMPLETED', text: '완료' }
+        ]}
+    ];
+    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+        fetchProductPlanList(filterValues);
+    });
+
+    const grid = new tui.Grid({
+        el: document.getElementById("grid"),
+        columns: [
+            { header: '수주번호', name: 'contract_cd' },
+            { header: '품목코드', name: 'product_cd' },
+            { header: '작업 시작일', name: 'productplan_sd' },
+            { header: '작업 종료일', name: 'productplan_ed' },
+            { header: '담당자', name: 'productplan_dd' },
+            { header: '지시수량', name: 'productplan_js' },
+            { header: '창고코드', name: 'warehouse_cd' },
+            { header: '계획상태', name: 'productplan_st' },
+            { header: '비고', name: 'productplan_bg' }
+        ],
+        data: [],
+        scrollX: false,
+        scrollY: false
+    });
+
+    function fetchProductPlanList(filters) {
+        fetch("/api/productplan/list", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
+            body: JSON.stringify(filters)
+        })
+        .then(response => response.json())
+        .then(data => {
+            grid.resetData(data);
+        })
+        .catch(error => console.error("데이터 조회 중 오류 발생:", error));
+    }
+
+    // openProductPlanModal는 검색 모달에서 값을 업데이트한 후 호출할 필요가 없도록 변경
+    // 단, 신규 등록 시에만 초기화가 필요합니다.
+    function openProductPlanModal(mode, data = null) {
+        
+        const productplanSdInput = document.getElementById('productplan_sd');
+        const productplanEdInput = document.getElementById('productplan_ed');
+        
+        if (mode === "insert") {
+            
+            const today = new Date();
+            const oneMonthLater = new Date();
+            oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+            rangePicker.setStartDate(today);
+            rangePicker.setEndDate(oneMonthLater);
+            // hidden input 값도 초기화
+            productplanSdInput.value = formatDate(today);
+            productplanEdInput.value = formatDate(oneMonthLater);
+            
+            modalTitle.textContent = "생산계획 등록";
+            modalMode.value = "insert";
+            contractCdInput.value = "";
+            productCdInput.value = "";
+            if (productPlanStInput) productPlanStInput.value = "PENDING";
+        } else if (mode === "update" && data) {
+            modalTitle.textContent = "생산계획 수정";
+            modalMode.value = "update";
+            contractCdInput.value = data.contract_cd;
+            productCdInput.value = data.product_cd;
+            if (productPlanStInput) productPlanStInput.value = data.productplan_st;
+        }
+        productPlanModal.show();
+    }
+
+    document.getElementById("btn_insert").addEventListener("click", () => {
+        // 신규 등록 시 초기화
+        openProductPlanModal("insert");
+    });
+
+    grid.on("dblclick", (ev) => {
+        const rowData = grid.getRow(ev.rowKey);
+        if (rowData) {
+            openProductPlanModal("update", rowData);
+        }
+    });
+
+    const saveButton = document.getElementById("saveProductPlan");
+    saveButton.addEventListener("click", () => {
+        const requestData = {
+            contract_cd: contractCdInput.value,
+            product_cd: productCdInput.value,
+            productplan_st: productPlanStInput ? productPlanStInput.value : ""
+        };
+
+        fetch(`/api/productplan/${modalMode.value === "insert" ? "" : requestData.contract_cd}`, {
+            method: modalMode.value === "insert" ? "POST" : "PUT",
+            headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
+            body: JSON.stringify(requestData)
+        })
+        .then(() => {
+            productPlanModal.hide();
+            fetchProductPlanList();
+        })
+        .catch(error => console.error("오류 발생:", error));
+    });
+});
+</script>
+
+</html>

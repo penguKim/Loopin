@@ -218,5 +218,27 @@ public class FilterRequest {
 		}
 	}
 
+	
+	// 수주관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class ContractFilterRequest extends FilterRequest {
+		
+		private String contractCd;
+		private String accountCd;
+		private String contractPs;
+		
+		public ContractFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (contractCd == null || contractCd.isEmpty())
+					&& (accountCd == null || accountCd.isEmpty()) && (contractPs == null || contractPs.isEmpty());
+		}
+	}
+	
 }
 
