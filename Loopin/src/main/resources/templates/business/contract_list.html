@@ -570,12 +570,12 @@
 	        status = "대기중";
 	    } 
 	    else if (contractSd <= today) {
-	        // 종료일이 없거나 오늘 이후이면 → "진행중"
-	        if (!contractEd || contractEd >= today) {
+	        // 종료일이 없거나 오늘이후 → "진행중"
+	        if (!contractEd || contractEd > today) {
 	            status = "진행중";
 	        } 
-	        // 종료일이 오늘 이전이면 → "완료"
-	        else if (contractEd < today) {
+	        // 종료일이 오늘 이전이거나 오늘이면 → "완료"
+	        else if (contractEd <= today) {
 	            status = "완료";
 	        }
 	    }
@@ -632,7 +632,7 @@
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			    	product_sz: {
+			    	product_un: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }

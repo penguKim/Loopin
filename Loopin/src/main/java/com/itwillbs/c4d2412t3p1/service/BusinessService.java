@@ -349,5 +349,152 @@ public class BusinessService {
         System.out.println("수주 상태 업데이트 완료!");
     }
 
+    
+    // 출하페이지 상세조회
+	public Map<String, Object> get_CONTRACT_SHIPMENT(String contractCd) {
+		Map<String, Object> result = new HashMap<>();
+
+		// 수주 정보 조회
+		List<Object[]> contractList = contractRepository.findContractShipmentByCd(contractCd);
+		
+		if (!contractList.isEmpty()) {
+			Object[] row = contractList.get(0); // 단일 계약이므로 첫 번째 행 사용
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_sd", row[2]);
+			contract.put("contract_ed", row[3]);
+			contract.put("contract_am", row[4]);
+			contract.put("contract_st", row[5]);
+
+			result.put("contract", contract);
+		}
+
+		// 상세 정보 조회
+		List<Object[]> detailList = contractRepository.select_CONTRACTDETAIL_SHIPMENT(contractCd);
+		List<Map<String, Object>> details = detailList.stream().map(row -> {
+			Map<String, Object> detail = new HashMap<>();
+			detail.put("contract_cd", row[0]);
+			detail.put("product_cd", row[1]);
+			detail.put("product_sz", row[2]);
+			detail.put("product_cr", row[3]);
+			detail.put("product_am", row[4]);
+			detail.put("contract_ct", row[5]);
+			detail.put("product_un", row[6]);
+			detail.put("detail_contract_ed", row[7]); // CONTRACTDETAIL의 contract_ed
+			detail.put("total_stock", row[8]); // 재고
+			detail.put("can_ship", row[9]); // 출하여부
+			return detail;
+		}).collect(Collectors.toList());
+
+		result.put("details", details);
+
+		return result;
+	}
+    
+    // 출하페이지 수주조회
+	public List<Map<String, Object>> select_CONTRACT_SHIPMENT() {
+
+		List<Object[]> result;
+
+		result = contractRepository.select_CONTRACT_SHIPMENT();
+
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("employee_cd", row[2]);
+			contract.put("contract_ps", row[3]);
+			contract.put("contract_sd", row[4]);
+			contract.put("contract_ed", row[5]);
+			contract.put("contract_am", row[6]);
+			contract.put("contract_mn", row[7]);
+			contract.put("contract_st", row[8]);
+			contract.put("contract_rm", row[9]);
+			contract.put("contract_wr", row[10]);
+			contract.put("contract_wd", row[11]);
+			contract.put("contract_mf", row[12]);
+			contract.put("contract_md", row[13]);
+
+			return contract;
+
+		}).collect(Collectors.toList());
+	}
+	
+	// 거래처 필터 데이터 조회
+	public List<Map<String, Object>> select_FILTERED_CONTRACT_SHIPMENT(ContractFilterRequest filterRequest) {
+		
+		List<Object[]> result;
+		
+		result = contractRepository.select_FILTERED_CONTRACT_SHIPMENT(filterRequest);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("employee_cd", row[2]);
+			contract.put("contract_ps", row[3]);
+			contract.put("contract_sd", row[4]);
+			contract.put("contract_ed", row[5]);
+			contract.put("contract_am", row[6]);
+			contract.put("contract_mn", row[7]);
+			contract.put("contract_st", row[8]);
+			contract.put("contract_rm", row[9]);
+			contract.put("contract_wr", row[10]);
+			contract.put("contract_wd", row[11]);
+			contract.put("contract_mf", row[12]);
+			contract.put("contract_md", row[13]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	
+    // 출하 정보 업데이트
+	@Transactional
+	public void updateContractShipment(String contractCd, String contractEd, String contractSt, List<Map<String, Object>> details, String updatedUser) {
+	    // CONTRACT 테이블 업데이트
+	    contractRepository.updateContractShipment(contractEd, contractSt, contractCd);
+
+	    // CONTRACTDETAIL 테이블에도 같은 contract_ed 업데이트
+	    contractRepository.updateContractDetailShipment(contractEd, contractCd);
+
+	    // 각 제품의 출하 처리 및 재고 차감
+	    for (Map<String, Object> detail : details) {
+	        String itemCd = (String) detail.get("product_cd") + "-" + detail.get("product_sz") + "-" + detail.get("product_cr");
+	        int shipmentQty = Integer.parseInt(detail.get("product_am").toString());
+
+	        // 창고별 가용 재고 목록 조회 (창고, 구역별 재고를 모두 가져옴)
+	        List<Map<String, Object>> availableStocks = contractRepository.findAvailableStockByItem(itemCd);
+
+	        if (availableStocks.isEmpty()) {
+	            throw new IllegalStateException("출고 실패: 해당 제품의 창고 정보 없음 (" + itemCd + ")");
+	        }
+
+	        int remainingQty = shipmentQty;
+
+	        for (Map<String, Object> stock : availableStocks) {
+	            if (remainingQty <= 0) break;
+
+	            String warehouseCd = (String) stock.get("warehouse_cd");
+	            String wareareaCd = (String) stock.get("warearea_cd");
+	            int availableQty = ((Number) stock.get("stock_aq")).intValue();
+
+	            int qtyToDeduct = Math.min(availableQty, remainingQty);
+
+	            // 출고 처리
+	            int updatedRows = contractRepository.reduceStockQuantity(itemCd, warehouseCd, wareareaCd, qtyToDeduct, updatedUser);
+	            if (updatedRows > 0) {
+	                remainingQty -= qtyToDeduct;
+	            }
+	        }
+
+	        if (remainingQty > 0) {
+	            throw new IllegalStateException("출고 실패: 재고 부족 (" + itemCd + ", 부족 " + remainingQty + "개)");
+	        }
+	    }
+	}
+
 	
 }

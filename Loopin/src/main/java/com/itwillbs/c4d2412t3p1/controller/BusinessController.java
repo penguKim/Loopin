@@ -324,4 +324,114 @@ public class BusinessController {
         businessService.updateContractStatus(); // 상태 업데이트 실행
         return "redirect:/contract_list"; // 상태 업데이트 후 목록 페이지로 이동
     }
+    
+    
+
+	// 출하관리 페이지로 이동
+	@GetMapping("/shipment_list")
+	public String shipment_list(Model model) {
+		
+		return "/business/shipment_list";
+	}
+    
+    
+    // 상세 페이지
+	@GetMapping("/get_CONTRACT_SHIPMENT")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> get_CONTRACT_SHIPMENT(@RequestParam(name = "contract_cd") String contractCd) {
+	    try {
+	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        Map<String, Object> contractData = businessService.get_CONTRACT_SHIPMENT(contractCd);
+
+	        if (contractData.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Map.of("error", "출하 데이터를 찾을 수 없습니다."));
+	        }
+
+	        return ResponseEntity.ok(contractData);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Map.of("error", "데이터 조회 중 오류 발생"));
+	    }
+	}
+	
+	// 출하페이지 수주 조회
+	@GetMapping("/select_CONTRACT_SHIPMENT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_SHIPMENT() {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_CONTRACT_SHIPMENT();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_CONTRACT_SHIPMENT")
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_CONTRACT_SHIPMENT(@RequestBody ContractFilterRequest filterRequest) {
+
+	    try {
+            // 필터 조건이 비어 있으면 전체 수주정보 반환
+            if (filterRequest.isEmpty()) {
+                List<Map<String, Object>> contracts = businessService.select_CONTRACT_SHIPMENT();
+                log.info("contracts : "+ contracts);
+                return ResponseEntity.ok(contracts);
+            }
+
+            // 필터 조건에 따른 필터링된 수주정보 반환
+            List<Map<String, Object>> filteredContractList = businessService.select_FILTERED_CONTRACT_SHIPMENT(filterRequest);
+            log.info("filteredContractList : "+ filteredContractList);
+            return ResponseEntity.ok(filteredContractList);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+    }
+	
+	
+	@PostMapping("/update_CONTRACT_SHIPMENT")
+	@ResponseBody
+	public Map<String, Object> updateContractShipment(@RequestBody Map<String, Object> requestData) {
+	    Map<String, Object> response = new HashMap<>();
+
+	    String updatedUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    
+	    try {
+	        Map<String, Object> contractData = (Map<String, Object>) requestData.get("contract");
+	        List<Map<String, Object>> detailData = (List<Map<String, Object>>) requestData.get("details");
+	        
+	        // 필수 값 추출
+	        String contractCd = (String) contractData.get("contract_cd");
+	        String contractEd = (String) contractData.get("contract_ed");
+	        String contractSt = (String) contractData.get("contract_st");
+	        
+	        System.out.println("Contract Code: " + contractCd);
+	        System.out.println("Contract End Date: " + contractEd);
+
+	        if (contractCd == null || contractEd == null) {
+	            response.put("success", false);
+	            response.put("message", "계약 코드 또는 출하일이 누락되었습니다.");
+	            return response;
+	        }
+
+	        // 출하 정보 및 CONTRACTDETAIL 업데이트 실행
+	        businessService.updateContractShipment(contractCd, contractEd, contractSt, detailData, updatedUser);
+
+	        response.put("success", true);
+	        response.put("message", "출하 업데이트 완료 및 재고 차감 완료");
+
+	    } catch (Exception e) {
+	        response.put("success", false);
+	        response.put("message", "출하 처리 중 오류 발생: " + e.getMessage());
+	    }
+
+	    return response;
+	}
+
 }
