@@ -13,6 +13,6 @@ import com.itwillbs.c4d2412t3p1.entity.DailyproductplanPK;
 public interface DailyproductplanRepository extends JpaRepository<Dailyproductplan, DailyproductplanPK> {
 	
 	// 생산계획 일자로 조회
-	@Query(value = "SELECT * FROM DAILYPRODUCTPLAN WHERE DAILYPRODUCTPLAN_SD = :productionDate", nativeQuery = true)
-    List<Dailyproductplan> findByProductionDate(@Param("productionDate") Timestamp productionDate);
+	@Query(value = "SELECT * FROM DAILYPRODUCTPLAN WHERE TO_CHAR(DAILYPRODUCTPLAN_SD, 'YYYY-MM-DD') = TO_CHAR(:productionDate, 'YYYY-MM-DD')", nativeQuery = true)
+	List<Dailyproductplan> findByProductionDate(@Param("productionDate") Timestamp productionDate);
 }

@@ -21,7 +21,7 @@ public class LotDTO {
 	private String contract_cd;
 	private String product_cr;
 	private String product_sz;
-	private Long productplan_js;
+	private Integer productplan_js;
 	private Timestamp lot_cr;
 	private Timestamp lothistory_st;
 	private Timestamp lothistory_en;

@@ -52,7 +52,7 @@ public class Lot {
     private String product_sz;
     
     @Column(name = "productplan_js")
-    private long productplan_js;
+    private Integer productplan_js;
     
     @Column(name = "lot_cr")
     private Timestamp lot_cr;

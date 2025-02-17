@@ -23,13 +23,9 @@ public class LotScheduler {
     @Autowired
     private LotService lotService;
 
-    @Scheduled(cron = "0 0 2 * * ?") // 매일 새벽 2시에 실행
-    public void generateLotInfo() {
-    	Timestamp today = new Timestamp(System.currentTimeMillis());  // ✅ 현재 날짜 기준 Timestamp 생성
-        List<Dailyproductplan> dailyPlans = lotService.getDailyPlansByDate(today);
-        
-        for (Dailyproductplan plan : dailyPlans) {
-            System.out.println("Processing plan: " + plan);
-        }
-    }
+//    @Scheduled(cron = "0 0 2 * * ?") // 매일 새벽 2시에 실행
+//    public void generateLotInfo() {
+//        lotService.getDailyPlansByDate();
+//        
+//    }
 }
