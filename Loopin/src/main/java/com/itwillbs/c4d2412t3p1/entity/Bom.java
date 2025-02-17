@@ -25,6 +25,6 @@ public class Bom {
 	private String bom_cd;
 	
 	@Column(name = "bom_am")
-	private String bom_am;
+	private Long bom_am;
 	
 }

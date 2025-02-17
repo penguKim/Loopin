@@ -11,4 +11,8 @@ public interface BomMapper {
 
 	List<Product> selectPD();
 
+	String checkpcd(String pcd);
+
+	List<Process> selectPCs();
+
 }

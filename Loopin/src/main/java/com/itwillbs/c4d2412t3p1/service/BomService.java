@@ -26,4 +26,22 @@ public class BomService {
 		return list;
 	}
 
+	public Integer checkpcd(String pcd) {
+		
+		String result = bM.checkpcd(pcd);
+		
+		if(result == null) {
+			return 0;
+		}else {
+			return 1;
+		}
+	}
+
+	public List<Process> selectPCs() {
+		
+		List<Process> list = bM.selectPCs();
+		
+		return list;
+	}
+
 }

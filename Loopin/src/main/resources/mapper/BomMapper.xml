@@ -16,5 +16,25 @@
 	WHERE pd.PRODUCT_GC = 'PRODUCT'
 </select>
 
+<select id="checkpcd" resultType="String">
+	SELECT DISTINCT 
+		bp.PRODUCT_CD 
+	FROM BOMPROCESS bp
+	WHERE bp.PRODUCT_CD = #{pcd}
+</select>
+
+<select id="selectPCs" resultType="map">
+	SELECT DISTINCT 
+		pc.PROCESS_CD,
+		pc.PROCESS_NM,
+		pc.PROCESS_GC AS PRODUCT_GC,
+		pc.PROCESS_CC AS PRODUCT_CC,
+		pd.PRODUCT_CD AS BOMPROCESS_CD,
+		pd.PRODUCT_NM,
+		pd.PRODUCT_UN 
+	FROM PROCESS pc
+	JOIN PRODUCT pd ON INSTR(','|| pc.PROCESS_PD || ',', ','|| pd.PRODUCT_CD || ',' ) > 0  
+	ORDER BY pc.PROCESS_CD
+</select>
 
 </mapper>
