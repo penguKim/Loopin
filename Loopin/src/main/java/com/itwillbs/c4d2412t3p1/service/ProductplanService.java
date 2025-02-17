@@ -7,17 +7,20 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
+import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Productplan;
 import com.itwillbs.c4d2412t3p1.entity.Warehouse;
 import com.itwillbs.c4d2412t3p1.repository.ApprovalRepository;
+import com.itwillbs.c4d2412t3p1.repository.BomProcessRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.ContractDetailRepository;
 import com.itwillbs.c4d2412t3p1.repository.ContractRepository;
@@ -42,6 +45,8 @@ public class ProductplanService {
 	private final CommonRepository commonRepository;
 	
 	private final WarehouseRepository warehouseRepository;
+	
+	private final BomProcessRepository bomProcessRepository;
 	
 	// 생산계획 등록 모달 진행중 상태 리스트 조회
 	public List<ContractDetailDTO> select_CONTRACTCD_list(String contractCd) {
@@ -112,6 +117,30 @@ public class ProductplanService {
             dtoList.add(dto);
         }
         return dtoList;
+    }
+    public List<BomProcessDTO> select_BOMPROCESS_BY_CD(String product_cd) {
+        // 1) DB에서 raw data 목록 조회 (List<Object[]>)
+        List<Object[]> rows = bomProcessRepository.selectRawData(product_cd);
+
+        // 2) List<Object[]> → List<BomProcessDTO>로 변환
+        List<BomProcessDTO> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            // row[0] : product_cd (String)
+            // row[1] : process_cd (String)
+            // row[2] : bomprocess_cd (String)
+            // row[3] : bomprocess_ap (String)
+            // row[4] : bomprocess_rt (String)
+            BomProcessDTO dto = new BomProcessDTO();
+            dto.setProduct_cd((String)row[0]);
+            dto.setProcess_cd((String)row[1]);
+            dto.setBomprocess_cd((String)row[2]);
+            dto.setBomprocess_ap((String)row[3]);
+            dto.setBomprocess_rt((String)row[4]);
+            // 필요한 필드만 매핑
+            result.add(dto);
+        }
+
+        return result;
     }
 	
 }

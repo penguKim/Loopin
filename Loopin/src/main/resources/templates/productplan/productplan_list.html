@@ -97,6 +97,14 @@
 
 												<input type="hidden" id="modalMode" value="insert">
 											</form>
+											
+											<hr>
+											<h5>공정리스트</h5>
+											<div id="subGrid1" style="margin-bottom: 20px;"></div>
+
+											<h5>BOM</h5>
+											<div id="subGrid2"></div>
+
 										</div>
 										<div class="modal-footer">
 											<button type="button" class="btn btn-secondary"
@@ -154,17 +162,26 @@
 
 </body>
 
-<!-- 필터 모듈 JS File -->
+<style>
+  /* DateRangePicker가 subGrid 뒤에 가려지지 않도록 z-index 상향 */
+  .tui-datepicker,
+  .tui-timepicker,
+  .tui-calendar {
+    z-index: 9999 !important;
+  }
+</style>
+
 <script th:inline="javascript">
 
 let rangePicker;
-	
+let subGrid1, subGrid2;
+
 document.addEventListener("DOMContentLoaded", function () {
     // CSRF 설정
     const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
-    // productPlanModal 관련 변수 (한 번만 선언)
+    // productPlanModal 관련 변수
     const productPlanModalEl = document.getElementById("productPlanModal");
     const productPlanModal = new bootstrap.Modal(productPlanModalEl);
     const modalTitle = document.getElementById("modalTitle");
@@ -172,7 +189,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const contractCdInput = document.getElementById("contract_cd");
     const productCdInput = document.getElementById("product_cd");
     const productPlanStInput = document.getElementById("productplan_st");
-	
+
+    // DateRangePicker 초기화
     const today = new Date();
     const oneMonthLater = new Date();
     oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
@@ -192,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
         timePicker: false
     });
 
- // 날짜 변경 시, hidden input 업데이트
+    // 날짜 범위 변경 시 hidden input 업데이트
     rangePicker.on('change:end', function () {
         const startDate = rangePicker.getStartDate();
         const endDate = rangePicker.getEndDate();
@@ -200,14 +218,22 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('productplan_ed').value = endDate ? formatDate(endDate) : "";
     });
 
-      // yyyy-MM-dd 형태로 변환해주는 헬퍼 함수
-      function formatDate(dateObj) {
+    // yyyy-MM-dd 형태로 변환해주는 헬퍼 함수
+    function formatDate(dateObj) {
         const yyyy = dateObj.getFullYear();
         const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
         const dd = String(dateObj.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
-      }
-    
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // 모달 표시 후 그리드 레이아웃 새로고침 (권장 방식)
+    // ─────────────────────────────────────────────────────────
+    productPlanModalEl.addEventListener('shown.bs.modal', () => {
+      subGrid1.refreshLayout();
+      subGrid2.refreshLayout();
+    });
+
     // 검색 모달 열기 이벤트 등록
     document.getElementById("contract_cd").addEventListener("click", () => {
         openSearchModal("contract");
@@ -221,6 +247,32 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let searchGrid; // 검색 모달에서 사용할 그리드 변수
 
+    // modeActions 객체 (if-else 최소화)
+    const modeActions = {
+        contract: (data) => {
+            contractCdInput.value = data.contract_cd;
+            if (targetProductInputId) {
+                productCdInput.value = data.product_cd;
+            }
+            if (targetProductAmInputId) {
+                document.getElementById(targetProductAmInputId).value = data.product_am;
+            }
+            // BOMPROCESS 조회 -> subGrid1 표시
+            if (data.product_cd) {
+                fetchBOMProcessList(data.product_cd);
+            }
+        },
+        employee: (data) => {
+            document.getElementById(targetInputId).value = data.employee_cd;
+        },
+        warehouse: (data) => {
+            document.getElementById(targetInputId).value = data.warehouse_cd;
+        }
+    };
+
+    // ─────────────────────────────────────────────────────────
+    // 검색 모달 열기 함수
+    // ─────────────────────────────────────────────────────────
     function openSearchModal(mode) {
         const modalTitleEl = document.getElementById('searchModalTitle');
         const searchInput = document.getElementById('searchInput');
@@ -228,9 +280,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
         let apiUrl = "";
         let gridColumns = [];
-        let targetInputId = "";
-        let targetProductInputId = "";
-        let targetProductAmInputId = "";
+        window.targetInputId = "";
+        window.targetProductInputId = "";
+        window.targetProductAmInputId = "";
 
         if (mode === "contract") {
             modalTitleEl.textContent = "수주번호 검색";
@@ -288,25 +340,16 @@ document.addEventListener("DOMContentLoaded", function () {
         searchGrid.off("dblclick");
         searchGrid.on("dblclick", (ev) => {
             const rowData = searchGrid.getRow(ev.rowKey);
-            if (rowData) {
-                if (mode === "contract") {
-                    contractCdInput.value = rowData.contract_cd;
-                    if (targetProductInputId) {
-                        productCdInput.value = rowData.product_cd;
-                    }
-                    if (targetProductAmInputId) {
-                        document.getElementById(targetProductAmInputId).value = rowData.product_am;
-                    }
-                } else if(mode === "employee"){
-                    document.getElementById(targetInputId).value = rowData.employee_cd;
-                }else if(mode === "warehouse"){
-                    document.getElementById(targetInputId).value = rowData.warehouse_cd;
-                }
-                // 검색 모달 닫기
-                bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
-                // 이미 productPlanModal이 열려 있다면, 값이 유지되도록 함
-                productPlanModal.show();
+            if (!rowData) return;
+
+            const action = modeActions[mode];
+            if (action) {
+                action(rowData);
             }
+
+            // 검색 모달 닫고 productPlanModal 열기
+            bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+            productPlanModal.show();
         });
 
         // 검색 모달 열기
@@ -314,6 +357,54 @@ document.addEventListener("DOMContentLoaded", function () {
         searchModal.show();
     }
 
+    // ─────────────────────────────────────────────────────────
+    // subGrid1, subGrid2 초기화
+    // ─────────────────────────────────────────────────────────
+    subGrid1 = new tui.Grid({
+        el: document.getElementById("subGrid1"),
+        columns: [
+          { header: '공정코드', name: 'process_cd' },
+          { header: '생산제품', name: 'bomprocess_cd' },
+          { header: '소요시간', name: 'bomprocess_rt' },
+          { header: '후공정코드', name: 'bomprocess_ap' }
+        ],
+        data: [],
+        scrollX: false,
+        scrollY: false
+    });
+
+    subGrid2 = new tui.Grid({
+        el: document.getElementById("subGrid2"),
+        columns: [
+          { header: '항목A', name: 'colA' },
+          { header: '항목B', name: 'colB' }
+        ],
+        data: [],
+        scrollX: false,
+        scrollY: false
+    });
+
+    // BOMPROCESS 조회 -> subGrid1 표시
+    function fetchBOMProcessList(productCd) {
+        if (!productCd) return;
+
+        fetch(`/select_BOMPROCESS_list?product_cd=${encodeURIComponent(productCd)}`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`서버 응답 실패: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            subGrid1.resetData(data);
+          })
+          .catch(error => {
+            console.error("BOMPROCESS 조회 오류:", error);
+            alert("BOMPROCESS 데이터를 조회하는 중 문제가 발생했습니다.");
+          });
+    }
+
+    // 공통 검색 리스트 조회 함수 (모달 열릴 때 전체 리스트)
     function fetchSearchList(apiUrl, grid) {
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) loadingIndicator.style.display = 'block';
@@ -349,6 +440,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
+    // 공통 검색 리스트 조회 함수 (검색 버튼 클릭 시)
     function fetchSearchListWithInput(apiUrl, grid) {
         const searchValue = document.getElementById("searchInput").value.trim();
         if (!searchValue) {
@@ -358,14 +450,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const loadingIndicator = document.getElementById('loadingIndicator');
         if (loadingIndicator) loadingIndicator.style.display = 'block';
 
-        // 검색 모달 종류에 따라 파라미터 이름을 설정합니다.
         let paramName = "";
         if (apiUrl.includes("CONTRACTCD")) {
             paramName = "contract_cd";
         } else if (apiUrl.includes("EMPLOYEE")) {
-            // 예: 인사 검색은 사원명으로 검색할 경우
             paramName = "employee_cd";
-            // 만약 사원번호로 검색하고 싶다면 "employee_cd"로 변경
         } else if (apiUrl.includes("WAREHOUSE")) {
             paramName = "warehouse_cd";
         } else {
@@ -405,19 +494,21 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
 
-
-    // 필터 모듈 초기화 (initializeFilterModule는 별도 정의된 함수라고 가정)
+    // 필터 모듈 초기화 & 메인 그리드
     const filterConfig = [
         { key: 'startDate', label: '시작일', type: 'date', format: 'YYYY-MM-dd', value: '' },
         { key: 'endDate', label: '종료일', type: 'date', format: 'YYYY-MM-dd', value: '' },
         { key: 'contract_cd', label: '수주번호', type: 'text', col: 'col-md-3', placeholder: '수주번호 입력' },
         { key: 'product_cd', label: '품목코드', type: 'text', col: 'col-md-3', placeholder: '품목코드 입력' },
-        { key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3', list: [
-            { value: 'ALL', text: '전체' },
-            { value: 'PENDING', text: '대기' },
-            { value: 'IN_PROGRESS', text: '진행중' },
-            { value: 'COMPLETED', text: '완료' }
-        ]}
+        {
+            key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3',
+            list: [
+                { value: 'ALL', text: '전체' },
+                { value: 'PENDING', text: '대기' },
+                { value: 'IN_PROGRESS', text: '진행중' },
+                { value: 'COMPLETED', text: '완료' }
+            ]
+        }
     ];
     initializeFilterModule('filterModule', filterConfig, (filterValues) => {
         fetchProductPlanList(filterValues);
@@ -454,24 +545,20 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("데이터 조회 중 오류 발생:", error));
     }
 
-    // openProductPlanModal는 검색 모달에서 값을 업데이트한 후 호출할 필요가 없도록 변경
-    // 단, 신규 등록 시에만 초기화가 필요합니다.
+    // 생산계획 모달 열기
     function openProductPlanModal(mode, data = null) {
-        
         const productplanSdInput = document.getElementById('productplan_sd');
         const productplanEdInput = document.getElementById('productplan_ed');
-        
+
         if (mode === "insert") {
-            
             const today = new Date();
             const oneMonthLater = new Date();
             oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
             rangePicker.setStartDate(today);
             rangePicker.setEndDate(oneMonthLater);
-            // hidden input 값도 초기화
             productplanSdInput.value = formatDate(today);
             productplanEdInput.value = formatDate(oneMonthLater);
-            
+
             modalTitle.textContent = "생산계획 등록";
             modalMode.value = "insert";
             contractCdInput.value = "";
@@ -488,7 +575,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     document.getElementById("btn_insert").addEventListener("click", () => {
-        // 신규 등록 시 초기화
         openProductPlanModal("insert");
     });
 
