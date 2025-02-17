@@ -13,7 +13,7 @@ import com.itwillbs.c4d2412t3p1.entity.BomProcessID;
 @Repository
 public interface BomProcessRepository extends JpaRepository<BomProcess, BomProcessID> {
 
-	// product_cd가 일치하는 BOMPROCESS 목록 조회 (Native Query)
+	// product_cd가 일치하는 BOMPROCESS 목록 조회
 	// 생산계획 등록 시 제품별 공정정보
     @Query(value = """
             WITH BOM_HIERARCHY (PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, BOMPROCESS_RT, LVL) AS (

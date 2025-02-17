@@ -1,11 +1,15 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -13,6 +17,7 @@ import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
+import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
@@ -69,5 +74,11 @@ public class ProductPlanController {
 	        List<BomProcessDTO> dtoList = productplanService.select_BOMPROCESS_BY_CD(product_cd);
 	        return ResponseEntity.ok(dtoList);
     }
+	
+	@PostMapping("/save_PRODUCTPLAN")
+	public ResponseEntity<?> saveProcessOrder(@RequestBody ProductPlanSaveRequest req) {
+	    productplanService.save_PRODUCTPLAN(req);
+	    return ResponseEntity.ok().body("SUCCESS");
+	}
 	
 }
