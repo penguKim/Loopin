@@ -57,7 +57,7 @@ public class ProcessController {
 	
 	@GetMapping("/selecteqlist")
 	@ResponseBody
-	public List<Map<String,Object>> selecteqlist (@RequestParam("pd") List pd) {
+	public List<Map<String,Object>> selecteqlist (@RequestParam("pd") String pd) {
 		
 		System.out.println("&로 넘어오지?"+ pd);
 		
@@ -66,23 +66,43 @@ public class ProcessController {
 		return list;
 	}
 	
-	@PostMapping("postprocess")
+	@PostMapping("postProcess")
 	@ResponseBody
-	public List<Map<String,Object>> postprocess(@RequestBody Map<String,Object> regidata) {
+	public int postProcess(@RequestBody List<Map<String,Object>> regidata) {
 		
-		System.out.println("말해바"+ regidata.get("process_cd"));
-		System.out.println("말해바"+ regidata.get("process_nm"));
-		System.out.println("말해바"+ regidata.get("process_gc"));
-		System.out.println("말해바"+ regidata.get("process_cc"));
-		System.out.println("말해바"+ regidata.get("process_pd"));
-		System.out.println("말해바"+ regidata.get("process_eq"));
-		System.out.println("말해바"+ regidata.get("process_wr"));
-		System.out.println("말해바"+ regidata.get("process_bg"));
+		System.out.println("말해바"+ regidata.get(0).get("process_cd"));
+		System.out.println("말해바"+ regidata.get(0).get("process_nm"));
+		System.out.println("말해바"+ regidata.get(0).get("process_gc"));
+		System.out.println("말해바"+ regidata.get(0).get("process_cc"));
+		System.out.println("말해바"+ regidata.get(0).get("process_pd"));
+		System.out.println("말해바"+ regidata.get(0).get("process_eq"));
+		System.out.println("말해바"+ regidata.get(0).get("process_wr"));
+		System.out.println("말해바"+ regidata.get(0).get("process_bg"));
 		
-		List<Map<String,Object>> result = pcS.postprocess(regidata);
+		int result = pcS.postProcess(regidata);
 		
-		return null;
+		System.out.println("저장되니"+result);
+		
+		return result;
 	}
 	
+	@GetMapping("/checkpccd")
+	@ResponseBody
+	public int checkpccd(@RequestParam("cdvalue") String cdvalue) {
+		System.out.println("받아오냐?"+cdvalue);
+		int result = pcS.checkpccd(cdvalue);
+		System.out.println("서비스에서 받아오냐?"+result);
+		
+		return result;
+	}
+	
+	@GetMapping("/selectpc")
+	@ResponseBody
+	public List<Map<String,Object>> selectpc (@RequestParam("pccd") String pccd) {
+		
+		List<Map<String,Object>> list = pcS.selectpc(pccd); 
+		
+		return list;
+	}
 	
 }
