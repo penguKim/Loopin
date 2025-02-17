@@ -59,8 +59,8 @@ public class Product {
 	private String product_un;
 	@Column(name = "product_wh", length = 30)
 	private String product_wh;
-	@Column(name = "product_pr", length = 30)
-	private String product_pr;
+	@Column(name = "product_pr", precision = 19, scale = 0)
+	private int product_pr;
 	@Column(name = "product_pc", length = 255)
 	private String product_pc;
 	@Column(name = "product_rm", length = 1000)
