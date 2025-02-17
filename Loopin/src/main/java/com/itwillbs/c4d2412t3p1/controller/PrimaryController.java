@@ -187,7 +187,6 @@ public class PrimaryController {
 		Map<String, Object> response = new HashMap<>(); 
 		Map<String, Object> data = new HashMap<>();
     	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
-		System.out.println("조회하냐!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		if (!product_cc.isEmpty()) {
 			response.put("result", true);
 			data.put("contents", product_cc.get(product_cc.keySet().iterator().next()));

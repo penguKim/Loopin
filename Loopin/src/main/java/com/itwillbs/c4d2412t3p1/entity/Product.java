@@ -26,6 +26,26 @@ import lombok.ToString;
 
 @Entity
 @Table(name = "PRODUCT")
+@NamedStoredProcedureQuery(
+	    name = "UPSERT_PRODUCT_BATCH",
+	    procedureName = "UPSERT_PRODUCT_BATCH",
+	    parameters = {
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_cd", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_nm", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_gc", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_cc", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_gd", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_un", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_pr", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_wh", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_pc", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_rm", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_product_us", type = Integer.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_reg_user", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_size_list", type = String.class),
+	        @StoredProcedureParameter(mode = ParameterMode.IN, name = "p_color_list", type = String.class)
+	    }
+	)
 @Getter
 @Setter
 @ToString
