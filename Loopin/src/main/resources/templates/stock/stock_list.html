@@ -219,7 +219,7 @@
 				showAlert('', 'warning', '삭제 항목 체크', '삭제할 재고를 체크해주세요.');
 			    return;
 			}
-			delete_STOCK(checkedRows, grid['flag']);				
+			delete_STOCK(checkedRows);				
 		});
 		
 	});
@@ -275,18 +275,11 @@
 	// 그리드, 모달 -----------------------
 	
 	// 그리드 생성
-	function make_grid() {
-		function commaFormatter(value) {
-			  if (value != null && !isNaN(value)) {
-			    return value.toLocaleString();
-			  }
-			  return value;
-			}
-		
+	function make_grid() {	
 		let baseColumns = [
 			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
 			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
-		    {header: '구역 잔량', name: 'WAREAREA_CP', sortable: true, formatter: (cell) => commaFormatter(cell.value)},		    
+		    {header: '구역 잔량', name: 'WAREAREA_CP', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString()}`},		    
 		    {header: '품목대분류', name: 'ITEM_GN', sortable: true, filter: 'select'},
 		    {header: '품목소분류', name: 'ITEM_CN', sortable: true, filter: 'select'},
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
@@ -294,14 +287,14 @@
    		    {header: '품목코드', name: 'ITEM_CD', sortable: true, filter: 'text'},
 		    {header: '품목명', name: 'ITEM_NM', sortable: true, filter: 'text'},
 		    {header: '색상', name: 'COLOR_NM', sortable: true, filter: 'select'},
-		    {header: '총 수량', name: 'STOCK_AQ', sortable: true, formatter: (cell) => commaFormatter(cell.value)},
+		    {header: '총 수량', name: 'STOCK_AQ', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString()}`},
 		    {header: '단위', name: 'ITEM_UN', align: 'center', sortable: true, filter: 'select'},
 		];
 		let additionalColumns = [];
 		
 		for(let i = 0; i <sizeList.length; i++) {
 			let temp = sizeList[i];
-			let column = {header : `${temp['common_cc']}`, name : `SIZE_${temp['common_cc']}`, width: '50', formatter: (cell) => commaFormatter(cell.value)};
+			let column = {header : `${temp['common_cc']}`, name : `SIZE_${temp['common_cc']}`, width: '50', formatter: (cell) => `${cell.value?.toLocaleString()}`};
 			additionalColumns.push(column);
 		}
 		
@@ -349,6 +342,26 @@
 			// setModalInput(row, getPrefix(grid['flag']));
 		});
     }
+	
+	// 그리드 클래스 지정
+	function setGridClass() {
+		 grid.getData().forEach((row, index) => {
+       	if(['MATERIALS', 'SUBMAT'].includes(row['ITEM_GC'])) {
+				grid.addCellClassName(index, 'STOCK_AQ', 'bg-opacity-50');
+				grid.addCellClassName(index, 'STOCK_AQ', 'text-black');
+				grid.addCellClassName(index, 'STOCK_AQ', 'bg-warning');
+       	} else {
+	        	sizeList.forEach(item => {
+	        		let colName = `SIZE_${item.common_cc}`;
+	        		if(row[colName] > 0) {
+						grid.addCellClassName(index, colName, 'bg-opacity-50');
+						grid.addCellClassName(index, colName, 'text-black');
+						grid.addCellClassName(index, colName, 'bg-warning');
+	        		}
+	        	});
+       	}
+       });
+	}
 	
 	// 차트 생성
 	function make_treeMap(list) {
@@ -481,22 +494,7 @@
 	        
 	        const ajaxData = await callAjaxPost(`/select_STOCK_list`, JSON.stringify(jsonData));
 	        grid.resetData(ajaxData.data.contents);
-	        grid.getData().forEach((row, index) => {
-	        	if(['MATERIALS', 'SUBMAT'].includes(row['ITEM_GC'])) {
-					grid.addCellClassName(index, 'STOCK_AQ', 'bg-opacity-50');
-					grid.addCellClassName(index, 'STOCK_AQ', 'text-black');
-					grid.addCellClassName(index, 'STOCK_AQ', 'bg-warning');
-	        	} else {
-		        	sizeList.forEach(item => {
-		        		let colName = `SIZE_${item.common_cc}`;
-		        		if(row[colName] > 0) {
-							grid.addCellClassName(index, colName, 'bg-opacity-50');
-							grid.addCellClassName(index, colName, 'text-black');
-							grid.addCellClassName(index, colName, 'bg-warning');
-		        		}
-		        	});
-	        	}
-	        });
+	        setGridClass();
 	    } catch (error) {
 	        console.log(error);
 	        showAlert('', 'error', '조회 실패', error.msg);
@@ -665,20 +663,19 @@
 		}
 	}
 	
+	
+*/
+
 	// 품목 삭제
-	async function delete_PRODUCT(checkedRows, flag) {
-		let prefix = getPrefix(flag);
-		if (!await showConfirm(`품목 삭제`, '선택한 품목을 삭제하시겠습니까?')) { 
+	async function delete_STOCK(checkedRows) {
+		if (!await showConfirm(`재고 삭제`, '선택한 재고를 삭제하시겠습니까?')) { 
 			return;
 		}
-		let data = {
-			[`${prefix}List`]: checkedRows,
-			[`${prefix}_gc`]: groupValue
-		}
-		
-		let ajaxData = await callAjaxPost(`/delete_${prefix.toUpperCase()}`, JSON.stringify(data));
 		try {
+			let ajaxData = await callAjaxPost('/delete_STOCK', JSON.stringify({stockList: checkedRows}));
+			
 			grid.resetData(ajaxData['list']);
+			setGridClass();
 			resetSearchInput();
 			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
 		} catch (error) {
@@ -687,7 +684,6 @@
 		}
 	}
 	
-*/
 
 
 </script>

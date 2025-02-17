@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
@@ -18,15 +20,18 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.MaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.StockDTO;
 import com.itwillbs.c4d2412t3p1.domain.StockRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.entity.Stock;
 import com.itwillbs.c4d2412t3p1.entity.Warearea;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.PrimaryService;
 import com.itwillbs.c4d2412t3p1.service.StockService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.ProductFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.StockFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
 
@@ -65,8 +70,6 @@ public class StockController {
 		Map<String, List<Common_codeDTO>> sizeList =  commonService.select_COMMON_list("SIZE");
 		List<Map<String, Object>> list = stockService.select_STOCK_list(filter, sizeList);
 
-		System.out.println(list.toString());
-		
 		response.put("result", true);
 		Map<String, Object> data = new HashMap<>();
 		data.put("contents", list);
@@ -113,6 +116,28 @@ public class StockController {
 		return response;
 	}
 	
-	
+	// 재고 삭제
+	// @LogActivity(value = "삭제", action = "재고삭제")
+	@ResponseBody
+	@PostMapping("/delete_STOCK")
+	public ResponseEntity<Map<String, Object>> delete_STOCK(@RequestBody StockRequestDTO stockRequest) {
+		List<Map<String, Object>> stockList = stockRequest.getStockList();
+		Map<String, Object> response = new HashMap<>();
+		
+		try {
+			stockService.delete_STOCK(stockList);
+			
+			Map<String, List<Common_codeDTO>> sizeList =  commonService.select_COMMON_list("SIZE");
+			List<Map<String, Object>> list = stockService.select_STOCK_list(new StockFilterRequest(), sizeList);
+			response.put("list", list);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", "창고 삭제 중 오류가 발생했습니다.");
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
 
 }

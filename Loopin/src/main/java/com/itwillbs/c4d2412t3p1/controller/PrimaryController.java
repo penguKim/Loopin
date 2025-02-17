@@ -429,8 +429,8 @@ public class PrimaryController {
 	// 자재 삭제
 	@LogActivity(value = "삭제", action = "자재삭제")
 	@ResponseBody
-	@PostMapping("/delete_MATERIAL")
-	public ResponseEntity<Map<String, Object>> delete_MATERIAL(@RequestBody PrimaryRequestDTO primaryDTO) {
+	@PostMapping("/delete_STOCK_list")
+	public ResponseEntity<Map<String, Object>> delete_STOCK_list(@RequestBody PrimaryRequestDTO primaryDTO) {
 		List<MaterialDTO> materialList = primaryDTO.getMaterialList();
 		ProductFilterRequest filter = new ProductFilterRequest();
 		filter.setProduct_gc(primaryDTO.getMaterial_gc());

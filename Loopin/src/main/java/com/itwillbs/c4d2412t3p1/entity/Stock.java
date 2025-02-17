@@ -44,9 +44,9 @@ public class Stock {
 	@Column(name="warearea_cd", length = 30)
 	private String warearea_cd;
 	@Column(name="stock_aq", precision = 19, scale = 0)
-	private BigDecimal stock_aq;
+	private int stock_aq;
 	@Column(name="stock_mq", precision = 19, scale = 0)
-	private BigDecimal stock_mq;
+	private int stock_mq;
 	@Column(name="stock_ru", length = 50)
 	private String stock_ru;
 	@Column(name="stock_rd")
