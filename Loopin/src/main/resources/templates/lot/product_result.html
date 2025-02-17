@@ -12,7 +12,7 @@
 			<div class="row">
 				<div class="card">
 					<div class="card-body">
-						<h1 class="card-title">로트 추적</h1>
+						<h1 class="card-title">생산 실적</h1>
 						<ul class="nav nav-pills mb-3" id="lot-tab" role="tablist">
 							<li class="nav-item" role="presentation">
 								<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
@@ -23,14 +23,31 @@
 								type="button" role="tab" aria-controls="tab_chart" aria-selected="false">차트</button>
 							</li>
 						</ul>
+						<div class="row align-items-center g-0">
+<!-- 						    <div class="col-auto me-5"> -->
+<!-- 						        <label for="rangeStart" class="form-label">조회기간 시작일</label> -->
+<!-- 						        <input type="text" id="rangeStart" class="form-control" style="width: 153.5px;"> -->
+<!-- 						        <div id="rangeStartContainer"></div> -->
+<!-- 						    </div> -->
+<!-- 						    <div class="col-auto me-5"> -->
+<!-- 						        <label for="rangeEnd" class="form-label">조회기간 종료일</label> -->
+<!-- 						        <input type="text" id="rangeEnd" class="form-control" style="width: 153.5px;"> -->
+<!-- 						        <div id="rangeEndContainer"></div> -->
+<!-- 						    </div> -->
+<!-- 						    <div class="col d-flex justify-content-end align-items-center mt-3"> -->
+<!-- 								<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀"> -->
+<!-- 						        <button id="resetFilter" class="btn btn-secondary me-2">초기화</button> -->
+<!-- 						        <button id="applyFilter" class="btn btn-primary me-2">검색</button> -->
+<!-- 						    </div> -->
+						</div>
 						<div class="tab-content pt-2" id="myTabContent">
+							<div id="filterModule" class="mb-3"></div>
 							<!-- 달력 탭 -->
-							<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="chart-tab">
-								<div id="filterModule" class="mb-3"></div>
+							<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
 								<div id="grid"></div>
 							</div>
 							<!-- 그리드 탭 -->
-							<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="grid-tab">
+							<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
 								<div class="row mb-3">
 									<div class="col-sm-6">
 										<div id="dayCommute_line"></div>
@@ -43,6 +60,9 @@
 									<div class="col-sm-6">
 										<div id="grade_bar"></div>
 									</div>
+									<div class="col-sm-6">
+										<div id="dept_bar"></div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -53,15 +73,29 @@
 	</main>
 </body>																																																																																																																																																																																																																											
 <script th:inline="javascript">
-	let grid, modal_grid;
+	let grid, modal_grid, rangePicker;
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
+	let date = new Date();
+	let useList = /*[[${commonList['USE']}]]*/[];
+	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
+	const today = new Date();
+	const oneMonthAgo = new Date();
+	oneMonthAgo.setMonth(date.getMonth() - 1);
 	const filterConfig = [
-	    { key: 'product_cd', label: '품목코드', type: 'text', placeholder: '품목코드 입력', col: 'col' },
-	    { key: 'product_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col' },
-	    { key: 'product_cc', label: '품목분류', type: 'select', list: [], col: 'col' },
-	    { key: 'product_wh', label: '보관창고', type: 'select', list: [], col: 'col' },
-	    { key: 'product_us', label: '사용여부', type: 'radio', list: ['계획중', '진행중', '최종완료'], col: 'col' },
+		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:oneMonthAgo },
+		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
+	    { key: 'product_nm', label: '수주번호', type: 'text', placeholder: '품목명 입력', col: 'col-4' },
+	    { key: 'product_cd', label: '제품명', type: 'select', list: [], col: 'col-4' },
+	    { key: 'product_cd', label: '품목명', type: 'text', placeholder: '품목코드 입력', col: 'col-4' },
+	    { key: 'product_wh', label: '품목명', type: 'select', list: setFilterList(productList), col: 'col-4' },
+	    { key: 'product_wh', label: '보관창고', type: 'select', list: setFilterList(productList), col: 'col-4' },
+	    { key: 'product_us', label: '사용여부', type: 'radio', list: [ 
+			{ value: 'ALL', text: '전체' },
+			{ value: 'PENDING', text: '대기' },
+			{ value: 'IN_PROGRESS', text: '진행중' },
+			{ value: 'COMPLETED', text: '완료' }
+		], col: 'col' },
 	];
 	
 	// 로딩
@@ -106,6 +140,29 @@
 		    }
 		});
 		
+		rangePicker = tui.DatePicker.createRangePicker({
+		    startpicker: {
+		        date: oneMonthAgo,
+		        input: '#rangeStart',
+		        container: '#rangeStartContainer'
+		    },
+		    endpicker: {
+		        date: date,
+		        input: '#rangeEnd',
+		        container: '#rangeEndContainer',
+		        disabled: false
+		    },
+		    format: 'yyyy-MM-dd',
+		    language: 'ko',
+		});
+		
+		rangePicker.on('change:start', function(event) {
+		    if (event && event.date) {
+		        rangePicker.setEndDate(event.date);
+		        rangePicker.enableEndPicker();
+		    }
+		});
+		
 	});
 	
 	// ------------함수------------
@@ -120,7 +177,7 @@
 					product_cd: 'South Korea',
 					product_cr: 'South Korea',
 					product_sz: 'South Korea',
-					lot_st: 'South Korea',
+					lot_st: '400000',
 					workorder_st: false,
 				},
 				{
@@ -129,7 +186,7 @@
 					product_cd: 'South Korea',
 					product_cr: 'South Korea',
 					product_sz: 'South Korea',
-					lot_st: 'South Korea',
+					lot_st: '50000',
 					workorder_st: true,
 				},
 				{
@@ -138,29 +195,33 @@
 					product_cd: 'South Korea',
 					product_cr: 'South Korea',
 					product_sz: 'South Korea',
-					lot_st: 'South Korea',
+					lot_st: '30000',
 					workorder_st: true,
 				},
-			  ],
+			],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
 				{type : 'checkbox',}, 
 			],
-			bodyHeight : 400,
+			bodyHeight : 600,
 			columns : [
-				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
 				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
-				{header : '생성일자', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
+				{header : '소요시간', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '소요량', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '지시수량', name : 'productplan_js', sortable : true, filter: 'text'}, 
+				{header : '양품수량', name : 'inout_nn', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'inout_fn', sortable : true, filter: 'text'}, 
+				{header : '판매단가', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '실적금액', name : 'lot_st', sortable : true, filter: 'text'}, 
+				{header : '출하일', name : 'lot_st', sortable : true, filter: 'text'}, 
 				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
 					formatter: function({value}) {
 						return value == true ? '최종완료' : value == false ? '진행중' : '';
 					}
-				}, 
+				},
 			],
 			summary: {
 				height: 40,
@@ -227,9 +288,6 @@
         });
 		
 		modalElement.addEventListener('hidden.bs.modal', function () {
-/* 			$('button, input, select, textarea').each(function () {
-                $(this).blur();
-            }); */
 			modalElement.remove();
 		});
 		
@@ -283,6 +341,37 @@
 
 		});
 		
+	}
+	
+	// 차트 데이터 조회
+	function getChartList(filter) {
+		const data = {
+					filter: filter || 
+		        {
+		        	startDate: rangeStart.val(),
+		    	 	endDate: rangeEnd.val() 
+		    	 }
+		    };
+
+		$.ajax({
+			type: 'post',
+			url: '/select_RESULT_list',
+			contentType: 'application/json',
+			data: JSON.stringify(data),
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(response) {
+				commuteLineChart(response['dayCommuteChart']);
+				commuteColumnChart(response['commuteChart']);
+				gradeBarChart(response['gradeChart']);
+				deptBarChart(response['deptChart']);
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log(xhr);
+				showAlert('', 'error', '차트 조회 실패' , '차트 조회에 실패하였습니다.<br>다시 접속해주세요.');
+			}
+		});
 	}
 	
 </script>

@@ -13,20 +13,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
-import com.itwillbs.c4d2412t3p1.domain.EquipmentDTO;
-import com.itwillbs.c4d2412t3p1.domain.EquipmentRequestDTO;
-import com.itwillbs.c4d2412t3p1.domain.PrimaryRequestDTO;
-import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
-import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
-import com.itwillbs.c4d2412t3p1.service.EquipmentService;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.EquipmentFilterRequest;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.WarehouseFilterRequest;
+import com.itwillbs.c4d2412t3p1.service.LotService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -37,18 +28,50 @@ import lombok.extern.java.Log;
 public class LotController {
 
 	private final CommonService commonService;
+	private final LotService lotService;
 	
+	// 로트추적 페이지
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
 	@GetMapping("/lot_list")
 	public String lot_list(Model model) {
 	    
-		Map<String, List<Common_codeDTO>> commonList = commonService.select_COMMON_list("USE", "USEYN", "WHTYPE");
+		Map<String, List<Common_codeDTO>> commonList = commonService.select_COMMON_list("USE", "USEYN", "PRDTYPE");
+		List<Map<String, Object>> processList = lotService.select_PROCESS_list();
+		model.addAttribute("processList", processList);
 		model.addAttribute("commonList", commonList);
 		
 		return "/lot/lot_list";
 	}
+	
+	// 생산실적 페이지
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
 	@GetMapping("/product_result")
-	public String product_result() {
+	public String product_result(Model model) {
+		
+		Map<String, List<Common_codeDTO>> commonList = commonService.select_COMMON_list("USE", "USEYN", "PRDTYPE");
+		model.addAttribute("commonList", commonList);
 		return "/lot/product_result";
 	}
+	
+	// 로트추적 조회
+	@ResponseBody
+	@PostMapping("/select_LOT_list")
+	public ResponseEntity<Map<String, Object>> select_LOT_list(@RequestBody Map<String, Object> params) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			
+			List<Map<String, Object>> lots = lotService.select_LOT_list(params);
+			response.put("data", lots);
+			
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	
+	
+	
 }
