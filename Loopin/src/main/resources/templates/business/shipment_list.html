@@ -46,10 +46,6 @@
 			                <div id="filterModule"></div>
 	                        <div class="d-flex align-items-center justify-content-between">
 	                            <h5 class="card-title">출하 관리</h5>
-<!--	                            <div>-->
-<!--									<button type="button" class="btn btn-primary" id="btn_contract_create" onclick="openModal('add')">등록</button>-->
-<!--									<button type="button" class="btn btn-primary" id="btn_contract_delete">삭제</button>-->
-<!--	                            </div>-->
 	                        </div>
 							<div class="col-sm-12">
 		                        <!-- 출하 관리 그리드 -->
@@ -150,7 +146,7 @@
 	    $('#contractInsertModal').remove();
 
 		// 모달 제목 및 버튼 텍스트 설정
-		const modalTitle = '출하 등록';
+		let modalTitle = '출하 등록';
 		const submitButtonText = '등록';
 			
 	    let contractStatus = rowData.contract.contract_st ? rowData.contract.contract_st.trim() : "진행중";
@@ -249,11 +245,15 @@
 	    if (contractStatus === "완료") {
 	        $('#contract_ed').prop('disabled', true); // 출하일 비활성화
 	        $('#modal_submit_button').hide(); // 등록 버튼 숨김
+	        modalTitle = '출하 완료';
 	    } else {
 	        $('#contract_ed').prop('readonly', false); // 출하일 활성화
 	        $('#modal_submit_button').show(); // 등록 버튼 표시
 	    }
 	
+		// 변경된 modalTitle을 모달에 적용
+		$('#dynamicModalLabel').text(modalTitle);
+	    
 	    // 출하 상태에 따라 `productGrid` 컬럼 변경
 	    make_product_grid(isCompleted);
 	    

@@ -428,7 +428,7 @@ public class BusinessController {
 
 	    } catch (Exception e) {
 	        response.put("success", false);
-	        response.put("message", "출하 처리 중 오류 발생: " + e.getMessage());
+	        response.put("message", e.getMessage());
 	    }
 
 	    return response;

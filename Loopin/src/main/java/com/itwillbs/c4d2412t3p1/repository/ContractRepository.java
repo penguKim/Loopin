@@ -81,7 +81,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		        a.account_nm AS account_nm
 		    FROM ACCOUNT a
     		WHERE a.account_dv IN ('BOTH', 'CONTRACT')
-	     ORDER BY account_cd ASC
+	     ORDER BY account_cd
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
 
@@ -93,7 +93,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		   WHERE a.account_dv IN ('BOTH', 'CONTRACT')
     		 AND (a.account_cd LIKE %:keyword%
 	          OR a.account_nm LIKE %:keyword%)
-	    ORDER BY account_cd ASC		        
+	    ORDER BY account_cd		        
 		""", nativeQuery = true)
 	List<Object[]> search_ACCOUNT_CONTRACT(@Param("keyword") String keyword);
 
@@ -112,7 +112,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		           ON e.employee_gd = s.common_cc 
 		          AND s.common_gc = 'POSITION'
 				WHERE c.common_nm = '영업'
-		ORDER BY employee_cd ASC		
+		ORDER BY employee_cd		
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_PS();
 
@@ -135,7 +135,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		        OR c.common_nm LIKE %:keyword%
 		        OR s.common_nm LIKE %:keyword%)
 			   AND c.common_nm = '영업'
-		   ORDER BY employee_cd ASC	
+		   ORDER BY employee_cd	
 		""", nativeQuery = true)
 	List<Object[]> search_CONTRACT_PS(@Param("keyword") String keyword);
 
@@ -157,7 +157,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		        c.contract_mf,
 		        c.contract_md
 		    FROM CONTRACT c
-		    ORDER BY contract_cd ASC	
+		    ORDER BY contract_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT();
 	
@@ -182,7 +182,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		    FROM CONTRACT c
 		) sub
 		WHERE contract_st NOT IN ('대기중')
-		ORDER BY contract_cd ASC
+		ORDER BY contract_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_SHIPMENT();
 
@@ -198,7 +198,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 			       d.contract_ed AS detail_contract_ed
 			FROM CONTRACTDETAIL d
 			WHERE d.contract_cd = :contractCd
-			ORDER BY contract_cd ASC
+			ORDER BY contract_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACTDETAIL(@Param("contractCd") String contractCd);
 
@@ -226,7 +226,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		) s 
 		ON (d.product_cd || '-' || d.product_sz || '-' || d.product_cr) = s.item_cd
 		WHERE d.contract_cd = :contractCd
-		ORDER BY d.contract_cd ASC
+		ORDER BY d.contract_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACTDETAIL_SHIPMENT(@Param("contractCd") String contractCd);
 	
@@ -249,7 +249,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
                 c.contract_md
             FROM CONTRACT c
             WHERE c.contract_cd = :contractCd
-            ORDER BY contract_cd ASC
+            ORDER BY contract_cd DESC
         """, nativeQuery = true)
     List<Object[]> findContractByCd(@Param("contractCd") String contractCd);
 
@@ -264,7 +264,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
                 c.contract_st
             FROM CONTRACT c
             WHERE c.contract_cd = :contractCd
-            ORDER BY contract_cd ASC
+            ORDER BY contract_cd DESC
         """, nativeQuery = true)
     List<Object[]> findContractShipmentByCd(@Param("contractCd") String contractCd);
 	
@@ -318,7 +318,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 			  AND (:#{#filterRequest.contractPs} IS NULL OR c.contract_ps LIKE %:#{#filterRequest.contractPs}%)
 			  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL
 			   OR c.contract_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate})
-		   ORDER BY contract_cd ASC
+		   ORDER BY contract_cd DESC
         """, nativeQuery = true)
     List<Object[]> select_FILTERED_CONTRACT(@Param("filterRequest") ContractFilterRequest filterRequest);
 
@@ -345,7 +345,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 			  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL
 			   OR c.contract_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate})
 		      AND c.contract_st NOT IN ('대기중')
-		   ORDER BY contract_cd ASC
+		   ORDER BY contract_cd DESC
         """, nativeQuery = true)
     List<Object[]> select_FILTERED_CONTRACT_SHIPMENT(@Param("filterRequest") ContractFilterRequest filterRequest);
     
