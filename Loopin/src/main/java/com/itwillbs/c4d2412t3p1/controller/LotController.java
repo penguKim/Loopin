@@ -52,6 +52,8 @@ public class LotController {
 	public String product_result(Model model) {
 		
 		Map<String, List<Common_codeDTO>> commonList = commonService.select_COMMON_list("USE", "USEYN", "PRDTYPE");
+		List<Map<String, Object>> accountList = lotService.select_ACCOUNT_list();
+		model.addAttribute("accountList", accountList);
 		model.addAttribute("commonList", commonList);
 		return "/lot/product_result";
 	}
@@ -97,12 +99,13 @@ public class LotController {
 	@PostMapping("/select_RESULT_list")
 	public ResponseEntity<Map<String, Object>> select_RESULT_list(@RequestBody(required = false) Map<String, Object> params) {
 		
+		log.info("params" + params);
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			
 			List<Map<String, Object>> results = lotService.select_RESULT_list(params);
 			response.put("data", results);
-			
+			log.info("results" + response);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("msg", e.getMessage());

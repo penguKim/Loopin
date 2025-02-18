@@ -10,6 +10,14 @@
     	 WHERE PROCESS_US = '1'
 	</select>
 	
+    <select id="select_ACCOUNT_list" resultType="map">
+    	SELECT ACCOUNT_NM AS common_nm, ACCOUNT_CD AS common_cc
+    	  FROM ACCOUNT 
+		 WHERE 1=1
+ 			   AND ACCOUNT_US = 1 
+		 	   AND ACCOUNT_DV != 'ORDER'
+	</select>
+	
 	<select id="select_LOT_list" resultType="map">
 	    SELECT * FROM BOMPROCESS WHERE 1=1
 	        <if test="process_cd != null and process_cd != ''">
@@ -70,13 +78,13 @@
 		            JSON_OBJECT(
 		                'name' VALUE A.CURRENT_PROCESS,
 		                'title' VALUE '반제품',
-		                'lot_st' VALUE A.BOMPROCESS_CD,
+		                'lot_st' VALUE A.CURRENT_PROCESS,
 		                'process' VALUE (
 		                    SELECT CASE WHEN W.workorder_st = '진행중' THEN '진행중'
 	                        	   ELSE '완료'
 		                    		END
 		                      FROM WORKORDER W
-		                    WHERE W.lot_cd = A.BOMPROCESS_CD
+		                    WHERE W.LOT_CD = A.CURRENT_PROCESS
 		                    FETCH FIRST 1 ROWS ONLY
 		                ),
 		                'children' VALUE (
@@ -84,14 +92,14 @@
 		                        JSON_OBJECT(
 		                            'name' VALUE B.CURRENT_PROCESS,
 		                            'title' VALUE '반제품',
-		                            'lot_st' VALUE B.BOMPROCESS_CD,
+		                            'lot_st' VALUE B.CURRENT_PROCESS,
 		                            'process' VALUE (
 		                                SELECT CASE 
 		                                    WHEN W.workorder_st = '진행중' THEN '진행중'
 		                                    ELSE '완료'
 		                                END
 		                                FROM WORKORDER W
-		                                WHERE W.lot_cd = B.BOMPROCESS_CD
+		                                WHERE W.LOT_CD = B.CURRENT_PROCESS
 		                                FETCH FIRST 1 ROWS ONLY
 		                            )
 		                        )
@@ -109,10 +117,64 @@
 	</select>
 	
 	<select id="select_RESULT_list" resultType="map">
-	    SELECT * FROM BOMPROCESS WHERE 1=1
-	        <if test="process_cd != null and process_cd != ''">
-	            AND PROCESS_CD = #{process_cd}
-	        </if>
+	    SELECT 
+		    CD.CONTRACT_CD,
+		    P.PRODUCT_NM PRODUCT_CD,
+		    TO_CHAR(P.PRODUCT_PR, 'FM999,999,999,999') || '원' AS PRODUCT_PR,
+		    TO_CHAR(SUM(C.CONTRACT_AM), 'FM999,999,999,999') || '개' AS CONTRACT_AM, 
+		    TO_CHAR(SUM(C.CONTRACT_MN), 'FM999,999,999,999') || '원' AS CONTRACT_MN, -- 실적 비교한 다음 다시 넣어야함
+		    C.CONTRACT_ED,
+		    C.CONTRACT_SD,
+		    A.ACCOUNT_NM ACCOUNT_CD
+		FROM CONTRACTDETAIL CD
+	LEFT JOIN PRODUCT P ON CD.PRODUCT_CD = P.PRODUCT_CD
+		 JOIN CONTRACT c ON CD.CONTRACT_CD = C.CONTRACT_CD AND C.CONTRACT_ST = '완료'
+	LEFT JOIN ACCOUNT A ON A.ACCOUNT_CD = C.ACCOUNT_CD
+	<where> 1=1
+	    <if test="contract_cd != null and contract_cd != ''">
+	        AND CD.CONTRACT_CD = #{contract_cd}
+	    </if>
+	    <if test="account_cd != null and account_cd != ''">
+	        AND A.ACCOUNT_CD = #{account_cd}
+	    </if>
+	    <if test="product_cd != null and product_cd != ''">
+	        AND P.PRODUCT_NM LIKE '%' || #{product_cd} || '%'
+	    </if>
+	    <if test="startDate != null and startDate != ''">
+		    AND TO_TIMESTAMP(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') &lt;= C.CONTRACT_SD
+		</if>
+		<if test="endDate != null and endDate != ''">
+		    AND TO_TIMESTAMP(#{endDate}, 'YYYY-MM-DD HH24:MI:SS') &gt;= C.CONTRACT_ED
+		</if>
+
+<!--	    <if test="annual_ra != null and annual_ra != ''">-->
+<!--	        AND a.ANNUAL_RA = #{annual_ra}-->
+<!--	    </if>-->
+	</where>
+	GROUP BY CD.CONTRACT_CD, P.PRODUCT_NM, P.PRODUCT_PR, C.CONTRACT_ED, A.ACCOUNT_NM, C.CONTRACT_SD
+	<if test="contract_am != null and contract_am != '' or product_pr != null and product_pr != ''">
+		HAVING 
+		<trim prefixOverrides="AND">
+            <if test="contract_am != null and contract_am != ''">
+                AND SUM(C.CONTRACT_AM) &gt;= TO_NUMBER(#{contract_am})
+            </if>
+            <if test="product_pr != null and product_pr != ''">
+                AND P.PRODUCT_PR &gt;= TO_NUMBER(#{product_pr})
+            </if>
+        </trim>
+    </if>
+	<choose>
+	    <when test="contract_mn == 'HIGH'">
+	        ORDER BY SUM(C.CONTRACT_MN) DESC
+	    </when>
+	    <when test="contract_mn == 'LOW'">
+	        ORDER BY SUM(C.CONTRACT_MN) ASC
+	    </when>
+	    <otherwise>
+	        ORDER BY CD.CONTRACT_CD DESC  <!-- 기본 정렬 조건 -->
+	    </otherwise>
+	</choose>
+
     </select>
 		
 </mapper>

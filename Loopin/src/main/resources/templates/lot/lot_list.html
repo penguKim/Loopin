@@ -78,7 +78,7 @@
 		{ key: 'product_cc', label: '품목분류', type: 'select', list: setFilterList(productList), col: 'col-4' },
 		{ key: 'process_cd', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
 		{ key: 'workorder_st', label: '사용여부', type: 'radio', list: [ 
-				{ value: 'ALL', text: '전체' },
+				{ value: 'ALL', text: '전체', checked: true },
 				{ value: 'PENDING', text: '대기' },
 				{ value: 'IN_PROGRESS', text: '진행중' },
 				{ value: 'COMPLETED', text: '완료' }

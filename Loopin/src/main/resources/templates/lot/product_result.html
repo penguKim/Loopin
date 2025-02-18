@@ -24,29 +24,36 @@
 							</li>
 						</ul>
 						<div class="tab-content pt-2" id="myTabContent">
-							<div id="filterModule" class="mb-3"></div>
 							<!-- 달력 탭 -->
 							<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
-								<div id="grid"></div>
+								<div id="filterModule" class="mb-3"></div>
+								<div>
+									<div id="grid"></div>
+								</div>
 							</div>
 							<!-- 그리드 탭 -->
 							<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
-								<div class="row mb-3">
-									<div class="col-sm-6">
-										<div id="dayCommute_line"></div>
+								<div class="col d-flex justify-content-end align-items-center mt-3">
+									<div id="btn_chart">
+								        <button id="resetFilter" class="btn btn-primary me-2">월별 생산량</button>
+								        <button id="resetFilter" class="btn btn-primary me-2">공정별 불량률</button>
+								        <button id="applyFilter" class="btn btn-primary me-2">제품별 불량률</button>
 									</div>
-									<div class="col-sm-6">
-										<div id="commute_column"></div>
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-sm-6">
-										<div id="grade_bar"></div>
-									</div>
-									<div class="col-sm-6">
-										<div id="dept_bar"></div>
-									</div>
-								</div>
+							    </div>
+								<div id="chart"></div>
+<!--								<div class="row mb-3">-->
+<!--									<div class="col-sm-6">-->
+<!--										<div id="monthProductChart"></div>-->
+<!--									</div>-->
+<!--									<div class="col-sm-6">-->
+<!--										<div id="productErrorChart"></div>-->
+<!--									</div>-->
+<!--								</div>-->
+<!--								<div class="row">-->
+<!--									<div class="col-sm-6">-->
+<!--										<div id="grade_bar"></div>-->
+<!--									</div>-->
+<!--								</div>-->
 							</div>
 						</div>
 					</div>
@@ -59,25 +66,33 @@
 	let grid, modal_grid, rangePicker;
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
+	let btn_chart = $("#btn_chart");
+	let chart = $("#chart");
 	let date = new Date();
 	let useList = /*[[${commonList['USE']}]]*/[];
 	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
+	let accountList = /*[[${accountList}]]*/ [];
+
+		let transformedAccountList = accountList.map(item => {
+		    return {
+		        common_cc: item.COMMON_CC,
+		        common_nm: item.COMMON_NM
+		    };
+		});
 	const today = new Date();
 	const oneMonthAgo = new Date();
 	oneMonthAgo.setMonth(date.getMonth() - 1);
 	const filterConfig = [
-		{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value:oneMonthAgo },
-		{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
-	    { key: 'product_nm', label: '수주번호', type: 'text', placeholder: '품목명 입력', col: 'col-4' },
-	    { key: 'product_cd', label: '제품명', type: 'select', list: [], col: 'col-4' },
-	    { key: 'product_cd', label: '품목명', type: 'text', placeholder: '품목코드 입력', col: 'col-4' },
-	    { key: 'product_wh', label: '품목명', type: 'select', list: setFilterList(productList), col: 'col-4' },
-	    { key: 'product_wh', label: '보관창고', type: 'select', list: setFilterList(productList), col: 'col-4' },
-	    { key: 'product_us', label: '사용여부', type: 'radio', list: [ 
-			{ value: 'ALL', text: '전체' },
-			{ value: 'PENDING', text: '대기' },
-			{ value: 'IN_PROGRESS', text: '진행중' },
-			{ value: 'COMPLETED', text: '완료' }
+		{ key: 'startDate', label: '수주일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
+		{ key: 'endDate', label: '출하일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
+	    { key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
+	    { key: 'account_cd', label: '거래처명', type: 'select', list: setFilterList(transformedAccountList), col: 'col-2' },
+	    { key: 'product_cd', label: '제품명', type: 'text', placeholder: '제품명 입력', col: 'col-2' },
+	    { key: 'contract_am', label: '지시수량', type: 'text', placeholder: '수량 입력', col: 'col-2' },
+	    { key: 'product_pr', label: '판매단가', type: 'text', placeholder: '단가 입력', col: 'col-2' },
+		{ key: 'contract_mn', label: '실적금액', type: 'radio', list: [ 
+			{ value: 'HIGH', text: '높은순', checked: true },
+			{ value: 'LOW', text: '낮은순' },
 		], col: 'col' },
 	];
 	
@@ -98,10 +113,11 @@
 			}, 300);
 		});
 		
-		// 검색필터
-        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-            getGridList(filterValues);
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+			getGridList(filterValues);
         });
+		
+		addExcelButton(grid, '생산실적');
 		
         $(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
@@ -110,7 +126,6 @@
 		        setGridHeight(grid, -380);
 		    }
 		});
-		
 		// 필터 엔터키 검색 이벤트
 		$('#filterModule').on('keypress', function(e) {
 		    if (e.keyCode !== 13) return;
@@ -122,31 +137,8 @@
 		        const value = input.val();
 		        filterValues[config.key] = value;
 		    }
+		    getGridList(filterValues);
 		});
-		
-		rangePicker = tui.DatePicker.createRangePicker({
-		    startpicker: {
-		        date: oneMonthAgo,
-		        input: '#rangeStart',
-		        container: '#rangeStartContainer'
-		    },
-		    endpicker: {
-		        date: date,
-		        input: '#rangeEnd',
-		        container: '#rangeEndContainer',
-		        disabled: false
-		    },
-		    format: 'yyyy-MM-dd',
-		    language: 'ko',
-		});
-		
-		rangePicker.on('change:start', function(event) {
-		    if (event && event.date) {
-		        rangePicker.setEndDate(event.date);
-		        rangePicker.enableEndPicker();
-		    }
-		});
-		
 	});
 	
 	// ------------함수------------
@@ -170,27 +162,20 @@
 			],
 			bodyHeight : 600,
 			columns : [
-				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '소요시간', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '소요량', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '지시수량', name : 'productplan_js', sortable : true, filter: 'text'}, 
-				{header : '양품수량', name : 'inout_nn', sortable : true, filter: 'text'}, 
-				{header : '불량수량', name : 'inout_fn', sortable : true, filter: 'text'}, 
-				{header : '판매단가', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '실적금액', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '출하일', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
-					formatter: function({value}) {
-						return value == true ? '최종완료' : value == false ? '진행중' : '';
-					}
-				},
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '거래처', name : 'ACCOUNT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '수주일', name : 'CONTRACT_SD', sortable : true, filter: 'text', align: 'center'}, 
+				{header : '출하일', name : 'CONTRACT_ED', sortable : true, filter: 'text', align: 'center'}, 
+				{header : '지시수량', name : 'CONTRACT_AM', sortable : true, filter: 'text', align: 'right'}, 
+				{header : '판매단가', name : 'PRODUCT_PR', sortable : true, filter: 'text', align: 'right'}, 
+				{header : '실적금액', name : 'CONTRACT_MN', sortable : true, filter: 'text', align: 'right'}, 
 			],
 			summary: {
 				height: 40,
 				position: 'bottom', // or 'top'
 				columnContent: {
-					workorder_st: {
+					CONTRACT_MN: {
 						template: (valueMap) => {
 							return `총 ${valueMap.cnt} 건`
 						}
@@ -206,6 +191,7 @@
 			if(row == null) {
 				return;
 			}
+			console.log(row);
 			modal_detail(row);
 		});
 	}
@@ -271,30 +257,24 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 200,
 			columns : [
-				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
 				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
+				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
+				{header : '소요시간', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
 				{header : '작업시작일', name : 'lothistory_st', sortable : true, filter: 'text'}, 
 				{header : '작업종료일', name : 'lothistory_en', sortable : true, filter: 'text'}, 
 				{header : '작업수량', name : 'lothistory_wq', sortable : true, filter: 'text'}, 
+				{header : '양품수량', name : 'INOUT_NN', sortable : true, filter: 'text'}, 
 				{header : '불량수량', name : 'lothistory_bq', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
-					formatter: function({value}) {
-						return value == true ? '사용' : value == false ? '미사용' : '';
-					}
-				}, 
 			],
 			summary: {
 				height: 40,
 				position: 'bottom', // or 'top'
 				columnContent: {
-					workorder_st: {
+					lothistory_bq: {
 						template: (valueMap) => {
 							return `총 ${valueMap.cnt} 건`
 						}
@@ -325,10 +305,9 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function(response) {
-				commuteLineChart(response['dayCommuteChart']);
-				commuteColumnChart(response['commuteChart']);
-				gradeBarChart(response['gradeChart']);
-				deptBarChart(response['deptChart']);
+				monthProductChart(response['monthProductChart']);
+				productErrorChart(response['productErrorChart']);
+				processErrorChart(response['processErrorChart']);
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log(xhr);

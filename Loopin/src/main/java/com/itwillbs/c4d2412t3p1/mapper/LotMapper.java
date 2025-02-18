@@ -20,6 +20,8 @@ public interface LotMapper {
 	Map<String, Object> select_LOT_json(Map<String, Object> params);
 
 	List<Map<String, Object>> select_RESULT_list(Map<String, Object> params);
+
+	List<Map<String, Object>> select_ACCOUNT_list();
 	
 	
 }
