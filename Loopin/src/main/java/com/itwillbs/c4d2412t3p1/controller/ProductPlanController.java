@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.itwillbs.c4d2412t3p1.domain.BomMaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
@@ -54,31 +55,41 @@ public class ProductPlanController {
 		List<EmployeeListDTO> employeeList = productplanService.select_EMPLOYEE_BY_DP(employee_cd);
 		return ResponseEntity.ok(employeeList);
 	}
-	
+
 	@GetMapping("/select_WAREHOUSE_list")
 	public ResponseEntity<List<WarehouseListDTO>> select_WAREHOUSE_list(
 			@RequestParam(value = "warehouse_cd", required = false) String warehouse_cd) {
 		List<WarehouseListDTO> list = productplanService.select_WAREHOUSE_BY_TP(warehouse_cd);
 		return ResponseEntity.ok(list);
 	}
-	
-	@GetMapping("/select_BOMPROCESS_list")
-    public ResponseEntity<List<BomProcessDTO>> select_BOMPROCESS_list(
-            @RequestParam(value = "product_cd", required = false) String product_cd
-    ) {
-		 if (product_cd == null || product_cd.trim().isEmpty()) {
-	            return ResponseEntity.ok(Collections.emptyList());
-	        }
 
-	        // Service 호출 -> DTO 리스트 반환
-	        List<BomProcessDTO> dtoList = productplanService.select_BOMPROCESS_BY_CD(product_cd);
-	        return ResponseEntity.ok(dtoList);
-    }
-	
-	@PostMapping("/save_PRODUCTPLAN")
-	public ResponseEntity<?> saveProcessOrder(@RequestBody ProductPlanSaveRequest req) {
-	    productplanService.save_PRODUCTPLAN(req);
-	    return ResponseEntity.ok().body("SUCCESS");
+	@GetMapping("/select_BOMPROCESS_list")
+	public ResponseEntity<List<BomProcessDTO>> select_BOMPROCESS_list(
+			@RequestParam(value = "product_cd", required = false) String product_cd) {
+		if (product_cd == null || product_cd.trim().isEmpty()) {
+			return ResponseEntity.ok(Collections.emptyList());
+		}
+
+		// Service 호출 -> DTO 리스트 반환
+		List<BomProcessDTO> dtoList = productplanService.select_BOMPROCESS_BY_CD(product_cd);
+		return ResponseEntity.ok(dtoList);
 	}
-	
+
+	@GetMapping("/select_BOMMATERIALS")
+	public ResponseEntity<List<BomMaterialDTO>> selectBOMMaterials(
+			@RequestParam(value = "product_cd", required = false) String productCd) {
+
+		List<BomMaterialDTO> dtoList = productplanService.findAllMaterialsForProduct(productCd);
+		return ResponseEntity.ok(dtoList);
+	}
+
+	@PostMapping("/save_PRODUCTPLAN")
+	public ResponseEntity<Map<String, String>> saveProcessOrder(@RequestBody ProductPlanSaveRequest req) {
+		productplanService.save_PRODUCTPLAN(req);
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "SUCCESS");
+
+		return ResponseEntity.ok(response);
+	}
+
 }

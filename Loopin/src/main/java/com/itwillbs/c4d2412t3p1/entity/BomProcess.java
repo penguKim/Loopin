@@ -38,7 +38,7 @@ public class BomProcess {
 	private String bomprocess_rt;
 	
 	@Column(name = "bomprocess_ra")
-	private String bomprocess_ra;
+	private Long bomprocess_ra;
 	
 	@Column(name = "bomprocess_er")
 	private String bomprocess_er;

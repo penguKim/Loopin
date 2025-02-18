@@ -251,6 +251,7 @@
 				// BOMPROCESS 조회 -> subGrid1 표시
 				if (data.product_cd) {
 					fetchBOMProcessList(data.product_cd);
+					fetchAllMaterials(data.product_cd);
 				}
 			},
 			employee: (data) => {
@@ -349,9 +350,10 @@
 		// 생산계획 모달 등록처리
 		document.getElementById("btnSaveProcessOrder").addEventListener("click", () => {
 		  // 1) productplan (수주번호, 품목코드, 시작일, 종료일, 담당자, 창고, 지시수량, 비고 등)
+		  
 		  const productplan = {
-		    contract_cd: document.getElementById("contract_cd").value,
-		    product_cd: document.getElementById("product_cd").value,
+		    contract_cd: contractCdInput.value,
+		    product_cd: productCdInput.value,
 		    productplan_sd: document.getElementById("productplan_sd").value,
 		    productplan_ed: document.getElementById("productplan_ed").value,
 		    productplan_dd: document.getElementById("productplan_dd").value,
@@ -359,7 +361,7 @@
 		    productplan_js: document.getElementById("productplan_js").value,
 		    productplan_bg: document.getElementById("productplan_bg").value
 		  };
-
+			
 		  // 2) 공정순서 (subGrid1)
 		  const allRows = subGrid1.getData();
 		  const reorderRows = allRows.filter(r =>
@@ -375,22 +377,27 @@
 		    productplan: productplan,
 		    processList: processList
 		  };
-
 		  // 4) fetch POST -> "/save_PRODUCTPLAN"
 		  fetch("/save_PRODUCTPLAN", {
-		    method: "POST",
-		    headers: { "Content-Type": "application/json" },
-		    body: JSON.stringify(requestBody)
-		  })
-		  .then(res => {
-		    if(!res.ok) throw new Error("저장 실패");
-		    return res.text(); // 문자열로 파싱
-		  })
-		  .then(text => {
-		    console.log(text); // "SUCCESS" 출력
-		    alert("저장 완료");
-		  })
-
+		      method: "POST",
+		      headers: {
+		          "Content-Type": "application/json",
+		          [csrfHeader]: csrfToken  // ← CSRF 토큰 헤더 추가
+		        },
+		      body: JSON.stringify(requestBody)
+		    })
+		    .then(res => {
+		      if(!res.ok) throw new Error("저장 실패");
+		      return res.json(); // JSON으로 파싱
+		    })
+		    .then(data => {
+		      console.log(data); // { status: "SUCCESS" }
+		      alert("저장 완료");
+		      
+		      productPlanModal.hide();
+		      
+		      fetchProductPlanList();
+		    });
 		});
 
 
@@ -405,7 +412,7 @@
 				{header: '후공정코드', name: 'bomprocess_ap'},
 				{header: '공정순서', name: 'process_se', editor:
 					{
-						type: 'text'  // 또는 'number'
+						type: 'text'
 					}
 				}
 			],
@@ -418,8 +425,10 @@
 		subGrid2 = new tui.Grid({
 			el: document.getElementById("subGrid2"),
 			columns: [
-				{header: '항목A', name: 'colA'},
-				{header: '항목B', name: 'colB'}
+				{header: '자재 코드', name: 'material_cd'},
+				{header: '자재 이름', name: 'material_nm'},
+				{header: '자재 유형', name: 'material_gc'},
+				{header: '총 소요량', name: 'totalAmount'}
 			],
 			data: [],
 			scrollX: false,
@@ -458,6 +467,35 @@
 					alert("BOMPROCESS 데이터를 조회하는 중 문제가 발생했습니다.");
 				});
 		}
+		
+		function fetchAllMaterials(productCd) {
+		    if (!productCd) {
+		        alert("제품코드가 없습니다.");
+		        return;
+		    }
+
+		    fetch(`/select_BOMMATERIALS?product_cd=${encodeURIComponent(productCd)}`)
+		        .then(response => {
+		            if (!response.ok) {
+		                throw new Error("재료 조회 실패");
+		            }
+		            return response.json();
+		        })
+		        .then(data => {
+		            console.log("BOM 재료 리스트:", data);
+		            subGrid2.resetData(data); // subGrid2에 표시
+		        })
+		        .catch(err => {
+		            console.error("BOM 조회 오류:", err);
+		            alert("재료 조회 중 오류 발생: " + err.message);
+		        });
+		}
+
+
+
+
+		
+		
 
 		// 공통 검색 리스트 조회 함수 (모달 열릴 때 전체 리스트)
 		function fetchSearchList(apiUrl, grid) {
@@ -604,7 +642,7 @@
 		function openProductPlanModal(mode, data = null) {
 			const productplanSdInput = document.getElementById('productplan_sd');
 			const productplanEdInput = document.getElementById('productplan_ed');
-
+			console.log("mode : " + mode);
 			if (mode === "insert") {
 				const today = new Date();
 				const oneMonthLater = new Date();
