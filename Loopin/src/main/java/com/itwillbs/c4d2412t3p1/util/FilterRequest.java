@@ -191,6 +191,50 @@ public class FilterRequest {
 					&& (accountPs == null || accountPs.isEmpty()) && (accountDv == null || accountDv.isEmpty());
 		}
 	}
+	
+	
+	// 발주관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class OrderFilterRequest extends FilterRequest {
+		
+		private String orderCd;
+		private String accountCd;
+		private String orderPs;
+		
+		public OrderFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (orderCd == null || orderCd.isEmpty())
+					&& (accountCd == null || accountCd.isEmpty()) && (orderPs == null || orderPs.isEmpty());
+		}
+	}
 
+	
+	// 수주관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class ContractFilterRequest extends FilterRequest {
+		
+		private String contractCd;
+		private String accountCd;
+		private String contractPs;
+		
+		public ContractFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (contractCd == null || contractCd.isEmpty())
+					&& (accountCd == null || accountCd.isEmpty()) && (contractPs == null || contractPs.isEmpty());
+		}
+	}
+	
 }
 
