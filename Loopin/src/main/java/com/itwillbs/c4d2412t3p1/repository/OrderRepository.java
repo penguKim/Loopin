@@ -36,7 +36,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     """, nativeQuery = true)
     void saveOrderDetail(@Param("orderDetail") OrderDetail orderDetail);
 	
-	
+	// 원자재조회
 	@Query(value = """
 		    SELECT 
 		        m.material_cd AS material_cd,
@@ -50,6 +50,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_MATERIAL();
 
+	// 원자재 검색
 	@Query(value = """
 		    SELECT 
 		        m.material_cd AS material_cd,
@@ -66,9 +67,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> search_MATERIAL(@Param("keyword") String keyword);
 	
-	
-	
-	
+	// 수주 거래처 조회
 	@Query(value = """
 		SELECT 
 		    a.account_cd AS account_cd,
@@ -79,6 +78,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_ORDER();
 
+	// 수주 거래처 검색
 	@Query(value = """
 		    SELECT 
 		        a.account_cd AS account_cd,
@@ -91,7 +91,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> search_ACCOUNT_ORDER(@Param("keyword") String keyword);
 	
-	
+	// 수주 담당자 조회
 	@Query(value = """
 		    SELECT 
 		        e.employee_cd AS employee_cd,
@@ -133,6 +133,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 	List<Object[]> search_ORDER_PS(@Param("keyword") String keyword);
 	
 	
+	// 발주 조회
 	@Query(value = """
 		    SELECT
 				o.order_cd,
@@ -154,7 +155,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER();
 
-	
+	// 발주상세 조회
 	@Query(value = """
 			SELECT d.order_cd, 
 			       d.material_cd, 
@@ -168,7 +169,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_ORDERDETAIL(@Param("orderCd") String orderCd);
 	
-	
+	// 발주 정보 조회
     @Query(value = """
             SELECT
 				o.order_cd,
@@ -191,11 +192,13 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
         """, nativeQuery = true)
     List<Object[]> findOrderByCd(@Param("orderCd") String orderCd);
 	
+    // 발주 수정 시 기존 정보 삭제
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM ORDERDETAIL WHERE order_cd = :orderCd", nativeQuery = true)
     void deleteOrderDetailsByOrderCd(@Param("orderCd") String orderCd);
 
+    // 발주 헤드 삭제
     @Modifying
     @Query(value = """
     		DELETE
@@ -207,6 +210,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
     int delete_ORDER(@Param("orderCds") List<String> orderCds);
 
+    // 발주 바디 삭제
     @Modifying
     @Query(value = """
     		DELETE
@@ -217,6 +221,8 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		""", nativeQuery = true)
     int delete_ORDERDETAIL(@Param("orderCds") List<String> orderCds);
 	
+    
+    // 발주 필터 검색
     @Query(value = """
 			SELECT
 				o.order_cd,
@@ -244,7 +250,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     List<Object[]> select_FILTERED_ORDER(@Param("filterRequest") OrderFilterRequest filterRequest);
     
     
-    // 수주 상태 업데이트
+    // 발주 상태 업데이트
     @Modifying
     @Transactional
     @Query(value = """

@@ -50,7 +50,7 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
-
+	// 원자재 검색
 	public List<Map<String, Object>> search_MATERIAL(String keyword) {
 
 	    List<Object[]> result;
@@ -97,7 +97,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
-	// 거래처 조회
+	// 수주 거래처 조회
 	public List<Map<String, Object>> select_ACCOUNT_ORDER() {
 
 		List<Object[]> result;
@@ -114,6 +114,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 	
+	// 수주 거래처 검색
 	public List<Map<String, Object>> search_ACCOUNT_ORDER(String keyword) {
 		
 		List<Object[]> result;
@@ -131,7 +132,7 @@ public class BusinessService {
 	}
 	
 
-	// 담당자 조회
+	// 수주 담당자 조회
 	public List<Map<String, Object>> select_ORDER_PS() {
 
 		List<Object[]> result;
@@ -192,7 +193,7 @@ public class BusinessService {
 		}
 	}
 	
-	
+	// 발주 수정
 	public void update_ORDER(OrderDTO orderDto, List<OrderDetailDTO> details) throws IOException {
 	    // 기존 발주 정보 조회
 		Order existingOrder = orderRepository.findById(orderDto.getOrder_cd())
@@ -240,7 +241,7 @@ public class BusinessService {
 
 	}
 	
-
+	// 발주상세 조회
 	public List<Map<String, Object>> select_ORDERDETAIL(String order_cd) {
 		// Repository에서 데이터 조회
 		List<Object[]> result = orderRepository.select_ORDERDETAIL(order_cd);
@@ -259,6 +260,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 발주 상세 가져오기 
 	public Map<String, Object> getOrderDetails(String orderCd) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -304,6 +306,7 @@ public class BusinessService {
 		return result;
 	}
 
+	// 발주 삭제
     @Transactional
     public void delete_OrderAndDetails(List<String> orderCds) {
     	orderRepository.delete_ORDERDETAIL(orderCds); // 디테일 먼저 삭제 처리
@@ -350,7 +353,7 @@ public class BusinessService {
     }
 	
 	
-	
+	// 제품 조회
 	public List<Map<String, Object>> select_RPODUCT() {
 
 		List<Object[]> result;
@@ -370,7 +373,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
-	
+	// 제품 검색
 	public List<Map<String, Object>> search_PRODUCT(String keyword) {
 
 	    List<Object[]> result;
@@ -391,7 +394,7 @@ public class BusinessService {
 	}
 
 	
-	
+	// 수주 조회
 	public List<Map<String, Object>> select_CONTRACT() {
 
 		List<Object[]> result;
@@ -420,6 +423,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 거래처 조회
 	public List<Map<String, Object>> select_ACCOUNT_CONTRACT() {
 
 		List<Object[]> result;
@@ -436,6 +440,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 	
+	// 수주 거래처 검색
 	public List<Map<String, Object>> search_ACCOUNT_CONTRACT(String keyword) {
 		
 		List<Object[]> result;
@@ -452,6 +457,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 담당자 조회
 	public List<Map<String, Object>> select_CONTRACT_PS() {
 
 		List<Object[]> result;
@@ -469,7 +475,8 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
-
+	
+	// 수주 담당자 검색
 	public List<Map<String, Object>> search_CONTRACT_PS(String keyword) {
 		
 		List<Object[]> result;
@@ -488,6 +495,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 등록 처리
 	@Transactional
 	public void insert_CONTRACT(ContractDTO contractDto, List<ContractDetailDTO> details) throws IOException {
 
@@ -512,7 +520,7 @@ public class BusinessService {
 		}
 	}
 	
-	
+	// 수주 수정 처리
 	public void update_CONTRACT(ContractDTO contractDto, List<ContractDetailDTO> details) throws IOException {
 	    // 기존 수주 정보 조회
 	    Contract existingContract = contractRepository.findById(contractDto.getContract_cd())
@@ -541,7 +549,7 @@ public class BusinessService {
 	    // 변경된 계약 저장
 	    contractRepository.save(existingContract);
 	    
-	    // 기존 상세 정보 삭제
+	    // 기존 수주 상세 정보 삭제
 	    contractRepository.deleteContractDetailsByContractCd(contractDto.getContract_cd());
 	   
 	    // 새로운 상세 정보 저장
@@ -562,7 +570,7 @@ public class BusinessService {
 
 	}
 	
-
+	// 수주상세 조회
 	public List<Map<String, Object>> select_CONTRACTDETAIL(String contract_cd) {
 		// Repository에서 데이터 조회
 		List<Object[]> result = contractRepository.select_CONTRACTDETAIL(contract_cd);
@@ -630,6 +638,7 @@ public class BusinessService {
 		return result;
 	}
 
+	// 수주 삭제 
     @Transactional
     public void delete_ContractAndDetails(List<String> contractCds) {
         contractRepository.delete_CONTRACTDETAIL(contractCds); // 디테일 먼저 삭제 처리

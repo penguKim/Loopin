@@ -39,7 +39,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     """, nativeQuery = true)
     void saveContractDetail(@Param("contractDetail") ContractDetail contractDetail);
 	
-	
+	// 제품 조회
 	@Query(value = """
 		    SELECT 
 		        p.product_cd,
@@ -54,7 +54,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_RPODUCT();
 
-	
+	// 제품 검색
 	@Query(value = """
 		    SELECT 
 		        p.product_cd,
@@ -74,7 +74,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		List<Object[]> search_PRODUCT(@Param("keyword") String keyword);
 
 	
-	
+	// 수주 거래처 조회
 	@Query(value = """
 		    SELECT 
 		        a.account_cd AS account_cd,
@@ -85,6 +85,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_ACCOUNT_CONTRACT();
 
+	// 수주 거래처 검색
 	@Query(value = """
 		  SELECT 
 		        a.account_cd AS account_cd,
@@ -97,7 +98,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> search_ACCOUNT_CONTRACT(@Param("keyword") String keyword);
 
-	
+	// 수주 담당자 조회
 	@Query(value = """
 		    SELECT 
 		        e.employee_cd AS employee_cd,
@@ -116,7 +117,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_PS();
 
-	
+	// 수주 담당자 검색
 	@Query(value = """
 		    SELECT 
 		        e.employee_cd AS employee_cd,
@@ -139,7 +140,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> search_CONTRACT_PS(@Param("keyword") String keyword);
 
-	
+	// 수주 조회
 	@Query(value = """
 		    SELECT
 		        c.contract_cd,
@@ -186,7 +187,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_SHIPMENT();
 
-	
+	// 수주상세 조회
 	@Query(value = """
 			SELECT d.contract_cd, 
 			       d.product_cd, 
@@ -202,6 +203,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACTDETAIL(@Param("contractCd") String contractCd);
 
+	// 출하 바디 조회
 	@Query(value = """
 		SELECT d.contract_cd, 
 		       d.product_cd, 
@@ -230,7 +232,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
 	List<Object[]> select_CONTRACTDETAIL_SHIPMENT(@Param("contractCd") String contractCd);
 	
-	
+	// 수주 헤드 가져오기
     @Query(value = """
             SELECT
                 c.contract_cd,
@@ -253,7 +255,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
         """, nativeQuery = true)
     List<Object[]> findContractByCd(@Param("contractCd") String contractCd);
 
-    
+    // 출하 헤드 조회
     @Query(value = """
             SELECT
                 c.contract_cd,
@@ -268,12 +270,13 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
         """, nativeQuery = true)
     List<Object[]> findContractShipmentByCd(@Param("contractCd") String contractCd);
 	
+    // 기존 수주 바디 삭제
     @Transactional
     @Modifying
     @Query(value = "DELETE FROM CONTRACTDETAIL WHERE contract_cd = :contractCd", nativeQuery = true)
     void deleteContractDetailsByContractCd(@Param("contractCd") String contractCd);
 
-    
+    // 수주 헤드 삭제
     @Modifying
     @Query(value = """
     		DELETE
@@ -285,6 +288,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
     int delete_CONTRACT(@Param("contractCds") List<String> contractCds);
 
+    // 수주 바디 삭제
     @Modifying
     @Query(value = """
     		DELETE
@@ -295,7 +299,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
 		""", nativeQuery = true)
     int delete_CONTRACTDETAIL(@Param("contractCds") List<String> contractCds);
 	
-    
+    // 수주 필터 데이터 가져오기
     @Query(value = """
 			SELECT
                 c.contract_cd,
@@ -322,6 +326,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
         """, nativeQuery = true)
     List<Object[]> select_FILTERED_CONTRACT(@Param("filterRequest") ContractFilterRequest filterRequest);
 
+    // 출하 필터 데이터 가져오기
     @Query(value = """
 			SELECT
                 c.contract_cd,
@@ -365,6 +370,7 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     """, nativeQuery = true)
     void updateContractStatus();
     
+    // contract 출하 등록 시 테이블에 출하일자 및 상태 변경처리
     @Modifying
     @Transactional
     @Query(value = """
@@ -372,7 +378,8 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
                WHERE contract_cd = :contractCd
 	""", nativeQuery = true)
     void updateContractShipment(@Param("contractEd") String contractEd,  @Param("contractSt") String contractSt, @Param("contractCd") String contractCd);
-
+    
+    // contractDetail 테이블 출하 등록 시 출하일자 변경 처리
     @Modifying
     @Transactional
     @Query(value = """

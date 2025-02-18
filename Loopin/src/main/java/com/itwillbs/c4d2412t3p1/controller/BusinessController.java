@@ -62,7 +62,7 @@ public class BusinessController {
 	    
 	}
 	
-	// 제품 검색 기능 추가 (제품명, 제품코드, 색상, 사이즈, 기준단위)
+	// 원자재 검색 기능 추가 (제품명, 제품코드, 색상, 사이즈, 기준단위)
 	@GetMapping("/search_MATERIAL")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> search_MATERIAL(@RequestParam("keyword") String keyword) {
@@ -119,7 +119,7 @@ public class BusinessController {
 		}
 	}
 
-	// 거래처 조회
+	// 수주 거래처 조회
 	@GetMapping("/select_ACCOUNT_ORDER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_ACCOUNT_ORDER() {
@@ -137,7 +137,7 @@ public class BusinessController {
 	}
 
 	
-	// 거래처 검색
+	// 수주 거래처 검색
 	@GetMapping("/search_ACCOUNT_ORDER")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_ORDER(@RequestParam("keyword") String keyword) {
@@ -161,7 +161,7 @@ public class BusinessController {
 	}
 	
 	
-	// 담당자 조회
+	// 수주 담당자 조회
 	@GetMapping("/select_ORDER_PS")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_ORDER_PS() {
@@ -200,6 +200,7 @@ public class BusinessController {
 	    }
 	}
 	
+	// 발주 등록
 	@ResponseBody
 	@PostMapping("/insert_ORDER")
 	public ResponseEntity<Map<String, String>> insert_ORDER(
@@ -230,17 +231,17 @@ public class BusinessController {
 	    }
 	}
 
-
+	// 발주 상세 가져오기 
 	@GetMapping("/get_ORDER")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> getOrderDetails(@RequestParam(name = "order_cd") String orderCd) {
 	    try {
-	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        // 서비스에서 발주 정보 + 상세 정보 조회
 	        Map<String, Object> orderData = businessService.getOrderDetails(orderCd);
 
 	        if (orderData.isEmpty()) {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                    .body(Map.of("error", "계약 데이터를 찾을 수 없습니다."));
+	                    .body(Map.of("error", "발주 데이터를 찾을 수 없습니다."));
 	        }
 
 	        return ResponseEntity.ok(orderData);
@@ -251,6 +252,8 @@ public class BusinessController {
 	    }
 	}
 
+	
+	// 발주 수정
 	@ResponseBody
 	@PostMapping("/update_ORDER")
 	public ResponseEntity<Map<String, String>> update_ORDER(
@@ -281,7 +284,7 @@ public class BusinessController {
 	    }
 	}
 
-	//	발주 삭제
+	// 발주 삭제
 	@PostMapping("/delete_ORDER")
 	public ResponseEntity<Map<String, Object>> delete_ORDER(@RequestBody Map<String, List<String>> request) {
 		
@@ -413,7 +416,7 @@ public class BusinessController {
 		}
 	}
 
-	// 거래처 조회
+	// 수주 거래처 조회
 	@GetMapping("/select_ACCOUNT_CONTRACT")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_ACCOUNT_CONTRACT() {
@@ -430,7 +433,7 @@ public class BusinessController {
 		
 	}
 
-	// 거래처 검색
+	// 수주 거래처 검색
 	@GetMapping("/search_ACCOUNT_CONTRACT")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_CONTRACT(@RequestParam("keyword") String keyword) {
@@ -453,7 +456,7 @@ public class BusinessController {
 	    }
 	}
 	
-	// 담당자 조회
+	// 수주 담당자 조회
 	@GetMapping("/select_CONTRACT_PS")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_PS() {
@@ -470,7 +473,7 @@ public class BusinessController {
 		
 	}
 	
-	// 담당자 검색
+	// 수주 담당자 검색
 	@GetMapping("/search_CONTRACT_PS")
 	@ResponseBody
 	public ResponseEntity<List<Map<String, Object>>> search_CONTRACT_PS(@RequestParam("keyword") String keyword) {
@@ -492,6 +495,7 @@ public class BusinessController {
 	    }
 	}
 	
+	// 수주 등록 처리
 	@ResponseBody
 	@PostMapping("/insert_CONTRACT")
 	public ResponseEntity<Map<String, String>> insert_CONTRACT(
@@ -522,11 +526,12 @@ public class BusinessController {
 	    }
 	}
 
+	// 수주 상세 가져오기
 	@GetMapping("/get_CONTRACT")
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> getContractDetails(@RequestParam(name = "contract_cd") String contractCd) {
 	    try {
-	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        // 서비스에서 수주 정보 + 상세 정보 조회
 	        Map<String, Object> contractData = businessService.getContractDetails(contractCd);
 
 	        if (contractData.isEmpty()) {
@@ -541,7 +546,8 @@ public class BusinessController {
 	                .body(Map.of("error", "데이터 조회 중 오류 발생"));
 	    }
 	}
-
+	
+	// 수주 수정 처리
 	@ResponseBody
 	@PostMapping("/update_CONTRACT")
 	public ResponseEntity<Map<String, String>> update_CONTRACT(
@@ -572,7 +578,7 @@ public class BusinessController {
 	    }
 	}
 
-	//	수주 삭제
+	// 수주 삭제
 	@PostMapping("/delete_CONTRACT")
 	public ResponseEntity<Map<String, Object>> delete_CONTRACT(@RequestBody Map<String, List<String>> request) {
 		
@@ -593,7 +599,7 @@ public class BusinessController {
 		}
 	}
 	
-    // 필터 데이터 가져오기
+    // 수주 필터 데이터 가져오기
 	@PostMapping("/select_FILTERED_CONTRACT")
     public ResponseEntity<List<Map<String, Object>>> select_FILTERED_CONTRACT(@RequestBody ContractFilterRequest filterRequest) {
 
@@ -669,7 +675,7 @@ public class BusinessController {
 		
 	}
 	
-    // 필터 데이터 가져오기
+    // 출하 필터 데이터 가져오기
 	@PostMapping("/select_FILTERED_CONTRACT_SHIPMENT")
     public ResponseEntity<List<Map<String, Object>>> select_FILTERED_CONTRACT_SHIPMENT(@RequestBody ContractFilterRequest filterRequest) {
 
