@@ -20,8 +20,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.itwillbs.c4d2412t3p1.domain.ContractDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractRequestDTO;
+import com.itwillbs.c4d2412t3p1.domain.OrderDTO;
+import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
+import com.itwillbs.c4d2412t3p1.domain.OrderRequestDTO;
 import com.itwillbs.c4d2412t3p1.service.BusinessService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
@@ -33,6 +37,298 @@ public class BusinessController {
 
 	private final BusinessService businessService ;
 	
+	
+	// 발주관리 페이지로 이동
+	@GetMapping("/order_list")
+	public String order_list(Model model) {
+		
+		return "/business/order_list";
+	}
+	
+	// 원자재 조회
+	@GetMapping("/select_MATERIAL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_MATERIAL() {
+		
+		try {
+	    	List<Map<String, Object>> response = businessService.select_MATERIAL();
+	    	
+	    	return ResponseEntity.ok(response);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	    
+	}
+	
+	// 제품 검색 기능 추가 (제품명, 제품코드, 색상, 사이즈, 기준단위)
+	@GetMapping("/search_MATERIAL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_MATERIAL(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_MATERIAL();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_MATERIAL(keyword);
+	        }
+	        
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
+	
+	// 발주 조회
+	@GetMapping("/select_ORDER")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDER() {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ORDER();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+
+	// 발주상세 조회
+	@GetMapping("/select_ORDERDETAIL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDERDETAIL(
+			@RequestParam(name = "order_cd") String orderCd) {
+		
+		try {
+			List<Map<String, Object>> details = businessService.select_ORDERDETAIL(orderCd);
+			
+			return ResponseEntity.ok(details);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+
+	// 거래처 조회
+	@GetMapping("/select_ACCOUNT_ORDER")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ACCOUNT_ORDER() {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ACCOUNT_ORDER();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+
+	
+	// 거래처 검색
+	@GetMapping("/search_ACCOUNT_ORDER")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ACCOUNT_ORDER(@RequestParam("keyword") String keyword) {
+	    try {
+	    	
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_ACCOUNT_ORDER();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_ACCOUNT_ORDER(keyword);
+	        }
+
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
+	
+	// 담당자 조회
+	@GetMapping("/select_ORDER_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDER_PS() {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ORDER_PS();
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+	
+	// 담당자 검색
+	@GetMapping("/search_ORDER_PS")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> search_ORDER_PS(@RequestParam("keyword") String keyword) {
+	    try {
+	    	List<Map<String, Object>> result;
+	    	
+	        if (keyword == null || keyword.trim().isEmpty()) {
+	            // 검색어가 없으면 전체 조회 실행
+	            result = businessService.select_ORDER_PS();
+	        } else {
+	            // 검색어가 있으면 필터링 실행
+	            result = businessService.search_ORDER_PS(keyword);
+	        }
+	    	
+	        return ResponseEntity.ok(result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+	}
+	
+	@ResponseBody
+	@PostMapping("/insert_ORDER")
+	public ResponseEntity<Map<String, String>> insert_ORDER(
+			@RequestBody OrderRequestDTO orderRequestDTO
+	) {
+	    Map<String, String> response = new HashMap<>();
+	    
+	    
+	    // 시큐리티 세션 값 가져오기
+	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName(); 
+	    
+	    try {
+	    	
+	    	OrderDTO orderDto = orderRequestDTO.getOrder();
+	    	orderDto.setOrder_wr(employee_id);
+	    	orderDto.setOrder_wd(new Timestamp(System.currentTimeMillis()));
+	    	
+	    	List<OrderDetailDTO> details = orderRequestDTO.getDetails();
+
+	        businessService.insert_ORDER(orderDto, details);
+
+	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
+	        return ResponseEntity.ok(response); // JSON 형식으로 반환
+	    } catch (Exception e) {
+	        log.severe("데이터 저장 실패: " + e.getMessage()); // 오류 로그 추가
+	        response.put("message", "데이터 저장 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+
+	@GetMapping("/get_ORDER")
+	@ResponseBody
+	public ResponseEntity<Map<String, Object>> getOrderDetails(@RequestParam(name = "order_cd") String orderCd) {
+	    try {
+	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        Map<String, Object> orderData = businessService.getOrderDetails(orderCd);
+
+	        if (orderData.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                    .body(Map.of("error", "계약 데이터를 찾을 수 없습니다."));
+	        }
+
+	        return ResponseEntity.ok(orderData);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(Map.of("error", "데이터 조회 중 오류 발생"));
+	    }
+	}
+
+	@ResponseBody
+	@PostMapping("/update_ORDER")
+	public ResponseEntity<Map<String, String>> update_ORDER(
+	        @RequestBody OrderRequestDTO orderRequestDTO
+	) {
+	    Map<String, String> response = new HashMap<>();
+
+	    // 시큐리티 세션 값 가져오기
+	    String employee_id = SecurityContextHolder.getContext().getAuthentication().getName();
+
+	    try {
+	        OrderDTO orderDto = orderRequestDTO.getOrder();
+	        
+	        orderDto.setOrder_mf(employee_id); // 수정자 설정
+	        orderDto.setOrder_md(new Timestamp(System.currentTimeMillis())); // 수정 시간 설정
+
+	        List<OrderDetailDTO> details = orderRequestDTO.getDetails();
+
+	        // 수정 서비스 호출
+	        businessService.update_ORDER(orderDto, details);
+
+	        response.put("message", "수정이 성공적으로 완료되었습니다.");
+	        return ResponseEntity.ok(response);
+	    } catch (Exception e) {
+	        log.severe("수정 실패: " + e.getMessage());
+	        response.put("message", "수정 실패: " + e.getMessage());
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+	    }
+	}
+
+	//	발주 삭제
+	@PostMapping("/delete_ORDER")
+	public ResponseEntity<Map<String, Object>> delete_ORDER(@RequestBody Map<String, List<String>> request) {
+		
+		List<String> orderCds  = request.get("order_cds");
+		
+		log.info("삭제 요청 데이터: " + request.toString());
+		
+		Map<String, Object> response = new HashMap<>();
+
+		try {
+            businessService.delete_OrderAndDetails(orderCds);
+            response.put("success", true);
+            return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("success", false);
+			response.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+    // 필터 데이터 가져오기
+	@PostMapping("/select_FILTERED_ORDER")
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_ORDER(@RequestBody OrderFilterRequest filterRequest) {
+
+	    try {
+            // 필터 조건이 비어 있으면 전체 수주정보 반환
+            if (filterRequest.isEmpty()) {
+                List<Map<String, Object>> orders = businessService.select_ORDER();
+                log.info("orders : "+ orders);
+                return ResponseEntity.ok(orders);
+            }
+
+            // 필터 조건에 따른 필터링된 수주정보 반환
+            List<Map<String, Object>> filteredOrderList = businessService.select_FILTERED_ORDER(filterRequest);
+            log.info("filteredOrderList : "+ filteredOrderList);
+            return ResponseEntity.ok(filteredOrderList);
+	    } catch (Exception e) {
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	    }
+    }
+	
+    // 수동으로 상태 업데이트 실행
+    @PostMapping("/updateOrderStatus")
+    public String updateOrderStatus() {
+        businessService.updateOrderStatus(); // 상태 업데이트 실행
+        return "redirect:/order_list"; // 상태 업데이트 후 목록 페이지로 이동
+    }
 	
 	// 수주관리 페이지로 이동
 	@GetMapping("/contract_list")
