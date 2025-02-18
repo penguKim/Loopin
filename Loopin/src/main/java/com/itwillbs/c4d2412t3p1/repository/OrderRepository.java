@@ -266,4 +266,20 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     void updateOrderStatus();
     
 	
+	// 발주 조회
+	@Query(value = """
+		    SELECT
+				o.order_cd,
+				o.account_cd,
+				o.order_sd,
+				o.order_ed,
+				o.order_am,
+				o.order_mn
+			FROM ORDERS o
+    	    WHERE o.order_sd BETWEEN :startDt AND :endDt
+    	    AND (o.order_ed IS NULL OR o.order_ed >= :startDt)
+			ORDER BY order_cd DESC
+		""", nativeQuery = true)
+	List<Object[]> select_ORDER_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
+    
 }

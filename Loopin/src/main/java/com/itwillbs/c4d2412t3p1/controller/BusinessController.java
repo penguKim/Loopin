@@ -736,4 +736,74 @@ public class BusinessController {
 	    return response;
 	}
 
+	
+	
+	// 영업현황 페이지
+	@GetMapping("/business_state")
+	public String business_state() {
+		
+		return "/business/business_state";
+	}
+    
+	
+	// 수주 현황 조회
+	@GetMapping("/select_CONTRACT_STATE")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_STATE(
+            @RequestParam("start_dt") String startDt,
+            @RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_CONTRACT_STATE(startDt, endDt);
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+
+	// 발주 현황 조회
+	@GetMapping("/select_ORDER_STATE")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDER_STATE(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ORDER_STATE(startDt, endDt);
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+
+	// 출하 현황 조회
+	@GetMapping("/select_SHIPMENT_STATE")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_SHIPMENT_STATE(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_SHIPMENT_STATE(startDt, endDt);
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+		
+	}
+	
 }

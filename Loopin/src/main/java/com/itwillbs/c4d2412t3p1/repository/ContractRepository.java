@@ -431,4 +431,40 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
                             @Param("shipmentQty") int shipmentQty,
                             @Param("updatedUser") String updatedUser);
     
+    
+    
+	// 수주 현황 조회
+    @Query(value = """
+    	    SELECT
+    	        c.contract_cd,
+    	        c.account_cd,
+    	        c.contract_sd,
+    	        c.contract_ed,
+    	        c.contract_am,
+    	        c.contract_mn
+    	    FROM CONTRACT c
+    	    WHERE c.contract_sd BETWEEN :startDt AND :endDt
+    	    AND (c.contract_ed IS NULL OR c.contract_ed >= :startDt)
+    	    ORDER BY c.contract_cd DESC
+    	""", nativeQuery = true)
+	List<Object[]> select_CONTRACT_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
+
+	
+	// 출하 현황 조회
+	@Query(value = """
+    	    SELECT
+    	        c.contract_cd,
+    	        c.account_cd,
+    	        c.contract_sd,
+    	        c.contract_ed,
+    	        c.contract_am,
+    	        c.contract_mn
+    	    FROM CONTRACT c
+    	    WHERE c.contract_sd BETWEEN :startDt AND :endDt
+    	    AND (c.contract_ed IS NULL OR c.contract_ed >= :startDt)
+    	    AND c.contract_st NOT IN ('대기중')
+    	    ORDER BY c.contract_cd DESC
+    	""", nativeQuery = true)
+	List<Object[]> select_SHIPMENT_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
+    
 }

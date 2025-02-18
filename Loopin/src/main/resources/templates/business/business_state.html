@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+				
+<style>
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
+</style>				
+				
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h5 class="card-title">인사현황</h5>
+							<div class="d-flex justify-content-between">
+								<div>
+									<ul class="nav nav-pills mb-3" id="business-tab" role="tablist">
+										<li class="nav-item" role="presentation">
+											<button class="nav-link active" id="btn_contract_tab" data-bs-toggle="pill" data-bs-target="#tab_contract" 
+											type="button" role="tab" aria-controls="tab_contract" aria-selected="false">수주</button>
+										</li>
+										<li class="nav-item" role="presentation">
+											<button class="nav-link" id="btn_order_tab" data-bs-toggle="pill" data-bs-target="#tab_order" 
+											type="button" role="tab" aria-controls="tab_order" aria-selected="true">발주</button>
+										</li>
+										<li class="nav-item" role="presentation">
+											<button class="nav-link" id="btn_shipment_tab" data-bs-toggle="pill" data-bs-target="#tab_shipment" 
+											type="button" role="tab" aria-controls="tab_shipment" aria-selected="true">출하</button>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div class="row mb-3 align-items-end">
+							    <div class="col-md-2">
+							        <label for="start_dt" class="form-label">시작일</label>
+							        <input type="text" class="form-control" id="start_dt" name="start_dt" aria-label="Date">
+							        <div id="startpicker-container"></div>
+							    </div>
+							    <div class="col-md-2">
+							        <label for="end_dt" class="form-label">종료일</label>
+							        <input type="text" class="form-control" id="end_dt" name="end_dt" aria-label="Date">
+							        <div id="endpicker-container"></div>
+							    </div>
+							
+							    <!-- 조회 버튼을 입력 필드와 같은 높이에 배치 -->
+							    <div class="col-md-3 d-flex align-items-end">
+							        <button type="button" class="btn btn-primary" id="search-btn">조회</button>
+							    </div>
+							</div>
+
+							<!-- 그리드 -->
+							<div class="row mb-3">
+							    <div class="col-sm-12">
+							        <div id="contract_grid" class="grid-container"></div>
+							        <div id="order_grid" class="grid-container" style="display: none;"></div>
+							        <div id="shipment_grid" class="grid-container" style="display: none;"></div>
+							    </div>
+							</div>
+							<div class="row mb-3">
+								<div class="col-sm-6">
+									<div id="chart-posi"></div>
+								</div>
+								<div class="col-sm-6">
+									<div id="chart-hdrd"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+
+<script th:inline="javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	
+	const btn_contract_tab = $('#btn_contract_tab');
+	const btn_order_tab = $('#btn_order_tab');
+	const btn_shipment_tab = $('#btn_shipment_tab');
+	
+	let contract_grid;
+	let order_grid;
+	let shipment_grid;
+	
+	$(function () {
+	    tui.Grid.setLanguage('ko');
+	    tui.Grid.applyTheme('striped');
+
+	    // 1개월 전과 오늘 날짜 설정
+	    const today = new Date();
+	    const oneMonthAgo = new Date();
+	    oneMonthAgo.setMonth(today.getMonth() - 1);
+
+	    // DatePicker 객체 생성
+	    const rangePicker = tui.DatePicker.createRangePicker({
+	        startpicker: {
+	            date: oneMonthAgo,
+	            input: '#start_dt',
+	            container: '#startpicker-container',
+	        },
+	        endpicker: {
+	            date: today,
+	            input: '#end_dt',
+	            container: '#endpicker-container',
+	            disabled: false,
+	        },
+	        format: 'yyyy-MM-dd',
+	        timePicker: false
+	    });
+
+		// 📌 탭 클릭 이벤트 - 선택된 탭에 해당하는 데이터만 불러오기
+		function loadGridByTab(gridType) {
+		    $('.grid-container').hide(); // 모든 그리드 숨김
+		    const startDt = rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null;
+		    const endDt = rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null;
+
+		    console.log(`탭 클릭: ${gridType} | 시작일: ${startDt}, 종료일: ${endDt}`);
+
+		    if (!startDt || !endDt) {
+		        alert('시작일과 종료일을 입력해주세요.');
+		        return;
+		    }
+
+		    if (gridType === 'contract') {
+		        $('#contract_grid').show();
+		        make_contract_grid(startDt, endDt);
+		    } else if (gridType === 'order') {
+		        $('#order_grid').show();
+		        make_order_grid(startDt, endDt);
+		    } else if (gridType === 'shipment') {
+		        $('#shipment_grid').show();
+		        make_shipment_grid(startDt, endDt);
+		    }
+		}
+
+		$('#btn_contract_tab').on('click', function () {
+		    loadGridByTab('contract');
+		});
+
+		$('#btn_order_tab').on('click', function () {
+		    loadGridByTab('order');
+		});
+
+		$('#btn_shipment_tab').on('click', function () {
+		    loadGridByTab('shipment');
+		});
+		
+		
+		$('#search-btn').on('click', function () {
+		    const startDt = rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null;
+		    const endDt = rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null;
+
+		    console.log("조회 버튼 클릭: 시작일 =", startDt, "종료일 =", endDt);
+
+		    if (!startDt || !endDt) {
+		        alert('시작일과 종료일을 입력해주세요.');
+		        return;
+		    }
+
+		    make_contract_grid(startDt, endDt);
+		    make_order_grid(startDt, endDt);
+		    make_shipment_grid(startDt, endDt);
+		});
+
+		// 페이지 로드 시 기본 데이터 로드
+		make_contract_grid(
+		    rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null, 
+		    rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null
+		);
+
+	});
+
+
+
+	function make_contract_grid(startDt, endDt) {
+	    // 기존 그리드가 있으면 새로 만들지 않고 데이터만 갱신
+		console.log("전송 데이터:", startDt, endDt);
+	    if (contract_grid) {
+	        load_contract_data(startDt, endDt);  // 데이터 갱신 함수 호출
+	        return;
+	    }
+
+	    $.ajax({
+	        url: '/select_CONTRACT_STATE',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        method: 'GET',
+	        success: function (response) {
+	            if (contract_grid) {
+	                contract_grid.resetData(response);
+	                return;
+	            }
+	            contract_grid = new tui.Grid({
+	                el: document.getElementById('contract_grid'),
+	                data: response, // 직접 데이터 전달
+	                scrollX: true,
+	                scrollY: true,
+	                autoWidth: true,
+	                rowHeight: 'auto',
+	                bodyHeight: 'fitToParent',
+	                zIndex: 100,
+	                columns: [
+	                    { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+	                    { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+	                    { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
+	                    { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
+	                    { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
+	                    { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`}
+	                ],
+	                summary: {
+	                    height: 40,
+	                    position: 'bottom', 
+	                    columnContent: {
+	                        contract_mn: {
+	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                        }
+	                    }
+	                }
+	            });
+	        },
+	        error: function (error) {
+	            console.error('수주 데이터 로드 실패:', error);
+	        }
+	    });
+	}
+
+	function load_contract_data(startDt, endDt) {
+	    $.ajax({
+	        url: '/select_CONTRACT_STATE',
+	        method: 'GET',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        success: function(response) {
+	            if (contract_grid) {
+	                contract_grid.resetData(response);
+	            }
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("수주 데이터 로드 실패:", xhr.status, error);
+	        }
+	    });
+	}
+
+
+	
+	function make_order_grid(startDt, endDt) {
+	    // 기존 그리드가 있으면 데이터만 갱신
+		console.log("전송 데이터:", startDt, endDt);
+	    if (order_grid) {
+	        load_order_data(startDt, endDt);  // 데이터만 갱신하는 함수 호출
+	        return;
+	    }
+
+	    $.ajax({
+	        url: '/select_ORDER_STATE',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        method: 'GET',
+	        success: function (response) {
+	            if (order_grid) {
+	                order_grid.resetData(response);
+	                return;
+	            }
+
+	            order_grid = new tui.Grid({
+	                el: document.getElementById('order_grid'),
+	                data: response, // 서버에서 받은 데이터 그대로 사용
+	                scrollX: true,
+	                scrollY: true,
+	                autoWidth: true,
+	                rowHeight: 'auto',
+	                bodyHeight: 'fitToParent',
+	                zIndex: 100,
+	                columns: [
+	                    { header: '발주번호', name: 'order_cd', align: 'center', sortable: true },
+	                    { header: '발주번호', name: 'account_cd', align: 'center', sortable: true },
+	                    { header: '발주일자', name: 'order_sd', align: 'center', sortable: true },
+	                    { header: '입고일자', name: 'order_ed', align: 'center', sortable: true },
+	                    { header: '발주수량', name: 'order_am', align: 'center', sortable: true },
+	                    { header: '발주금액', name: 'order_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
+	                ],
+	                summary: {
+	                    height: 40,
+	                    position: 'bottom', 
+	                    columnContent: {
+	                        order_mn: {
+	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                        }
+	                    }
+	                }
+	            });
+	        },
+	        error: function (error) {
+	            console.error('발주 데이터 로드 실패:', error);
+	        }
+	    });
+	}
+
+	function load_order_data(startDt, endDt) {
+	    $.ajax({
+	        url: '/select_ORDER_STATE',
+	        method: 'GET',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        success: function(response) {
+	            if (order_grid) {
+	                order_grid.resetData(response);
+	            }
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("발주 데이터 로드 실패:", xhr.status, error);
+	        }
+	    });
+	}
+
+	
+	function make_shipment_grid(startDt, endDt) {
+	    if (shipment_grid) {
+	        load_shipment_data(startDt, endDt);  // 데이터만 갱신하는 함수 호출
+	        return;
+	    }
+
+	    $.ajax({
+	        url: '/select_SHIPMENT_STATE',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        method: 'GET',
+	        success: function (response) {
+	            if (shipment_grid) {
+	                shipment_grid.resetData(response);
+	                return;
+	            }
+
+	            shipment_grid = new tui.Grid({
+	                el: document.getElementById('shipment_grid'),
+	                data: response, // 서버에서 받은 데이터 그대로 사용
+	                scrollX: true,
+	                scrollY: true,
+	                autoWidth: true,
+	                rowHeight: 'auto',
+	                bodyHeight: 'fitToParent',
+	                zIndex: 100,
+	                columns: [
+	                    { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+	                    { header: '출하일자', name: 'contract_sd', align: 'center', sortable: true },
+	                    { header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
+	                    { header: '출하수량', name: 'contract_am', align: 'center', sortable: true }
+	                ],
+	                summary: {
+	                    height: 40,
+	                    position: 'bottom', 
+	                    columnContent: {
+	                        contract_am: {
+	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                        }
+	                    }
+	                }
+	            });
+	        },
+	        error: function (error) {
+	            console.error('출하 데이터 로드 실패:', error);
+	        }
+	    });
+	}
+
+	function load_shipment_data(startDt, endDt) {
+	    $.ajax({
+	        url: '/select_SHIPMENT_STATE',
+	        method: 'GET',
+			data: { start_dt: startDt, end_dt: endDt }, 
+	        success: function(response) {
+	            if (shipment_grid) {
+	                shipment_grid.resetData(response);
+	            }
+	        },
+	        error: function(xhr, status, error) {
+	            console.error("출하 데이터 로드 실패:", xhr.status, error);
+	        }
+	    });
+	}
+
+	
+	
+</script>
+
+</html>

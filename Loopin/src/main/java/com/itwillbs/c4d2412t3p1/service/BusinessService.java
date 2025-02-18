@@ -832,4 +832,69 @@ public class BusinessService {
 	}
 
 	
+	// 수주 현황 조회
+	public List<Map<String, Object>> select_CONTRACT_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = contractRepository.select_CONTRACT_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_sd", row[2]);
+			contract.put("contract_ed", row[3]);
+			contract.put("contract_am", row[4]);
+			contract.put("contract_mn", row[5]);
+
+			return contract;
+
+		}).collect(Collectors.toList());
+	}
+
+	// 발주 현황 조회
+	public List<Map<String, Object>> select_ORDER_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = orderRepository.select_ORDER_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("order_cd", row[0]);
+			order.put("account_cd", row[1]);
+			order.put("order_sd", row[2]);
+			order.put("order_ed", row[3]);
+			order.put("order_am", row[4]);
+			order.put("order_mn", row[5]);
+
+			return order;
+
+		}).collect(Collectors.toList());
+	}
+	
+	
+    // 출하페이지 수주조회
+	public List<Map<String, Object>> select_SHIPMENT_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = contractRepository.select_SHIPMENT_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_sd", row[2]);
+			contract.put("contract_ed", row[3]);
+			contract.put("contract_am", row[4]);
+			contract.put("contract_mn", row[5]);
+
+			return contract;
+
+		}).collect(Collectors.toList());
+	}
+	
+	
 }
