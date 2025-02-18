@@ -15,8 +15,6 @@
 	margin-right: 5px;
 }
 
-
-
 .tui-datepicker {
 	z-index: 9999 !important;
 	overflow: visible !important;
@@ -163,7 +161,7 @@
 	    // 모달 HTML 생성
 	    const modalHtml = `
 	        <div class="modal" id="orderInsertModal" tabindex="-1" aria-labelledby="orderInsertModalLabel" aria-hidden="true">
-	            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl ">
+	            <div class="modal-dialog modal-dialog-centered modal-xl">
 	                <div class="modal-content">
 	                    <div class="modal-header">
 	                        <h5 class="modal-title" id="dynamicModalLabel">${modalTitle}</h5>
@@ -397,7 +395,6 @@
 	    });
 	}
 	
-	// todo
 	function validateForm() {
 	    let isValid = true;
 	    let errorMessage = "";
@@ -549,12 +546,12 @@
 	        status = "대기중";
 	    } 
 	    else if (orderSd <= today) {
-	        // 종료일이 없거나 오늘 이후이면 → "진행중"
-	        if (!orderEd || orderEd >= today) {
+	        // 종료일이 없거나 오늘 이후면 "진행중"
+	        if (!orderEd || orderEd > today) {
 	            status = "진행중";
 	        } 
-	        // 종료일이 오늘 이전이면 → "완료"
-	        else if (orderEd < today) {
+	        // 종료일이 오늘 이전이거나 오늘이면 "완료"
+	        else if (orderEd <= today) {
 	            status = "완료";
 	        }
 	    }
@@ -1179,9 +1176,9 @@
         const filterConfig = [
             { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
             { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
-            { key: 'orderCd', label: '발주번호', type: 'text', placeholder: '발주번호 입력', col: 'col-2' },
-            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-2' },
-            { key: 'orderPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-2' },
+            { key: 'orderCd', label: '발주번호', type: 'text', placeholder: '발주번호 입력', col: 'col-4' },
+            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-4' },
+            { key: 'orderPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-4' },
         ];
 
         // 필터 모듈 초기화

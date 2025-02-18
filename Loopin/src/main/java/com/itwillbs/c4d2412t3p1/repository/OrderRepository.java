@@ -46,7 +46,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    LEFT JOIN COMMON_CODE u 
 		           ON m.material_un = u.common_cc 
 		          AND u.common_gc = 'UNIT'
-			ORDER BY material_cd ASC
+			ORDER BY material_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_MATERIAL();
 
@@ -62,7 +62,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 		    WHERE (m.material_cd LIKE %:keyword%
 		        OR m.material_nm LIKE %:keyword%
 		        OR u.common_nm LIKE %:keyword%)
-			ORDER BY material_cd ASC
+			ORDER BY material_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> search_MATERIAL(@Param("keyword") String keyword);
 	
@@ -143,19 +143,14 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 				o.order_ed,
 				o.order_am,
 				o.order_mn,
-		       CASE 
-		            WHEN o.order_sd > SYSDATE THEN '대기중'
-		            WHEN o.order_sd <= SYSDATE AND (o.order_ed IS NULL OR o.order_ed >= SYSDATE) THEN '진행중'
-		            WHEN o.order_sd <= SYSDATE AND o.order_ed < SYSDATE THEN '완료'
-		            ELSE '알 수 없음'
-		        END AS order_st,
+				o.order_st,
 				o.order_rm,
 				o.order_wr,
 				o.order_wd,
 				o.order_mf,
 				o.order_md
 			FROM ORDERS o
-			ORDER BY order_cd ASC
+			ORDER BY order_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER();
 
@@ -244,7 +239,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 			  AND (:#{#filterRequest.orderPs} IS NULL OR o.order_ps LIKE %:#{#filterRequest.orderPs}%)
 			  AND (:#{#filterRequest.startDate} IS NULL OR :#{#filterRequest.endDate} IS NULL
 			   OR o.order_sd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate})
-			   ORDER BY order_cd ASC
+			   ORDER BY order_cd DESC
         """, nativeQuery = true)
     List<Object[]> select_FILTERED_ORDER(@Param("filterRequest") OrderFilterRequest filterRequest);
     
@@ -257,8 +252,8 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
         SET o.order_st = 
             CASE 
                 WHEN o.order_sd > SYSDATE THEN '대기중'
-                WHEN o.order_sd <= SYSDATE AND (o.order_ed IS NULL OR o.order_ed >= SYSDATE) THEN '진행중'
-                WHEN o.order_sd <= SYSDATE AND o.order_ed < SYSDATE THEN '완료'
+                WHEN o.order_sd <= SYSDATE AND (o.order_ed IS NULL OR o.order_ed > SYSDATE) THEN '진행중'
+                WHEN o.order_sd <= SYSDATE AND o.order_ed <= SYSDATE THEN '완료'
                 ELSE '알 수 없음'
             END
     """, nativeQuery = true)
