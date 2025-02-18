@@ -23,23 +23,6 @@
 								type="button" role="tab" aria-controls="tab_chart" aria-selected="false">차트</button>
 							</li>
 						</ul>
-						<div class="row align-items-center g-0">
-<!-- 						    <div class="col-auto me-5"> -->
-<!-- 						        <label for="rangeStart" class="form-label">조회기간 시작일</label> -->
-<!-- 						        <input type="text" id="rangeStart" class="form-control" style="width: 153.5px;"> -->
-<!-- 						        <div id="rangeStartContainer"></div> -->
-<!-- 						    </div> -->
-<!-- 						    <div class="col-auto me-5"> -->
-<!-- 						        <label for="rangeEnd" class="form-label">조회기간 종료일</label> -->
-<!-- 						        <input type="text" id="rangeEnd" class="form-control" style="width: 153.5px;"> -->
-<!-- 						        <div id="rangeEndContainer"></div> -->
-<!-- 						    </div> -->
-<!-- 						    <div class="col d-flex justify-content-end align-items-center mt-3"> -->
-<!-- 								<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀"> -->
-<!-- 						        <button id="resetFilter" class="btn btn-secondary me-2">초기화</button> -->
-<!-- 						        <button id="applyFilter" class="btn btn-primary me-2">검색</button> -->
-<!-- 						    </div> -->
-						</div>
 						<div class="tab-content pt-2" id="myTabContent">
 							<div id="filterModule" class="mb-3"></div>
 							<!-- 달력 탭 -->
@@ -103,6 +86,7 @@
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		make_grid();
+		getGridList();
 		setElementHeight('.card', -105);
 		setGridHeight(grid, -380);
 		
@@ -116,7 +100,7 @@
 		
 		// 검색필터
         initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-        	get_PRODUCT_list(filterValues, groupValue);
+            getGridList(filterValues);
         });
 		
         $(document).on('filterToggled', function(e) {
@@ -166,39 +150,18 @@
 	});
 	
 	// ------------함수------------
+	// 그리드 데이터 함수
+	async function getGridList(filter) {
+		let jsonData = JSON.stringify(filter);
+		let ajaxData = await callAjaxPost('/select_RESULT_list', jsonData);
+		grid.resetData(ajaxData.data);
+	}
+	
 	// 그리드 생성 함수
 	function make_grid() {
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
-			data : [
-				{
-					lot_cd: '10012',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: '400000',
-					workorder_st: false,
-				},
-				{
-					lot_cd: '10013',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: '50000',
-					workorder_st: true,
-				},
-				{
-					lot_cd: '10014',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: '30000',
-					workorder_st: true,
-				},
-			],
+			data : [],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [

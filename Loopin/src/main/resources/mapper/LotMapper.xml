@@ -5,8 +5,114 @@
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.LotMapper">
     
     <select id="select_PROCESS_list" resultType="map">
-    	SELECT PROCESS_NM AS common_nm, PROCESS_CD AS common_cd
+    	SELECT PROCESS_NM AS common_nm, PROCESS_CD AS common_cc
     	  FROM PROCESS
     	 WHERE PROCESS_US = '1'
 	</select>
+	
+	<select id="select_LOT_list" resultType="map">
+	    SELECT * FROM BOMPROCESS WHERE 1=1
+	        <if test="process_cd != null and process_cd != ''">
+	            AND PROCESS_CD = #{process_cd}
+	        </if>
+<!-- 	        a.*, -->
+<!-- 	        e.EMPLOYEE_NM, -->
+<!-- 	        e.EMPLOYEE_HD, -->
+<!-- 	        c.COMMON_NM, -->
+<!-- 	        CASE  -->
+<!-- 		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1  -->
+<!-- 		        THEN TO_CHAR(TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')))) || '개월' -->
+<!-- 		        ELSE TO_CHAR(FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12)) || '년' -->
+<!-- 		    END AS service_years -->
+<!-- 	    FROM ANNUAL a -->
+<!-- 		LEFT JOIN EMPLOYEE e  -->
+<!-- 	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD -->
+<!--         LEFT JOIN COMMON_CODE c -->
+<!--        	    ON e.EMPLOYEE_DP = c.COMMON_CC -->
+<!-- 	    <where> 1=1 -->
+<!-- 	    		AND c.COMMON_GC = 'DEPARTMENT' -->
+<!-- 	        <if test="employee_nm != null and employee_nm != ''"> -->
+<!-- 	            AND e.EMPLOYEE_NM = #{employee_nm} -->
+<!-- 	        </if> -->
+<!-- 	        <if test="employee_dp != null and employee_dp != ''"> -->
+<!-- 	            AND e.EMPLOYEE_DP = #{employee_dp} -->
+<!-- 	        </if> -->
+<!-- 	        <if test="employee_hd1 != null and employee_hd1 != '' and employee_hd2 != null and employee_hd2 != ''"> -->
+<!-- 	            AND #{employee_hd1} &lt;= e.EMPLOYEE_HD AND e.EMPLOYEE_HD &lt;= #{employee_hd2} -->
+<!-- 	        </if> -->
+<!-- 	        <if test="annual_ra != null and annual_ra != ''"> -->
+<!-- 	            AND a.ANNUAL_RA = #{annual_ra} -->
+<!-- 	        </if> -->
+<!-- 	    </where> -->
+<!-- 	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC -->
+	</select>
+	
+	
+	<select id="select_LOT_json" resultType="map">
+	    WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
+		    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
+		      FROM BOMPROCESS
+		     WHERE BOMPROCESS_AP = 'NONE'
+		       AND PRODUCT_CD = #{PRODUCT_CD}
+		     UNION ALL
+		    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 LVL
+		      FROM BOMPROCESS BP
+		      JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
+		     WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
+		)
+		SELECT JSON_OBJECT(
+		    'name' VALUE #{PRODUCT_CD},
+		    'title' VALUE '제품',
+		    'lot_st' VALUE #{PRODUCT_CD},
+		    'process' VALUE '대기중',
+		    'children' VALUE (
+		        SELECT JSON_ARRAYAGG(
+		            JSON_OBJECT(
+		                'name' VALUE A.CURRENT_PROCESS,
+		                'title' VALUE '반제품',
+		                'lot_st' VALUE A.BOMPROCESS_CD,
+		                'process' VALUE (
+		                    SELECT CASE WHEN W.workorder_st = '진행중' THEN '진행중'
+	                        	   ELSE '완료'
+		                    		END
+		                      FROM WORKORDER W
+		                    WHERE W.lot_cd = A.BOMPROCESS_CD
+		                    FETCH FIRST 1 ROWS ONLY
+		                ),
+		                'children' VALUE (
+		                    SELECT JSON_ARRAYAGG(
+		                        JSON_OBJECT(
+		                            'name' VALUE B.CURRENT_PROCESS,
+		                            'title' VALUE '반제품',
+		                            'lot_st' VALUE B.BOMPROCESS_CD,
+		                            'process' VALUE (
+		                                SELECT CASE 
+		                                    WHEN W.workorder_st = '진행중' THEN '진행중'
+		                                    ELSE '완료'
+		                                END
+		                                FROM WORKORDER W
+		                                WHERE W.lot_cd = B.BOMPROCESS_CD
+		                                FETCH FIRST 1 ROWS ONLY
+		                            )
+		                        )
+		                    ) 
+		                    FROM BOM_HIERARCHY B 
+		                    WHERE B.BOMPROCESS_AP = A.CURRENT_PROCESS
+		                )
+		            ) RETURNING CLOB
+		        ) 
+		        FROM BOM_HIERARCHY A 
+		        WHERE A.BOMPROCESS_AP = 'ASSEMBLY'
+		    )
+		) AS json_data
+		FROM DUAL
+	</select>
+	
+	<select id="select_RESULT_list" resultType="map">
+	    SELECT * FROM BOMPROCESS WHERE 1=1
+	        <if test="process_cd != null and process_cd != ''">
+	            AND PROCESS_CD = #{process_cd}
+	        </if>
+    </select>
+		
 </mapper>

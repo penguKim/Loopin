@@ -36,10 +36,6 @@
 						<div class="card-body">
 							<h1 class="card-title">로트 추적</h1>
 							<div class="mb-3 row d-flex align-items-center justify-content-end">
-								<div class="col d-flex align-items-center justify-content-start">
-									<input type="text" id="group_search" class="form-control me-2" placeholder="로트번호" style="width:130px;">
-									<input type="button" id="btn_group_search" class="btn btn-primary" value="검색">
-								</div>
 								<div class="col-auto">
 									<div id="filterModule" class="mb-3"></div>
 								</div>
@@ -61,7 +57,7 @@
 	</main>
 </body>																																																																																																																																																																																																																											
 <script th:inline="javascript">
-	let grid;
+	let grid, modal_grid;
 	let chart = $("#chart");
 	let useList = /*[[${commonList['USE']}]]*/[];
 	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
@@ -69,7 +65,7 @@
 
 	let transformedProcessList = processList.map(item => {
 	    return {
-	        common_cd: item.COMMON_CD,
+	        common_cc: item.COMMON_CC,
 	        common_nm: item.COMMON_NM
 	    };
 	});
@@ -80,8 +76,8 @@
 		{ key: 'product_cd', label: '로트번호', type: 'text', placeholder: '로트번호 입력', col: 'col-4' },
 		{ key: 'product_nm', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
 		{ key: 'product_cc', label: '품목분류', type: 'select', list: setFilterList(productList), col: 'col-4' },
-		{ key: 'process_nm', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
-		{ key: 'product_us', label: '사용여부', type: 'radio', list: [ 
+		{ key: 'process_cd', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
+		{ key: 'workorder_st', label: '사용여부', type: 'radio', list: [ 
 				{ value: 'ALL', text: '전체' },
 				{ value: 'PENDING', text: '대기' },
 				{ value: 'IN_PROGRESS', text: '진행중' },
@@ -94,22 +90,35 @@
 		tui.Grid.setLanguage('ko');
 		tui.Grid.applyTheme('striped');
 		make_grid();
+		getGridList();
+		
+		// 창크기
 		setElementHeight('.card', -105);
-		setGridHeight(grid, -430);
+		setGridHeight(grid, -380);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
 				setElementHeight('.card', -105);
-				setGridHeight(grid, -430);
+				setGridHeight(grid, -380);
 				setGridWidth(grid, 0);
 			}, 300);
 		});
-		
-		// 검색필터
-        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-        	select_LOT_list(filterValues, groupValue);
-        });
 
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            getGridList(filterValues);
+        });
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '로트추적');
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -450);
+		    } else {
+		        setGridHeight(grid, -380);
+		    }
+		});
+		
 		// 필터 엔터키 검색 이벤트
 		$('#filterModule').on('keypress', function(e) {
 		    if (e.keyCode !== 13) return;
@@ -121,61 +130,40 @@
 		        const value = input.val();
 		        filterValues[config.key] = value;
 		    }
+		    getGridList(filterValues);
 		});
-		
 	});
 	
 	// ------------함수------------
+	// 그리드 데이터 함수
+	async function getGridList(filter) {
+		let jsonData = JSON.stringify(filter);
+		let ajaxData = await callAjaxPost('/select_LOT_list', jsonData);
+		grid.resetData(ajaxData.data);
+	}
+	
 	// 그리드 생성 함수
 	function make_grid() {
 		grid = new tui.Grid({
 			el : document.getElementById('grid'),
-			data : [
-				{
-					lot_cd: '10012',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: 'South Korea',
-					workorder_st: false,
-				},
-				{
-					lot_cd: '10013',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: 'South Korea',
-					workorder_st: true,
-				},
-				{
-					lot_cd: '10014',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: 'South Korea',
-					workorder_st: true,
-				},
-			  ],
+			data : [],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 400,
 			columns : [
-				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
-				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
-				{header : '생성일자', name : 'lot_st', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
+				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text'},
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
+				{header : '색상', name : 'PRODUCT_CR', sortable : true, filter: 'text'}, 
+				{header : '사이즈', name : 'PRODUCT_SZ', sortable : true, filter: 'text'}, 
+				{header : '생성일자', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '완료여부', name : 'WORKORDER_ST', sortable : true, filter: 'select',
 					formatter: function({value}) {
-						return value == true ? '최종완료' : value == false ? '진행중' : '';
+						return value == true ? '최종완료' : value == false ? '진행중' : '대기';
 					}
 				}, 
 			],
@@ -200,34 +188,46 @@
 			if(row == null) {
 				return;
 			}
-			make_chart(row);
-			//modal_detail(row);
+		    fetchChartData(row);
 		});
 	}
 	
-	// 차트 생성 함수
+	// 차트 JSON 가져오기
+	function fetchChartData(row) {
+	    $.ajax({
+	        type: "POST",
+	        url: "/select_LOT_json",
+	        contentType: 'application/json',
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+	        data: JSON.stringify(row),
+	        success: function(data) {
+                try {
+                    let jsonData = JSON.parse(data.data.JSON_DATA);
+                    make_chart(jsonData); // 변환된 JSON 객체 전달
+                } catch (error) {
+                    console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.JSON_DATA);
+                }
+	        },
+	        error: function(error) {
+	            console.error("Error fetching chart data:", error);
+	        }
+	    });
+	}
+
+	
+	
+	// 트리 생성 함수
 	function make_chart(data){
-		var datascource = {
-			'name': '조던1', 'title': '제품', 'lot_st': 11311, 'process': '대기중', // title은 품목코드, name은 productname, processname
-			'children': [
-				{ 'name': '나염/고주파&재봉', 'title': '반제품', 'className': 'middle-level', 'lot_st': 11111, 'process': '완료',},
-				{ 'name': '파일론', 'title': '반제품', 'className': 'middle-level', 'lot_st': 1112,'process': '진행중',
-					'children': [
-						{ 'name': '미드솔', 'title': '반제품', 'className': 'rd-dept', 'lot_st': 1111, 'process': '완료',},
-						{ 'name': '아웃솔', 'title': '반제품', 'className': 'rd-dept', 'lot_st': 112212111, 'process': '완료',}
-					]
-				},
-				{ 'name': '인솔', 'title': '원자재', 'className': 'rd-dept', 'lot_st': 114511, 'process': '완료',},
-			]
-		};
 		chart.orgchart({
-			'data': datascource, // 데이터 입력
+			'data': data, // 데이터 입력
 			'nodeContent': data.lot_st, // 노드에 표시할 속성
-			'pan': true, // 패닝 활성화
+			//'pan': true, // 패닝 활성화
 			'direction': 't2b', // 방향 설정 (bottom to top)
 			'nodeTemplate': function(data) {
-				console.log(data);
 				let background = '#997af3'; // 기본 배경색 (파란색)
+				let color = '#997af3'; // 기본 배경색 (파란색)
 				// 직급(title)에 따라 다른 배경색 적용
 				if (data.title === '제품') {
 					background = '#ff5733'; // 주황색
@@ -256,69 +256,82 @@
 				node.classList.add('blinking-node');
 			}
 		});
+		
+		$('.node').on('dblclick', function(ev) {
+			modal_detail(ev);
+		});
 
 	}
 	
 	// 모달 생성
 	function modal_detail(data) {
-		let text = !data ? '등록' : '수정';
-		let title = `로트 ${text}`;
-		const div_modal = 'div_modal';
-		let modalElement = document.getElementById('#${div_modal}');
 		
-		if(!modalElement) {
-			let modalHtml = `
-			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-				<div class="modal-dialog modal-dialog-centered modal-xl">
-		            <div class="modal-content">
-						<div class="modal-header">
-		            		<h5 class="modal-title">${title}</h5>
-		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div id="modal_grid"></div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-							<button type="button" class="btn btn-primary" id="btn_COMMUTE_show">등록</button>
-						</div>
-					</div>
-				</div>
-			</div>
-			`;
-			
-			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
-			
-			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
-		}
-		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
-		
+	    const div_modal = "div_modal";
+	    let modalElement = document.getElementById(div_modal); // 기존 모달 확인
 
-		
-        modalElement.addEventListener('shown.bs.modal', function () {
-			
-        	make_modal_grid(date);
-			
-        });
-		
-		modalElement.addEventListener('hidden.bs.modal', function () {
-/* 			$('button, input, select, textarea').each(function () {
-                $(this).blur();
-            }); */
-			modalElement.remove();
-		});
-		
-		modal.show();
-		
-		$(window).resize(function() {
-			setGridHeight(modal_grid, -600);
-		});
+	    // 기존 모달이 있으면 삭제 후 새로 생성
+	    if (modalElement) {
+	        modalElement.remove();
+	    }
+
+	    // 새로운 모달 HTML 추가
+	    let modalHtml = `
+	    <div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+	    	<div class="modal-dialog modal-dialog-centered modal-xl">
+	        	<div class="modal-content">
+	            	<div class="modal-header">
+	                    <h5 class="modal-title">로트 상세정보</h5>
+	                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                </div>
+	                <div class="modal-body">
+	                    <div id="modal_grid"></div>
+	                </div>
+	                <div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	    `;
+
+	    document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+	    modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+
+	    const modal = new bootstrap.Modal(modalElement); // 모달 초기화
+
+	    modalElement.addEventListener("shown.bs.modal", function () {
+	        make_modal_grid(data); // 모달 내부 그리드 생성
+	    });
+
+	    modal.show();
+
+	    modalElement.addEventListener("hidden.bs.modal", function () {
+	        modalElement.remove(); // 모달 삭제
+
+	        // 🔹 모달 내부 모든 요소에서 포커스 제거
+	        document.activeElement.blur();
+
+	        // 🔹 모달 백드롭 제거
+	        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+
+	        // 🔹 body 상태 초기화 (스크롤 가능하도록 복구)
+	        document.body.classList.remove("modal-open");
+	        document.body.style.overflow = "";
+	    });
+
+
+
+	    $(window).resize(function () {
+	        setGridHeight(modal_grid, -600);
+	    });
+	    
 	}
+
 	
 	// 모달 그리드 생성
 	function make_modal_grid(data) {
-		grid = new tui.Grid({
-			el : document.getElementById('grid'),
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
 			data : [
 				{
 					lot_cd: '10012',
@@ -329,12 +342,11 @@
 					lot_st: 'South Korea',
 					workorder_st: true,
 				},
-			  ],
+			],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 200,
 			columns : [
@@ -364,9 +376,7 @@
 					}
 				}
 			},
-
 		});
-		
 	}
 	
 </script>
