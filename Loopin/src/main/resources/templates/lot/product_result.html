@@ -35,25 +35,26 @@
 							<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
 								<div class="col d-flex justify-content-end align-items-center mt-3">
 									<div id="btn_chart">
-								        <button id="resetFilter" class="btn btn-primary me-2">월별 생산량</button>
-								        <button id="resetFilter" class="btn btn-primary me-2">공정별 불량률</button>
-								        <button id="applyFilter" class="btn btn-primary me-2">제품별 불량률</button>
+								        <button id="btn_month" class="btn btn-primary me-2">월별</button>
+								        <button id="btn_process" class="btn btn-primary me-2">공정별</button>
+								        <button id="btn_product" class="btn btn-primary me-2">제품별</button>
 									</div>
 							    </div>
-								<div id="chart"></div>
+								<div id="chart">
 <!--								<div class="row mb-3">-->
 <!--									<div class="col-sm-6">-->
-<!--										<div id="monthProductChart"></div>-->
+<!-- 										<div id="productionChart"></div> -->
 <!--									</div>-->
 <!--									<div class="col-sm-6">-->
-<!--										<div id="productErrorChart"></div>-->
+<!-- 										<div id="errorChart"></div> -->
 <!--									</div>-->
 <!--								</div>-->
 <!--								<div class="row">-->
 <!--									<div class="col-sm-6">-->
-<!--										<div id="grade_bar"></div>-->
+<!-- 										<div id="processChart"></div> -->
 <!--									</div>-->
 <!--								</div>-->
+								</div>
 							</div>
 						</div>
 					</div>
@@ -63,27 +64,27 @@
 	</main>
 </body>																																																																																																																																																																																																																											
 <script th:inline="javascript">
-	let grid, modal_grid, rangePicker;
+	let grid, modal_grid, rangePicker, lineChart, gradeChart;
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
-	let btn_chart = $("#btn_chart");
 	let chart = $("#chart");
-	let date = new Date();
+	let btn_month = $("#btn_month");
+	let btn_process = $("#btn_process");
+	let btn_product = $("#btn_product");
 	let useList = /*[[${commonList['USE']}]]*/[];
 	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
 	let accountList = /*[[${accountList}]]*/ [];
-
-		let transformedAccountList = accountList.map(item => {
-		    return {
-		        common_cc: item.COMMON_CC,
-		        common_nm: item.COMMON_NM
-		    };
-		});
+	let transformedAccountList = accountList.map(item => {
+	    return {
+	        common_cc: item.COMMON_CC,
+	        common_nm: item.COMMON_NM
+	    };
+	});
 	const today = new Date();
 	const oneMonthAgo = new Date();
-	oneMonthAgo.setMonth(date.getMonth() - 1);
+	oneMonthAgo.setMonth(today.getMonth() - 1);
 	const filterConfig = [
-		{ key: 'startDate', label: '수주일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
+		{ key: 'startDate', label: '수주일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(oneMonthAgo) },
 		{ key: 'endDate', label: '출하일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
 	    { key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
 	    { key: 'account_cd', label: '거래처명', type: 'select', list: setFilterList(transformedAccountList), col: 'col-2' },
@@ -91,7 +92,8 @@
 	    { key: 'contract_am', label: '지시수량', type: 'text', placeholder: '수량 입력', col: 'col-2' },
 	    { key: 'product_pr', label: '판매단가', type: 'text', placeholder: '단가 입력', col: 'col-2' },
 		{ key: 'contract_mn', label: '실적금액', type: 'radio', list: [ 
-			{ value: 'HIGH', text: '높은순', checked: true },
+			{ value: 'ALL', text: '기본', checked: true },
+			{ value: 'HIGH', text: '높은순'},
 			{ value: 'LOW', text: '낮은순' },
 		], col: 'col' },
 	];
@@ -103,12 +105,12 @@
 		make_grid();
 		getGridList();
 		setElementHeight('.card', -105);
-		setGridHeight(grid, -380);
+		setGridHeight(grid, -430);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
 				setElementHeight('.card', -105);
-				setGridHeight(grid, -380);
+				setGridHeight(grid, -430);
 				setGridWidth(grid, 0);
 			}, 300);
 		});
@@ -121,9 +123,9 @@
 		
         $(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -450);
+		        setGridHeight(grid, -490);
 		    } else {
-		        setGridHeight(grid, -380);
+		        setGridHeight(grid, -430);
 		    }
 		});
 		// 필터 엔터키 검색 이벤트
@@ -138,6 +140,28 @@
 		        filterValues[config.key] = value;
 		    }
 		    getGridList(filterValues);
+		});
+		
+		$("#btn_chart_tab").on('click', function() {
+			chart.empty();
+		    productionChart();
+			errorChart();
+		});
+		btn_month.on('click', function(e) {
+			chart.empty();
+			console.log(e);
+		    productionChart("month");
+			errorChart("month");
+		});
+		btn_process.on('click', function() {
+			chart.empty();
+		    productionChart("process");
+			errorChart("process");
+		});
+		btn_product.on('click', function() {
+			chart.empty();
+		    productionChart("product");
+			errorChart("product");
 		});
 	});
 	
@@ -158,7 +182,6 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',},
-				{type : 'checkbox',}, 
 			],
 			bodyHeight : 600,
 			columns : [
@@ -262,10 +285,9 @@
 			columns : [
 				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
 				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '소요시간', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '공정명', name : 'process_cd', sortable : true, filter: 'text'},
 				{header : '소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
-				{header : '작업시작일', name : 'lothistory_st', sortable : true, filter: 'text'}, 
-				{header : '작업종료일', name : 'lothistory_en', sortable : true, filter: 'text'}, 
+				{header : '소요기간', name : 'lothistory_st', sortable : true, filter: 'text'}, 
 				{header : '작업수량', name : 'lothistory_wq', sortable : true, filter: 'text'}, 
 				{header : '양품수량', name : 'INOUT_NN', sortable : true, filter: 'text'}, 
 				{header : '불량수량', name : 'lothistory_bq', sortable : true, filter: 'text'}, 
@@ -289,25 +311,24 @@
 	// 차트 데이터 조회
 	function getChartList(filter) {
 		const data = {
-					filter: filter || 
+				filter: filter || 
 		        {
-		        	startDate: rangeStart.val(),
-		    	 	endDate: rangeEnd.val() 
-		    	 }
+					startDate: rangeStart.val(),
+					endDate: rangeEnd.val() 
+		    	}
 		    };
 
 		$.ajax({
 			type: 'post',
-			url: '/select_RESULT_list',
+			url: '/select_RESULT_chart',
 			contentType: 'application/json',
 			data: JSON.stringify(data),
 			beforeSend : function(xhr) {
 			    xhr.setRequestHeader(header, token);
 			},
 			success: function(response) {
-				monthProductChart(response['monthProductChart']);
-				productErrorChart(response['productErrorChart']);
-				processErrorChart(response['processErrorChart']);
+				productionChart(response['productionChart']);
+				errorChart(response['errorChart']);
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log(xhr);
@@ -315,6 +336,152 @@
 			}
 		});
 	}
+	
+	// 생산량 차트
+	function productionChart(productionChart){
+		if(lineChart) {
+			lineChart.destroy();
+		}
+		
+		let el = document.getElementById("productionChart");
+	    if (!el) {
+	        el = document.createElement("div"); // 새로운 div 요소 생성
+	        el.id = "productionChart"; // ID 설정
+	        document.getElementById("chart").appendChild(el); // #chart 내부에 추가
+	    }
+	    const parentElement = el.parentElement;
+
+	    
+	    const data = {
+// 	        categories: productionChart.categories,
+// 	        series: productionChart.series.map(series => ({
+// 	            name: series.name,
+// 	            data: series.data.map(value => parseFloat(value) || 0)
+// 	        }))
+			categories: ['1월', '2월', '3월', '4월', '5월'],
+		    series: [
+		      {
+		        name: '매출',
+		        data: [5000, 7000, 8000, 6000, 9000]
+		      },
+		      {
+		        name: '이익',
+		        data: [3000, 5000, 6000, 4000, 7000]
+		      }
+		    ]
+	    };
+	    
+	    const options = {
+	        chart: { 
+	            title: '생산량',
+	            ...getChartSize(document.getElementById('chart'))
+	        },
+	        xAxis: {
+	            title: '원'
+	        },
+	        yAxis: {
+	            title: '원'
+	        },
+	        tooltip: {
+	            formatted: (value) => `${value}시간`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        },
+	        series: {
+	            spline: true,
+	            showDot: true
+	        },
+	        theme: {
+	            series: {
+	                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96c93d', '#7950f2']
+	            }
+	        }
+	    };
+
+	    lineChart = toastui.Chart.lineChart({ el, data, options });
+	    
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(document.getElementById('chart'));
+	        lineChart.resize({ width, height });
+	    });
+	}
+	
+	// 불량률 차트
+	function errorChart(){
+		if(gradeChart) {
+			gradeChart.destroy();
+		}
+		
+		let el = document.getElementById("errorChart");
+	    if (!el) {
+	        el = document.createElement("div"); // 새로운 div 요소 생성
+	        el.id = "errorChart"; // ID 설정
+	        document.getElementById("chart").appendChild(el); // #chart 내부에 추가
+	    }
+	    const parentElement = el.parentElement;
+	    
+	    const data = {
+// 		        categories: chart.categories,
+// 		        series: chart.series.map(series => ({
+// 		            name: series.name,
+// 		            data: series.data.map(value => parseFloat(value) || 0)
+// 		        }))
+				categories: ['JORDAN01', 'JORDAN02', 'JORDAN03', 'JORDAN04', 'JORDAN05'],
+			    series: [
+			      {
+			        name: '양품수량',
+			        data: [500, 700, 800, 600, 900]
+			      },
+			      {
+			        name: '불량수량',
+			        data: [100, 200, 50, 40, 60]
+			      }
+			    ]
+		    };
+
+		const options = {
+		    chart: { 
+		        title: '불량률',
+		        ...getChartSize(parentElement)
+		    },
+		    legend: {
+		        align: 'bottom'
+		    },
+		    series: {
+		        stack: true,
+		        dataLabels: {
+		            visible: true
+		        }
+		    },
+		    theme: {
+		        series: {
+		            colors: ['#4ecdc4', '#ff6b6b']
+		        }
+		    }
+		};
+
+		gradeChart = toastui.Chart.barChart({ el, data, options });
+
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(parentElement);
+	        gradeChart.resize({ width, height });
+	    });
+	}
+	
+	function processChart(){
+		console.log("processChart 함수 호출!");
+	}
+	
+	// 차트 크기를 계산하는 함수
+    function getChartSize(el) {
+        return {
+			width: el.clientWidth-100,
+            height: window.innerHeight - 640
+        };
+    }
 	
 </script>
 </html>

@@ -19,12 +19,18 @@
 	}
 	@keyframes blink {
 	    0% { opacity: 1;}
-	    40% { opacity: 0.5;}
+	    35% { opacity: 0.2;}
 	    100% { opacity: 1;}
 	}
-	
 	.blinking-node {
-	    animation: blink 2s infinite;
+	    animation: blink 3s infinite;
+	    color: red;
+	    background-color: white;
+	}
+	.wide-header {
+	    min-width: 200px !important;  /* ✅ 원하는 너비 지정 */
+	    white-space: normal !important;  /* ✅ 텍스트 줄 바꿈 */
+	    text-align: center;
 	}
 </style>
 <body>
@@ -73,11 +79,11 @@
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	const filterConfig = [
-		{ key: 'product_cd', label: '로트번호', type: 'text', placeholder: '로트번호 입력', col: 'col-4' },
-		{ key: 'product_nm', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
-		{ key: 'product_cc', label: '품목분류', type: 'select', list: setFilterList(productList), col: 'col-4' },
+		{ key: 'lot_cd', label: '로트번호', type: 'text', placeholder: '로트번호 입력', col: 'col-4' },
+		{ key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
+		{ key: 'product_cd', label: '제품명', type: 'text', placeholder: '제품명 입력', col: 'col-4' },
 		{ key: 'process_cd', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
-		{ key: 'workorder_st', label: '사용여부', type: 'radio', list: [ 
+		{ key: 'workorder_st', label: '완료여부', type: 'radio', list: [ 
 				{ value: 'ALL', text: '전체', checked: true },
 				{ value: 'PENDING', text: '대기' },
 				{ value: 'IN_PROGRESS', text: '진행중' },
@@ -94,12 +100,12 @@
 		
 		// 창크기
 		setElementHeight('.card', -105);
-		setGridHeight(grid, -380);
+		setGridHeight(grid, -430);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
 				setElementHeight('.card', -105);
-				setGridHeight(grid, -380);
+				setGridHeight(grid, -430);
 				setGridWidth(grid, 0);
 			}, 300);
 		});
@@ -113,9 +119,9 @@
 		
 		$(document).on('filterToggled', function(e) {
 		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -450);
+		        setGridHeight(grid, -460);
 		    } else {
-		        setGridHeight(grid, -380);
+		        setGridHeight(grid, -430);
 		    }
 		});
 		
@@ -154,13 +160,11 @@
 			],
 			bodyHeight : 400,
 			columns : [
-				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text'},
+				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text', width: 200,},
 				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
 				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
 				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
-				{header : '색상', name : 'PRODUCT_CR', sortable : true, filter: 'text'}, 
-				{header : '사이즈', name : 'PRODUCT_SZ', sortable : true, filter: 'text'}, 
-				{header : '생성일자', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '생성일자', name : 'LOT_CR', sortable : true, filter: 'text'}, 
 				{header : '완료여부', name : 'WORKORDER_ST', sortable : true, filter: 'select',
 					formatter: function({value}) {
 						return value == true ? '최종완료' : value == false ? '진행중' : '대기';
@@ -251,14 +255,14 @@
 			el.style.pointerEvents = 'none'; // 클릭 이벤트 비활성화
 		});
 		
-		document.querySelectorAll('.orgchart .node').forEach(node => {
-			if(node.textContent.includes("진행중")) {
+		document.querySelectorAll('.process').forEach(node => {
+			if(node.textContent.includes("대기중")) {
 				node.classList.add('blinking-node');
 			}
 		});
 		
-		$('.node').on('dblclick', function(ev) {
-			modal_detail(ev);
+		$('.node').on('dblclick', function() {
+			modal_detail(data);
 		});
 
 	}
@@ -332,17 +336,7 @@
 	function make_modal_grid(data) {
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : [
-				{
-					lot_cd: '10012',
-					contract_cd: 'Seoul',
-					product_cd: 'South Korea',
-					product_cr: 'South Korea',
-					product_sz: 'South Korea',
-					lot_st: 'South Korea',
-					workorder_st: true,
-				},
-			],
+			data : [], //{api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {lot_cd: data.lot_cd} }}}
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
