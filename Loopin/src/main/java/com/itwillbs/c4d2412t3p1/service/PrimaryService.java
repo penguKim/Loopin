@@ -77,17 +77,19 @@ public class PrimaryService {
         
         // 창고 등록
         warehouseRepository.save(warehouse);
-        // 기존 구역 삭제
-        wareareaRepository.deleteByWarehouseCd(warehouseDTO.getWarehouse_cd());
+        if(wareareaDTOList != null) {
+            // 기존 구역 삭제
+            wareareaRepository.deleteByWarehouseCd(warehouseDTO.getWarehouse_cd());
 
-        List<Warearea> wareareaList = wareareaDTOList.stream()
-            .map(warearea -> {
-            	warearea.setWarehouse_cd(warehouseDTO.getWarehouse_cd());
-                return Warearea.setWarehouse(warearea);
-            })
-            .collect(Collectors.toList());
-        // 구역 등록
-        wareareaRepository.saveAll(wareareaList);
+            List<Warearea> wareareaList = wareareaDTOList.stream()
+                .map(warearea -> {
+                	warearea.setWarehouse_cd(warehouseDTO.getWarehouse_cd());
+                    return Warearea.setWarehouse(warearea);
+                })
+                .collect(Collectors.toList());
+            // 구역 등록
+            wareareaRepository.saveAll(wareareaList);
+        }
 	}
 	
 	// 창고코드 중복 체크
