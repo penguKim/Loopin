@@ -26,7 +26,7 @@
 				<div class="col-lg-12">
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">인사현황</h5>
+							<h5 class="card-title">영업현황</h5>
 							<div class="d-flex justify-content-between">
 								<div>
 									<ul class="nav nav-pills mb-3" id="business-tab" role="tablist">
@@ -72,11 +72,17 @@
 							    </div>
 							</div>
 							<div class="row mb-3">
+								<!-- 바 차트 -->
 								<div class="col-sm-6">
-									<div id="chart-posi"></div>
+									<div id="chart-product"></div>
+									<div id="chart-material"></div>
+									<div id="chart-shipment"></div>
 								</div>
+								<!-- 파이 차트 -->
 								<div class="col-sm-6">
-									<div id="chart-hdrd"></div>
+									<div id="chart-product-amount"></div>
+									<div id="chart-material-amount"></div>
+									<div id="chart-shipment-amount"></div>
 								</div>
 							</div>
 						</div>
@@ -110,6 +116,7 @@
 
 	    // DatePicker 객체 생성
 	    const rangePicker = tui.DatePicker.createRangePicker({
+	    	language: 'ko',
 	        startpicker: {
 	            date: oneMonthAgo,
 	            input: '#start_dt',
@@ -125,73 +132,91 @@
 	        timePicker: false
 	    });
 
-		// 📌 탭 클릭 이벤트 - 선택된 탭에 해당하는 데이터만 불러오기
-		function loadGridByTab(gridType) {
-		    $('.grid-container').hide(); // 모든 그리드 숨김
-		    const startDt = rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null;
-		    const endDt = rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null;
+	    // 탭 클릭 시 해당 데이터 불러오기
+	    $('.nav-link').on('click', function () {
+	        const selectedTab = $(this).attr('id');
+	        const startDt = rangePicker.getStartDate()?.toISOString().split('T')[0] || null;
+	        const endDt = rangePicker.getEndDate()?.toISOString().split('T')[0] || null;
 
-		    console.log(`탭 클릭: ${gridType} | 시작일: ${startDt}, 종료일: ${endDt}`);
+	        if (!startDt || !endDt) {
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '시작일과 종료일을 입력해주세요.', confirmButtonText: '확인' });
+	            return;
+	        }
 
-		    if (!startDt || !endDt) {
-		        alert('시작일과 종료일을 입력해주세요.');
-		        return;
-		    }
 
-		    if (gridType === 'contract') {
-		        $('#contract_grid').show();
-		        make_contract_grid(startDt, endDt);
-		    } else if (gridType === 'order') {
-		        $('#order_grid').show();
-		        make_order_grid(startDt, endDt);
-		    } else if (gridType === 'shipment') {
-		        $('#shipment_grid').show();
-		        make_shipment_grid(startDt, endDt);
-		    }
-		}
+	        $('.grid-container').hide();
+	        $('#chart-product, #chart-material, #chart-product-amount, #chart-material-amount, #chart-shipment, #chart-shipment-amount').hide();
 
-		$('#btn_contract_tab').on('click', function () {
-		    loadGridByTab('contract');
-		});
+	        // 차트 요소 초기화
+	        $('#chart-product, #chart-material, #chart-product-amount, #chart-material-amount, #chart-shipment, #chart-shipment-amount').empty();
 
-		$('#btn_order_tab').on('click', function () {
-		    loadGridByTab('order');
-		});
+	        if (selectedTab === 'btn_contract_tab') {
+	            $('#contract_grid').show();
+	            $('#chart-product').show();
+	            $('#chart-product-amount').show();
+	            make_contract_grid(startDt, endDt);
+	            fetchDataAndRenderContractCharts('/select_CONTRACT_PRODUCT', 'chart-product', startDt, endDt);
+	            fetchDataAndRenderContractAmountPieChart('/select_CONTRACT_PRODUCT_AMOUNT', 'chart-product-amount', startDt, endDt);
+	        } else if (selectedTab === 'btn_order_tab') {
+	            $('#order_grid').show();
+	            $('#chart-material').show();
+	            $('#chart-material-amount').show();
+	            make_order_grid(startDt, endDt);
+	            fetchDataAndRenderOrderMaterialChart('/select_ORDER_MATERIAL', 'chart-material', startDt, endDt);
+	            fetchDataAndRenderOrderAmountPieChart('/select_ORDER_MATERIAL_AMOUNT', 'chart-material-amount', startDt, endDt);
+	        } else if (selectedTab === 'btn_shipment_tab') {
+	            $('#shipment_grid').show();
+	            $('#chart-shipment').show();
+	            $('#chart-shipment-amount').show();
+	            make_shipment_grid(startDt, endDt);
+	            fetchDataAndRenderShipmentChart('/select_SHIPMENT_PRODUCT', 'chart-shipment', startDt, endDt);
+	            fetchDataAndRenderShipmentPieChart('/select_SHIPMENT_PRODUCT_AMOUNT', 'chart-shipment-amount', startDt, endDt);
+	        }
+	    });
 
-		$('#btn_shipment_tab').on('click', function () {
-		    loadGridByTab('shipment');
-		});
-		
-		
-		$('#search-btn').on('click', function () {
-		    const startDt = rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null;
-		    const endDt = rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null;
+	    // 조회 버튼 클릭 시 데이터를 불러오기
+	    $('#search-btn').on('click', function () {
+	    	const selectedTab = $('.nav-link.active').attr('id');
+	        const startDt = rangePicker.getStartDate()?.toISOString().split('T')[0] || null;
+	        const endDt = rangePicker.getEndDate()?.toISOString().split('T')[0] || null;
 
-		    console.log("조회 버튼 클릭: 시작일 =", startDt, "종료일 =", endDt);
+	        if (!startDt || !endDt) {
+	        	Swal.fire({ icon: 'error', title: '오류 발생!', text: '시작일과 종료일을 입력해주세요.', confirmButtonText: '확인' });
+	            return;
+	        }
+	        
+	        if (selectedTab === 'btn_contract_tab') {
+	        	make_contract_grid(startDt, endDt);
+	        	fetchDataAndRenderContractCharts('/select_CONTRACT_PRODUCT', 'chart-product', startDt, endDt);
+	            fetchDataAndRenderContractAmountPieChart('/select_CONTRACT_PRODUCT_AMOUNT', 'chart-product-amount', startDt, endDt);
+	        } else if (selectedTab === 'btn_order_tab') {
+	        	make_order_grid(startDt, endDt);
+	            fetchDataAndRenderOrderMaterialChart('/select_ORDER_MATERIAL', 'chart-material', startDt, endDt);
+	            fetchDataAndRenderOrderAmountPieChart('/select_ORDER_MATERIAL_AMOUNT', 'chart-material-amount', startDt, endDt);
+	        } else if (selectedTab === 'btn_shipment_tab') {
+	        	make_shipment_grid(startDt, endDt);
+	            fetchDataAndRenderShipmentChart('/select_SHIPMENT_PRODUCT', 'chart-shipment', startDt, endDt);
+	            fetchDataAndRenderShipmentPieChart('/select_SHIPMENT_PRODUCT_AMOUNT', 'chart-shipment-amount', startDt, endDt);
+	        }
+	    });
 
-		    if (!startDt || !endDt) {
-		        alert('시작일과 종료일을 입력해주세요.');
-		        return;
-		    }
-
-		    make_contract_grid(startDt, endDt);
-		    make_order_grid(startDt, endDt);
-		    make_shipment_grid(startDt, endDt);
-		});
-
-		// 페이지 로드 시 기본 데이터 로드
-		make_contract_grid(
-		    rangePicker.getStartDate() ? rangePicker.getStartDate().toISOString().split('T')[0] : null, 
-		    rangePicker.getEndDate() ? rangePicker.getEndDate().toISOString().split('T')[0] : null
-		);
-
+	    //  페이지 로드 시 기본 데이터 로드
+	    const initialStartDt = rangePicker.getStartDate()?.toISOString().split('T')[0] || null;
+	    const initialEndDt = rangePicker.getEndDate()?.toISOString().split('T')[0] || null;
+	    if (initialStartDt && initialEndDt) {
+	        $('#contract_grid').show();
+	        make_contract_grid(initialStartDt, initialEndDt);
+	        fetchDataAndRenderContractCharts('/select_CONTRACT_PRODUCT', 'chart-product', initialStartDt, initialEndDt);
+	        fetchDataAndRenderContractAmountPieChart('/select_CONTRACT_PRODUCT_AMOUNT', 'chart-product-amount', initialStartDt, initialEndDt);
+	    }
 	});
 
-
-
+	// 수주 탭 시작 
+	
+	
+	// 수주 그리드
 	function make_contract_grid(startDt, endDt) {
 	    // 기존 그리드가 있으면 새로 만들지 않고 데이터만 갱신
-		console.log("전송 데이터:", startDt, endDt);
 	    if (contract_grid) {
 	        load_contract_data(startDt, endDt);  // 데이터 갱신 함수 호출
 	        return;
@@ -227,8 +252,11 @@
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
+	                    	contract_am: {
+	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                        },
 	                        contract_mn: {
-	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
 	                        }
 	                    }
 	                }
@@ -240,6 +268,7 @@
 	    });
 	}
 
+	// 수주 그리드
 	function load_contract_data(startDt, endDt) {
 	    $.ajax({
 	        url: '/select_CONTRACT_STATE',
@@ -257,10 +286,175 @@
 	}
 
 
+	// 수주 바 차트
+	function fetchDataAndRenderContractCharts(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("차트 데이터 응답:", response);
 	
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+	
+	            const productMap = {};
+	            const categories = new Set();
+	
+	            response.forEach(item => {
+	                const productKey = `${item.product_nm} (${item.product_sz}/${item.product_cr})`; // 제품명 (사이즈/색상)
+	                const date = item.contract_sd;   // 계약 날짜
+	                const amount = Number(item.product_am); // 계약 수량 (숫자로 변환)
+	
+	                categories.add(date);
+	
+	                if (!productMap[productKey]) {
+	                    productMap[productKey] = [];
+	                }
+	                productMap[productKey].push({ date, amount });
+	            });
+	
+	            const sortedCategories = Array.from(categories).sort();
+	
+	            const seriesData = Object.keys(productMap).map(productKey => {
+	                const dataArr = sortedCategories.map(date => {
+	                    const found = productMap[productKey].find(d => d.date === date);
+	                    return found ? found.amount : 0;
+	                });
+	
+	                return { name: productKey, data: dataArr };
+	            });
+	
+	            const data = {
+	                categories: sortedCategories,
+	                series: seriesData
+	            };
+	
+	            console.log("차트 렌더링 데이터:", data);
+	            renderContractChart(data, chartId); // 🔹 변환된 데이터 전달
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+
+	// 수주 바 차트 랜더링 함수
+	function renderContractChart(response, chartId) {
+	    const data = {
+	        categories: response.categories,
+	        series: response.series
+	    };
+	
+	    const options = {
+	        chart: {
+	            title: '수주 제품 수량',
+	            width: 800,
+	            height: 500
+	        },
+	        xAxis: {
+	            title: '수주량',
+	            type: 'category'
+	        },
+	        yAxis: {
+	            title: '수주 날짜'
+	        },
+	        series: {
+	            stack: false // 누적 그래프 비활성화 (각 제품 개별 표시)
+	        },
+	        tooltip: {
+	            formatter: (value) => `${value} 개`
+	        }
+	    };
+	
+	    // 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.barChart({ el, data, options });
+	}
+	
+	// 수주 파이 차트
+	function fetchDataAndRenderContractAmountPieChart(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("수주 금액 파이 차트 데이터 응답:", response);
+
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+
+	            const seriesData = response.map(item => ({
+	                name: `${item.product_nm} (${item.product_sz}/${item.product_cr})`,
+	                data: Number(item.total_price)
+	            }));
+
+	            const data = {
+	                series: seriesData
+	            };
+
+	            console.log("수주 금액 파이 차트 렌더링 데이터:", data);
+	            renderContractAmountPieChart(data, chartId);
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+	// 수주 파이 차트 랜더링 함수
+	function renderContractAmountPieChart(response, chartId) {
+	    const data = {
+	        series: response.series
+	    };
+
+	    const options = {
+	        chart: {
+	            title: '제품별 수주 금액',
+	            width: 600,
+	            height: 500
+	        },
+	        tooltip: {
+	            formatter: (value) => `₩${value.toLocaleString()}`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        }
+	    };
+
+	    // 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.pieChart({ el, data, options });
+	}
+	
+	// 수주 탭 끝
+	
+	
+	
+	
+	
+	
+	// 발주 탭 시작
+	// 발주 그리드 
 	function make_order_grid(startDt, endDt) {
 	    // 기존 그리드가 있으면 데이터만 갱신
-		console.log("전송 데이터:", startDt, endDt);
 	    if (order_grid) {
 	        load_order_data(startDt, endDt);  // 데이터만 갱신하는 함수 호출
 	        return;
@@ -287,7 +481,7 @@
 	                zIndex: 100,
 	                columns: [
 	                    { header: '발주번호', name: 'order_cd', align: 'center', sortable: true },
-	                    { header: '발주번호', name: 'account_cd', align: 'center', sortable: true },
+	                    { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
 	                    { header: '발주일자', name: 'order_sd', align: 'center', sortable: true },
 	                    { header: '입고일자', name: 'order_ed', align: 'center', sortable: true },
 	                    { header: '발주수량', name: 'order_am', align: 'center', sortable: true },
@@ -297,8 +491,11 @@
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
+	                    	order_am: {
+	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                        },
 	                        order_mn: {
-	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
 	                        }
 	                    }
 	                }
@@ -310,6 +507,7 @@
 	    });
 	}
 
+	// 발주 데이터 가져오는 함수
 	function load_order_data(startDt, endDt) {
 	    $.ajax({
 	        url: '/select_ORDER_STATE',
@@ -327,6 +525,178 @@
 	}
 
 	
+	// 발주 바 차트
+	function fetchDataAndRenderOrderMaterialChart(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("발주 제품 차트 데이터 응답:", response);
+
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+
+	            // 🔹 제품별 데이터를 그룹화하여 차트 데이터 구조 생성
+	            const productMap = {};
+	            const categories = new Set();
+
+	            response.forEach(item => {
+	                const productKey = `${item.material_nm} (${item.material_cd})`; // 제품명 (코드 포함)
+	                const date = item.order_sd;   // 발주 날짜
+	                const amount = Number(item.material_am); // 발주 수량
+
+	                categories.add(date);
+
+	                if (!productMap[productKey]) {
+	                    productMap[productKey] = [];
+	                }
+	                productMap[productKey].push({ date, amount });
+	            });
+
+	            // 🔹 x축 날짜 (categories) 정렬
+	            const sortedCategories = Array.from(categories).sort();
+
+	            // 🔹 Series 데이터 생성 (날짜별 발주 수량)
+	            const seriesData = Object.keys(productMap).map(productKey => {
+	                const dataArr = sortedCategories.map(date => {
+	                    const found = productMap[productKey].find(d => d.date === date);
+	                    return found ? found.amount : 0;
+	                });
+
+	                return { name: productKey, data: dataArr };
+	            });
+
+	            // 🔹 차트에 전달할 데이터
+	            const data = {
+	                categories: sortedCategories,
+	                series: seriesData
+	            };
+
+	            console.log("발주 제품 바 차트 렌더링 데이터:", data);
+	            renderOrderProductChart(data, chartId); // ✅ 바 차트 함수 호출
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+
+	// 발주 바 차트 함수
+	function renderOrderProductChart(response, chartId) {
+	    const data = {
+	        categories: response.categories, // x축 (발주 날짜)
+	        series: response.series // 제품별 발주 수량
+	    };
+
+	    const options = {
+	        chart: {
+	            title: '기간별 발주 제품 현황',
+	            width: 800,
+	            height: 500
+	        },
+	        xAxis: {
+	            title: '발주 수량',
+	            type: 'category' // 날짜를 범주형 데이터로 설정
+	        },
+	        yAxis: {
+	            title: '발주 날짜'
+	        },
+	        series: {
+	            stack: false // 개별 제품별로 수량 표시
+	        },
+	        tooltip: {
+	            formatter: (value) => `${value} 개`
+	        }
+	    };
+
+	    // ✅ 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.barChart({ el, data, options });
+	}
+	
+	
+	
+	// 발주 파이 차트 함수
+	function fetchDataAndRenderOrderAmountPieChart(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("수주 금액 파이 차트 데이터 응답:", response);
+
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+
+	            const seriesData = response.map(item => ({
+	                name: `${item.material_nm}`,
+	                data: Number(item.total_price)
+	            }));
+
+	            const data = {
+	                series: seriesData
+	            };
+
+	            console.log("수주 금액 파이 차트 렌더링 데이터:", data);
+	            renderOrderAmountPieChart(data, chartId);
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+	// 발주 파이 차트 함수
+	function renderOrderAmountPieChart(response, chartId) {
+	    const data = {
+	        series: response.series
+	    };
+
+	    const options = {
+	        chart: {
+	            title: '제품별 수주 금액',
+	            width: 600,
+	            height: 500
+	        },
+	        tooltip: {
+	            formatter: (value) => `₩${value.toLocaleString()}`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        }
+	    };
+
+	    // 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.pieChart({ el, data, options });
+	}
+
+	// 발주 탭 끝
+	
+	
+	
+	
+	
+	
+	// 출하 탭 시작
 	function make_shipment_grid(startDt, endDt) {
 	    if (shipment_grid) {
 	        load_shipment_data(startDt, endDt);  // 데이터만 갱신하는 함수 호출
@@ -354,17 +724,20 @@
 	                zIndex: 100,
 	                columns: [
 	                    { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
-	                    { header: '출하일자', name: 'contract_sd', align: 'center', sortable: true },
 	                    { header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
-	                    { header: '출하수량', name: 'contract_am', align: 'center', sortable: true }
+	                    { header: '출하수량', name: 'contract_am', align: 'center', sortable: true },
+	                    { header: '출하금액', name: 'contract_mn', align: 'center', sortable: true }
 	                ],
 	                summary: {
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
 	                        contract_am: {
-	                            template: (valueMap) => `총 ${valueMap.cnt} 건`
-	                        }
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                        },
+	                        contract_mn: {
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
+	                        },
 	                    }
 	                }
 	            });
@@ -391,7 +764,161 @@
 	    });
 	}
 
+
+	function fetchDataAndRenderShipmentChart(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("차트 데이터 응답:", response);
 	
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+	
+	            const productMap = {};
+	            const categories = new Set();
+	
+	            response.forEach(item => {
+	                const productKey = `${item.product_nm} (${item.product_sz}/${item.product_cr})`; // 제품명 (사이즈/색상)
+	                const date = item.contract_sd;   // 계약 날짜
+	                const amount = Number(item.product_am); // 계약 수량 (숫자로 변환)
+	
+	                categories.add(date);
+	
+	                if (!productMap[productKey]) {
+	                    productMap[productKey] = [];
+	                }
+	                productMap[productKey].push({ date, amount });
+	            });
+	
+	            const sortedCategories = Array.from(categories).sort();
+	
+	            const seriesData = Object.keys(productMap).map(productKey => {
+	                const dataArr = sortedCategories.map(date => {
+	                    const found = productMap[productKey].find(d => d.date === date);
+	                    return found ? found.amount : 0;
+	                });
+	
+	                return { name: productKey, data: dataArr };
+	            });
+	
+	            const data = {
+	                categories: sortedCategories,
+	                series: seriesData
+	            };
+	
+	            console.log("차트 렌더링 데이터:", data);
+	            renderShipmentChart(data, chartId); // 🔹 변환된 데이터 전달
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+	function renderShipmentChart(response, chartId) {
+	    const data = {
+	        categories: response.categories,
+	        series: response.series
+	    };
+	
+	    const options = {
+	        chart: {
+	            title: '출하 제품 수량',
+	            width: 800,
+	            height: 500
+	        },
+	        xAxis: {
+	            title: '출하량',
+	            type: 'category'
+	        },
+	        yAxis: {
+	            title: '출하 날짜'
+	        },
+	        series: {
+	            stack: false // 누적 그래프 비활성화 (각 제품 개별 표시)
+	        },
+	        tooltip: {
+	            formatter: (value) => `${value} 개`
+	        }
+	    };
+	
+	    // 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.barChart({ el, data, options });
+	}
+	
+
+	function fetchDataAndRenderShipmentPieChart(url, chartId, startDt, endDt) {
+	    $.ajax({
+	        url: url,
+	        method: 'GET',
+	        headers: {
+	            [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
+	        },
+	        data: { start_dt: startDt, end_dt: endDt },
+	        success: function (response) {
+	            console.log("수주 금액 파이 차트 데이터 응답:", response);
+
+	            if (!response || response.length === 0) {
+	                console.warn("차트 데이터가 없음");
+	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                return;
+	            }
+
+	            const seriesData = response.map(item => ({
+	                name: `${item.product_nm} (${item.product_sz}/${item.product_cr})`,
+	                data: Number(item.total_price)
+	            }));
+
+	            const data = {
+	                series: seriesData
+	            };
+
+	            console.log("수주 금액 파이 차트 렌더링 데이터:", data);
+	            renderShipmentAmountPieChart(data, chartId);
+	        },
+	        error: function (xhr, status, error) {
+	            console.error('Error fetching data:', error);
+	            Swal.fire({ icon: 'error', title: '오류 발생!', text: '데이터 조회 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	        }
+	    });
+	}
+
+	function renderShipmentAmountPieChart(response, chartId) {
+	    const data = {
+	        series: response.series
+	    };
+
+	    const options = {
+	        chart: {
+	            title: '제품별 수주 금액',
+	            width: 600,
+	            height: 500
+	        },
+	        tooltip: {
+	            formatter: (value) => `₩${value.toLocaleString()}`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        }
+	    };
+
+	    // 기존 차트 제거 후 새로 생성
+	    $(`#${chartId}`).empty();
+	    const el = document.getElementById(chartId);
+	    toastui.Chart.pieChart({ el, data, options });
+	}
+	// 출하 탭 끝
 	
 </script>
 

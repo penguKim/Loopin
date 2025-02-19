@@ -766,6 +766,43 @@ public class BusinessController {
 		
 	}
 
+	
+	// 수주 차트 조회
+	@GetMapping("/select_CONTRACT_PRODUCT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_PRODUCT(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_CONTRACT_PRODUCT(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+
+	// 수주 차트 조회
+	@GetMapping("/select_CONTRACT_PRODUCT_AMOUNT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_CONTRACT_PRODUCT_AMOUNT(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_CONTRACT_PRODUCT_AMOUNT(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+	
 	// 발주 현황 조회
 	@GetMapping("/select_ORDER_STATE")
 	@ResponseBody
@@ -785,6 +822,43 @@ public class BusinessController {
 		}
 		
 	}
+	
+	// 발주 차트 조회
+	@GetMapping("/select_ORDER_MATERIAL")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDER_MATERIAL(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ORDER_MATERIAL(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+	
+	// 발주 차트 조회
+	@GetMapping("/select_ORDER_MATERIAL_AMOUNT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_ORDER_MATERIAL_AMOUNT(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_ORDER_MATERIAL_AMOUNT(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+	
 
 	// 출하 현황 조회
 	@GetMapping("/select_SHIPMENT_STATE")
@@ -804,6 +878,42 @@ public class BusinessController {
 			return ResponseEntity.status(500).body(null);
 		}
 		
+	}
+	
+	// 출하 차트 조회
+	@GetMapping("/select_SHIPMENT_PRODUCT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_SHIPMENT_PRODUCT(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_SHIPMENT_PRODUCT(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
+	}
+
+	// 출하 차트 조회
+	@GetMapping("/select_SHIPMENT_PRODUCT_AMOUNT")
+	@ResponseBody
+	public ResponseEntity<List<Map<String, Object>>> select_SHIPMENT_PRODUCT_AMOUNT(
+			@RequestParam("start_dt") String startDt,
+			@RequestParam("end_dt") String endDt
+			) {
+		
+		try {
+			List<Map<String, Object>> response = businessService.select_SHIPMENT_PRODUCT_AMOUNT(startDt, endDt);
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+			return ResponseEntity.status(500).body(null);
+		}
 	}
 	
 }

@@ -445,9 +445,57 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     	    FROM CONTRACT c
     	    WHERE c.contract_sd BETWEEN :startDt AND :endDt
     	    AND (c.contract_ed IS NULL OR c.contract_ed >= :startDt)
+    	    AND c.contract_st NOT IN ('대기중')
     	    ORDER BY c.contract_cd DESC
     	""", nativeQuery = true)
 	List<Object[]> select_CONTRACT_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
+
+	
+
+	
+	
+	// 날짜별 수주 제품 현황
+    @Query(value = """
+			SELECT 
+			    c.contract_sd AS contract_sd,
+			    cd.product_cd AS product_cd,
+			    COALESCE(p.product_nm, '미등록 제품') AS product_nm,
+			    cd.product_sz AS product_sz,
+			    cd.product_cr AS product_cr,
+			    SUM(cd.product_am) AS product_am
+			FROM CONTRACT c
+			JOIN CONTRACTDETAIL cd ON c.contract_cd = cd.contract_cd
+			LEFT JOIN PRODUCT p
+			    ON cd.product_cd = p.product_cd  
+			    AND cd.product_sz = p.product_sz
+			    AND cd.product_cr = p.product_cr
+			WHERE c.contract_sd BETWEEN :startDt AND :endDt  
+			AND c.contract_st NOT IN ('대기중')  
+			GROUP BY c.contract_sd, cd.product_cd, p.product_nm, cd.product_sz, cd.product_cr
+			ORDER BY c.contract_sd ASC, cd.product_cd ASC
+        """, nativeQuery = true)
+    List<Object[]> select_CONTRACT_PRODUCT(@Param("startDt") String startDt, @Param("endDt") String endDt);
+	
+    
+    @Query(value = """
+		    SELECT 
+		        cd.product_cd AS product_cd,
+		        COALESCE(p.product_nm, '미등록 제품') AS product_nm,
+		        cd.product_sz AS product_sz,
+		        cd.product_cr AS product_cr,
+		        SUM(cd.product_am * cd.contract_ct) AS total_price
+		    FROM CONTRACT c
+		    JOIN CONTRACTDETAIL cd ON c.contract_cd = cd.contract_cd
+		    LEFT JOIN PRODUCT p
+		        ON cd.product_cd = p.product_cd  
+		        AND cd.product_sz = p.product_sz
+		        AND cd.product_cr = p.product_cr
+			WHERE c.contract_sd BETWEEN :startDt AND :endDt  
+			AND c.contract_st NOT IN ('대기중')  
+		    GROUP BY cd.product_cd, p.product_nm, cd.product_sz, cd.product_cr
+		    ORDER BY total_price DESC
+    	""", nativeQuery = true)
+	List<Object[]> select_CONTRACT_PRODUCT_AMOUNT(@Param("startDt") String startDt, @Param("endDt") String endDt);
 
 	
 	// 출하 현황 조회
@@ -460,11 +508,57 @@ public interface ContractRepository  extends JpaRepository<Contract, String> {
     	        c.contract_am,
     	        c.contract_mn
     	    FROM CONTRACT c
-    	    WHERE c.contract_sd BETWEEN :startDt AND :endDt
+    	    WHERE c.contract_ed BETWEEN :startDt AND :endDt
     	    AND (c.contract_ed IS NULL OR c.contract_ed >= :startDt)
-    	    AND c.contract_st NOT IN ('대기중')
+    	    AND c.contract_st IN ('완료')
     	    ORDER BY c.contract_cd DESC
     	""", nativeQuery = true)
 	List<Object[]> select_SHIPMENT_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
+	
+	
+	// 수주 제품 수량
+	@Query(value = """
+			SELECT 
+			    c.contract_sd AS contract_sd,
+			    cd.product_cd AS product_cd,
+			    COALESCE(p.product_nm, '미등록 제품') AS product_nm,
+			    cd.product_sz AS product_sz,
+			    cd.product_cr AS product_cr,
+			    SUM(cd.product_am) AS product_am
+			FROM CONTRACT c
+			JOIN CONTRACTDETAIL cd ON c.contract_cd = cd.contract_cd
+			LEFT JOIN PRODUCT p
+			    ON cd.product_cd = p.product_cd  
+			    AND cd.product_sz = p.product_sz
+			    AND cd.product_cr = p.product_cr
+			WHERE c.contract_sd BETWEEN :startDt AND :endDt  
+			AND c.contract_st NOT IN ('대기중')  
+			GROUP BY c.contract_sd, cd.product_cd, p.product_nm, cd.product_sz, cd.product_cr
+			ORDER BY c.contract_sd ASC, cd.product_cd ASC
+        """, nativeQuery = true)
+	List<Object[]> select_SHIPMENT_PRODUCT(@Param("startDt") String startDt, @Param("endDt") String endDt);
+	
+	
+	@Query(value = """
+		    SELECT 
+		        cd.product_cd AS product_cd,
+		        COALESCE(p.product_nm, '미등록 제품') AS product_nm,
+		        cd.product_sz AS product_sz,
+		        cd.product_cr AS product_cr,
+		        SUM(cd.product_am * cd.contract_ct) AS total_price
+		    FROM CONTRACT c
+		    JOIN CONTRACTDETAIL cd ON c.contract_cd = cd.contract_cd
+		    LEFT JOIN PRODUCT p
+		        ON cd.product_cd = p.product_cd  
+		        AND cd.product_sz = p.product_sz
+		        AND cd.product_cr = p.product_cr
+			WHERE c.contract_ed BETWEEN :startDt AND :endDt  
+			AND c.contract_st IN ('완료')  
+		    GROUP BY cd.product_cd, p.product_nm, cd.product_sz, cd.product_cr
+		    ORDER BY total_price DESC
+    	""", nativeQuery = true)
+	List<Object[]> select_SHIPMENT_PRODUCT_AMOUNT(@Param("startDt") String startDt, @Param("endDt") String endDt);
+
+	
     
 }

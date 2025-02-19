@@ -875,7 +875,7 @@ public class BusinessService {
 	}
 	
 	
-    // 출하페이지 수주조회
+    // 출하현황
 	public List<Map<String, Object>> select_SHIPMENT_STATE(String startDt, String endDt) {
 
 		List<Object[]> result;
@@ -893,6 +893,144 @@ public class BusinessService {
 
 			return contract;
 
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_CONTRACT_PRODUCT(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = contractRepository.select_CONTRACT_PRODUCT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_sd", row[0]);
+			contract.put("product_cd", row[1]);
+			contract.put("product_nm", row[2]);
+			contract.put("product_sz", row[3]);
+			contract.put("product_cr", row[4]);
+			contract.put("product_am", row[5]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_CONTRACT_PRODUCT_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = contractRepository.select_CONTRACT_PRODUCT_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("product_cd", row[0]);
+			contract.put("product_nm", row[1]);
+			contract.put("product_sz", row[2]);
+			contract.put("product_cr", row[3]);
+			contract.put("total_price", row[4]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_ORDER_MATERIAL(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = orderRepository.select_ORDER_MATERIAL(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("order_sd", row[0]);
+			order.put("material_cd", row[1]);
+			order.put("material_nm", row[2]);
+			order.put("material_am", row[3]);
+			
+			return order;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_ORDER_MATERIAL_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = orderRepository.select_ORDER_MATERIAL_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("material_cd", row[0]);
+			order.put("material_nm", row[1]);
+			order.put("total_price", row[2]);
+			
+			return order;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_SHIPMENT_PRODUCT(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = contractRepository.select_SHIPMENT_PRODUCT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_sd", row[0]);
+			contract.put("product_cd", row[1]);
+			contract.put("product_nm", row[2]);
+			contract.put("product_sz", row[3]);
+			contract.put("product_cr", row[4]);
+			contract.put("product_am", row[5]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_SHIPMENT_PRODUCT_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = contractRepository.select_SHIPMENT_PRODUCT_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("product_cd", row[0]);
+			contract.put("product_nm", row[1]);
+			contract.put("product_sz", row[2]);
+			contract.put("product_cr", row[3]);
+			contract.put("total_price", row[4]);
+			
+			return contract;
+			
 		}).collect(Collectors.toList());
 	}
 	

@@ -266,7 +266,7 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
     void updateOrderStatus();
     
 	
-	// 발주 조회
+	// 발주 현황
 	@Query(value = """
 		    SELECT
 				o.order_cd,
@@ -278,8 +278,45 @@ public interface OrderRepository  extends JpaRepository<Order, String> {
 			FROM ORDERS o
     	    WHERE o.order_sd BETWEEN :startDt AND :endDt
     	    AND (o.order_ed IS NULL OR o.order_ed >= :startDt)
+    	    AND o.order_st NOT IN ('대기중')
 			ORDER BY order_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_ORDER_STATE(@Param("startDt") String startDt, @Param("endDt") String endDt);
     
+	// 날짜별 발주 제품 현황
+    @Query(value = """
+		SELECT 
+		    o.order_sd AS order_sd,
+		    od.material_cd AS material_cd,
+		    COALESCE(m.material_nm, '미등록 제품') AS material_nm,
+		    SUM(od.material_am) AS material_am
+		FROM ORDERS o
+		JOIN ORDERDETAIL od ON o.order_cd = od.order_cd
+		LEFT JOIN MATERIAL m 
+		   	   ON od.material_cd = m.material_cd  
+		WHERE o.order_sd BETWEEN :startDt AND :endDt  
+		  AND o.order_sd NOT IN ('대기중')  
+		GROUP BY o.order_sd, od.material_cd, m.material_nm
+		ORDER BY o.order_sd ASC, od.material_cd ASC
+        """, nativeQuery = true)
+    List<Object[]> select_ORDER_MATERIAL(@Param("startDt") String startDt, @Param("endDt") String endDt);
+
+    
+    // 날짜별 발주 제품 현황
+    @Query(value = """
+		SELECT 
+		    od.material_cd AS material_cd,
+		    COALESCE(m.material_nm, '미등록 제품') AS material_nm,
+		    SUM(od.material_am * od.order_ct) AS total_price
+		FROM ORDERS o
+		JOIN ORDERDETAIL od ON o.order_cd = od.order_cd
+		LEFT JOIN MATERIAL m 
+		   	   ON od.material_cd = m.material_cd  
+		WHERE o.order_sd BETWEEN :startDt AND :endDt  
+		  AND o.order_sd NOT IN ('대기중')  
+		GROUP BY o.order_sd, od.material_cd, m.material_nm
+		ORDER BY o.order_sd ASC, od.material_cd ASC
+        """, nativeQuery = true)
+    List<Object[]> select_ORDER_MATERIAL_AMOUNT(@Param("startDt") String startDt, @Param("endDt") String endDt);
+	
 }
