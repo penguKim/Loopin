@@ -20,4 +20,10 @@ public interface ContractDetailRepository extends JpaRepository<ContractDetail, 
         AND (:contractCd IS NULL OR d.contract_cd = :contractCd)
     """)
     List<ContractDetail> select_CONTRACTDETAIL_BY_STATUS_list(@Param("contractCd") String contractCd);
+    
+ // 같은 수주번호, 품목코드를 가진 모든 컬러·사이즈의 총합을 조회
+    @Query("SELECT SUM(d.product_am) FROM ContractDetail d " +
+           "WHERE d.contract_cd = :contractCd AND d.product_cd = :productCd")
+    Integer findTotalContractAmount(@Param("contractCd") String contractCd, 
+                                    @Param("productCd") String productCd);
 }
