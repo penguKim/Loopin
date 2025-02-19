@@ -229,6 +229,10 @@ public class FilterRequest {
 		private String item_gc;
 		private String item_cc;
 		private String item_nm;
+		private String item_cd;
+		private String item_sz;
+		private String item_cr;
+		
 		
 		public StockFilterRequest() {
 			super();

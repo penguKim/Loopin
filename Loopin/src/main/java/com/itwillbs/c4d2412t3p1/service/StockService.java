@@ -1,13 +1,19 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.StockDTO;
+import com.itwillbs.c4d2412t3p1.entity.Stock;
+import com.itwillbs.c4d2412t3p1.entity.StockPK;
 import com.itwillbs.c4d2412t3p1.mapper.StockMapper;
 import com.itwillbs.c4d2412t3p1.repository.StockRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.StockFilterRequest;
@@ -72,6 +78,46 @@ public class StockService {
 		    }
 		}
 
+	}
+
+	// 품목 조회
+	public List<StockDTO> select_STOCK_MATERIAL(String material_gc, String material_cc, StockFilterRequest filter) {
+		return stockMapper.select_STOCK_MATERIAL(material_gc, material_cc, filter);
+	}
+	// 품목 조회
+	public List<StockDTO> select_STOCK_PRODUCT(String product_gc, String product_cc, StockFilterRequest filter) {
+		return stockMapper.select_STOCK_PRODUCT(product_gc, product_cc, filter);
+	}
+
+	// 재고 등록
+	public void insert_STOCK(StockDTO stockDTO) {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp time = new Timestamp(System.currentTimeMillis());
+	    
+		StockPK stockPk = new StockPK();
+		stockPk.setItem_cd(stockDTO.getItem_cd());
+		stockPk.setWarehouse_cd(stockDTO.getWarehouse_cd());
+		stockPk.setWarearea_cd(stockDTO.getWarearea_cd());
+		
+        Stock stock = stockRepository.findById(stockPk)
+                .map(existing -> {
+                	stockDTO.setStock_uu(regUser);
+                	stockDTO.setStock_ud(time);
+                    return Stock.setStock(stockDTO);
+                })
+                .orElseGet(() -> {
+                	stockDTO.setStock_ru(regUser);
+                	stockDTO.setStock_rd(time);
+                    return Stock.setStock(stockDTO);
+                });
+		
+        stockRepository.save(stock);
+		
+	}
+
+	// 재고 수량 조회
+	public StockDTO check_STOCK_AQ(StockDTO stock) {
+		return stockMapper.check_STOCK_AQ(stock);
 	}
 
 }

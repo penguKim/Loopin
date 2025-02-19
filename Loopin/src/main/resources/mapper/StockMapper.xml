@@ -3,288 +3,149 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.StockMapper">
-<select id="select_STOCK_list" resultType="map">
-  WITH PRODUCT_DATA AS (
-      SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN, PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
-          PD.PRODUCT_NM ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, CC.COMMON_NM COLOR_NM, ST.WAREHOUSE_CD, 
-          ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, PD.PRODUCT_UN ITEM_UN,
-          SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) ITEM_CD,
-          SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) COLOR,
-          SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) "SIZE",
-          WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
-      FROM STOCK ST
-      LEFT OUTER JOIN PRODUCT PD 
-         ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
-        AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-        AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
-      LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-      LEFT OUTER JOIN WAREAREA WA ON WA.WAREAREA_CD = ST.WAREAREA_CD AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-      LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'COLOR' 
-        AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-      LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
-      LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
-      WHERE ST.STOCK_TP = 'Y'
-        <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-        <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
-        <if test="filter.item_gc != null and filter.item_gc != ''">AND PD.PRODUCT_GC = #{filter.item_gc}</if>
-        <if test="filter.item_cc != null and filter.item_cc != ''">AND PD.PRODUCT_CC = #{filter.item_cc}</if>
-        <if test="filter.item_nm != null and filter.item_nm != ''">AND PD.PRODUCT_NM LIKE '%${filter.item_nm}%'</if>
-  ),
-  PIVOT_DATA AS (
-      SELECT *
-      FROM PRODUCT_DATA
-	  PIVOT (
-			SUM(STOCK_AQ)
-			FOR "SIZE" IN 
-		<foreach collection="sizeList.SIZE" item="size" open="(" close=")" separator=",">
-			'${size.common_cc}' AS "${size.common_cc}"
-		</foreach>
+	<select id="select_STOCK_list" resultType="map">
+	  WITH PRODUCT_DATA AS (
+	      SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN, PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
+	          PD.PRODUCT_NM ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, CC.COMMON_NM COLOR_NM, ST.WAREHOUSE_CD, 
+	          ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, PD.PRODUCT_UN ITEM_UN,
+	          SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) ITEM_CD,
+	          SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) COLOR,
+	          SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) "SIZE",
+	          WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
+	      FROM STOCK ST
+	      LEFT OUTER JOIN PRODUCT PD 
+	         ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
+	        AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+	        AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
+	      LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	      LEFT OUTER JOIN WAREAREA WA ON WA.WAREAREA_CD = ST.WAREAREA_CD AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	      LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'COLOR' 
+	        AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
+	      LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
+	      LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
+	      WHERE ST.STOCK_TP = 'Y'
+	        <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
+	        <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
+	        <if test="filter.item_gc != null and filter.item_gc != ''">AND PD.PRODUCT_GC = #{filter.item_gc}</if>
+	        <if test="filter.item_cc != null and filter.item_cc != ''">AND PD.PRODUCT_CC = #{filter.item_cc}</if>
+	        <if test="filter.item_nm != null and filter.item_nm != ''">AND PD.PRODUCT_NM LIKE '%${filter.item_nm}%'</if>
+	  ),
+	  PIVOT_DATA AS (
+	      SELECT *
+	      FROM PRODUCT_DATA
+		  PIVOT (
+				SUM(STOCK_AQ)
+				FOR "SIZE" IN 
+			<foreach collection="sizeList.SIZE" item="size" open="(" close=")" separator=",">
+				'${size.common_cc}' AS "${size.common_cc}"
+			</foreach>
+		  )
+	  ),
+	  UNION_DATA AS (
+	      SELECT PVT.ITEM_GC, PVT.ITEM_GN, PVT.ITEM_CC, PVT.ITEM_CN, PVT.ITEM_NM, PVT.ITEM_CD, PVT.COLOR,
+	          	 PVT.ITEM_UN, PVT.WAREHOUSE_NM, PVT.WAREHOUSE_CD, PVT.WAREAREA_NM,  PVT.WAREAREA_CD,
+	          	 PVT.COLOR_NM, PVT.WAREAREA_CP, PVT.STOCK_TP,
+		    <foreach collection="sizeList.SIZE" item="size" separator=",">
+		      NVL(PVT."${size.common_cc}", 0) AS SIZE_${size.common_cc}
+		    </foreach>,
+		    (
+		      <foreach collection="sizeList.SIZE" item="size" separator="+">
+		        NVL(PVT."${size.common_cc}", 0)
+		      </foreach>
+		    ) STOCK_AQ
+	      FROM PIVOT_DATA PVT
+	      UNION ALL
+	      SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN, ST.ITEM_NM, ST.ITEM_CD,
+	          	 NULL AS COLOR, ST.ITEM_UN, ST.WAREHOUSE_NM, ST.WAREHOUSE_CD, ST.WAREAREA_NM,
+	          	 ST.WAREAREA_CD, NULL AS COLOR_NM, ST.WAREAREA_CP, ST.STOCK_TP,
+		    <foreach collection="sizeList.SIZE" item="size" separator=",">
+		         0 AS SIZE_${size.common_cc}
+		    </foreach>, 
+		    ST.STOCK_AQ
+	      FROM (
+	          SELECT MR.MATERIAL_GC ITEM_GC, CC.COMMON_NM ITEM_GN, MR.MATERIAL_CC ITEM_CC, CC2.COMMON_NM ITEM_CN,
+	             	 MR.MATERIAL_NM ITEM_NM, MR.MATERIAL_CD ITEM_CD, WH.WAREHOUSE_NM, WH.WAREHOUSE_CD, WA.WAREAREA_NM,
+	             	 WA.WAREAREA_CD, MR.MATERIAL_UN ITEM_UN, ST.STOCK_TP, ST.STOCK_AQ,
+	              	 WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
+	          FROM STOCK ST
+	          LEFT OUTER JOIN MATERIAL MR ON MR.MATERIAL_CD = ST.ITEM_CD
+	          LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	          LEFT OUTER JOIN WAREAREA WA ON WA.WAREAREA_CD = ST.WAREAREA_CD AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
+	          LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MR.MATERIAL_GC
+	          LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MR.MATERIAL_GC AND CC2.COMMON_CC = MR.MATERIAL_CC
+	          WHERE ST.STOCK_TP = 'N'
+		      <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
+		      <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
+		      <if test="filter.item_gc != null and filter.item_gc != ''">AND MR.MATERIAL_GC = #{filter.item_gc}</if>
+		      <if test="filter.item_cc != null and filter.item_cc != ''">AND MR.MATERIAL_CC = #{filter.item_cc}</if>
+		      <if test="filter.item_nm != null and filter.item_nm != ''">AND MR.MATERIAL_NM LIKE '%${filter.item_nm}%'</if>
+	      ) ST
 	  )
-  ),
-  UNION_DATA AS (
-      SELECT PVT.ITEM_GC, PVT.ITEM_GN, PVT.ITEM_CC, PVT.ITEM_CN, PVT.ITEM_NM, PVT.ITEM_CD, PVT.COLOR,
-          	 PVT.ITEM_UN, PVT.WAREHOUSE_NM, PVT.WAREHOUSE_CD, PVT.WAREAREA_NM,  PVT.WAREAREA_CD,
-          	 PVT.COLOR_NM, PVT.WAREAREA_CP, PVT.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	      NVL(PVT."${size.common_cc}", 0) AS SIZE_${size.common_cc}
-	    </foreach>,
-	    (
-	      <foreach collection="sizeList.SIZE" item="size" separator="+">
-	        NVL(PVT."${size.common_cc}", 0)
-	      </foreach>
-	    ) STOCK_AQ
-      FROM PIVOT_DATA PVT
-      UNION ALL
-      SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN, ST.ITEM_NM, ST.ITEM_CD,
-          	 NULL AS COLOR, ST.ITEM_UN, ST.WAREHOUSE_NM, ST.WAREHOUSE_CD, ST.WAREAREA_NM,
-          	 ST.WAREAREA_CD, NULL AS COLOR_NM, ST.WAREAREA_CP, ST.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	         0 AS SIZE_${size.common_cc}
-	    </foreach>, 
-	    ST.STOCK_AQ
-      FROM (
-          SELECT MR.MATERIAL_GC ITEM_GC, CC.COMMON_NM ITEM_GN, MR.MATERIAL_CC ITEM_CC, CC2.COMMON_NM ITEM_CN,
-             	 MR.MATERIAL_NM ITEM_NM, MR.MATERIAL_CD ITEM_CD, WH.WAREHOUSE_NM, WH.WAREHOUSE_CD, WA.WAREAREA_NM,
-             	 WA.WAREAREA_CD, MR.MATERIAL_UN ITEM_UN, ST.STOCK_TP, ST.STOCK_AQ,
-              	 WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
-          FROM STOCK ST
-          LEFT OUTER JOIN MATERIAL MR ON MR.MATERIAL_CD = ST.ITEM_CD
-          LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-          LEFT OUTER JOIN WAREAREA WA ON WA.WAREAREA_CD = ST.WAREAREA_CD AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-          LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MR.MATERIAL_GC
-          LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MR.MATERIAL_GC AND CC2.COMMON_CC = MR.MATERIAL_CC
-          WHERE ST.STOCK_TP = 'N'
-	      <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-	      <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
-	      <if test="filter.item_gc != null and filter.item_gc != ''">AND MR.MATERIAL_GC = #{filter.item_gc}</if>
-	      <if test="filter.item_cc != null and filter.item_cc != ''">AND MR.MATERIAL_CC = #{filter.item_cc}</if>
-	      <if test="filter.item_nm != null and filter.item_nm != ''">AND MR.MATERIAL_NM LIKE '%${filter.item_nm}%'</if>
-      ) ST
-  )
-  SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN, ST.ITEM_NM, ST.ITEM_CD,
-         ST.COLOR, ST.ITEM_UN, ST.WAREHOUSE_NM, ST.WAREHOUSE_CD, ST.WAREAREA_NM,
-         ST.WAREAREA_CD, ST.COLOR_NM, ST.WAREAREA_CP, ST.STOCK_TP, ST.STOCK_AQ,
-		<foreach collection="sizeList.SIZE" item="size" separator=",">
-	         ST.SIZE_${size.common_cc}
-	    </foreach>
-  FROM (
-      SELECT UD.*,
-             CASE WHEN ITEM_GC = 'MATERIALS' THEN 1
-                  WHEN ITEM_GC = 'HALFPRO'   THEN 2
-                  WHEN ITEM_GC = 'PRODUCT'   THEN 3
-                  ELSE 4 END SORT_ORDER
-      FROM UNION_DATA UD
-  ) ST
-  ORDER BY ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.SORT_ORDER, ST.ITEM_CD, ST.COLOR
-<!--   ORDER BY ST.SORT_ORDER, ST.ITEM_CD, ST.COLOR, ST.WAREHOUSE_CD, ST.WAREAREA_CD -->
-</select>
-
-
-
-
-<!-- 	<select id="select_STOCK_list" resultType="map">
-		WITH PRODUCT_DATA AS (
-		    SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN, PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
-		           PD.PRODUCT_NM ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, CC.COMMON_NM COLOR_NM,
-		           ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, PD.PRODUCT_UN ITEM_UN,
-		           SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) ITEM_CD,
-		           SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) COLOR,
-		           SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) "SIZE",
-		           WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
-  			  FROM STOCK ST
-  			  LEFT OUTER JOIN PRODUCT PD 
-    			ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
-   			   AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-   			   AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
-  			  LEFT OUTER JOIN WAREHOUSE WH 
-    			ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-  			  LEFT OUTER JOIN WAREAREA WA 
-    		    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
-   			   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-  			  LEFT OUTER JOIN COMMON_CODE CC 
-    			ON CC.COMMON_GC = 'COLOR' 
-   			   AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-   			  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
-   			  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
- 			 WHERE STOCK_TP = 'Y'
-		),
-		PIVOT_DATA AS (
-			SELECT *
-	      	  FROM PRODUCT_DATA
-	     	 PIVOT (
-				SUM(STOCK_AQ)
-				FOR "SIZE" IN 
-		<foreach collection="sizeList.SIZE" item="size" open="(" close=")" separator=",">
-			'${size.common_cc}' AS "${size.common_cc}"
-		</foreach>
-			)
-		)
-		SELECT PVT.ITEM_GC, PVT.ITEM_GN, PVT.ITEM_CC, PVT.ITEM_CN, PVT.ITEM_NM, PVT.ITEM_CD, 
-    		   PVT.COLOR, PVT.ITEM_UN, PVT.WAREHOUSE_NM, PVT.WAREHOUSE_CD, PVT.WAREAREA_NM, 
-    		   PVT.WAREAREA_CD, PVT.COLOR_NM, PVT.WAREAREA_CP, PVT.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	      NVL(PVT."${size.common_cc}", 0) AS SIZE_${size.common_cc}
-	    </foreach>,
-	    (
-	      <foreach collection="sizeList.SIZE" item="size" separator="+">
-	        NVL(PVT."${size.common_cc}", 0)
-	      </foreach>
-	    ) STOCK_AQ
-		  FROM PIVOT_DATA PVT
-  		 WHERE 1 = 1
-		<if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND PVT.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-		<if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND PVT.WAREAREA_CD = #{filter.warearea_cd}</if>
-		<if test="filter.item_gc != null and filter.item_gc != ''">AND PVT.ITEM_GC = #{filter.item_gc}</if>
-		<if test="filter.item_cc != null and filter.item_cc != ''">AND PVT.ITEM_CC = #{filter.item_cc}</if>
-		<if test="filter.item_nm != null and filter.item_nm != ''">AND PVT.ITEM_NM LIKE '%${filter.item_nm}%'</if>
-		  UNION ALL
-		 SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC,  ST.ITEM_CN, ST.ITEM_NM,
-		        ST.ITEM_CD, NULL COLOR, ST.ITEM_UN, ST.WAREHOUSE_NM, ST.WAREHOUSE_CD,
-		        ST.WAREAREA_NM, ST.WAREAREA_CD, NULL COLOR_NM, ST.WAREAREA_CP, ST.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	         0 AS SIZE_${size.common_cc}
-	    </foreach>
-	    , ST.STOCK_AQ
-			FROM (
-				SELECT MR.MATERIAL_GC ITEM_GC, CC.COMMON_NM ITEM_GN, MR.MATERIAL_CC ITEM_CC, CC2.COMMON_NM ITEM_CN,
-        			   MR.MATERIAL_NM ITEM_NM,  MR.MATERIAL_CD ITEM_CD, WH.WAREHOUSE_NM, WH.WAREHOUSE_CD,
-       				   WA.WAREAREA_NM, WA.WAREAREA_CD, MR.MATERIAL_UN ITEM_UN, ST.STOCK_TP, ST.STOCK_AQ,
-       				   WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) WAREAREA_CP
-				  FROM STOCK ST
-				  LEFT OUTER JOIN MATERIAL MR 
-				    ON MR.MATERIAL_CD = ST.ITEM_CD
-				  LEFT OUTER JOIN WAREHOUSE WH 
-				    ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-				  LEFT OUTER JOIN WAREAREA WA 
-				    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
-				   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-				  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MR.MATERIAL_GC
-				  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MR.MATERIAL_GC AND CC2.COMMON_CC = MR.MATERIAL_CC
-				 WHERE ST.STOCK_TP = 'N'
-		) ST
-		WHERE 1 = 1
-		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-		 <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
-		 <if test="filter.item_gc != null and filter.item_gc != ''">AND ST.ITEM_GC = #{filter.item_gc}</if>
-		 <if test="filter.item_cc != null and filter.item_cc != ''">AND ST.ITEM_CC = #{filter.item_cc}</if>
-		 <if test="filter.item_nm != null and filter.item_nm != ''">AND ST.ITEM_NM LIKE '%${filter.item_nm}%'</if>
-		ORDER BY ITEM_CD, WAREHOUSE_CD, WAREAREA_CD
-	</select> -->
+	  SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN, ST.ITEM_NM, ST.ITEM_CD,
+	         ST.COLOR, ST.ITEM_UN, ST.WAREHOUSE_NM, ST.WAREHOUSE_CD, ST.WAREAREA_NM,
+	         ST.WAREAREA_CD, ST.COLOR_NM, ST.WAREAREA_CP, ST.STOCK_TP, ST.STOCK_AQ,
+			<foreach collection="sizeList.SIZE" item="size" separator=",">
+		         ST.SIZE_${size.common_cc}
+		    </foreach>
+	  FROM (
+	      SELECT UD.*,
+	             CASE WHEN ITEM_GC = 'MATERIALS' THEN 1
+	                  WHEN ITEM_GC = 'HALFPRO'   THEN 2
+	                  WHEN ITEM_GC = 'PRODUCT'   THEN 3
+	                  ELSE 4 END SORT_ORDER
+	      FROM UNION_DATA UD
+	  ) ST
+	  ORDER BY ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.SORT_ORDER, ST.ITEM_CD, ST.COLOR
+	<!--   ORDER BY ST.SORT_ORDER, ST.ITEM_CD, ST.COLOR, ST.WAREHOUSE_CD, ST.WAREAREA_CD -->
+	</select>
 	
+	<!-- 품목 조회 -->
+	<select id="select_STOCK_MATERIAL" resultType="Stock">
+		SELECT CC.COMMON_NM ITEM_GN, CC2.COMMON_NM ITEM_CN, MT.MATERIAL_CD ITEM_CD,
+			   MT.MATERIAL_NM ITEM_NM, CC3.COMMON_NM ITEM_UN, WH.WAREHOUSE_CD, WH.WAREHOUSE_NM 
+		  FROM MATERIAL MT
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MT.MATERIAL_GC
+		  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MT.MATERIAL_GC AND CC2.COMMON_CC = MT.MATERIAL_CC
+		  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = 'UNIT' AND CC3.COMMON_CC = MT.MATERIAL_UN
+		  LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = MT.MATERIAL_WH
+		 WHERE MT.MATERIAL_GC = #{material_gc}
+		   AND MT.MATERIAL_CC = #{material_cc}
+		<if test="filter.item_cd != null and filter.item_cd != ''">AND MT.MATERIAL_CD LIKE '%${filter.item_cd}%'</if>
+		<if test="filter.item_nm != null and filter.item_nm != ''">AND MT.MATERIAL_NM LIKE '%${filter.item_nm}%'</if>
+	</select>
+	<select id="select_STOCK_PRODUCT" resultType="Stock">
+		SELECT CC.COMMON_NM ITEM_GN, CC2.COMMON_NM ITEM_CN, PD.PRODUCT_CD ITEM_CD, PD.PRODUCT_NM ITEM_NM, 
+			   PD.PRODUCT_SZ ITEM_SZ, PD.PRODUCT_CR COLOR, CC3.COMMON_NM COLOR_NM, CC4.COMMON_NM ITEM_UN, WH.WAREHOUSE_CD, WH.WAREHOUSE_NM 
+		  FROM PRODUCT PD
+		  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = PD.PRODUCT_GC 
+		  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = PD.PRODUCT_GC  AND CC2.COMMON_CC = PD.PRODUCT_CC
+		  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = 'COLOR' AND CC3.COMMON_CC = PD.PRODUCT_CR 
+		  LEFT OUTER JOIN COMMON_CODE CC4 ON CC4.COMMON_GC = 'UNIT' AND CC4.COMMON_CC = PD.PRODUCT_UN 
+		  LEFT OUTER JOIN WAREHOUSE WH ON WH.WAREHOUSE_CD = PD.PRODUCT_WH
+		 WHERE PD.PRODUCT_GC = #{product_gc}
+		   AND PD.PRODUCT_CC = #{product_cc}
+		<if test="filter.item_cd != null and filter.item_cd != ''">AND PD.PRODUCT_CD LIKE '%${filter.item_cd}%'</if>
+		<if test="filter.item_nm != null and filter.item_nm != ''">AND PD.PRODUCT_NM LIKE '%${filter.item_nm}%'</if>
+		<if test="filter.item_sz != null and filter.item_sz != ''">AND PD.PRODUCT_SZ = #{filter.item_sz}</if>
+		<if test="filter.item_cr != null and filter.item_cr != ''">AND PD.PRODUCT_CR = #{filter.item_cr}</if>
+	</select>
 	
-	
-	
-<!-- 	<select id="select_STOCK_list" resultType="map">
-		WITH PRODUCT_DATA AS (
-			SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN,  PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,
-				   PD.PRODUCT_NM AS ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, CC.COMMON_NM AS COLOR_NM,
-  	   			   ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_AQ, ST.STOCK_TP, PD.PRODUCT_UN AS ITEM_UN,
- 	   			   SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1) AS ITEM_CD,
-  	   			   SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1) AS COLOR,
-  	  			   SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3) AS "SIZE",
-  	  			   WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) AS WAREAREA_CP
-  			  FROM STOCK ST
-  			  LEFT OUTER JOIN PRODUCT PD 
-    			ON PD.PRODUCT_CD = SUBSTR(ST.ITEM_CD, 1, INSTR(ST.ITEM_CD, '-') - 1)
-   			   AND PD.PRODUCT_CR = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-   			   AND PD.PRODUCT_SZ = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-') + 1, 3)
-  			  LEFT OUTER JOIN WAREHOUSE WH 
-    			ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-  			  LEFT OUTER JOIN WAREAREA WA 
-    		    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
-   			   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-  			  LEFT OUTER JOIN COMMON_CODE CC 
-    			ON CC.COMMON_GC = 'COLOR' 
-   			   AND CC.COMMON_CC = SUBSTR(ST.ITEM_CD, INSTR(ST.ITEM_CD, '-', -1) + 1)
-   			  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'PRDTYPE' AND CC2.COMMON_CC = PD.PRODUCT_GC
-   			  LEFT OUTER JOIN COMMON_CODE CC3 ON CC3.COMMON_GC = PD.PRODUCT_GC AND CC3.COMMON_CC = PD.PRODUCT_CC
- 			 WHERE STOCK_TP = 'Y'
-		),
-		PIVOT_DATA AS (
-			SELECT *
-	      	  FROM PRODUCT_DATA
-	     	 PIVOT (
-				SUM(STOCK_AQ)
-				FOR "SIZE" IN 
-		<foreach collection="sizeList.SIZE" item="size" open="(" close=")" separator=",">
-			'${size.common_cc}' AS "${size.common_cc}"
-		</foreach>
-			)
-		)
-		SELECT PVT.ITEM_GC, PVT.ITEM_GN, PVT.ITEM_CC, PVT.ITEM_CN, PVT.ITEM_NM, 
-			   PVT.WAREHOUSE_NM, PVT.WAREAREA_NM, PVT.WAREAREA_CP, PVT.COLOR_NM, PVT.ITEM_UN,
-			   PVT.ITEM_CD, PVT.COLOR, PVT.WAREHOUSE_CD, PVT.WAREAREA_CD, PVT.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	      NVL(PVT."${size.common_cc}", 0) AS SIZE_${size.common_cc}
-	    </foreach>,
-	    (
-	      <foreach collection="sizeList.SIZE" item="size" separator="+">
-	        NVL(PVT."${size.common_cc}", 0)
-	      </foreach>
-	    ) AS STOCK_AQ
-		  FROM PIVOT_DATA PVT
-  		 WHERE 1 = 1
-		<if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND PVT.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-		<if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND PVT.WAREAREA_CD = #{filter.warearea_cd}</if>
-		<if test="filter.item_gc != null and filter.item_gc != ''">AND PVT.ITEM_GC = #{filter.item_gc}</if>
-		<if test="filter.item_cc != null and filter.item_cc != ''">AND PVT.ITEM_CC = #{filter.item_cc}</if>
-		<if test="filter.item_nm != null and filter.item_nm != ''">AND PVT.ITEM_NM LIKE '%${filter.item_nm}%'</if>
-		  UNION ALL
-		  SELECT ST.ITEM_GC, ST.ITEM_GN, ST.ITEM_CC, ST.ITEM_CN, ST.ITEM_NM, 
-				 ST.WAREHOUSE_NM, ST.WAREAREA_NM, ST.WAREAREA_CP, NULL, ST.ITEM_UN,
-	    		 ST.ITEM_CD, NULL, ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_TP,
-	    <foreach collection="sizeList.SIZE" item="size" separator=",">
-	         0 AS SIZE_${size.common_cc}
-	    </foreach>
-	    , ST.STOCK_AQ
-			FROM (
-				SELECT MR.MATERIAL_GC ITEM_GC, CC.COMMON_NM ITEM_GN, MR.MATERIAL_CC ITEM_CC, CC2.COMMON_NM ITEM_CN,
-					   MR.MATERIAL_NM AS ITEM_NM, WH.WAREHOUSE_NM, WA.WAREAREA_NM, MR.MATERIAL_UN ITEM_UN,
-	      			   ST.ITEM_CD, ST.WAREHOUSE_CD, ST.WAREAREA_CD, ST.STOCK_TP, ST.STOCK_AQ,
-	      			   WA.WAREAREA_CP - SUM(ST.STOCK_AQ) OVER (PARTITION BY ST.WAREHOUSE_CD, ST.WAREAREA_CD) AS WAREAREA_CP
-				  FROM STOCK ST
-				  LEFT OUTER JOIN MATERIAL MR 
-				    ON MR.MATERIAL_CD = ST.ITEM_CD
-				  LEFT OUTER JOIN WAREHOUSE WH 
-				    ON WH.WAREHOUSE_CD = ST.WAREHOUSE_CD
-				  LEFT OUTER JOIN WAREAREA WA 
-				    ON WA.WAREAREA_CD = ST.WAREAREA_CD 
-				   AND WA.WAREHOUSE_CD = ST.WAREHOUSE_CD
-				  LEFT OUTER JOIN COMMON_CODE CC ON CC.COMMON_GC = 'PRDTYPE' AND CC.COMMON_CC = MR.MATERIAL_GC
-				  LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = MR.MATERIAL_GC AND CC2.COMMON_CC = MR.MATERIAL_CC
-				 WHERE ST.STOCK_TP = 'N'
-		) ST
-		WHERE 1 = 1
-		 <if test="filter.warehouse_cd != null and filter.warehouse_cd != ''">AND ST.WAREHOUSE_CD = #{filter.warehouse_cd}</if>
-		 <if test="filter.warearea_cd != null and filter.warearea_cd != ''">AND ST.WAREAREA_CD = #{filter.warearea_cd}</if>
-		 <if test="filter.item_gc != null and filter.item_gc != ''">AND ST.ITEM_GC = #{filter.item_gc}</if>
-		 <if test="filter.item_cc != null and filter.item_cc != ''">AND ST.ITEM_CC = #{filter.item_cc}</if>
-		 <if test="filter.item_nm != null and filter.item_nm != ''">AND ST.ITEM_NM LIKE '%${filter.item_nm}%'</if>
-		ORDER BY WAREHOUSE_CD, WAREAREA_CD
-	</select> -->
-	
-	
-	
+	<select id="check_STOCK_AQ" resultType="Stock">
+		SELECT ST.STOCK_AQ, WS.WAREAREA_CP
+		  FROM STOCK ST
+		  LEFT OUTER JOIN (
+		  	SELECT WA.WAREHOUSE_CD, WA.WAREAREA_CD, NVL(WA.WAREAREA_CP - STOCK_MQ, WA.WAREAREA_CP) WAREAREA_CP
+		  	  FROM WAREAREA WA
+		  	  LEFT OUTER JOIN (
+			  	  SELECT SUM(ST.STOCK_AQ) STOCK_MQ, ST.WAREHOUSE_CD, ST.WAREAREA_CD 
+				    FROM STOCK ST
+				   GROUP BY ST.WAREHOUSE_CD, ST.WAREAREA_CD 
+		  	  ) ST ON ST.WAREHOUSE_CD = WA.WAREHOUSE_CD AND ST.WAREAREA_CD = WA.WAREAREA_CD
+		  ) WS ON WS.WAREHOUSE_CD = ST.WAREHOUSE_CD AND WS.WAREAREA_CD = ST.WAREAREA_CD
+		WHERE ST.ITEM_CD = #{stock.item_cd}
+		  AND ST.WAREHOUSE_CD  = #{stock.warehouse_cd}
+		  AND ST.WAREAREA_CD = #{stock.warearea_cd}
+	</select>
 
 	<select id="select_STOCK_chart" resultType="map">
 			SELECT PD.PRODUCT_GC ITEM_GC, CC2.COMMON_NM ITEM_GN,  PD.PRODUCT_CC ITEM_CC, CC3.COMMON_NM ITEM_CN,

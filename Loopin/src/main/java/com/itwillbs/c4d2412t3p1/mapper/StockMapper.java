@@ -24,6 +24,13 @@ public interface StockMapper {
 
 	List<Map<String, Object>> select_STOCK_chart(@Param("filter") StockFilterRequest filter);
 
+	// 품목 조회
+	List<StockDTO> select_STOCK_MATERIAL(@Param("material_gc") String material_gc, @Param("material_cc") String material_cc, @Param("filter") StockFilterRequest filter);
+	List<StockDTO> select_STOCK_PRODUCT(@Param("product_gc") String product_gc, @Param("product_cc") String product_cc, @Param("filter") StockFilterRequest filter);
+
+	// 창고 재고 체크
+	StockDTO check_STOCK_AQ(@Param("stock") StockDTO stock);
+
 
 
 

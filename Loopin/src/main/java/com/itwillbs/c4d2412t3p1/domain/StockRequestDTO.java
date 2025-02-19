@@ -22,4 +22,8 @@ public class StockRequestDTO {
 	
 	
 	String warehouse_cd;
+	String material_gc;
+	String material_cc;
+	String product_gc;
+	String product_cc;
 }
