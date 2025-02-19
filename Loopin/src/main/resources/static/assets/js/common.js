@@ -64,6 +64,9 @@ async function showConfirm(title, msg) {
         confirmButtonText: '확인',
         cancelButtonText: '취소',
 		reverseButtons: true, 
+		allowOutsideClick: false,  // 외부 클릭 방지
+		allowEscapeKey: false,     // ESC 키 방지
+		allowEnterKey: false       // 엔터키 방지
     });
     
     return result.isConfirmed;

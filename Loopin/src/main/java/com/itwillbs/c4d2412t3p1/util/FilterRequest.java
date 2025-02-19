@@ -192,6 +192,7 @@ public class FilterRequest {
 		}
 	}
 	
+	
 	// 발주관리 필터 클래스
 	@Getter
 	@Setter
@@ -212,6 +213,7 @@ public class FilterRequest {
 					&& (accountCd == null || accountCd.isEmpty()) && (orderPs == null || orderPs.isEmpty());
 		}
 	}
+
 	
 	// 수주관리 필터 클래스
 	@Getter
@@ -235,4 +237,3 @@ public class FilterRequest {
 	}
 	
 }
-
