@@ -127,7 +127,7 @@
 	    });
 
 	    $('#contract_am').val(totalQty);
-	    $('#contract_mn').val(`₩${totalAmount.toLocaleString()}`);
+	    $('#contract_mn').val(`${totalAmount.toLocaleString()}원`);
 	}	
 	
 		
@@ -633,9 +633,7 @@
 			    position: 'bottom', // or 'top'
 			    columnContent: {
 			    	product_un: {
-			            template: (valueMap) => {
-			                return `총  ${valueMap.cnt} 건`
-			            }
+						template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 			        }
 			    }
 			}
@@ -799,9 +797,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	                account_nm: {
-	                    template: (valueMap) => {
-	                    	return `총  ${valueMap.cnt} 건`
-	                    }
+	                	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -975,9 +971,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	            	employee_gd: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`;
-	                    }
+	            		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -1325,8 +1319,8 @@
                             { header: '담당자명', name: 'contract_ps', align: 'center', sortable: true },
                             { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
                             { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
-                            { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-                            { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
+                            { header: '수주수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+                            { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
                             { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
                             
                             // 숨김 컬럼
@@ -1340,11 +1334,15 @@
         				    height: 40,
         				    position: 'bottom', // or 'top'
         				    columnContent: {
-        				    	contract_st: {
-        				            template: (valueMap) => {
-        				                return `총  ${valueMap.cnt} 건`
-        				            }
-        				        }
+        				    	contract_am: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+    	                        },
+    	                        contract_mn: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
+    	                        },
+    	                        contract_st: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+    	                        }
         				    }
         				}
                     });
@@ -1395,20 +1393,21 @@
 					 { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
 					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
 					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
-					 { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
-					 { header: '단가', name: 'contract_ct', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`}, 
 					 { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
+					 { header: '단가', name: 'contract_ct', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`}, 
+					 { header: '제품수량', name: 'product_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
 					 { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
 	            ],
 				summary: {
 				    height: 40,
 				    position: 'bottom', // or 'top'
 				    columnContent: {
-				    	contract_ed: {
-				            template: (valueMap) => {
-				                return `총  ${valueMap.cnt} 건`
-				            }
-				        }
+				    	product_am: {
+                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+                        },
+                        contract_ed: {
+                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+                        }
 				    }
 				}
 	        });
@@ -1497,11 +1496,16 @@
 	            { header: '색상', name: 'product_cr', align: 'center' },
 	            { header: '사이즈', name: 'product_sz', align: 'center' },
 	            { header: '기준단위', name: 'product_un', align: 'center' },
-	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'contract_ct', align: 'center',  editor: 'text',     formatter: ({ value }) => {
+	            { header: '수량', name: 'product_am', align: 'center', editor: 'text', formatter: ({ value }) => {
 	                const num = Number(value);
-	                if (isNaN(num)) return '₩0';
-	                return `₩${num.toLocaleString()}`;
+	                if (isNaN(num)) return '0개';
+	                return `${num.toLocaleString()}개`;
+	            	}
+	            },
+	            { header: '단가', name: 'contract_ct', align: 'center',  editor: 'text', formatter: ({ value }) => {
+	                const num = Number(value);
+	                if (isNaN(num)) return '0원';
+	                return `${num.toLocaleString()}원`;
 	            	}
 	            }
 	        ],
@@ -1512,10 +1516,11 @@
 	            height: 40,
 	            position: 'bottom',
 	            columnContent: {
+	            	product_am: {
+	                    template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+	                },
 	                contract_ct: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`
-	                    }
+	                	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }

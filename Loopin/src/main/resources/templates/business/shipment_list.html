@@ -613,18 +613,19 @@
 							{ header: '출하요청자', name: 'contract_ps', align: 'center', sortable: true },
 							{ header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
 							{ header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
-							{ header: '출하상태', name: 'contract_st', align: 'center', sortable: true },
-							{ header: '출하수량', name: 'contract_am', align: 'center', sortable: true }
+							{ header: '출하수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+							{ header: '출하상태', name: 'contract_st', align: 'center', sortable: true }
                         ],
         				summary: {
         				    height: 40,
         				    position: 'bottom', // or 'top'
         				    columnContent: {
         				    	contract_am: {
-        				            template: (valueMap) => {
-        				                return `총  ${valueMap.cnt} 건`
-        				            }
-        				        }
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+        				        },
+        				        contract_st: {
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+        				        },
         				    }
         				}
                     });
@@ -675,17 +676,18 @@
 					 { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
 					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
 					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
-					 { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
+					 { header: '제품수량', name: 'product_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
 					 { header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
 	            ],
 				summary: {
 				    height: 40,
 				    position: 'bottom', // or 'top'
 				    columnContent: {
+				    	product_am: {
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+				        },
 				    	contract_ed: {
-				            template: (valueMap) => {
-				                return `총  ${valueMap.cnt} 건`
-				            }
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 				        }
 				    }
 				}
@@ -773,12 +775,12 @@
 	        { header: '색상', name: 'product_cr', align: 'center' },
 	        { header: '사이즈', name: 'product_sz', align: 'center' },
 	        { header: '기준단위', name: 'product_un', align: 'center' },
-	        { header: '수량', name: 'product_am', align: 'center' }
+	        { header: '수량', name: 'product_am', align: 'center',  formatter: ({ value }) => `${value.toLocaleString()}개`},
 	    ];
 	
 	    if (!isCompleted) {
 	        columns.push(
-	            { header: '제품재고', name: 'total_stock', align: 'center' },
+	            { header: '제품재고', name: 'total_stock', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
 	            { 
 	                header: '출하여부', 
 	                name: 'can_ship', 

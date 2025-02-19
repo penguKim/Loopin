@@ -17,6 +17,14 @@
     border-right-width: 1px;
     color: #333;
 }
+
+.chart-container {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    width: 100%; /* 전체 너비 */
+}
+
 </style>				
 				
 <body>
@@ -74,15 +82,19 @@
 							<div class="row mb-3">
 								<!-- 바 차트 -->
 								<div class="col-sm-6">
-									<div id="chart-product"></div>
-									<div id="chart-material"></div>
-									<div id="chart-shipment"></div>
+									<div class="chart-container">
+										<div id="chart-product"></div>
+										<div id="chart-material"></div>
+										<div id="chart-shipment"></div>
+									</div>
 								</div>
 								<!-- 파이 차트 -->
 								<div class="col-sm-6">
-									<div id="chart-product-amount"></div>
-									<div id="chart-material-amount"></div>
-									<div id="chart-shipment-amount"></div>
+									<div class="chart-container">
+										<div id="chart-product-amount"></div>
+										<div id="chart-material-amount"></div>
+										<div id="chart-shipment-amount"></div>
+									</div>
 								</div>
 							</div>
 						</div>
@@ -245,18 +257,18 @@
 	                    { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
 	                    { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
 	                    { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
-	                    { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-	                    { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`}
+	                    { header: '수주수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+	                    { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
 	                ],
 	                summary: {
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
 	                    	contract_am: {
-	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
 	                        },
 	                        contract_mn: {
-	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
 	                        }
 	                    }
 	                }
@@ -301,6 +313,7 @@
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">수주 제품 수량 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 	
@@ -357,8 +370,8 @@
 	    const options = {
 	        chart: {
 	            title: '수주 제품 수량',
-	            width: 800,
-	            height: 500
+	            width: 700,
+	            height: 330
 	        },
 	        xAxis: {
 	            title: '수주량',
@@ -371,7 +384,7 @@
 	            stack: false // 누적 그래프 비활성화 (각 제품 개별 표시)
 	        },
 	        tooltip: {
-	            formatter: (value) => `${value} 개`
+	            formatter: (value) => `${value.toLocaleString()} 개`
 	        }
 	    };
 	
@@ -396,6 +409,7 @@
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">수주 제품 금액 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 
@@ -427,11 +441,11 @@
 	    const options = {
 	        chart: {
 	            title: '제품별 수주 금액',
-	            width: 600,
-	            height: 500
+	            width: 700,
+	            height: 330
 	        },
 	        tooltip: {
-	            formatter: (value) => `₩${value.toLocaleString()}`
+	            formatter: (value) => `${value.toLocaleString()}원`
 	        },
 	        legend: {
 	            align: 'bottom'
@@ -445,11 +459,6 @@
 	}
 	
 	// 수주 탭 끝
-	
-	
-	
-	
-	
 	
 	// 발주 탭 시작
 	// 발주 그리드 
@@ -484,18 +493,18 @@
 	                    { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
 	                    { header: '발주일자', name: 'order_sd', align: 'center', sortable: true },
 	                    { header: '입고일자', name: 'order_ed', align: 'center', sortable: true },
-	                    { header: '발주수량', name: 'order_am', align: 'center', sortable: true },
-	                    { header: '발주금액', name: 'order_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
+	                    { header: '발주수량', name: 'order_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+	                    { header: '발주금액', name: 'order_mn', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
 	                ],
 	                summary: {
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
 	                    	order_am: {
-	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
 	                        },
 	                        order_mn: {
-	                    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
 	                        }
 	                    }
 	                }
@@ -540,10 +549,10 @@
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">발주 제품 수량 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 
-	            // 🔹 제품별 데이터를 그룹화하여 차트 데이터 구조 생성
 	            const productMap = {};
 	            const categories = new Set();
 
@@ -560,10 +569,10 @@
 	                productMap[productKey].push({ date, amount });
 	            });
 
-	            // 🔹 x축 날짜 (categories) 정렬
+	            // x축 날짜 (categories) 정렬
 	            const sortedCategories = Array.from(categories).sort();
 
-	            // 🔹 Series 데이터 생성 (날짜별 발주 수량)
+	            // Series 데이터 생성 (날짜별 발주 수량)
 	            const seriesData = Object.keys(productMap).map(productKey => {
 	                const dataArr = sortedCategories.map(date => {
 	                    const found = productMap[productKey].find(d => d.date === date);
@@ -573,14 +582,14 @@
 	                return { name: productKey, data: dataArr };
 	            });
 
-	            // 🔹 차트에 전달할 데이터
+	            // 차트에 전달할 데이터
 	            const data = {
 	                categories: sortedCategories,
 	                series: seriesData
 	            };
 
 	            console.log("발주 제품 바 차트 렌더링 데이터:", data);
-	            renderOrderProductChart(data, chartId); // ✅ 바 차트 함수 호출
+	            renderOrderProductChart(data, chartId); // 바 차트 함수 호출
 	        },
 	        error: function (xhr, status, error) {
 	            console.error('Error fetching data:', error);
@@ -600,8 +609,8 @@
 	    const options = {
 	        chart: {
 	            title: '기간별 발주 제품 현황',
-	            width: 800,
-	            height: 500
+	            width: 700,
+	            height: 330
 	        },
 	        xAxis: {
 	            title: '발주 수량',
@@ -614,7 +623,7 @@
 	            stack: false // 개별 제품별로 수량 표시
 	        },
 	        tooltip: {
-	            formatter: (value) => `${value} 개`
+	            formatter: (value) => `${value.toLocaleString()} 개`
 	        }
 	    };
 
@@ -636,11 +645,12 @@
 	        },
 	        data: { start_dt: startDt, end_dt: endDt },
 	        success: function (response) {
-	            console.log("수주 금액 파이 차트 데이터 응답:", response);
+	            console.log("발주 금액 파이 차트 데이터 응답:", response);
 
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">발주 제품 금액 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 
@@ -653,7 +663,7 @@
 	                series: seriesData
 	            };
 
-	            console.log("수주 금액 파이 차트 렌더링 데이터:", data);
+	            console.log("발주 금액 파이 차트 렌더링 데이터:", data);
 	            renderOrderAmountPieChart(data, chartId);
 	        },
 	        error: function (xhr, status, error) {
@@ -672,11 +682,11 @@
 	    const options = {
 	        chart: {
 	            title: '제품별 수주 금액',
-	            width: 600,
-	            height: 500
+	            width: 700,
+	            height: 330
 	        },
 	        tooltip: {
-	            formatter: (value) => `₩${value.toLocaleString()}`
+	            formatter: (value) => `${value.toLocaleString()}원`
 	        },
 	        legend: {
 	            align: 'bottom'
@@ -690,11 +700,6 @@
 	}
 
 	// 발주 탭 끝
-	
-	
-	
-	
-	
 	
 	// 출하 탭 시작
 	function make_shipment_grid(startDt, endDt) {
@@ -725,18 +730,18 @@
 	                columns: [
 	                    { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
 	                    { header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
-	                    { header: '출하수량', name: 'contract_am', align: 'center', sortable: true },
-	                    { header: '출하금액', name: 'contract_mn', align: 'center', sortable: true }
+	                    { header: '출하수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+	                    { header: '출하금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
 	                ],
 	                summary: {
 	                    height: 40,
 	                    position: 'bottom', 
 	                    columnContent: {
 	                        contract_am: {
-	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 개</div>`
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
 	                        },
 	                        contract_mn: {
-	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum} 원</div>`
+	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
 	                        },
 	                    }
 	                }
@@ -779,6 +784,7 @@
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">출하 제품 수량 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 	
@@ -815,7 +821,7 @@
 	            };
 	
 	            console.log("차트 렌더링 데이터:", data);
-	            renderShipmentChart(data, chartId); // 🔹 변환된 데이터 전달
+	            renderShipmentChart(data, chartId); // 변환된 데이터 전달
 	        },
 	        error: function (xhr, status, error) {
 	            console.error('Error fetching data:', error);
@@ -833,8 +839,8 @@
 	    const options = {
 	        chart: {
 	            title: '출하 제품 수량',
-	            width: 800,
-	            height: 500
+	            width: 700,
+	            height: 330
 	        },
 	        xAxis: {
 	            title: '출하량',
@@ -847,7 +853,7 @@
 	            stack: false // 누적 그래프 비활성화 (각 제품 개별 표시)
 	        },
 	        tooltip: {
-	            formatter: (value) => `${value} 개`
+	            formatter: (value) => `${value.toLocaleString()} 개`
 	        }
 	    };
 	
@@ -867,11 +873,12 @@
 	        },
 	        data: { start_dt: startDt, end_dt: endDt },
 	        success: function (response) {
-	            console.log("수주 금액 파이 차트 데이터 응답:", response);
+	            console.log("출하 금액 파이 차트 데이터 응답:", response);
 
 	            if (!response || response.length === 0) {
 	                console.warn("차트 데이터가 없음");
 	                Swal.fire({ icon: 'error', title: '오류 발생!', text: '차트 데이터를 불러오지 못했습니다.', confirmButtonText: '확인' });
+	                $(`#${chartId}`).empty().append(`<div style="text-align:center; color:#999;">출하 제품 금액 데이터를 불러오지 못했습니다.</div>`);
 	                return;
 	            }
 
@@ -884,7 +891,7 @@
 	                series: seriesData
 	            };
 
-	            console.log("수주 금액 파이 차트 렌더링 데이터:", data);
+	            console.log("출하 금액 파이 차트 렌더링 데이터:", data);
 	            renderShipmentAmountPieChart(data, chartId);
 	        },
 	        error: function (xhr, status, error) {
@@ -901,12 +908,12 @@
 
 	    const options = {
 	        chart: {
-	            title: '제품별 수주 금액',
-	            width: 600,
-	            height: 500
+	            title: '제품별 출하 금액',
+	            width: 700,
+	            height: 330
 	        },
 	        tooltip: {
-	            formatter: (value) => `₩${value.toLocaleString()}`
+	            formatter: (value) => `${value.toLocaleString()}원`
 	        },
 	        legend: {
 	            align: 'bottom'

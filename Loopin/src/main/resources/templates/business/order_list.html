@@ -607,9 +607,7 @@
 			    position: 'bottom', // or 'top'
 			    columnContent: {
 			    	material_un: {
-			            template: (valueMap) => {
-			                return `총  ${valueMap.cnt} 건`
-			            }
+			    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 			        }
 			    }
 			}
@@ -769,9 +767,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	                account_nm: {
-	                    template: (valueMap) => {
-	                    	return `총  ${valueMap.cnt} 건`
-	                    }
+	                	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -943,9 +939,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	            	employee_gd: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`;
-	                    }
+	            		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -1320,10 +1314,14 @@
         				    height: 40,
         				    position: 'bottom', // or 'top'
         				    columnContent: {
+        				    	order_am: {
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+        				        },
+        				    	order_mn: {
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
+        				        },
         				    	order_st: {
-        				            template: (valueMap) => {
-        				                return `총  ${valueMap.cnt} 건`
-        				            }
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
         				        }
         				    }
         				}
@@ -1373,19 +1371,20 @@
 	            columns: [
 					 { header: '발주번호', name: 'order_cd', align: 'center', sortable: true },
 					 { header: '원자재코드', name: 'material_cd', align: 'center', sortable: true },
-					 { header: '원자재수량', name: 'material_am', align: 'center', sortable: true },
-					 { header: '단가', name: 'order_ct', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
+					 { header: '단가', name: 'order_ct', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
 					 { header: '기준단위', name: 'material_un', align: 'center', sortable: true },
+					 { header: '원자재수량', name: 'material_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
 					 { header: '입고일', name: 'order_ed', align: 'center', sortable: true },
 	            ],
 				summary: {
 				    height: 40,
 				    position: 'bottom', // or 'top'
 				    columnContent: {
+				    	material_am: {
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+				        },
 				    	order_ed: {
-				            template: (valueMap) => {
-				                return `총  ${valueMap.cnt} 건`
-				            }
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 				        }
 				    }
 				}
@@ -1473,11 +1472,16 @@
 	        columns: [
 	            { header: '원자재코드', name: 'material_cd', align: 'center' },
 	            { header: '기준단위', name: 'material_un', align: 'center' },
-	            { header: '수량', name: 'material_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'order_ct', align: 'center',  editor: 'text',     formatter: ({ value }) => {
+	            { header: '수량', name: 'material_am', align: 'center', editor: 'text',  formatter: ({ value }) => {
 	                const num = Number(value);
-	                if (isNaN(num)) return '₩0';
-	                return `₩${num.toLocaleString()}`;
+	                if (isNaN(num)) return '0개';
+	                return `${num.toLocaleString()}개`;
+	            	}
+	            },
+	            { header: '단가', name: 'order_ct', align: 'center',  editor: 'text',  formatter: ({ value }) => {
+	                const num = Number(value);
+	                if (isNaN(num)) return '0원';
+	                return `₩${num.toLocaleString()}원`;
 	            	}
 	            }
 	        ],
@@ -1488,10 +1492,11 @@
 	            height: 40,
 	            position: 'bottom',
 	            columnContent: {
+	            	material_am: {
+	            		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+	                },
 	            	order_ct: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`
-	                    }
+	            		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
