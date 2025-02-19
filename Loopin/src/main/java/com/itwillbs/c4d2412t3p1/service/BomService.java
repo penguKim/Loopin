@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.mapper.BomMapper;
 import com.itwillbs.c4d2412t3p1.repository.BomProcessRepository;
@@ -26,6 +27,10 @@ public class BomService {
 		return list;
 	}
 
+	public List<BomProcess> selectBomAll() {
+		return bM.selectBomAll();
+	}
+
 	public Integer checkpcd(String pcd) {
 		
 		String result = bM.checkpcd(pcd);
@@ -43,5 +48,13 @@ public class BomService {
 		
 		return list;
 	}
+
+	public List<Product> selectbom(List<String> ckrowpds) {
+
+		List<Product> list = bM.selectbom(ckrowpds);
+		
+		return list;
+	}
+
 
 }

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.service.BomService;
 
@@ -22,6 +23,14 @@ public class BomController {
 	@GetMapping("/bom")
 	public String BOM() {
 		return "bom/bom";
+	}
+	
+	@GetMapping("/selectBomAll")
+	public ResponseEntity<List<BomProcess>> selectBomAll() {
+		
+		List<BomProcess> list = bS.selectBomAll();
+		
+		return ResponseEntity.ok(list);
 	}
 	
 	@GetMapping("/selpd")
@@ -47,5 +56,14 @@ public class BomController {
 		
 		return ResponseEntity.ok(list);
 	}
+	
+	@GetMapping("/selectbom")
+	public ResponseEntity<List<Product>> selectbom(@RequestParam("pdc") List<String> ckrowpds) {
+		
+		List<Product> list = bS.selectbom(ckrowpds);
+		
+		return ResponseEntity.ok(list);
+	}
+	
 	
 }

@@ -54,5 +54,8 @@ public class BomProcess {
 	
 	@Column(name = "bomprocess_md")
 	private Timestamp bomprocess_md;
+
+	@Column(name = "bomprocess_bg")
+	private String bomprocess_bg;
 	
 }

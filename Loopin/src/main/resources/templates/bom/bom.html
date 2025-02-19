@@ -57,7 +57,7 @@
 		</div>
 		
 		<div class="modal" id="registermodal" tabindex="-1" data-bs-backdrop="static">
-	        <div class="modal-dialog modal-dialog-centered modal-xl">
+	        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 	           <div class="modal-content">
 	             <div class="modal-header">
 	               <h5 class="modal-title">BOM 등록</h5>
@@ -89,26 +89,36 @@
 	             		</div>
 						<div id="mgrid" class="p-1"></div>
 					</div>
-					<ul class="nav nav-pills mb-3 d-flex" id="pills-tab" role="tablist">
-			                <li class="nav-item" role="presentation">
-			                  <button class="nav-link active" id="pills-mbom-tab" data-bs-toggle="pill" data-bs-target="#pills-mbom" type="button" role="tab" aria-controls="pills-mbom" aria-selected="true">BOM</button>
-			                </li>
-			                <li class="nav-item" role="presentation">
-			                  <button class="nav-link" id="pills-mat-tab" data-bs-toggle="pill" data-bs-target="#pills-mat" type="button" role="tab" aria-controls="pills-mat" aria-selected="false">원자재</button>
-			                </li>
-		                <li class="nav-item d-flex ms-auto">
-					   	  <button class="btn btn-primary m-1" id="m_btn_matdel" style="display: none;" >삭제</button>
-					   	  <button class="btn btn-primary m-1" id="m_btn_matregi" style="display: none;" >추가</button>
-					    </li>
-	                </ul>
-	                <div class="tab-content pt-2" id="myTabContent">
-		                <div class="tab-pane active" id="pills-mbom" role="tabpanel" aria-labelledby="mbom-tab">
-							<div id="m_bomgrid" class="p-1"></div>
-		                </div>
-		                <div class="tab-pane show" id="pills-mat" role="tabpanel" aria-labelledby="mat-tab">
-							<div id="m_matgrid" class="p-1"></div>
-		                </div>
-	                </div>
+	             	<div class="mb-4">
+	             		<div class="d-flex">
+							<h6 style="color:#012970">BOM</h6>
+							<div class="d-flex ms-auto">
+								<button class="btn btn-primary m-1" id="m_btn_matdel" >삭제</button>
+						   	    <button class="btn btn-primary m-1" id="m_btn_matregi" >추가</button>
+							</div>
+	             		</div>
+						<div id="m_bomgrid" class="p-1"></div>
+					</div>
+<!-- 					<ul class="nav nav-pills mb-3 d-flex" id="pills-tab" role="tablist"> -->
+<!-- 			                <li class="nav-item" role="presentation"> -->
+<!-- 			                  <button class="nav-link active" id="pills-mbom-tab" data-bs-toggle="pill" data-bs-target="#pills-mbom" type="button" role="tab" aria-controls="pills-mbom" aria-selected="true">BOM</button> -->
+<!-- 			                </li> -->
+<!-- 			                <li class="nav-item" role="presentation"> -->
+<!-- 			                  <button class="nav-link" id="pills-mat-tab" data-bs-toggle="pill" data-bs-target="#pills-mat" type="button" role="tab" aria-controls="pills-mat" aria-selected="false">원자재</button> -->
+<!-- 			                </li> -->
+<!-- 		                <li class="nav-item d-flex ms-auto"> -->
+<!-- 					   	  <button class="btn btn-primary m-1" id="m_btn_matdel" style="display: none;" >삭제</button> -->
+<!-- 					   	  <button class="btn btn-primary m-1" id="m_btn_matregi" style="display: none;" >추가</button> -->
+<!-- 					    </li> -->
+<!-- 	                </ul> -->
+<!-- 	                <div class="tab-content pt-2" id="myTabContent"> -->
+<!-- 		                <div class="tab-pane active" id="pills-mbom" role="tabpanel" aria-labelledby="mbom-tab"> -->
+<!-- 							<div id="m_bomgrid" class="p-1"></div> -->
+<!-- 		                </div> -->
+<!-- 		                <div class="tab-pane show" id="pills-mat" role="tabpanel" aria-labelledby="mat-tab"> -->
+<!-- 							<div id="m_bomgrid" class="p-1"></div> -->
+<!-- 		                </div> -->
+<!-- 	                </div> -->
 	             </div>
 		         <div class="modal-footer d-flex justify-content-between">
 		         	<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
@@ -155,11 +165,30 @@ const pdninput = document.getElementById('PRODUCT_NM');
 const am_btnadd = document.getElementById('btn_addmodal');
 const m_btnaddpc = document.getElementById('m_btn_pcregi');
 const m_btndelpc = document.getElementById('m_btn_pcdel');
-const m_btnaddmat = document.getElementById('m_btn_matregi');
-const m_btndelmat = document.getElementById('m_btn_matdel');
+const m_btnaddbom = document.getElementById('m_btn_matregi');
+const m_btndelbom = document.getElementById('m_btn_matdel');
+const btnmregi = document.getElementById('btn_modalregi');
 let selop = [];
+let ckrowpds = [];
 let m_matStorage = {};
 let m_gridClickRowkey = null;
+
+//////////////////
+// 카드 크기 설정 //
+//////////////////
+
+setElementHeight('#div_card', -110);
+// setGridHeight(pdgrid,-400)
+
+$(window).resize(function() {
+	setElementHeight('#div_card', -110);
+	if(pdgrid != null) {
+		setGridHeight(pdgrid, -750);
+	}
+	if(pcgrid != null) {
+		setGridHeight(pcgrid, -750);
+	}
+});
 
   //////////
  // 필터 //
@@ -177,6 +206,29 @@ initializeFilterModule('filterModule', filterConfig, (filterValues) => {
 	 console.log('filtertest',filterValues);
 });
 
+const fetchBOM = async () => {
+	try{
+		const response = await fetch('/selectBomAll',{
+			method:"GET",
+			headers:{
+				"Content-Type": "application/json",
+			}
+		});
+		const data = await response.json();
+		console.log('초기 데이터'+data);
+		pdgrid.resetData(data);
+	} catch(error){
+		console.log('BOM데이터를 로드하는데 실패했습니다.'+error);
+		swal.fire({
+			title: "데이터를 로드하는데 실패했습니다.",
+			text:"관리자에게 연락요망",
+			icon:"error"
+		})
+	}
+};
+ 
+fetchBOM();
+
 /* ====================
   ||	그리드 생성   ||
   ====================*/
@@ -184,6 +236,7 @@ initializeFilterModule('filterModule', filterConfig, (filterValues) => {
 const pdgrid = new tui.Grid({
 	  el: document.getElementById('pdgrid'),
 	  rowHeaders: ['checkbox'],
+	  bodyHeight: 190,
 	  scrollX: true,
 	  scrollY: true,
 	  columns: [    
@@ -200,6 +253,7 @@ const pdgrid = new tui.Grid({
 });
 const pcgrid = new tui.Grid({   
 	  el: document.getElementById('pcgrid'),
+	  bodyHeight: 190,
 	  scrollX: true,
 	  scrollY: true,
 	  columns: [
@@ -215,9 +269,11 @@ const pcgrid = new tui.Grid({
 		  {header:'불량률', name:'BOMPROCESS_ER', align:'center'},
 		  {header:'후공정', name:'BOMPROCESS_APNM', align:'center'},
 	  ],
+// 	  data:[{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},],
 });
 const bomgrid = new tui.Grid({
 	  el: document.getElementById('bomgrid'),
+	  bodyHeight: 190,
 	  scrollX: true,
 	  scrollY: true,
 	  columns: [
@@ -252,28 +308,30 @@ const m_bomgrid = new tui.Grid({
 	  el: document.getElementById('m_bomgrid'),
 	  scrollX: true,
 	  scrollY: true,
+	  rowHeaders: ['checkbox'],
 	  columns: [
 		  {header:'품목코드', name:'BOM_CD', align:'center'}, // 위의 mgrid의 행에 해당하는 bomprocess_cd의 값을 product_cd값으로 가지고 있어야함.
 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
-		  {header:'소요량', name:'BOM_AM', align:'center'},
+		  {header:'소요량', name:'BOM_AM', align:'center', editor:'text'},
 	  ],
 });
-const m_matgrid = new tui.Grid({
-	  el: document.getElementById('m_matgrid'),
-	  scrollX: true,
-	  scrollY: true,
-	  columns: [
-		  {header:'품목코드', name:'BOM_CD', align:'center'},
-		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
-		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
-		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
-		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
-		  {header:'소요량', name:'BOM_AM', align:'center'},
-	  ],
-});
+// const m_bomgrid = new tui.Grid({
+// 	  el: document.getElementById('m_bomgrid'),
+// 	  rowHeaders: ['checkbox'],
+// 	  scrollX: true,
+// 	  scrollY: true,
+// 	  columns: [
+// 		  {header:'품목코드', name:'BOM_CD', align:'center'},
+// 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+// 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+// 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+// 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
+// 		  {header:'소요량', name:'BOM_AM', align:'center'},
+// 	  ],
+// });
 const am_modalgrid = new tui.Grid({
 	  el: document.getElementById('am_modalgrid'),
 	  rowHeaders: ['checkbox'],
@@ -289,7 +347,7 @@ const am_modalgrid = new tui.Grid({
 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
-		  {header:'소요량', name:'BOM_AM', align:'center'}, // 이거 여기 필요없는것같지
+// 		  {header:'소요량', name:'BOM_AM', align:'center'}, // 이거 여기 필요없는것같지
 // 		  {header:'비고', name:'PROCESS_BG', align:'center'},
 	  ],
 });
@@ -327,9 +385,6 @@ function hideColumn() {
         // 각 row의 해당 컬럼 값이 있는지 확인
         data.forEach((row) => {
             const value = row[column.name];
-
-            // 값이 존재하고, string이면 trim()을 사용해서 빈 문자열이 아닌지 확인
-//             if (value && typeof value === 'string' && value.trim() !== '') {
             // 값이 존재하고, null값이 아닌지 확인
             if (value && value != null) {
                 isColumnEmpty = false;
@@ -363,7 +418,7 @@ document.querySelectorAll('#pills-tab button').forEach(tab => {
 	  document.getElementById('m_btn_matregi').style.display = 'none'; // 다른 탭에서는 숨기기
     } else if(targetTab === '#pills-mat') {
     	console.log('mat활성화')
-      m_matgrid.refreshLayout();
+      m_bomgrid.refreshLayout();
 	  document.getElementById('m_btn_matdel').style.display = 'inline-block'; 
 	  document.getElementById('m_btn_matregi').style.display = 'inline-block'; 
    }
@@ -385,7 +440,8 @@ modalregi.addEventListener('hidden.bs.modal',function(){
 	pdninput.value = ""	;
 	mgrid.resetData([]);
 	m_bomgrid.resetData([]);
-	m_matgrid.resetData([]);
+	m_bomgrid.resetData([]);
+	m_matStorage = {};
 })
 
 async function clickppd(e) {
@@ -453,28 +509,67 @@ function clickmbtndelpc (){
 	const selRowKey = deldata.map(i=> i.rowKey);
 	console.log('삭제할 행 rowkey'+ typeof selRowKey);
 	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+		selRowKey.forEach(i => {delete m_matStorage[i]});
+// 	if(selRowKey.length > 1){
+// 	}else {
+// 		delete m_matStorage[selRowKey];
+// 	}
 	mgrid.resetData(deleteddata);
+	m_bomgrid.resetData([]);
+}
+
+function clickmbtndelbom (){
+	console.log('선택한 bom 삭제할거야')
+	const deldata = m_bomgrid.getCheckedRows();
+	const data = m_bomgrid.getData();
+	console.log('삭제할 행 rowkey'+deldata);
+	console.log('삭제할 행 rowkey'+deldata.map(i=> i.rowKey));
+	const selRowKey = deldata.map(i=> i.rowKey);
+	console.log('삭제할 행 rowkey'+ typeof selRowKey);
+	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+	m_matStorage[m_gridClickRowkey] = deleteddata;
+	m_bomgrid.resetData(deleteddata);
 }
 
 async function clickmbtnaddmat () {
-	console.log('원자재 추가버튼누름');
-// 	여기서 m_matStorage[rowKey].push(그리드데이터)이게 들어가야함. 아니지 추가버튼 누르면 작은모달뜨고, 거기값 불러와서 선택해서 m_matgrid에 넣어주고, 그값들에 원자재 소요량 인풋받고,,, 이거 받을때마다 걍 배열 덮어쓰자,,,ㅎ m_matStorage[rowKey]= 새데이터 이렇게.
-// 	mgrid에서 선택한 행이 없다면 행을 먼저 선택해달라 알람모달+return
-	modaltype = 'selectMat';
+	console.log('BOM 추가버튼누름');
+
+	if(mgrid.getData().length === 0){
+		swal.fire({
+			title:"공정을 먼저 추가해주세요.",
+			icon:"warning"
+		})
+		return;
+	}
+	
+	if(m_gridClickRowkey === undefined || m_gridClickRowkey === null){
+		swal.fire({
+			title:"공정을 먼저 선택해주세요.",
+			icon:"info"
+		})
+		return;
+	}
+	
+	modaltype = 'selectBOM';
 	let matdata = [];
+	const selpdcs= ckrowpds.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
 	try{
-		const response = await fetch('/',{
+		const response = await fetch(`/selectbom?${selpdcs}`,{
 			method:"GET",
 			headers: {
 				"Content-Type":"application/json",
 			}
 		});
-		const data = response.json();
-		console.log('원자재'+data);
+		const data = await response.json();
+		console.log('BOM'+data);
+		console.log('BOM'+ JSON.stringify(data));
+		matdata = data;
 		
 	} catch(error) {
-		console.log('원자재 리스트 데이터 로드에 실패했습니다.'+error);
+		console.log('BOM 리스트 데이터 로드에 실패했습니다.'+error);
 	}
+	
+	openModalWithData('BOM 추가',matdata);
 }
 
 function openModalWithData(title, content) {
@@ -552,6 +647,7 @@ async function clickambtnadd (){
 		}else{
 			
 			const existdata = mgrid.getData();
+			// 업데이트할때 체크된거 해제되게 햇으면,,,!
 			const updatedData = existdata.map(i=>({
 				...i,
 				BOMPROCESS_CD: pdcinput.value
@@ -565,6 +661,7 @@ async function clickambtnadd (){
 			
 			const selopdata = updatedData.filter(i => i.PROCESS_CD && i.PROCESS_NM)
 										.map(it => ({text: it.PROCESS_NM, value: it.PROCESS_CD}));
+			ckrowpds = updatedData.map(i => i.BOMPROCESS_CD);
 			console.log('selop'+selopdata);
 			selop = selopdata;
 			updateSelectOption(selopdata);
@@ -575,6 +672,26 @@ async function clickambtnadd (){
 		}
 	} else {
 		console.log('원자재추가')
+// 	여기서 m_matStorage[rowKey].push(그리드데이터)이게 들어가야함. m_bomgrid에 넣어주고, 배열에 넣자! 그리고 그값들에 원자재 소요량 인풋받고 배열에 엎어씌워,,,ㅎ m_matStorage[rowKey]= 새데이터 이렇게.
+// 	mgrid에서 선택한 행이 없다면 행을 먼저 선택해달라 알람모달+return
+		if(checkrow.length <1){
+			swal.fire({
+				title:"품목을 선택해주세요.",
+				icon:"warning"
+			})
+		}else{
+			const existdata = m_bomgrid.getData();
+			checkrow.forEach(i=>{
+				const existindex = existdata.findIndex(it => it.BOM_CD === i.BOM_CD);
+				
+				if(existindex === -1){existdata.push(i)};
+			})
+			m_bomgrid.resetData(existdata);
+			m_matStorage[m_gridClickRowkey] = existdata;
+			m_bomgrid.refreshLayout();
+			addmodal.hide();
+			
+		}
 	}
 };
 
@@ -583,21 +700,82 @@ function handlemgridRowClick (rowkey){
 	if(!m_matStorage[rowkey]){
 		m_matStorage[rowkey] = [];
 	}
-	updatem_matgrid(rowkey,m_matStorage[rowkey]);
+	console.log('저장된 행값'+JSON.stringify(m_matStorage[rowkey]));
+	updatem_bomgrid(rowkey,m_matStorage[rowkey]);
 }
 
-function updatem_matgrid (rowkey, data) {
+function updatem_bomgrid (rowkey, data) {
 	
-	console.log(`${rowkey}행의 데이터 m_matgrid에 반영`+data);
-	m_matgrid.resetData(data);
+	console.log(`${rowkey}행의 데이터 m_bomgrid에 반영`+data);
+	if(data.length === 0 || data === ""){
+		m_bomgrid.resetData(data);
+	}else{
+// 		m_bomgrid.resetData(data[0]);
+		m_bomgrid.resetData(data);
+	}
+	m_bomgrid.refreshLayout();
+}
+
+async function clickbtnmregi(){
+	console.log('BOM등록할거야!!!');
+	const mgriddata = mgrid.getData();
+	const pdcd = pdcinput.value
+	mgriddata.forEach(i =>{
+		delete i.BOM_AM;
+		delete i.BOM_CD;
+	})
+	const bomprocessdata = mgriddata.map(i =>({
+		...i,
+		PRODUCT_CD: pdcd
+	}));
+	console.log('mgrid 전처리'+JSON.stringify(bomprocessdata));
+// 	셀 유효성검사하기
+	delete m_matStorage['undefined'];
+	
+	const bomdata = [];
+	
+	Object.entries(m_matStorage).forEach(([key,value])=>{
+		const bpcd = bomprocessdata.find(i => i.rowKey === Number(key));
+		console.log('bpcd'+JSON.stringify(bpcd));
+		
+		value.forEach(i => {
+			bomdata.push({
+				BOM_CD: i.BOM_CD,
+				BOM_AM: i.BOM_AM,
+				PRODUCT_CD: bpcd ? bpcd.BOMPROCESS_CD : null
+				
+			})
+		});
+	});
+	
+	console.log('bomdata'+JSON.stringify(bomdata));
+	
+	try{
+		//등록 fetch
+	}catch(error){
+		console.log('BOM 등록에 실패했습니다.'+error);
+		swal.fire({
+			title:"BOM 등록에 실패했습니다.",
+			text:"관리자에게 연락주세요.",
+			icon:"error"
+		})
+	}
+	
+// 	const flatStorage = Object.keys(m_matStorage).map(i => m_matStorage[i]).flat();
+// 	console.log('확인'+JSON.stringify(flatStorage));
+// 	const values = flatStorage.map(i => ({
+// 		BOM_CD: i.BOM_CD,
+// 		BOM_AM: i.BOM_AM}));
 }
 
 pdcinput.addEventListener('click',clickppd);
 pdninput.addEventListener('click',clickppd);
+btnmregi.addEventListener('click',clickbtnmregi);
 m_btnaddpc.addEventListener('click',clickmbtnaddpc);
 m_btndelpc.addEventListener('click',clickmbtndelpc);
 am_btnadd.addEventListener('click',clickambtnadd);
-m_btnaddmat.addEventListener('click',clickmbtnaddmat);
+m_btnaddbom.addEventListener('click',clickmbtnaddmat);
+m_btndelbom.addEventListener('click',clickmbtndelbom);
 
 mgrid.on('click',function(e){
 	console.log('행선택했다.');
@@ -607,6 +785,14 @@ mgrid.on('click',function(e){
 	m_gridClickRowkey = e.rowKey; 
 	handlemgridRowClick(m_gridClickRowkey);
 	
+});
+
+m_bomgrid.on('editingFinish', function (e) {
+	console.log('소요량 입력');
+	console.log('소요량 입력' + e.rowKey);
+	console.log('소요량 입력' + JSON.stringify(m_bomgrid.getRow(e.rowKey)));
+	const editdata = m_bomgrid.getData();
+	m_matStorage[m_gridClickRowkey] = editdata;
 });
 
 </script>
