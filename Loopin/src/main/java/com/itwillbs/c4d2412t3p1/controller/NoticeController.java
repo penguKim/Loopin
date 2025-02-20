@@ -31,6 +31,7 @@ import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.NoticeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Notice;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.NoticeService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.NoticeFilterRequest;
 
@@ -91,6 +92,7 @@ public class NoticeController {
 		}
 	}
 	
+	@LogActivity(value = "등록", action = "공지사항등록")
 	@PostMapping("/insert_NOTICE")
 	public ResponseEntity<Map<String, String>> insert_NOTICE(
 		    @RequestPart("NoticeDTO") NoticeDTO noticeDTO // DTO 받기
