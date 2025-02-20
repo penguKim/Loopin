@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.BomProcessID;
 
@@ -55,4 +56,7 @@ public interface BomProcessRepository extends JpaRepository<BomProcess, BomProce
 	// 생산계획 등록 시 원자재, 부자재 소요량 추적 위함
     @Query("SELECT bp FROM BomProcess bp WHERE bp.product_cd = :productCd")
     List<BomProcess> findByProductCd(@Param("productCd") String productCd);
+
+	void save(BomallDTO bomItem);
+
 }

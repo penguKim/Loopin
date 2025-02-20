@@ -1,5 +1,6 @@
 package com.itwillbs.c4d2412t3p1.service;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -58,9 +59,30 @@ public class BomService {
 		return list;
 	}
 
-	public List<BomallDTO> insertbom(List<BomallDTO> bom, List<BomallDTO> bompc) {
-		// TODO Auto-generated method stub
-		return null;
+	public void insertbom(List<BomallDTO> bom, List<BomallDTO> bompc) {
+		
+		for (BomallDTO bomit : bom) {
+			Bom bomdata = new Bom();
+			bomdata.setBom_cd(bomit.getBom_cd());
+			bomdata.setBom_am(bomit.getBom_am());
+			bomdata.setProduct_cd(bomit.getProduct_cd());
+			bomdata.setBomproduct_cd(bomit.getBomproduct_cd());
+			bR.save(bomdata);
+		}
+		for (BomallDTO bomItem : bompc) {
+			BomProcess bompcdata = new BomProcess();
+			bompcdata.setBomprocess_cd(bomItem.getBomprocess_cd());
+			bompcdata.setBomprocess_ap(bomItem.getBomprocess_ap());
+			bompcdata.setProcess_cd(bomItem.getProcess_cd());
+			bompcdata.setProduct_cd(bomItem.getProduct_cd());
+			bompcdata.setBomprocess_rt(bomItem.getBomprocess_rt());
+			bompcdata.setBomprocess_ra(bomItem.getBomprocess_ra());
+			bompcdata.setBomprocess_er(bomItem.getBomprocess_er());
+			bompcdata.setBomprocess_wr(bomItem.getBomprocess_wr());
+			bompcdata.setBomprocess_wd(new Timestamp(System.currentTimeMillis()));
+			bompcdata.setBomprocess_bg(bomItem.getBomprocess_bg());
+			bpR.save(bompcdata);
+		}
 	}
 
 

@@ -186,13 +186,14 @@ setElementHeight('#div_card', -110);
 $(window).resize(function() {
 	setElementHeight('#div_card', -110);
 	if(pdgrid != null) {
-		setGridHeight(pdgrid, -750);
+		setGridHeight(pdgrid, -800);
 	}
 	if(pcgrid != null) {
-		setGridHeight(pcgrid, -750);
+		setGridHeight(pcgrid, -800);
 	}
 });
 
+setGridTheme();
   //////////
  // 필터 //
 //////////
@@ -239,13 +240,14 @@ fetchBOM();
 const pdgrid = new tui.Grid({
 	  el: document.getElementById('pdgrid'),
 	  rowHeaders: ['checkbox'],
-	  bodyHeight: 190,
-	  scrollX: true,
+	  bodyHeight: 175,
+	  scrollX: false,
 	  scrollY: true,
 	  columns: [    
+		  {header:'제품', name:'PRODUCT_NM', align:'center', rowSpan:true},
 		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
-		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
-		  {header:'공정명', name:'PROCESS_NM', align:'center'}, // PROCESS_CD는 가지고 있어야함
+		  {header:'품목명', name:'BOMPROCESS_NM', align:'center'},
+		  {header:'공정명', name:'PROCESS_NM', align:'center'},
 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
 		  {header:'소요시간', name:'BOMPROCESS_RT', align:'center'},
@@ -253,10 +255,22 @@ const pdgrid = new tui.Grid({
 		  {header:'BOM수', name:'BOMPROCESS_BC', align:'center'},
 		  {header:'비고', name:'BOMPROCESS_BG', align:'center'},
 	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOMPROCESS_BG: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
 });
+
 const pcgrid = new tui.Grid({   
 	  el: document.getElementById('pcgrid'),
-	  bodyHeight: 190,
+	  bodyHeight: 175,
 	  scrollX: true,
 	  scrollY: true,
 	  columns: [
@@ -272,8 +286,20 @@ const pcgrid = new tui.Grid({
 		  {header:'불량률', name:'BOMPROCESS_ER', align:'center'},
 		  {header:'후공정', name:'BOMPROCESS_APNM', align:'center'},
 	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOMPROCESS_APNM: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
 // 	  data:[{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},],
 });
+
 const bomgrid = new tui.Grid({
 	  el: document.getElementById('bomgrid'),
 	  bodyHeight: 190,
@@ -288,11 +314,12 @@ const bomgrid = new tui.Grid({
 		  {header:'소요량', name:'BOM_AM', align:'center'},
 	  ],
 });
+
 const mgrid = new tui.Grid({
 	  el: document.getElementById('mgrid'),
 	  scrollX: true,
 	  scrollY: true,
-	  rowHeaders: ['checkbox'],
+	  rowHeaders: ['checkbox','rowNum'],
 	  columns: [
 		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
@@ -306,7 +333,9 @@ const mgrid = new tui.Grid({
 		  {header:'후공정', name:'BOMPROCESS_AP', align:'center', editor:{ type:'select', options: []}}, //BOMPROCESS_AP는 가지고 있어야함(가능하다면 셀렉트로 가져가도 괜찮을듯.)
 		  {header:'비고', name:'BOMPROCESS_BG', align:'center', editor:'text'},
 	  ],
+	  selectionUnit:'row',
 });
+
 const m_bomgrid = new tui.Grid({
 	  el: document.getElementById('m_bomgrid'),
 	  scrollX: true,
@@ -321,20 +350,7 @@ const m_bomgrid = new tui.Grid({
 		  {header:'소요량', name:'BOM_AM', align:'center', editor:'text'},
 	  ],
 });
-// const m_bomgrid = new tui.Grid({
-// 	  el: document.getElementById('m_bomgrid'),
-// 	  rowHeaders: ['checkbox'],
-// 	  scrollX: true,
-// 	  scrollY: true,
-// 	  columns: [
-// 		  {header:'품목코드', name:'BOM_CD', align:'center'},
-// 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
-// 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
-// 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
-// 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
-// 		  {header:'소요량', name:'BOM_AM', align:'center'},
-// 	  ],
-// });
+
 const am_modalgrid = new tui.Grid({
 	  el: document.getElementById('am_modalgrid'),
 	  rowHeaders: ['checkbox'],
@@ -368,6 +384,9 @@ function updateSelectOption(selopdata) {
 	          type: 'select',
 	          options: {listItems:selopdata}
 	        },
+	        formatter :{
+	        	
+	        }
 	      };
 	    }
 	    return col;
@@ -654,7 +673,6 @@ async function clickambtnadd (){
 			const updatedData = existdata.map(i=>({
 				...i,
 				BOMPROCESS_CD: pdcinput.value
-// 				BOMPROCESS_AP: 'ASSEMBLY'
 			}))
 			checkrow.forEach(i => {
 				const existindex = updatedData.findIndex(it => it.BOMPROCESS_CD === i.BOMPROCESS_CD);
@@ -662,14 +680,17 @@ async function clickambtnadd (){
 				if(existindex === -1){updatedData.push(i)}
 			})
 			
+			const nonedata = {text : "-", value:"NONE"}
 			const selopdata = updatedData.filter(i => i.PROCESS_CD && i.PROCESS_NM)
 										.map(it => ({text: it.PROCESS_NM, value: it.PROCESS_CD}));
+			selopdata.push(nonedata);
 			ckrowpds = updatedData.map(i => i.BOMPROCESS_CD);
 			console.log('selop'+selopdata);
 			selop = selopdata;
 			updateSelectOption(selopdata);
 			console.log('그리드 데이터 확인'+ JSON.stringify( mgrid.getColumn('BOMPROCESS_AP')));
 			mgrid.resetData(updatedData);
+			mgrid.uncheckAll();
 			mgrid.refreshLayout();
 			addmodal.hide();
 		}
@@ -692,6 +713,7 @@ async function clickambtnadd (){
 			m_bomgrid.resetData(existdata);
 			m_matStorage[m_gridClickRowkey] = existdata;
 			m_bomgrid.refreshLayout();
+			m_bomgrid.uncheckAll();
 			addmodal.hide();
 			
 		}
@@ -729,7 +751,9 @@ async function clickbtnmregi(){
 	})
 	const bomprocessdata = mgriddata.map(i =>({
 		...i,
-		PRODUCT_CD: pdcd
+		PRODUCT_CD: pdcd,
+		BOMPROCESS_WR: empcd,
+		BOMPROCESS_WD: new Date()
 	}));
 	console.log('mgrid 전처리'+JSON.stringify(bomprocessdata));
 // 	셀 유효성검사하기
@@ -744,9 +768,9 @@ async function clickbtnmregi(){
 		value.forEach(i => {
 			bomdata.push({
 				BOM_CD: i.BOM_CD,
-				BOM_AM: i.BOM_AM,
-				PRODUCT_CD: bpcd ? bpcd.BOMPROCESS_CD : null
-				
+				BOM_AM: Number(i.BOM_AM),
+				PRODUCT_CD: bpcd ? bpcd.BOMPROCESS_CD : null,
+				BOMPRODUCT_CD: pdcd
 			})
 		});
 	});
@@ -754,6 +778,8 @@ async function clickbtnmregi(){
 	console.log('bomdata'+JSON.stringify(bomdata));
 	
 	try{
+		document.getElementById('loadingSpinner').style.display = 'flex';
+		
 		const response = await fetch(`/insertbom`,{
 			method:"POST",
 			headers:{
@@ -763,14 +789,33 @@ async function clickbtnmregi(){
 			body:JSON.stringify({bom: bomdata, bompro: bomprocessdata})
 		});
 		const data = await response.json();
+		
+		document.getElementById('loadingSpinner').style.display = 'none';
+		
 		console.log('등록했다!'+data);
+		if(data === 0){
+			fetchBOM();
+			regimodal.hide();
+			swal.fire({
+				title:"BOM 등록에 성공했습니다.",
+				icon:"success"
+			})
+			return;
+		}else{
+			swal.fire({
+				title:"BOM 등록에 실패했습니다.",
+				text:"관리자에게 연락주세요.",
+				icon:"error"
+			})
+		}
 	}catch(error){
+		document.getElementById('loadingSpinner').style.display = 'none';
 		console.log('BOM 등록에 실패했습니다.'+error);
-// 		swal.fire({
-// 			title:"BOM 등록에 실패했습니다.",
-// 			text:"관리자에게 연락주세요.",
-// 			icon:"error"
-// 		})
+		swal.fire({
+			title:"BOM 등록에 실패했습니다.",
+			text:"관리자에게 연락주세요.",
+			icon:"error"
+		})
 	}
 	
 // 	const flatStorage = Object.keys(m_matStorage).map(i => m_matStorage[i]).flat();
@@ -793,10 +838,8 @@ mgrid.on('click',function(e){
 	console.log('행선택했다.');
 	console.log('행값'+ e.rowKey);
 	console.log('행값'+ mgrid.getRow(e.rowKey));
-	
 	m_gridClickRowkey = e.rowKey; 
 	handlemgridRowClick(m_gridClickRowkey);
-	
 });
 
 m_bomgrid.on('editingFinish', function (e) {
