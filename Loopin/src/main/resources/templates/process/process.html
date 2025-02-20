@@ -54,7 +54,7 @@
 					 	<form class="row g-3">
 							<div class="col-md-6">
 			                   <div class="input-group mb-3">
-			                    	<label for="registermodal" class="col-sm-3 col-from-label">공정코드</label>
+			                    	<label for="registermodal" class="col-sm-3 col-from-label">공정코드<span class="text-danger">*</span></label>
 			                    	<input type="text" class="col-sm-9 form-control" id="PROCESS_CD">
 			                   </div>
 		                   </div>
@@ -67,7 +67,7 @@
 		                   <div class="col-md-6">
 			                   <div class="input-group mb-3">
 			                    	<label for="" class="col-sm-3 col-from-label">품목분류<span class="text-danger">*</span></label>
-			                    	<select class="form-select" aria-label="PRODUCT_GC" id="PRODUCT_GC">
+			                    	<select class="form-select" aria-label="PROCESS_GC" id="PROCESS_GC">
 				                      <option selected></option>
 				                    </select>
 			                   </div>
@@ -75,14 +75,14 @@
 		                   <div class="col-md-6">
 			                   <div class="input-group mb-3">
 			                    	<label for="" class="col-sm-3 col-from-label">품목세부<span class="text-danger">*</span></label>
-			                    	<select class="form-select" aria-label="PRODUCT_CC" id="PRODUCT_CC">
+			                    	<select class="form-select" aria-label="PROCESS_CC" id="PROCESS_CC">
 				                    </select>
 			                   </div>
 		                   </div>
 		                   <div class="col-md-6">
 			                   <div class="input-group mb-3">
-			                    	<label for="registermodal" class="col-3 col-form-label">적용품목<span class="text-danger">*</span></label>
-									<div class="col-9"><select id="PRODUCT_PD" class="form-select1" style="width: 100%;" multiple>
+			                    	<label for="registermodal" class="col-3 col-form-label">공정품목<span class="text-danger">*</span></label>
+									<div class="col-9"><select id="PROCESS_PD" class="form-select1" style="width: 100%;" multiple>
 									</select>
 									</div>
 			                   </div>
@@ -90,15 +90,15 @@
 		                   <div class="col-md-6">
 			                   <div class="input-group mb-3">
 		                    	<label for="registermodal" class="col-3 col-form-label">설비</label>
-								<div class="col-9"><select id="PRODUCT_EQ" class="form-select2" style="width: 100%;" multiple></select></div>
+								<div class="col-9"><select id="PROCESS_EQ" class="form-select2" style="width: 100%;" multiple></select></div>
 		                   	   </div>
 		                   </div>
 		                   <div class="col-md-6">
 			                   <div class="input-group mb-3">
 			                    	<label for="registermodal" class="col-sm-3 col-from-label">사용여부<span class="text-danger">*</span></label>
 			                    	<select class="form-select" aria-label="PROCESS_US" id="PROCESS_US" >
-				                      <option value="1" selected>Y</option>
-				                      <option value="0">N</option>
+				                      <option value="1" selected>사용</option>
+				                      <option value="0">미사용</option>
 				                    </select>
 			                   </div>
 		                   </div>
@@ -137,6 +137,7 @@
     let pccd = null;
     let pcnm = null;
     let pcbg = null;
+    let modaltype = 'create';
 	
 	/* FETCH */
 	
@@ -152,7 +153,14 @@
 	    });
 	    const data = await response.json();
 	    console.log(data);
-	    grid.resetData(data);
+	    const setdata = data.map(i=>{
+	    	return {
+	    		...i,
+	    		PROCESS_US: (i.PROCESS_US == 1?"사용":"미사용")
+	    	}
+	    });
+	    console.log(setdata);
+	    grid.resetData(setdata);
 	  } catch (error) {
 	    console.error('공정관리 데이터를 불러오는데 실패했습니다.', error);
 	    swal.fire({
@@ -179,7 +187,7 @@
 	    if(COMMON_GC === PRDTYPE){
 		    updateSelectOptions(data);
 	    }else{
-		    updatePDGCSelectOptions(data);
+		    updatePDCCSelectOptions(data);
 	    }
 	  } catch (error) {
 	    console.error('품목분류 데이터를 불러오는데 실패했습니다.', error);
@@ -193,7 +201,7 @@
 	
 	// 품목분류 셀렉트 업데이트
 	const updateSelectOptions = (options) => {
-	  const selectElement = document.querySelector('#PRODUCT_GC');
+	  const selectElement = document.querySelector('#PROCESS_GC');
 	  
 	// 기존 옵션을 모두 삭제
 	  selectElement.innerHTML = '<option selected>품목분류</option>';
@@ -213,23 +221,28 @@
 	
 	const btn_regi = document.getElementById('btn_register');
 	const modal = document.getElementById('registermodal');
-	
+	const regimodal = new bootstrap.Modal(modal);
 	btn_regi.addEventListener('click', function(e){
+		modaltype= 'create';
 		console.log('등록버튼 눌렀다.');
 		// 모달 뜨기. 모달에서 어쩌고.
 		
-		var regimodal = new bootstrap.Modal(modal);
 		regimodal.show();
 		
 		// select2 초기화
-	    $('#PRODUCT_EQ').select2({
+	    $('#PROCESS_EQ').select2({
 	        placeholder: '설비를 선택하세요',
 	        allowClear: true,
 	        dropdownParent: $('#registermodal'),
 	        multiple:true,
+	        language: {
+	            noResults: function() {
+	                return "해당설비가 없습니다."; // 옵션이 없을 때 나타날 메시지
+	            }
+	        },
 	    });
 		
-	    $('#PRODUCT_PD').select2({
+	    $('#PROCESS_PD').select2({
 	        placeholder: '품목을 선택하세요',
 	        allowClear: true,
 	        dropdownParent: $('#registermodal'),
@@ -238,33 +251,125 @@
 		
 	});
 	
-	/* // 공정코드 입력
-	pccd = document.getElementById('PROCESS_CD').value;
-	const changeCD = ()=>{
-		const cdvalue = document.getElementById('PROCESS_CD').value;
+	modal.addEventListener('hide.bs.modal',function(){
+		console.log('모달이닫힘')
+		
+		document.getElementById('PROCESS_CD').value = "";
+		document.getElementById('PROCESS_NM').value = "";
+		document.querySelector('#PROCESS_GC').selectedIndex = 0;
+		const productCC = document.querySelector('#PROCESS_CC');
+	    if (productCC) {
+	        // 기존 옵션 모두 제거
+	        productCC.innerHTML = '';
+	        
+	        // 기본 '품목세부' 옵션 추가
+	        const defaultOption = document.createElement('option');
+	        defaultOption.textContent = '품목세부';  // 기본 텍스트
+	        defaultOption.selected = true;  // 기본으로 선택된 상태
+	        productCC.appendChild(defaultOption);  // 기본 옵션 추가
+	    }
+		document.getElementById('PROCESS_BG').value = "";
+		
+	    $('#PROCESS_PD').val([]).trigger('change');  // 다중 선택 초기화
+	    $('#PROCESS_EQ').val([]).trigger('change');  // 다중 선택 초기화
+	    $('#PROCESS_PD').select2('destroy').val(null).trigger('change');
+	    $('#PROCESS_EQ').select2('destroy').val(null).trigger('change');
+	    
+		$('#PROCESS_EQ').select2({
+	        placeholder: '설비를 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	        language: {
+	            noResults: function() {
+	                return "해당설비가 없습니다."; // 옵션이 없을 때 나타날 메시지
+	            }
+	        },
+	    });
+		
+	    $('#PROCESS_PD').select2({
+	        placeholder: '품목을 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+	    
+	    document.querySelector('#PROCESS_US').selectedIndex = 0;
+	    
+	    pccd = null;
+	    pcnm = null;
+	    selgc = null;
+	    selcc = null;
+	    selpd = null;
+	    seleq = null;
+	    selus = null;
+	    pcbg = null;
+	    
+		console.log("닫아서 초기화완료");
+	})
+	
+// 공정코드 입력
+	
+// 	$("#PROCESS_CD").on("keyup", (e) => {
+// 		console.log("확인 : " + $("#PROCESS_CD").val());
+// 	});
+	const changeCD = (e)=>{
+		const cdvalue = e.target.value;
 		console.log('code',cdvalue);
 		pccd = cdvalue;
-	} 
+	}
+	
+//  공정코드 중복확인
+	const checkCD = async (e)=>{
+		const cdvalue = e.target.value;
+		console.log('blur',cdvalue);
+		try{
+			const response = await fetch(`/checkpccd?cdvalue=${cdvalue}`,{
+				method: 'GET',
+			      headers: {
+			        'Content-Type': 'application/json',
+			      },
+			})
+			const checkdata = await response.json();
+			console.log("cd중복확인"+checkdata);
+			
+			if(checkdata == 1){
+				pccd = cdvalue;
+			}else{
+				swal.fire({
+					title:"이미 있는 공정코드입니다.",
+					icon:"warning"
+				})
+			}
+			}catch(error){
+				console.log('공정코드 중복확인에 실패했습니다.'+error);
+				swal.fire({
+					title:"중복확인 실패",
+					text: "관리자에게 문의해주세요",
+					icon: "error"
+				})
+			}
+	}
 
 	// 공정명 입력
-	pcnm = document.getElementById('PROCESS_NM').value;
-	const changeNM = ()=>{
-		const nmvalue = document.getElementById('PROCESS_NM').value;
-		console.log('name',nmvalue);
+	const changeNM = (e)=>{
+		const nmvalue = e.target.value;
+		console.log('이름', nmvalue);
 		pcnm = nmvalue;
-	}  */
+	} 
 	
 	//품목분류 선택
 	const pdgChange = async () => {
-		const gcvalue = document.querySelector('#PRODUCT_GC').value;
-		console.log('품목선택',gcvalue);
-		console.log('품목분류선택',typeof gcvalue);
-		selgc = gcvalue;
+			const gcvalue = document.querySelector('#PROCESS_GC').value;
+			console.log('품목선택',gcvalue);
+			console.log('품목분류선택',typeof gcvalue);
+			selgc = gcvalue;
 		fetchpdgclist(gcvalue);
 	};
 	
-   const updatePDGCSelectOptions = (options) => {
- 	  const selectElement = document.querySelector('#PRODUCT_CC');
+   const updatePDCCSelectOptions = (options) => {
+	   console.log('품목세부옵션설정시작');
+ 	  const selectElement = document.querySelector('#PROCESS_CC');
 	    
 	  selectElement.innerHTML = '<option selected>품목세부</option>';
 	    
@@ -277,12 +382,12 @@
     };
 	
     //품목세부 선택
-	const pdcChange = async () => {
-		const ccvalue = document.querySelector('#PRODUCT_CC').value;
-		console.log('세부품목선택',ccvalue);
-		console.log('세부품목분류선택',typeof ccvalue);
-		selcc = ccvalue;
-		console.log('이러면?!',selgc);
+	const pdcChange = async (v) => {
+			const ccvalue = document.querySelector('#PROCESS_CC').value;
+			console.log('세부품목선택',ccvalue);
+			console.log('세부품목분류선택',typeof ccvalue);
+			selcc = ccvalue;
+			console.log('이러면?!',selgc);
 		try {
 		
 		  const response = await fetch(`/selectpdcclist?pdcc=${selcc}&pdgc=${selgc}`, {
@@ -293,16 +398,16 @@
 	      },
     	});
 		  
-	    const ccdata = await response.json();
-	    console.log('ccdata',ccdata);
+	    const pddata = await response.json();
+	    console.log('pddata',pddata);
 	    if(selgc === 'HALFPRO' || selgc === 'PRODUCT' ){
-			updatePDSelectOptions(ccdata);
+			updatePDSelectOptions(pddata);
 	    }else{
-			updatePDSelectOptions2(ccdata);
+			updatePDSelectOptions2(pddata);
 	    }
 	    
 	  } catch (error) {
-	    console.error('적용품목 데이터를 불러오는데 실패했습니다.', error);
+	    console.error('공정품목 데이터를 불러오는데 실패했습니다.', error);
 	    swal.fire({
 	      title: "데이터 로드에 실패했습니다.",
 	      text: "관리자에게 문의하세요.",
@@ -312,45 +417,54 @@
 	};
 	
 	 const updatePDSelectOptions = (options) => {
-	    const selectElement = document.querySelector('#PRODUCT_PD');
+		 console.log('공정품목옵션설정시작');
+	    const selectElement = document.querySelector('#PROCESS_PD');
+	    const selectedValues = $(selectElement).val();
+	    console.log('선택되어있는 품목'+selectedValues);
 	    
-	    selectElement.innerHTML = '<option></option>';
+	    selectElement.innerHTML = '';
 	    
 	    options.forEach(option => {
 	      const optionElement = document.createElement('option');
-	      optionElement.value = option.PRODUCT_CC;
+	      optionElement.value = option.PRODUCT_CD;
 	      optionElement.textContent = option.PRODUCT_NM;
 	      selectElement.appendChild(optionElement);
 	    });
+	    
+	    $(selectElement).val(selectedValues).trigger('change')
 	  };
 	  
 	 const updatePDSelectOptions2 = (options) => {
-	    const selectElement = document.querySelector('#PRODUCT_PD');
-	    
-	    selectElement.innerHTML = '<option></option>';
+		 console.log('공정품목옵션설정시작');
+	    const selectElement = document.querySelector('#PROCESS_PD');
+	    const selectedValues = $(selectElement).val();
+	    console.log('선택되어있는 품목'+selectedValues);
+	    selectElement.innerHTML = '';
 	    
 	    options.forEach(option => {
 	      const optionElement = document.createElement('option');
-	      optionElement.value = option.MATERIAL_CC;
+	      optionElement.value = option.MATERIAL_CD;
 	      optionElement.textContent = option.MATERIAL_NM;
 	      selectElement.appendChild(optionElement);
 	    });
+	    $(selectElement).val(selectedValues).trigger('change')
 	  };
 	
-	// PRODUCT_PD (적용품목) 선택이 변경되었을 때
-	$('#PRODUCT_PD').on('change', async function() {
+	// PROCESS_PD (적용품목) 선택이 변경되었을 때
+	$('#PROCESS_PD').on('change', async function() {
 	  var pdvalue = $(this).val();
 	  console.log('선택된 적용품목:', pdvalue);
 	  console.log('선택된 적용품목:', typeof pdvalue);
 	  
 	  // 다중 선택 값이 배열일 경우, 이를 쿼리 파라미터 형식으로 변환
-    const pdvalueString = pdvalue.map(value => `pd=${encodeURIComponent(value)}`).join('&');
-    const pdvaluepost = pdvalue.map(value => `${encodeURIComponent(value)}`).join(',');
-	  console.log('어떻게 받아오는데', pdvalueString);
+//       const pdvalueString = pdvalue.map(value => `pd=${encodeURIComponent(value)}`).join('&');
+      const pdvaluepost = pdvalue.map(value => `${encodeURIComponent(value)}`).join(',');
+// 	  console.log('어떻게 받아오는데', pdvalueString);
 	  selpd = pdvaluepost
+	  console.log('selcc'+selcc);
 	  
 	  try {
-		  const response = await fetch(`/selecteqlist?${pdvalueString}`, {
+		  const response = await fetch(`/selecteqlist?pd=${selcc}`, {
 	      method: 'GET',
 	      headers: {
 	        'Content-Type': 'application/json',
@@ -376,7 +490,10 @@
 	});
 
 	const updateEQSelectOptions = (options) => {
-	    const selectElement = document.querySelector('#PRODUCT_EQ');
+		 console.log('설비옵션설정시작');
+	    const selectElement = document.querySelector('#PROCESS_EQ');
+	    const selectedValues = $(selectElement).val();
+		 console.log('선택되어있는 설비'+selectedValues);
 	    
 	    selectElement.innerHTML = '';
 	    
@@ -387,20 +504,16 @@
 	            optionElement.textContent = option.EQUIPMENT_NM;
 	            selectElement.appendChild(optionElement);
 	        });
-	    } else {
-	    	selectElement.value = '';
-	    	selectElement.textContent = '사용가능한 설비가 없습니다.';
-	    	selectElement.disabled = true;
-	        console.log('설비가 없습니다 옵션 추가됨');
 	    }
+	    $(selectElement).val(selectedValues).trigger('change')
 	 };
 	
-	// PRODUCT_EQ (설비) 선택이 변경되었을 때
-	$('#PRODUCT_EQ').on('change', function() {
+	// PROCESS_EQ (설비) 선택이 변경되었을 때
+	$('#PROCESS_EQ').on('change', function() {
 	  var eqvalue = $(this).val();
 	  console.log('선택된 설비:', eqvalue);
 	  
-	  const eqvalueString = eqvalue.map(value => `eq=${encodeURIComponent(value)}`).join(',');
+	  const eqvalueString = eqvalue.map(value => `${encodeURIComponent(value)}`).join(',');
 	  console.log('설비어케 가져옴:', eqvalueString);
 	  console.log('설비어케 가져옴:', typeof eqvalueString);
 	  seleq = eqvalueString;
@@ -423,28 +536,11 @@
 	} 
 	
 	
-	// 공정코드 입력
-	
-// 	$("#PROCESS_CD").on("keyup", (e) => {
-// 		console.log("확인 : " + $("#PROCESS_CD").val());
-// 	});
-	const changeCD = (e)=>{
-		const cdvalue = e.target.value;
-		console.log('code',cdvalue);
-		pccd = cdvalue;
-	}
-
-	// 공정명 입력
-	const changeNM = (e)=>{
-		const nmvalue = e.target.value;
-		console.log('이름', nmvalue);
-		pcnm = nmvalue;
-	} 
-	
 	document.getElementById('PROCESS_CD').addEventListener('input', changeCD);
+	document.getElementById('PROCESS_CD').addEventListener('blur', checkCD);
 	document.getElementById('PROCESS_NM').addEventListener('input', changeNM);
-	document.querySelector('#PRODUCT_GC').addEventListener('change', pdgChange);
-	document.querySelector('#PRODUCT_CC').addEventListener('change', pdcChange);
+	document.querySelector('#PROCESS_GC').addEventListener('change', pdgChange);
+	document.querySelector('#PROCESS_CC').addEventListener('change', pdcChange);
 	document.querySelector('#PROCESS_US').addEventListener('change', changeUs);
 	document.getElementById('PROCESS_BG').addEventListener('input', changeBG);
 	
@@ -454,21 +550,50 @@
 // 모달 초기화 버튼 & 닫으면 내용 초기화 	
 	
 	const btn_mregi = document.getElementById('btn_modalregi');
+	const btn_reset = document.getElementById('btn_modal_reset');
 	
 	btn_mregi.addEventListener('click',async function(e){
 		console.log('모달 등록버튼 누름')
-		
-// 		pccd = document.getElementById('PROCESS_CD');
-// 		pcnm = document.getElementById('PROCESS_NM');
-// 		pcbg = document.getElementById('PROCESS_BG');
 		console.log('pccd등록',pccd);
 		console.log('pcnm등록',pcnm);
 		console.log('pcbg등록',pcbg);
+		if(pccd === null){
+			swal.fire({
+				title:"공정코드를 입력해주세요.",
+				icon: "warning"
+			})
+			return;
+		}
+		if(pcnm === null){
+			swal.fire({
+				title:"공정명을 입력해주세요.",
+				icon: "warning"
+			})
+			return;
+		}
+		if(selgc === null){
+			swal.fire({
+				title:"품목분류를 선택해주세요.",
+				icon: "warning"
+			})
+			return;
+		}
+		if(selcc === null){
+			swal.fire({
+				title:"품목세부를 선택해주세요.",
+				icon: "warning"
+			})
+			return;
+		}
+		if(selpd === null){
+			swal.fire({
+				title:"공정품목을 선택해주세요.",
+				icon: "warning"
+			})
+			return;
+		}
 		
-		console.log('등록누르면 가져와',selgc+selcc+selpd+seleq);
-		console.log('등록누르면 가져와',typeof seleq);
-		
-		const regidata = JSON.stringify({
+		const regidata = JSON.stringify([{
 			process_cd: pccd,
 			process_nm: pcnm,
 			process_gc: selgc,
@@ -478,11 +603,11 @@
 			process_us: selus,
 			process_bg: pcbg,
 			process_wr: empcd
-		})
+		}]);
 		console.log('어덕게 보임',regidata);
 		
 		try {
-			  const response = await fetch(`/postprocess`, {
+			  const response = await fetch(`/postProcess`, {
 		      method: 'POST',
 		      headers: {
 		        'Content-Type': 'application/json',
@@ -493,8 +618,20 @@
 			  
 		    const data = await response.json();
 		    console.log('등록',data);
-		    
-		   
+		    if(data === 1){
+		    	swal.fire({
+		    		title: "등록 성공",
+		    		icon: "success"
+		    	})
+		    	regimodal.hide()
+		    	fetchProcesslist();
+		    }else{
+		    	swal.fire({
+		    		title: "등록 실패",
+		    		text: "관리자에게 문의하세요.",
+		    		icon: "error"
+		    	})
+		    }
 		 } catch (error) {
 		    console.error('공정등록에 실패했습니다.', error);
 		    swal.fire({
@@ -504,7 +641,65 @@
 		    });
 		 }
 	});
-
+	
+	btn_reset.addEventListener('click', function(){
+		console.log("초기화누름");
+		// 각 요소 초기화하기.
+		console.log("확인"+document.getElementById('PROCESS_CD').value);
+		console.log("확인"+document.getElementById('PROCESS_BG').value);
+		
+		document.getElementById('PROCESS_CD').value = "";
+		document.getElementById('PROCESS_NM').value = "";
+		document.querySelector('#PROCESS_GC').selectedIndex = 0;
+		const productCC = document.querySelector('#PROCESS_CC');
+	    if (productCC) {
+	        // 기존 옵션 모두 제거
+	        productCC.innerHTML = '';
+	        
+	        // 기본 '품목세부' 옵션 추가
+	        const defaultOption = document.createElement('option');
+	        defaultOption.textContent = '품목세부';  // 기본 텍스트
+	        defaultOption.selected = true;  // 기본으로 선택된 상태
+	        productCC.appendChild(defaultOption);  // 기본 옵션 추가
+	    }
+		document.getElementById('PROCESS_BG').value = "";
+		
+	    $('#PROCESS_PD').val([]).trigger('change');  // 다중 선택 초기화
+	    $('#PROCESS_EQ').val([]).trigger('change');  // 다중 선택 초기화
+		
+		$('#PROCESS_EQ').select2({
+	        placeholder: '설비를 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	        language: {
+	            noResults: function() {
+	                return "해당설비가 없습니다."; // 옵션이 없을 때 나타날 메시지
+	            }
+	        },
+	    });
+		
+	    $('#PROCESS_PD').select2({
+	        placeholder: '품목을 선택하세요',
+	        allowClear: true,
+	        dropdownParent: $('#registermodal'),
+	        multiple:true,
+	    });
+	    
+	    document.querySelector('#PROCESS_US').selectedIndex = 0;
+	    
+	    pccd = null;
+	    pcnm = null;
+	    selgc = null;
+	    selcc = null;
+	    selpd = null;
+	    seleq = null;
+	    selus = null;
+	    pcbg = null;
+	    
+		console.log("초기화완료");
+	});
+	
       //////////////////
      // 카드 크기 설정 //
 	//////////////////
@@ -523,9 +718,9 @@
 	//////////
 	
 	const filterConfig = [
-		{key: 'PROCESS_CD', label: '공정코드', type:'text', placeholder:'공정코드 입력', col:'col-2'},
-		{key: 'PROCESS_NM', label: '공정명', type:'text', placeholder:'공정명 입력', col:'col-2'},
-		]
+		{key: 'fPROCESS_CD', label: '공정코드', type:'text', placeholder:'공정코드 입력', col:'col-2'},
+		{key: 'fPROCESS_NM', label: '공정명', type:'text', placeholder:'공정명 입력', col:'col-2'},
+	]
 	
 	 initializeFilterModule('filterModule', filterConfig, (filterValues) => {
 		 console.log('filtertest',filterValues);
@@ -545,15 +740,110 @@
 	  
 	  const grid = new tui.Grid({
 		  el: document.getElementById('grid'),
+		  rowHeaders: ['checkbox'],
 		  scrollX: true,
 		  scrollY: true,
 		  columns: [
 			  {header:'공정코드', name:'PROCESS_CD', align:'center'},
 			  {header:'공정명', name:'PROCESS_NM', align:'center'},
-			  {header:'공정명', name:'PROCESS_EQ', align:'center'},
-			  {header:'공정명', name:'PROCESS_PD', align:'center'},
+			  {header:'공정품목', name:'PROCESS_PD', align:'center'},
+			  {header:'설비', name:'PROCESS_EQ', align:'center'},
 			  {header:'사용여부', name:'PROCESS_US', align:'center'},
 			  {header:'비고', name:'PROCESS_BG', align:'center'},
 		  ],
 	  });
+	
+	grid.on('click',async function(e){
+		console.log('행선택함');
+		const rowdatacd = grid.getData()[e.rowKey].PROCESS_CD;
+		console.log('행데이터'+rowdatacd);
+		// 서버에서 행하나 받아와서 모달에 뿌리기.
+		 try {
+		  const response = await fetch(`/selectpc?pccd=${rowdatacd}`, {
+	      method: 'GET',
+	      headers: {
+	        'Content-Type': 'application/json',
+	      },
+		    });
+		    const data = await response.json();
+		    console.log(data);
+		    const setdata = data.map(i=>{
+		    	return {
+		    		...i,
+		    		PROCESS_US: (i.PROCESS_US == 1?"사용":"미사용")
+		    	}
+		    });
+		    console.log(setdata);
+		    modaltype='edit';
+		    // 모달에 값 채우기
+	       if (setdata.length > 0) {
+		      const item = setdata[0]; // 첫 번째 데이터
+		      regimodal.show();
+// 		      $('#PROCESS_PD').select2();
+// 		      $('#PROCESS_EQ').select2();
+		
+		      // 모달 값 채우기
+		      const processGcElem = document.getElementById('PROCESS_GC');
+		      const processCcElem = document.getElementById('PROCESS_CC');
+		      const processPdElem = $('#PROCESS_PD');
+		      const processEqElem = $('#PROCESS_EQ');
+		      const processGcValue = item.PROCESS_GC; 
+		      const processCcValue = item.PROCESS_CC; 
+		      const processPdValue = item.PROCESS_PD ? item.PROCESS_PD.split(',') : []; 
+		      const processEqValue = item.PROCESS_EQ ? item.PROCESS_EQ.split(',') : [];
+		      
+		      processGcElem.value = processGcValue;
+		      selgc = processGcValue;
+		      
+		      fetchpdgclist(processGcValue).then(()=>{
+		    	  processCcElem.value = processCcValue;
+		    	  
+		    	  const ev = new Event('change');
+		    	  processCcElem.dispatchEvent(ev);
+		      })
+		      .then(()=>{
+	    	  	processPdElem.val(processPdValue).trigger('change');
+	    	  	processEqElem.val(processEqValue).trigger('change');
+
+	    	    if (!$('#PROCESS_PD').hasClass('select2-hidden-accessible')) {
+	    	        $('#PROCESS_PD').select2({
+	    	            placeholder: '품목을 선택하세요',
+	    	            allowClear: true,
+	    	            dropdownParent: $('#registermodal'),
+	    	            multiple: true,
+	    	        });
+	    	    }
+
+	    	    if (!$('#PROCESS_EQ').hasClass('select2-hidden-accessible')) {
+	    	        $('#PROCESS_EQ').select2({
+	    	            placeholder: '설비를 선택하세요',
+	    	            allowClear: true,
+	    	            dropdownParent: $('#registermodal'),
+	    	            multiple: true,
+	    	            language: {
+	    	                noResults: function() {
+	    	                    return "해당설비가 없습니다.";
+	    	                }
+	    	            }
+	    	        });
+	    	    }
+		      })
+			      
+			      document.getElementById('PROCESS_CD').value = item.PROCESS_CD;  // 공정코드
+			      document.getElementById('PROCESS_NM').value = item.PROCESS_NM;  // 공정명
+			      document.getElementById('PROCESS_BG').value = item.PROCESS_BG!=null?item.PROCESS_BG:"";  // 비고
+			      document.getElementById('PROCESS_US').value = item.PROCESS_US == "사용" ? 1 : 0;
+// 		      });
+		     
+		    }
+		    
+		  } catch (error) {
+		    console.error('모달 수정 데이터를 불러오는데 실패했습니다.', error);
+		    swal.fire({
+		      title: "데이터 로드에 실패했습니다.",
+		      icon: "error",
+		    });
+		  }
+	});
+	
 </script>

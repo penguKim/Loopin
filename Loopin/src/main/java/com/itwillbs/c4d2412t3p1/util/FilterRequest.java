@@ -311,4 +311,5 @@ public class FilterRequest {
 					&& (item_cc == null || item_cc.isEmpty()) && (item_nm == null || item_nm.isEmpty());
 		}
 	}
+
 }

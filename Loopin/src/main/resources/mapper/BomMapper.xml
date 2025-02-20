@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.BomMapper">
+
+<select id="selectPD" resultType="map">
+	SELECT DISTINCT 
+		pd.PRODUCT_CD,
+		pd.PRODUCT_NM,
+		pd.PRODUCT_GC,
+		pd.PRODUCT_CC,
+		pd.PRODUCT_UN,
+		pd.PRODUCT_RM 
+	FROM PRODUCT pd
+	WHERE pd.PRODUCT_GC = 'PRODUCT'
+</select>
+
+
+</mapper>
