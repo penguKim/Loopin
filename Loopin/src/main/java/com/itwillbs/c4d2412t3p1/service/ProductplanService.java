@@ -19,6 +19,7 @@ import com.itwillbs.c4d2412t3p1.domain.BomMaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
+import com.itwillbs.c4d2412t3p1.domain.ContractDetailProductInfoDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
@@ -412,6 +413,16 @@ public class ProductplanService {
 		}
 
 		return processList;
+	}
+
+	public List<ContractDetailProductInfoDTO> findColorSizeList(String contractCd, String productCd) {
+		// 1) 수주상세 목록 조회
+		List<ContractDetail> detailList = contractdetailRepository.findByContractCdAndProductCd(contractCd, productCd);
+
+		// 2) DTO 변환
+		return detailList.stream()
+				.map(d -> new ContractDetailProductInfoDTO(d.getProduct_cr(), d.getProduct_sz(), d.getProduct_am()))
+				.collect(Collectors.toList());
 	}
 
 }
