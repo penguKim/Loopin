@@ -4,6 +4,23 @@
 
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.BomMapper">
 
+<select id="selectBomAll" resultType="map"> 
+<!-- 임시..!!! 이거 다시 조건걸어서 가져와야한다. 각 부모 품목별로는 중복이라도 나와야함...아닌가? 아닐수도?ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ 이건 이야기해보자 이거 그대로 둘거면 모달에 불러오는 데이터를 손대야함.-->
+	SELECT DISTINCT
+		bp.BOMPROCESS_CD,
+		pd.PRODUCT_NM,
+		bp.PROCESS_CD,
+		pc.PROCESS_NM,
+		pc.PROCESS_GC,
+		pc.PROCESS_CC,
+		bp.BOMPROCESS_RT,
+		bp.BOMPROCESS_BG
+	FROM BOMPROCESS bp
+	JOIN PROCESS pc ON bp.PROCESS_CD = pc.PROCESS_CD
+	JOIN PRODUCT pd ON bp.BOMPROCESS_CD = pd.PRODUCT_CD
+	ORDER BY bp.BOMPROCESS_CD
+</select>
+
 <select id="selectPD" resultType="map">
 	SELECT DISTINCT 
 		pd.PRODUCT_CD,
@@ -14,7 +31,50 @@
 		pd.PRODUCT_RM 
 	FROM PRODUCT pd
 	WHERE pd.PRODUCT_GC = 'PRODUCT'
+<!-- 	여기 product를 서버에서 가져와야하는데 sql로 한번에 가져오는게 빠른지, 따로 가져와서 다시 이렇게 가져오는게 빠른지,,, 고민하고 바ㅏ꿔야해. -->
 </select>
 
+<select id="checkpcd" resultType="String">
+	SELECT DISTINCT 
+		bp.PRODUCT_CD 
+	FROM BOMPROCESS bp
+	WHERE bp.PRODUCT_CD = #{pcd}
+</select>
+
+<select id="selectPCs" resultType="map">
+	SELECT DISTINCT 
+		pc.PROCESS_CD,
+		pc.PROCESS_NM,
+		pc.PROCESS_GC AS PRODUCT_GC,
+		pc.PROCESS_CC AS PRODUCT_CC,
+		pd.PRODUCT_CD AS BOMPROCESS_CD,
+		pd.PRODUCT_NM,
+		pd.PRODUCT_UN 
+	FROM PROCESS pc
+	JOIN PRODUCT pd ON INSTR(','|| pc.PROCESS_PD || ',', ','|| pd.PRODUCT_CD || ',' ) > 0  
+	ORDER BY pc.PROCESS_CD
+</select>
+
+<select id="selectbom" resultType="map">
+	SELECT 
+        mt.MATERIAL_CD AS BOM_CD,
+        mt.MATERIAL_GC AS PRODUCT_GC,
+        mt.MATERIAL_CC AS PRODUCT_CC,
+        mt.MATERIAL_NM AS PRODUCT_NM,
+        mt.MATERIAL_UN AS PRODUCT_UN
+    FROM MATERIAL mt
+    UNION
+    SELECT
+        pd.PRODUCT_CD AS BOM_CD,
+        pd.PRODUCT_GC,
+        pd.PRODUCT_CC,
+        pd.PRODUCT_NM,
+        pd.PRODUCT_UN
+    FROM PRODUCT pd
+    WHERE pd.PRODUCT_CD IN 
+    <foreach collection="ckrowpds" item="pdc" open="(" close=")" separator=",">
+        #{pdc}
+    </foreach>
+</select>
 
 </mapper>

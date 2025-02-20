@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+@SuppressWarnings("serial")
 @Getter @Setter
 @EqualsAndHashCode
 public class BomId implements Serializable{
