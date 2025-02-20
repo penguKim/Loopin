@@ -254,7 +254,6 @@
 
 		
         modalElement.addEventListener('shown.bs.modal', function () {
-			console.log(data);
         	make_modal_grid(data);
 			
         });
@@ -274,8 +273,7 @@
 	function make_modal_grid(data) {
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : [
-			  ],
+			data : [],
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [

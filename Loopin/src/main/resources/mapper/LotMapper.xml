@@ -43,32 +43,30 @@
 	        MIN(L.PRODUCT_CR) AS PRODUCT_CR,
 	        NVL(MIN(WS.PROCESS_CD), 'UPPER') AS PROCESS_CD,
 	        TO_CHAR(MIN(L.LOT_CR), 'YYYY-MM-DD') AS LOT_CR,
-	        NVL(MIN(WS.WORKORDER_ST), '계획중') AS WORKORDER_ST
+	        NVL(MIN(WS.WORKORDER_ST), '대기') AS WORKORDER_ST
 	    FROM LOT L
 	    LEFT JOIN (
 	        SELECT LOT_CD, PROCESS_CD, WORKORDER_ST 
 	        FROM WORKORDER_STATUS 
 	        WHERE RN = 1
 	    ) WS ON WS.LOT_CD = L.LOT_CD
-	
 	    <where>
 	        <if test="lot_cd != null and lot_cd != ''">
-	            AND L.LOT_CD = #{lot_cd}
+	            AND INSTR(L.LOT_CD, #{lot_cd}) > 0
 	        </if>
 	        <if test="contract_cd != null and contract_cd != ''">
-	            AND L.CONTRACT_CD = #{contract_cd}
+	            AND INSTR(L.CONTRACT_CD, #{contract_cd}) > 0
 	        </if>
 	        <if test="product_cd != null and product_cd != ''">
-	            AND L.PRODUCT_CD = #{product_cd}
+	            AND INSTR(L.PRODUCT_CD, #{product_cd}) > 0
 	        </if>
 	        <if test="process_cd != null and process_cd != ''">
-	            AND WS.PROCESS_CD = #{process_cd}
+	            AND L.PROCESS_CD = #{process_cd}
 	        </if>
 	        <if test="workorder_st != null and workorder_st != '' and workorder_st != 'ALL'">
-	            AND WS.WORKORDER_ST = #{workorder_st}
+	            AND L.WORKORDER_ST = #{workorder_st}
 	        </if>
 	    </where>
-	
 	    GROUP BY L.LOT_CD
 	    ORDER BY MIN(L.LOT_CR) DESC
 	</select>
@@ -97,19 +95,22 @@
 		SELECT JSON_OBJECT(
 		    'name' VALUE #{PRODUCT_CD},
 		    'title' VALUE '제품',
-		    'process' VALUE NVL(W.process, '계획중'),  -- 🚀 W.process를 참조할 수 있도록 JOIN
+		    'process' VALUE NVL(W.process, '대기'),  -- 🚀 W.process를 참조할 수 있도록 JOIN
+		    'lot_cd' VALUE #{LOT_CD},
 		    'children' VALUE (
 		        SELECT JSON_ARRAYAGG(
 		            JSON_OBJECT(
 		                'name' VALUE A.CURRENT_PROCESS,
 		                'title' VALUE '반제품',
-		                'process' VALUE NVL(W.process, '계획중'), 
+		                'process' VALUE NVL(W.process, '대기'),
+		                'lot_cd' VALUE #{LOT_CD},
 		                'children' VALUE (
 		                    SELECT JSON_ARRAYAGG(
 		                        JSON_OBJECT(
 		                            'name' VALUE B.CURRENT_PROCESS,
 		                            'title' VALUE '반제품',
-		                            'process' VALUE NVL(W2.process, '계획중') 
+		                            'process' VALUE NVL(W2.process, '대기'), 
+					                'lot_cd' VALUE #{LOT_CD}
 		                        )
 		                    ) 
 		                    FROM BOM_HIERARCHY B
@@ -183,5 +184,20 @@
 		    </otherwise>
 		</choose>
     </select>
-		
+
+	<select id="select_LOTHISTORY_list" resultType="map">
+		SELECT LH.CONTRACT_CD
+			   , LH.LOT_CD
+			   , LH.PROCESS_CD
+			   , L.PRODUCT_CR 
+			   , L.PRODUCT_SZ 
+			   , TO_CHAR(LOTHISTORY_BQ) AS LOTHISTORY_BQ
+			   , TO_CHAR(LOTHISTORY_EN, 'YYYY-MM-DD') AS LOTHISTORY_EN
+			   , TO_CHAR(LOTHISTORY_ST, 'YYYY-MM-DD') AS LOTHISTORY_ST
+			   , TO_CHAR(LOTHISTORY_WQ) AS LOTHISTORY_WQ
+    	  FROM LOTHISTORY LH
+	 LEFT JOIN LOT L ON L.LOT_CD = LH.LOT_CD AND LH.PROCESS_CD = L.PROCESS_CD
+		 WHERE 1=1
+ 			   AND LH.LOT_CD = #{lot_cd}
+	</select>
 </mapper>
