@@ -18,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -33,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.EmployeeFilterRequest;
 
@@ -157,6 +159,7 @@ public class EmployeeController {
 	    
 	}
 	
+	@LogActivity(value = "등록", action = "인사카드등록")
 	@PostMapping("/insert_EMPLOYEE")
 	public ResponseEntity<Map<String, String>> insert_EMPLOYEE(
 		    @RequestPart("employeeDTO") EmployeeDTO employeeDTO, // DTO 받기
@@ -285,6 +288,7 @@ public class EmployeeController {
 	
 	
 	//	인사발령 삭제
+	@LogActivity(value = "삭제", action = "인사카드삭제")
 	@PostMapping("/delete_EMPLOYEE")
 	public ResponseEntity<Map<String, Object>> delete_EMPLOYEE(@RequestBody Map<String, List<String>> request) {
 		
@@ -308,6 +312,7 @@ public class EmployeeController {
 	
 	 
 	// 인사현황 차트
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_HR_ADMIN')")
 	@GetMapping("/employee_chart")
 	public String employee_chart(Model model) {
 		
@@ -317,13 +322,11 @@ public class EmployeeController {
 
     // 성별 데이터 조회
     @GetMapping("/select_GENDER")
-    public ResponseEntity<Map<String, Object>> select_GENDER(
-            @RequestParam("start_dt") String startDt,
-            @RequestParam("end_dt") String endDt) {
+    public ResponseEntity<Map<String, Object>> select_GENDER() {
     	
     	
         // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
-        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStatsByDate(startDt, endDt);
+        List<Map<String, Object>> genderStats = employeeService.getEmployeeGenderStatsByDate();
     	
     	
         // Toast UI Chart 형식으로 변환
@@ -369,13 +372,11 @@ public class EmployeeController {
     
     // 부서별 인원 현황 데이터 조회
     @GetMapping("/select_DEPT")
-    public ResponseEntity<Map<String, Object>> select_DEPT(
-    		@RequestParam("start_dt") String startDt,
-    		@RequestParam("end_dt") String endDt) {
+    public ResponseEntity<Map<String, Object>> select_DEPT(){
     	
     	
     	// 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
-    	List<Map<String, Object>> deptStats = employeeService.getEmployeeDeptStatsByDate(startDt, endDt);
+    	List<Map<String, Object>> deptStats = employeeService.getEmployeeDeptStatsByDate();
     	
     	
     	// Toast UI Chart 형식으로 변환
@@ -394,12 +395,10 @@ public class EmployeeController {
     
     // 직위별 조회 현황 데이터 조회
     @GetMapping("/select_POSI")
-    public ResponseEntity<Map<String, Object>> select_POSI(
-            @RequestParam("start_dt") String startDt,
-            @RequestParam("end_dt") String endDt) {
+    public ResponseEntity<Map<String, Object>> select_POSI(){
 
         // 서비스 호출: 시작일과 종료일을 기준으로 데이터 조회
-        List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate(startDt, endDt);
+        List<Map<String, Object>> posiStats = employeeService.getEmployeePosiStatsByDate();
 
         // 직위명과 인원 수를 각각 카테고리와 데이터로 분리
         List<String> categories = posiStats.stream()

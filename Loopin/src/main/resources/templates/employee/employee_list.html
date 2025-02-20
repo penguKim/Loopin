@@ -734,6 +734,9 @@
 					}
 				});
 				
+				// 인사카드 엑셀
+				addExcelButton(grid, '인사카드');
+				
 				setGridHeight(grid, -476);
 				
 	        },
@@ -786,9 +789,8 @@
 	    		                text: '삭제가 완료되었습니다.',
 	    		                confirmButtonText: '확인'
 	    		            });
-	    		            setTimeout(() => {
-	    		                location.reload();
-	    		            }, 1000);
+	    		            // 그리드 데이터 갱신
+	    		            refreshGridData();
 	    	            },
 	    	            error: function (xhr) {
 	    	                console.error('삭제 중 오류 발생:', xhr.responseText);
@@ -1043,7 +1045,7 @@
  		        fieldsToDisable.forEach(function (field) {
  		            $(field).prop("disabled", false); // 모든 필드 활성화
  		        });
- 		    } else if (userRole === 'EMPLOYEE' || userRole === 'PR_ADMIN' || userRole === 'AT_ADMIN') {
+ 		    } else if (userRole !== 'HR_ADMIN' || userRole !== 'SYS_ADMIN') {
 				fieldsToDisable.forEach(function (field) {
 				     $(field).prop("disabled", true);
 				 });
@@ -1306,9 +1308,8 @@
 		        		});
 
 		            $('#modal_appointment_save').modal('hide'); // 모달 닫기
-		            setTimeout(() => {
-		                location.reload();
-		            }, 1000);
+		            // 그리드 데이터 갱신
+		            refreshGridData();
 		        },
 		        error: function (xhr) {
 		            console.error('AJAX Error:', xhr.responseText);
@@ -1323,6 +1324,19 @@
 		    });
 		});
 		
+		function refreshGridData() {
+		    $.ajax({
+		        url: '/select_EMPLOYEE',
+		        method: 'GET',
+		        success: function (response) {
+		            grid.resetData(response);
+		            console.log("그리드 데이터가 갱신되었습니다.");
+		        },
+		        error: function (error) {
+		            console.error("그리드 데이터 갱신 중 오류 발생:", error);
+		        }
+		    });
+		}
 		
 
 		// 폼 제출 시 필수값 체크

@@ -48,7 +48,7 @@
 							<div class="row mb-3">
 							    <div class="col-md-6">
 							        <div class="chart-container">
-							            <div id="chart-gender"></div>
+							            <div id="chart-hdrd"></div>
 							        </div>
 							    </div>
 							    <div class="col-md-6">
@@ -65,7 +65,7 @@
 							    </div>
 							    <div class="col-md-6">
 							        <div class="chart-container">
-							            <div id="chart-hdrd"></div>
+							            <div id="chart-gender"></div>
 							        </div>
 							    </div>
 							</div>
@@ -144,10 +144,6 @@ $(document).ready(function () {
             headers: {
                 [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
             },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
-            },
             success: function (response) {
                 renderGenderChart(response);
             },
@@ -164,10 +160,6 @@ $(document).ready(function () {
             headers: {
                 [csrfHeader]: csrfToken
             },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
-            },
             success: function (response) {
                 renderDeptChart(response);
             },
@@ -183,10 +175,6 @@ $(document).ready(function () {
             method: 'GET',
             headers: {
                 [csrfHeader]: csrfToken
-            },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
             },
             success: function (response) {
                 renderPosiChart(response);
@@ -225,7 +213,7 @@ $(document).ready(function () {
             chart: {
                 title: '남녀 성비 현황',
                 width: 700,
-                height: 300
+                height: 290
             },
         };
         $('#chart-gender').empty();
@@ -240,7 +228,7 @@ $(document).ready(function () {
             chart: {
                 title: '부서별 인원 현황',
                 width: 700,
-                height: 300
+                height: 290
             },
         };
         $('#chart-dept').empty();
@@ -258,7 +246,7 @@ $(document).ready(function () {
             chart: {
                 title: '직위별 인원 현황',
                 width: 700,
-                height: 300
+                height: 290
             },
             xAxis: { title: '직위' },
             yAxis: { title: '인원 수' },
@@ -290,9 +278,9 @@ $(document).ready(function () {
 
         const options = {
             chart: {
-                title: '입퇴사자 인원 현황',
+                title: '기간별 입퇴사자 인원 현황',
                 width: 700,
-                height: 300
+                height: 290
             },
             xAxis: { title: '기간', categories: categories },
             yAxis: { title: '인원 수', min: 0 },
