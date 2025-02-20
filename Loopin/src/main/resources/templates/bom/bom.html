@@ -152,6 +152,9 @@
 </body>
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+var empcd = document.getElementById('employee_cd').textContent;
 let pcdata = [];
 let bomdata = [];
 const btnregi = document.getElementById('btn_register');
@@ -751,14 +754,23 @@ async function clickbtnmregi(){
 	console.log('bomdata'+JSON.stringify(bomdata));
 	
 	try{
-		//등록 fetch
+		const response = await fetch(`/insertbom`,{
+			method:"POST",
+			headers:{
+				"Content-Type":"application/json",
+				[csrfHeader]: csrfToken,
+			},
+			body:JSON.stringify({bom: bomdata, bompro: bomprocessdata})
+		});
+		const data = await response.json();
+		console.log('등록했다!'+data);
 	}catch(error){
 		console.log('BOM 등록에 실패했습니다.'+error);
-		swal.fire({
-			title:"BOM 등록에 실패했습니다.",
-			text:"관리자에게 연락주세요.",
-			icon:"error"
-		})
+// 		swal.fire({
+// 			title:"BOM 등록에 실패했습니다.",
+// 			text:"관리자에게 연락주세요.",
+// 			icon:"error"
+// 		})
 	}
 	
 // 	const flatStorage = Object.keys(m_matStorage).map(i => m_matStorage[i]).flat();

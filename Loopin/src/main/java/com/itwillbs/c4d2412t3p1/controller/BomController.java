@@ -1,17 +1,23 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
+import com.itwillbs.c4d2412t3p1.entity.Bom;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.service.BomService;
 
 import lombok.RequiredArgsConstructor;
+
 
 
 @Controller
@@ -63,6 +69,27 @@ public class BomController {
 		List<Product> list = bS.selectbom(ckrowpds);
 		
 		return ResponseEntity.ok(list);
+	}
+	
+	@PostMapping("/insertbom")
+	public ResponseEntity<List<BomallDTO>> insertbom(@RequestBody Map<String, List<BomallDTO>> bomdata) {
+		
+		List<BomallDTO> bom = bomdata.get("bom");
+		List<BomallDTO> bompc = bomdata.get("bompro");
+		
+		System.out.println("bom받아오니? : "+ bom.get(0).getBom_am());
+		System.out.println("bom받아오니? : "+ bom.get(0).getProduct_cd());
+		System.out.println("bom받아오니? : "+ bom.get(0).getBom_cd());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_cd());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_ap());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_er());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_rt());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_ra());
+		System.out.println("bompc받아오니? : "+ bompc.get(0).getBomprocess_bg());
+		
+		List<BomallDTO> list = bS.insertbom(bom, bompc);
+		
+		return ResponseEntity.ok(null);
 	}
 	
 	

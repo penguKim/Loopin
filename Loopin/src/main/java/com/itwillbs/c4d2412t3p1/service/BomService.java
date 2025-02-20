@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
+import com.itwillbs.c4d2412t3p1.entity.Bom;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 import com.itwillbs.c4d2412t3p1.mapper.BomMapper;
@@ -54,6 +56,11 @@ public class BomService {
 		List<Product> list = bM.selectbom(ckrowpds);
 		
 		return list;
+	}
+
+	public List<BomallDTO> insertbom(List<BomallDTO> bom, List<BomallDTO> bompc) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 
