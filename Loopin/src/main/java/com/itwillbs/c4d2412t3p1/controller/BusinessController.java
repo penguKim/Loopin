@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,6 +24,7 @@ import com.itwillbs.c4d2412t3p1.domain.ContractRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.OrderRequestDTO;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.BusinessService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.ContractFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.OrderFilterRequest;
@@ -37,8 +39,8 @@ public class BusinessController {
 
 	private final BusinessService businessService ;
 	
-	
 	// 발주관리 페이지로 이동
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_BN_ADMIN')")
 	@GetMapping("/order_list")
 	public String order_list(Model model) {
 		
@@ -201,6 +203,7 @@ public class BusinessController {
 	}
 	
 	// 발주 등록
+	@LogActivity(value = "등록", action = "발주등록")
 	@ResponseBody
 	@PostMapping("/insert_ORDER")
 	public ResponseEntity<Map<String, String>> insert_ORDER(
@@ -285,6 +288,7 @@ public class BusinessController {
 	}
 
 	// 발주 삭제
+	@LogActivity(value = "삭제", action = "발주삭제")
 	@PostMapping("/delete_ORDER")
 	public ResponseEntity<Map<String, Object>> delete_ORDER(@RequestBody Map<String, List<String>> request) {
 		
@@ -334,6 +338,7 @@ public class BusinessController {
     }
 	
 	// 수주관리 페이지로 이동
+    @PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_BN_ADMIN')")
 	@GetMapping("/contract_list")
 	public String contract_list(Model model) {
 		
@@ -496,6 +501,7 @@ public class BusinessController {
 	}
 	
 	// 수주 등록 처리
+	@LogActivity(value = "등록", action = "수주등록")
 	@ResponseBody
 	@PostMapping("/insert_CONTRACT")
 	public ResponseEntity<Map<String, String>> insert_CONTRACT(
@@ -579,6 +585,7 @@ public class BusinessController {
 	}
 
 	// 수주 삭제
+	@LogActivity(value = "삭제", action = "발주삭제")
 	@PostMapping("/delete_CONTRACT")
 	public ResponseEntity<Map<String, Object>> delete_CONTRACT(@RequestBody Map<String, List<String>> request) {
 		
@@ -630,6 +637,7 @@ public class BusinessController {
     
 
 	// 출하관리 페이지로 이동
+    @PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_BN_ADMIN')")
 	@GetMapping("/shipment_list")
 	public String shipment_list(Model model) {
 		
@@ -642,7 +650,7 @@ public class BusinessController {
 	@ResponseBody
 	public ResponseEntity<Map<String, Object>> get_CONTRACT_SHIPMENT(@RequestParam(name = "contract_cd") String contractCd) {
 	    try {
-	        // 서비스에서 계약 정보 + 상세 정보 조회
+	        // 서비스에서 수주 정보 + 상세 정보 조회
 	        Map<String, Object> contractData = businessService.get_CONTRACT_SHIPMENT(contractCd);
 
 	        if (contractData.isEmpty()) {
@@ -696,7 +704,7 @@ public class BusinessController {
 	    }
     }
 	
-	
+	@LogActivity(value = "등록", action = "출하등록")
 	@PostMapping("/update_CONTRACT_SHIPMENT")
 	@ResponseBody
 	public Map<String, Object> updateContractShipment(@RequestBody Map<String, Object> requestData) {
@@ -718,7 +726,7 @@ public class BusinessController {
 
 	        if (contractCd == null || contractEd == null) {
 	            response.put("success", false);
-	            response.put("message", "계약 코드 또는 출하일이 누락되었습니다.");
+	            response.put("message", "수주 코드 또는 출하일이 누락되었습니다.");
 	            return response;
 	        }
 
@@ -739,6 +747,7 @@ public class BusinessController {
 	
 	
 	// 영업현황 페이지
+	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_BN_ADMIN')")
 	@GetMapping("/business_state")
 	public String business_state() {
 		
