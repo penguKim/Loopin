@@ -4,6 +4,7 @@ package com.itwillbs.c4d2412t3p1.repository;
 import java.util.List;
 import java.util.Map;
 
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +19,7 @@ import jakarta.transaction.Transactional;
 
 @Repository
 public interface ContractRepository  extends JpaRepository<Contract, String> {
-
+	
 	// 시퀀스 조회
 	@Query(value = "SELECT CT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();

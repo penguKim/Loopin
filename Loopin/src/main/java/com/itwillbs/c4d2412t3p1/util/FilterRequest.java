@@ -193,6 +193,7 @@ public class FilterRequest {
 	}
 	
 	
+	
 	// 발주관리 필터 클래스
 	@Getter
 	@Setter
@@ -236,5 +237,30 @@ public class FilterRequest {
 		}
 	}
 	
+	// 제품관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class EquipmentFilterRequest extends FilterRequest {
+		
+		private String equipment_cd;
+		private String model_cd;
+		private String equipment_nm;
+		private String warehouse_cd;
+		private String product_cd;
+		private String equipment_us;
+		
+		public EquipmentFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (equipment_cd == null || equipment_cd.isEmpty())
+					&& (model_cd == null || model_cd.isEmpty()) && (equipment_nm == null || equipment_nm.isEmpty())
+					&& (product_cd == null || product_cd.isEmpty()) && (equipment_us == null || equipment_us.isEmpty()
+					&& (warehouse_cd == null || warehouse_cd.isEmpty()));
+		}
+	}
 }
 

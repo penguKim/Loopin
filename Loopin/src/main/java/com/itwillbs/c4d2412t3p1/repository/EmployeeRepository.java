@@ -379,7 +379,13 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
 	List<Object[]> select_FILTERED_EMPLOYEE_WITH_CD(@Param("filterRequest") EmployeeFilterRequest filterRequest, 
 	                                                 @Param("currentCd") String currentCd);
 
+	// 2025-02-14 김기렬(생산계획 등록 시 담당자리스트를 가져오기 위함)
+	// 부서(employee_dp) 기준 조회 (예: '60'인 전체 사원)
+	@Query(value = "SELECT * FROM employee WHERE employee_dp = :employee_dp", nativeQuery = true)
+    List<Employee> select_EMPLOYEE_BY_DP(@Param("employee_dp") String employee_dp);
 	
-	
-	
+	// 사원번호(employee_cd)와 부서(employee_dp) 모두 조건에 해당하는 사원 조회
+    @Query(value = "SELECT * FROM employee WHERE employee_cd = :employee_cd AND employee_dp = :employee_dp", nativeQuery = true)
+    List<Employee> select_EMPLOYEE_BY_CD_DP(@Param("employee_cd") String employee_cd,
+                                              @Param("employee_dp") String employee_dp);
 }
