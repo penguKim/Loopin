@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
@@ -43,5 +44,9 @@ public interface CommuteMapper {
 	List<CommuteDTO> select_COMMUTE_commuteChart(@Param("filter") CommuteFilterRequest filter);
 	// 직위, 부서별 출근 차트
 	List<CommuteDTO> select_COMMUTE_gradeChart(@Param("sort") String sort, @Param("filter") CommuteFilterRequest filter);
+	// 근로코드 조회
+	List<WorkinghourDTO> select_WORKINGHOUR_CD();
+	// 등록된 사원 카운트
+	int countEmployeeWorkinghour(@Param("work") String work);
     
 }

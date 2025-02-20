@@ -14,4 +14,7 @@ public class InoutRequestDTO {
 	InoutFilterRequest inoutfilter;
 	InoutDTO inout;
 	
+	String order_cd;
+	String contract_cd;
+	
 }

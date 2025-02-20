@@ -27,6 +27,7 @@ import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
+import com.itwillbs.c4d2412t3p1.domain.ProductDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
@@ -463,6 +464,30 @@ public class CommuteService {
 		series.put("name", name);
 		series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
 		return series;
+	}
+
+	// 근로코드 조회
+	public List<WorkinghourDTO> select_WORKINGHOUR_CD() {
+		return commuteMapper.select_WORKINGHOUR_CD();
+	}
+
+	// 근로관리 항목 삭제
+	@Transactional
+	public void delete_WORKINGHOUR(List<WorkinghourDTO> workinghourList) {
+		
+		for(WorkinghourDTO work : workinghourList) {
+			int count = commuteMapper.countEmployeeWorkinghour(work.getWorkinghour_id());
+			if(count> 0) {
+				throw new RuntimeException("사원이 지정되어 삭제가 불가능합니다.");
+			}
+		}
+		
+		
+	    List<String> workCodes = workinghourList.stream()
+		        .map(WorkinghourDTO::getWorkinghour_id)
+		        .collect(Collectors.toList());
+	    workinghourRepository.deleteByworkCodes(workCodes);
+		
 	}
 
 

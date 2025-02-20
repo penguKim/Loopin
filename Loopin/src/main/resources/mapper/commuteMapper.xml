@@ -80,7 +80,7 @@
 	</select>	
 	
 	<!-- 근로시간 조회 -->
-	<select id="selcet_COMMUTE_time" resultType="Commute">
+	<select id="selcet_COMMUTE_time" resultType="Workinghour">
 		SELECT NVL(SUM(COMMUTE_IG),0) COMMUTE_IG, NVL(SUM(COMMUTE_EG),0) COMMUTE_EG, 
 			NVL(SUM(COMMUTE_YG),0) COMMUTE_YG, NVL(SUM(COMMUTE_JG),0) COMMUTE_JG, NVL(SUM(COMMUTE_HG),0) COMMUTE_HG,
 			NVL(SUM(COMMUTE_IG),0) + NVL(SUM(COMMUTE_EG),0) + NVL(SUM(COMMUTE_YG),0) + 
@@ -130,6 +130,23 @@
 		  , EMPLOYEE_MD = #{workinghour.workinghour_ud}
 		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
 	</update>
+	
+	<!-- // 근로코드 조회 -->
+	<select id="select_WORKINGHOUR_CD" resultType="Workinghour">
+		SELECT CC.COMMON_CC workinghour_id, CC.COMMON_NM workinghour_nm, CC.COMMON_CT workinghour_rm
+		  FROM COMMON_CODE CC
+		  LEFT OUTER JOIN WORKINGHOUR WH ON CC.COMMON_CC = WH.WORKINGHOUR_ID
+		 WHERE CC.COMMON_GC = 'WKTYPE'
+		   AND WH.WORKINGHOUR_ID IS NULL
+	</select>
+	
+	<!-- 등록된 사원 카운트 -->
+	<select id="countEmployeeWorkinghour">
+		SELECT COUNT(*)
+		  FROM WORKINGHOUR WH
+		  LEFT OUTER JOIN EMPLOYEE EM ON EM.WORKINGHOUR_ID = WH.WORKINGHOUR_ID 
+		 WHERE EM.WORKINGHOUR_ID = #{work}
+	</select>
 	
 <!-- //////////////////////////////////////////////////////////// 출퇴근 현황 //////////////////////////////////////////////////////////// -->
 	

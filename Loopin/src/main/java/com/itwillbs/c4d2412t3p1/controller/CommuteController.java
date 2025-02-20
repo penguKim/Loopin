@@ -46,6 +46,7 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final EmployeeService employeeService;
+	private final CommonService commonService;	
 	private final UtilService util;
 	
 
@@ -216,7 +217,7 @@ public class CommuteController {
 	// 근로관리 그리드 조회
 	@ResponseBody
 	@GetMapping("/select_WORKINGHOUR")
-	public ResponseEntity<Map<String, Object>> getMethodName() {
+	public ResponseEntity<Map<String, Object>> select_WORKINGHOUR() {
 		
 		List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR();
 		log.info(list.toString());
@@ -255,11 +256,10 @@ public class CommuteController {
 	@LogActivity(value = "등록", action = "근로관리")
 	@ResponseBody
 	@PostMapping("/insert_WORKINGHOUR")
-	public ResponseEntity<Map<String, Object>> insert_WORKINGHOUR(@RequestBody WorkinghourDTO workinghourDTO) {
-		
+	public ResponseEntity<Map<String, Object>> insert_WORKINGHOUR(@RequestBody CommuteRequestDTO commuteRequest) {
 		Map<String, Object> response = new HashMap<>();
 		try {
-			Workinghour workinghour = commuteService.insert_WORKINGHOUR(workinghourDTO);
+			Workinghour workinghour = commuteService.insert_WORKINGHOUR(commuteRequest.getWorkinghour());
 			
 			List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR();
 			response.put("result", true);
@@ -268,6 +268,27 @@ public class CommuteController {
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+		
+	}
+	
+	// 근로관리 항목 삭제
+	// @LogActivity(value = "삭제", action = "근로관리")
+	@ResponseBody
+	@PostMapping("/delete_WORKINGHOUR")
+	public ResponseEntity<Map<String, Object>> delete_WORKINGHOUR(@RequestBody CommuteRequestDTO commuteRequest) {
+		System.out.println("------------------------------------");
+		System.out.println(commuteRequest.getWorkinghourList().toString());
+		Map<String, Object> response = new HashMap<>();
+		try {
+			commuteService.delete_WORKINGHOUR(commuteRequest.getWorkinghourList());
+			
+			List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR();
+			response.put("list", list);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("msg", e.getMessage());
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 		
@@ -316,6 +337,26 @@ public class CommuteController {
             response.put("result", true);
 			response.put("EMPLOYEE_LIST", EMPLOYEE_LIST);
 			response.put("CHK_LSIT", CHK_LSIT);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	// 근무코드 조회
+	@ResponseBody
+	@PostMapping("/select_WORKINGHOUR_CD")
+	public ResponseEntity<Map<String, Object>> select_WORKINGHOUR_CD(@RequestBody CommuteRequestDTO commuteRequest) {
+		Map<String, Object> response = new HashMap<>();
+		Map<String, Object> data = new HashMap<>();
+		try {
+			List<WorkinghourDTO> list = commuteService.select_WORKINGHOUR_CD();
+			
+		    response.put("result", true);
+		    data.put("contents", list);
+		    response.put("data", data);
+		    
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("result", false);

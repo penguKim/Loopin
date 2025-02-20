@@ -618,6 +618,11 @@ function setGridTheme() {
 	        showVerticalBorder: true,
 	        showHorizontalBorder: true
 	    },
+		row: {
+			even: {
+				background: '#FFFFFF',
+			}
+		},
 		cell: {
 	        normal: {
 	            border: '#e0e0e0',
@@ -636,7 +641,7 @@ function setGridTheme() {
 	            showHorizontalBorder: true
 	        },
 	        summary: {
-	        	background: '#ddd',
+	        	background: '#e0e0e0',
 	        	border: '#fff',
 	            showVerticalBorder: true,
 	            showHorizontalBorder: true
