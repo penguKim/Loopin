@@ -9,6 +9,18 @@
 	<aside id="sidebar" class="sidebar" layout:fragment="aside">
 		
 		<ul class="sidebar-nav" id="sidebar-nav">
+			<li class="nav-item">
+				<a class="nav-link collapsed" href="approval_list">
+					<i class="bi bi-files"></i>
+					<span>전자결재</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link collapsed" href="notice_list">
+					<i class="bi bi-megaphone"></i>
+					<span>공지사항</span>
+				</a>
+			</li>
 			<div sec:authorize="hasAnyRole('SYS_ADMIN, HR_ADMIN, AT_ADMIN, PR_ADMIN')">
 				<li class="nav-heading">관리자메뉴</li>
 			</div>
@@ -110,72 +122,6 @@
 					</ul>
 				</li>
 			</div>
-			<div id="myMenu">
-				<li class="nav-heading">나의메뉴</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" data-bs-target="#form1s-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-person-vcard"></i><span>인사</span><i class="bi bi-chevron-down ms-auto"></i>
-					</a>
-					<ul id="form1s-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-						<li>
-							<a th:href="@{/employee_list(type=1)}">
-								<i class="bi bi-circle"></i><span>인사카드</span>
-							</a>
-						</li>
-						<li>
-							<a th:href="@{/transfer_list(type=1)}">
-								<i class="bi bi-circle"></i><span>인사발령</span>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" data-bs-target="#form2s-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-calendar-check"></i><span>근태</span><i class="bi bi-chevron-down ms-auto"></i>
-					</a>
-					<ul id="form2s-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-						<li>
-							<a th:href="@{/attendance_list(type=1)}">
-								<i class="bi bi-circle"></i><span>휴가조회</span>
-							</a>
-						</li>
-						<li>
-							<a th:href="@{/commute(type=1)}">
-								<i class="bi bi-circle"></i><span>출퇴근기록부</span>
-							</a>
-						</li>
-					</ul>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" data-bs-target="#form12s-nav" data-bs-toggle="collapse" href="#">
-						<i class="bi bi-cash-stack"></i><span>급여</span><i class="bi bi-chevron-down ms-auto"></i>
-					</a>
-					<ul id="form12s-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-						<li>
-							<a href="check_salary">
-								<i class="bi bi-circle"></i><span>급여조회</span>
-							</a>
-						</li>
-						<li>
-							<a href="prcal">
-								<i class="bi bi-circle"></i><span>급여계산기</span>
-							</a>
-						</li>
-					</ul>
-				</li>
-			</div>
-			<li class="nav-item">
-				<a class="nav-link collapsed" href="approval_list">
-					<i class="bi bi-files"></i>
-					<span>전자결재</span>
-				</a>
-			</li>
-			<li class="nav-item">
-				<a class="nav-link collapsed" href="notice_list">
-					<i class="bi bi-megaphone"></i>
-					<span>공지사항</span>
-				</a>
-			</li>
 			<div sec:authorize="hasRole('SYS_ADMIN')">
 				<li class="nav-heading">시스템 권한</li>
 				<li class="nav-item">
@@ -191,13 +137,7 @@
 					</a>
 				</li>
 			</div>
-				<li class="nav-heading">기준정보관리</li>
-				<li class="nav-item">
-					<a class="nav-link collapsed" href="warehouse_list">
-						<i class="bi bi-grid"></i>
-						<span>창고관리</span>
-					</a>
-				</li>
+			
 		</ul>
 
 	</aside>
