@@ -69,6 +69,7 @@ public class LotController {
 	public ResponseEntity<Map<String, Object>> select_LOT_list(@RequestBody(required = false) Map<String, Object> params) {
 		
 		Map<String, Object> response = new HashMap<>(); 
+		log.info("params"+params);
 		try {
 			
 			List<Map<String, Object>> lots = lotService.select_LOT_list(params);

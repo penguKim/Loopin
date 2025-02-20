@@ -19,17 +19,31 @@
 	</select>
 	
 	<select id="select_LOT_list" resultType="map">
-	    SELECT LOT_CD
+	    SELECT L.LOT_CD
 	    	   , CONTRACT_CD
 	    	   , PRODUCT_CD
-	    	   , PROCESS_CD
+	    	   , L.PROCESS_CD
 	    	   , TO_CHAR(LOT_CR, 'YYYY-MM-DD') AS LOT_CR
-		  FROM LOT 
+	    	   , NVL(W.WORKORDER_ST, '계획중') AS WORKORDER_ST
+		  FROM LOT L
+	 LEFT JOIN WORKORDER W ON W.LOT_CD = L. LOT_CD AND L.PROCESS_CD = W.PROCESS_CD
 		 WHERE 1=1
-	        <if test="process_cd != null and process_cd != ''">
-	            AND PROCESS_CD = #{process_cd}
+	        <if test="lot_cd != null and lot_cd != ''">
+	            AND L.LOT_CD = #{lot_cd}
 	        </if>
-	  ORDER BY LOT_CR DESC
+	        <if test="contract_cd != null and contract_cd != ''">
+	            AND CONTRACT_CD = #{contract_cd}
+	        </if>
+	        <if test="product_cd != null and product_cd != ''">
+	            AND PRODUCT_CD = #{product_cd}
+	        </if>
+	        <if test="process_cd != null and process_cd != ''">
+	            AND L.PROCESS_CD = #{process_cd}
+	        </if>
+	        <if test="workorder_st != null and workorder_st != '' or workorder_st != ALL">
+	            AND W.WORKORDER_ST = #{workorder_st}
+	        </if>
+	  ORDER BY L.LOT_CD DESC
 <!-- 	    <where> 1=1 -->
 <!-- 	    		AND c.COMMON_GC = 'DEPARTMENT' -->
 <!-- 	        <if test="employee_nm != null and employee_nm != ''"> -->
@@ -50,7 +64,7 @@
 	
 	
 	<select id="select_LOT_json" resultType="map">
-	    WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
+		WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
 		    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
 		      FROM BOMPROCESS
 		     WHERE BOMPROCESS_AP = 'NONE'
@@ -60,12 +74,18 @@
 		      FROM BOMPROCESS BP
 		      JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
 		     WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
+		),
+		WORKORDER_STATUS AS (
+		    -- LOT별 최신 작업 상태 가져오기
+		    SELECT LOT_CD, NVL(WORKORDER_ST, '계획중') AS PROCESS_CD, WORKORDER_ST
+		    FROM WORKORDER
+		    WHERE LOT_CD IN (SELECT BOMPROCESS_CD FROM BOM_HIERARCHY)
 		)
 		SELECT JSON_OBJECT(
 		    'name' VALUE #{PRODUCT_CD},
 		    'title' VALUE '제품',
 		    'lot_st' VALUE #{PRODUCT_CD},
-		    'process' VALUE '대기중',
+		    'process' VALUE '대기',
 		    'children' VALUE (
 		        SELECT JSON_ARRAYAGG(
 		            JSON_OBJECT(

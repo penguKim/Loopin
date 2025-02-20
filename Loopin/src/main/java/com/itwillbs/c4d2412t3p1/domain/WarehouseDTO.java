@@ -27,6 +27,7 @@ public class WarehouseDTO {
 	private Timestamp warehouse_ud;
 
 	private String wacount;
+	private String warehouse_tpnm;
 	
 	public WarehouseDTO() {}
 	

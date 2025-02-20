@@ -85,9 +85,9 @@
 		{ key: 'process_cd', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
 		{ key: 'workorder_st', label: '완료여부', type: 'radio', list: [ 
 				{ value: 'ALL', text: '전체', checked: true },
-				{ value: 'PENDING', text: '대기' },
-				{ value: 'IN_PROGRESS', text: '진행중' },
-				{ value: 'COMPLETED', text: '완료' }
+				{ value: '대기', text: '대기' },
+				{ value: '진행중', text: '진행중' },
+				{ value: '완료', text: '완료' }
 			], col: 'col' },
 	];
 	
@@ -165,11 +165,7 @@
 				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
 				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
 				{header : '생성일자', name : 'LOT_CR', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'WORKORDER_ST', sortable : true, filter: 'select',
-					formatter: function({value}) {
-						return value == true ? '최종완료' : value == false ? '진행중' : '대기';
-					}
-				}, 
+				{header : '완료여부', name : 'WORKORDER_ST', sortable : true, filter: 'text',}, 
 			],
 			summary: {
 				height: 40,
@@ -225,7 +221,7 @@
 	// 트리 생성 함수
 	function make_chart(data){
 		chart.orgchart({
-			'data': data, // 데이터 입력
+			'data': {"name":"조던1","title":"제품","lot_st":"JORDAN001","process":"대기중","children":[{"name":"UPPER","title":"반제품","lot_st":"BANTEST","process":"진행중","children":null},{"name":"INSOLE","title":"반제품","lot_st":"IN001","process":"진행중","children":null},{"name":"STOCK-FIT","title":"반제품","lot_st":"SOLE001","process":"진행중","children":[{"name":"PHYLON","title":"반제품","lot_st":"BAN001","process":"완료"},{"name":"OUTSOLE","title":"반제품","lot_st":"OUT001","process":"완료"}]}]}, // 데이터 입력
 			'nodeContent': data.lot_st, // 노드에 표시할 속성
 			//'pan': true, // 패닝 활성화
 			'direction': 't2b', // 방향 설정 (bottom to top)
@@ -244,7 +240,7 @@
 				return `
 					<div class="node" style="background-color: ${background}; color: white;">
 						<div class="title" style="background-color: ${background};">${data.title}</div>
-						<div class="name">${data.lot_st}</div>
+						<div class="name">${data.name}</div>
 						<div class="process">${data.process}</div>
 					</div>
 				`;
@@ -256,7 +252,7 @@
 		});
 		
 		document.querySelectorAll('.process').forEach(node => {
-			if(node.textContent.includes("대기중")) {
+			if(node.textContent.includes("진행중")) {
 				node.classList.add('blinking-node');
 			}
 		});
