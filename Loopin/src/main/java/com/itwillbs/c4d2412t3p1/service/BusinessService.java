@@ -50,7 +50,7 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
-
+	// 원자재 검색
 	public List<Map<String, Object>> search_MATERIAL(String keyword) {
 
 	    List<Object[]> result;
@@ -97,7 +97,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
-	// 거래처 조회
+	// 수주 거래처 조회
 	public List<Map<String, Object>> select_ACCOUNT_ORDER() {
 
 		List<Object[]> result;
@@ -114,6 +114,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 	
+	// 수주 거래처 검색
 	public List<Map<String, Object>> search_ACCOUNT_ORDER(String keyword) {
 		
 		List<Object[]> result;
@@ -131,7 +132,7 @@ public class BusinessService {
 	}
 	
 
-	// 담당자 조회
+	// 수주 담당자 조회
 	public List<Map<String, Object>> select_ORDER_PS() {
 
 		List<Object[]> result;
@@ -192,7 +193,7 @@ public class BusinessService {
 		}
 	}
 	
-	
+	// 발주 수정
 	public void update_ORDER(OrderDTO orderDto, List<OrderDetailDTO> details) throws IOException {
 	    // 기존 발주 정보 조회
 		Order existingOrder = orderRepository.findById(orderDto.getOrder_cd())
@@ -240,7 +241,7 @@ public class BusinessService {
 
 	}
 	
-
+	// 발주상세 조회
 	public List<Map<String, Object>> select_ORDERDETAIL(String order_cd) {
 		// Repository에서 데이터 조회
 		List<Object[]> result = orderRepository.select_ORDERDETAIL(order_cd);
@@ -259,6 +260,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 발주 상세 가져오기 
 	public Map<String, Object> getOrderDetails(String orderCd) {
 		Map<String, Object> result = new HashMap<>();
 
@@ -304,6 +306,7 @@ public class BusinessService {
 		return result;
 	}
 
+	// 발주 삭제
     @Transactional
     public void delete_OrderAndDetails(List<String> orderCds) {
     	orderRepository.delete_ORDERDETAIL(orderCds); // 디테일 먼저 삭제 처리
@@ -350,7 +353,7 @@ public class BusinessService {
     }
 	
 	
-	
+	// 제품 조회
 	public List<Map<String, Object>> select_RPODUCT() {
 
 		List<Object[]> result;
@@ -370,7 +373,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
-	
+	// 제품 검색
 	public List<Map<String, Object>> search_PRODUCT(String keyword) {
 
 	    List<Object[]> result;
@@ -391,7 +394,7 @@ public class BusinessService {
 	}
 
 	
-	
+	// 수주 조회
 	public List<Map<String, Object>> select_CONTRACT() {
 
 		List<Object[]> result;
@@ -420,6 +423,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 거래처 조회
 	public List<Map<String, Object>> select_ACCOUNT_CONTRACT() {
 
 		List<Object[]> result;
@@ -436,6 +440,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 	
+	// 수주 거래처 검색
 	public List<Map<String, Object>> search_ACCOUNT_CONTRACT(String keyword) {
 		
 		List<Object[]> result;
@@ -452,6 +457,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 담당자 조회
 	public List<Map<String, Object>> select_CONTRACT_PS() {
 
 		List<Object[]> result;
@@ -469,7 +475,8 @@ public class BusinessService {
 
 		}).collect(Collectors.toList());
 	}
-
+	
+	// 수주 담당자 검색
 	public List<Map<String, Object>> search_CONTRACT_PS(String keyword) {
 		
 		List<Object[]> result;
@@ -488,6 +495,7 @@ public class BusinessService {
 		}).collect(Collectors.toList());
 	}
 
+	// 수주 등록 처리
 	@Transactional
 	public void insert_CONTRACT(ContractDTO contractDto, List<ContractDetailDTO> details) throws IOException {
 
@@ -512,7 +520,7 @@ public class BusinessService {
 		}
 	}
 	
-	
+	// 수주 수정 처리
 	public void update_CONTRACT(ContractDTO contractDto, List<ContractDetailDTO> details) throws IOException {
 	    // 기존 수주 정보 조회
 	    Contract existingContract = contractRepository.findById(contractDto.getContract_cd())
@@ -541,7 +549,7 @@ public class BusinessService {
 	    // 변경된 계약 저장
 	    contractRepository.save(existingContract);
 	    
-	    // 기존 상세 정보 삭제
+	    // 기존 수주 상세 정보 삭제
 	    contractRepository.deleteContractDetailsByContractCd(contractDto.getContract_cd());
 	   
 	    // 새로운 상세 정보 저장
@@ -562,7 +570,7 @@ public class BusinessService {
 
 	}
 	
-
+	// 수주상세 조회
 	public List<Map<String, Object>> select_CONTRACTDETAIL(String contract_cd) {
 		// Repository에서 데이터 조회
 		List<Object[]> result = contractRepository.select_CONTRACTDETAIL(contract_cd);
@@ -630,6 +638,7 @@ public class BusinessService {
 		return result;
 	}
 
+	// 수주 삭제 
     @Transactional
     public void delete_ContractAndDetails(List<String> contractCds) {
         contractRepository.delete_CONTRACTDETAIL(contractCds); // 디테일 먼저 삭제 처리
@@ -822,5 +831,208 @@ public class BusinessService {
 	    }
 	}
 
+	
+	// 수주 현황 조회
+	public List<Map<String, Object>> select_CONTRACT_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = contractRepository.select_CONTRACT_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_sd", row[2]);
+			contract.put("contract_ed", row[3]);
+			contract.put("contract_am", row[4]);
+			contract.put("contract_mn", row[5]);
+
+			return contract;
+
+		}).collect(Collectors.toList());
+	}
+
+	// 발주 현황 조회
+	public List<Map<String, Object>> select_ORDER_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = orderRepository.select_ORDER_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("order_cd", row[0]);
+			order.put("account_cd", row[1]);
+			order.put("order_sd", row[2]);
+			order.put("order_ed", row[3]);
+			order.put("order_am", row[4]);
+			order.put("order_mn", row[5]);
+
+			return order;
+
+		}).collect(Collectors.toList());
+	}
+	
+	
+    // 출하현황
+	public List<Map<String, Object>> select_SHIPMENT_STATE(String startDt, String endDt) {
+
+		List<Object[]> result;
+
+		result = contractRepository.select_SHIPMENT_STATE(startDt, endDt);
+
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_cd", row[0]);
+			contract.put("account_cd", row[1]);
+			contract.put("contract_sd", row[2]);
+			contract.put("contract_ed", row[3]);
+			contract.put("contract_am", row[4]);
+			contract.put("contract_mn", row[5]);
+
+			return contract;
+
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_CONTRACT_PRODUCT(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = contractRepository.select_CONTRACT_PRODUCT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_sd", row[0]);
+			contract.put("product_cd", row[1]);
+			contract.put("product_nm", row[2]);
+			contract.put("product_sz", row[3]);
+			contract.put("product_cr", row[4]);
+			contract.put("product_am", row[5]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_CONTRACT_PRODUCT_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = contractRepository.select_CONTRACT_PRODUCT_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("product_cd", row[0]);
+			contract.put("product_nm", row[1]);
+			contract.put("product_sz", row[2]);
+			contract.put("product_cr", row[3]);
+			contract.put("total_price", row[4]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_ORDER_MATERIAL(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = orderRepository.select_ORDER_MATERIAL(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("order_sd", row[0]);
+			order.put("material_cd", row[1]);
+			order.put("material_nm", row[2]);
+			order.put("material_am", row[3]);
+			
+			return order;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_ORDER_MATERIAL_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = orderRepository.select_ORDER_MATERIAL_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> order = new HashMap<>();
+			order.put("material_cd", row[0]);
+			order.put("material_nm", row[1]);
+			order.put("total_price", row[2]);
+			
+			return order;
+			
+		}).collect(Collectors.toList());
+	}
+	
+	
+	// 날짜별 수주 제품
+	public List<Map<String, Object>> select_SHIPMENT_PRODUCT(String startDt, String endDt) {
+		
+        // 시작일과 종료일 검증
+        if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+            throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+        }
+		
+		List<Object[]> result = contractRepository.select_SHIPMENT_PRODUCT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("contract_sd", row[0]);
+			contract.put("product_cd", row[1]);
+			contract.put("product_nm", row[2]);
+			contract.put("product_sz", row[3]);
+			contract.put("product_cr", row[4]);
+			contract.put("product_am", row[5]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+
+	// 날짜별 수주 제품 수량
+	public List<Map<String, Object>> select_SHIPMENT_PRODUCT_AMOUNT(String startDt, String endDt) {
+		
+		// 시작일과 종료일 검증
+		if (startDt == null || endDt == null || startDt.isEmpty() || endDt.isEmpty()) {
+			throw new IllegalArgumentException("시작일과 종료일은 필수입니다.");
+		}
+		
+		List<Object[]> result = contractRepository.select_SHIPMENT_PRODUCT_AMOUNT(startDt, endDt);
+		
+		return result.stream().map(row -> {
+			Map<String, Object> contract = new HashMap<>();
+			contract.put("product_cd", row[0]);
+			contract.put("product_nm", row[1]);
+			contract.put("product_sz", row[2]);
+			contract.put("product_cr", row[3]);
+			contract.put("total_price", row[4]);
+			
+			return contract;
+			
+		}).collect(Collectors.toList());
+	}
+	
 	
 }

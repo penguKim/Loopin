@@ -2,6 +2,7 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -169,39 +170,27 @@ public class PrimaryService {
 		    String colorListStr = String.join(",", colorList);
 	        
             // 저장 프로시저 호출
-	        StoredProcedureQuery query = entityManager
-	                .createStoredProcedureQuery("UPSERT_PRODUCT_BATCH")
-	                .registerStoredProcedureParameter("p_product_cd", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_nm", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_gc", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_cc", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_gd", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_un", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_pr", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_wh", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_pc", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_rm", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_product_us", Integer.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_reg_user", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_size_list", String.class, ParameterMode.IN)
-	                .registerStoredProcedureParameter("p_color_list", String.class, ParameterMode.IN);
-
-	            query.setParameter("p_product_cd", productDTO.getProduct_cd())
-	                 .setParameter("p_product_nm", productDTO.getProduct_nm())
-	                 .setParameter("p_product_gc", productDTO.getProduct_gc())
-	                 .setParameter("p_product_cc", productDTO.getProduct_cc())
-	                 .setParameter("p_product_gd", productDTO.getProduct_gd())
-	                 .setParameter("p_product_un", productDTO.getProduct_un())
-	                 .setParameter("p_product_pr", productDTO.getProduct_pr())
-	                 .setParameter("p_product_wh", productDTO.getProduct_wh())
-	                 .setParameter("p_product_pc", productDTO.getProduct_pc())
-	                 .setParameter("p_product_rm", productDTO.getProduct_rm())
-	                 .setParameter("p_product_us", productDTO.isProduct_us() ? 1 : 0)
-	                 .setParameter("p_reg_user", regUser)
-	                 .setParameter("p_size_list", sizeListStr)
-	                 .setParameter("p_color_list", colorListStr);
-
-	            query.execute();
+            StoredProcedureQuery query = entityManager.createNamedStoredProcedureQuery("UPSERT_PRODUCT_BATCH");
+            
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("p_product_cd", productDTO.getProduct_cd());
+            parameters.put("p_product_nm", productDTO.getProduct_nm());
+            parameters.put("p_product_gc", productDTO.getProduct_gc());
+            parameters.put("p_product_cc", productDTO.getProduct_cc());
+            parameters.put("p_product_gd", productDTO.getProduct_gd());
+            parameters.put("p_product_un", productDTO.getProduct_un());
+            parameters.put("p_product_pr", productDTO.getProduct_pr());
+            parameters.put("p_product_wh", productDTO.getProduct_wh());
+            parameters.put("p_product_pc", productDTO.getProduct_pc());
+            parameters.put("p_product_rm", productDTO.getProduct_rm());
+            parameters.put("p_product_us", productDTO.isProduct_us() ? 1 : 0);
+            parameters.put("p_reg_user", regUser);
+            parameters.put("p_size_list", sizeListStr);
+            parameters.put("p_color_list", colorListStr);
+            
+            parameters.forEach(query::setParameter);
+            
+            query.execute();
 	        
 	        // 모든 작업 성공 후 기존 파일 삭제
 	        if (oldFilePath != null) {

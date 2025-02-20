@@ -187,7 +187,6 @@ public class PrimaryController {
 		Map<String, Object> response = new HashMap<>(); 
 		Map<String, Object> data = new HashMap<>();
     	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
-		System.out.println("조회하냐!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 		if (!product_cc.isEmpty()) {
 			response.put("result", true);
 			data.put("contents", product_cc.get(product_cc.keySet().iterator().next()));
@@ -331,7 +330,7 @@ public class PrimaryController {
 	    try {
 	    	Map<String, List<Common_codeDTO>> product_cc = commonService.select_COMMON_list(primaryDTO.getProduct_gc());
 	    	if (!product_cc.isEmpty()) {
-	    	    response.put("product_cc", product_cc.get(product_cc.keySet().iterator().next()));
+	    	    response.put("list", product_cc.get(product_cc.keySet().iterator().next()));
 	    	}
 			
 			return ResponseEntity.ok(response);
@@ -430,8 +429,8 @@ public class PrimaryController {
 	// 자재 삭제
 	@LogActivity(value = "삭제", action = "자재삭제")
 	@ResponseBody
-	@PostMapping("/delete_MATERIAL")
-	public ResponseEntity<Map<String, Object>> delete_MATERIAL(@RequestBody PrimaryRequestDTO primaryDTO) {
+	@PostMapping("/delete_STOCK_list")
+	public ResponseEntity<Map<String, Object>> delete_STOCK_list(@RequestBody PrimaryRequestDTO primaryDTO) {
 		List<MaterialDTO> materialList = primaryDTO.getMaterialList();
 		ProductFilterRequest filter = new ProductFilterRequest();
 		filter.setProduct_gc(primaryDTO.getMaterial_gc());
@@ -451,6 +450,5 @@ public class PrimaryController {
 		}
 		
 	}
-	
 	
 }
