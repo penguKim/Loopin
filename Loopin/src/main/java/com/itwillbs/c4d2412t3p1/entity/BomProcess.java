@@ -1,6 +1,6 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import groovy.transform.ToString;
 import jakarta.persistence.Column;
@@ -54,5 +54,8 @@ public class BomProcess {
 	
 	@Column(name = "bomprocess_md")
 	private Timestamp bomprocess_md;
+
+	@Column(name = "bomprocess_bg")
+	private String bomprocess_bg;
 	
 }

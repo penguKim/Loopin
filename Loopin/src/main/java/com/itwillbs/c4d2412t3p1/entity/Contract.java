@@ -43,6 +43,9 @@ public class Contract {
 	    }
 	}
     
+    @Column(name = "employee_cd", length = 15)
+    private String employee_cd;
+	
 	// 거래처코드
 	@Column(name = "account_cd", length = 15)
 	private String account_cd;
@@ -98,6 +101,7 @@ public class Contract {
 	public Contract(
 			String contract_cd,
 			String account_cd,
+			String employee_cd,
 			String contract_ps,
 			String contract_sd,
 			String contract_ed,
@@ -113,6 +117,7 @@ public class Contract {
 	) {
 		this.contract_cd = contract_cd;
 		this.account_cd = account_cd;
+		this.employee_cd = employee_cd;
 		this.contract_ps = contract_ps;
 		this.contract_sd = contract_sd;
 		this.contract_ed = contract_ed;
@@ -130,6 +135,7 @@ public class Contract {
 	public static Contract setContractEntity(Contract contract, ContractDTO contractDto) {
 		contract.setContract_cd(contractDto.getContract_cd());
 		contract.setAccount_cd(contractDto.getAccount_cd());
+		contract.setEmployee_cd(contractDto.getEmployee_cd());
 		contract.setContract_ps(contractDto.getContract_ps());
 		contract.setContract_sd(contractDto.getContract_sd());
 		contract.setContract_ed(contractDto.getContract_ed());
@@ -151,6 +157,7 @@ public class Contract {
 	        return new Contract(
 	            null,
 	            contractDto.getAccount_cd(),
+	            contractDto.getEmployee_cd(),
 	            contractDto.getContract_ps(),
 	            contractDto.getContract_sd(),
 	            contractDto.getContract_ed(),

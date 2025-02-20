@@ -27,44 +27,44 @@ public interface EmployeeRepository  extends JpaRepository<Employee, String> {
 	Long getNextSequenceValue();
 	
 	// 기간별 남녀성비 조회
-	@Query(value = "SELECT employee_sb AS name, COUNT(*) AS data " +
-            "FROM employee " +
-            "WHERE employee_hd BETWEEN :startDt AND :endDt " +
-            "AND (employee_rd IS NULL OR employee_rd >= :startDt) " +
-            "GROUP BY employee_sb", nativeQuery = true)
-	List<Map<String, Object>> findEmployeeGenderStatsByDate(
-	  @Param("startDt") String startDt, 
-	  @Param("endDt") String endDt);
+	@Query(value = """
+		    SELECT 
+		        employee_sb AS name, 
+		        COUNT(*) AS data
+		    FROM employee
+		    GROUP BY employee_sb
+		    """, nativeQuery = true)
+	List<Map<String, Object>> findEmployeeGenderStatsByDate();
 
 	// 부서별 인원 조회
-	@Query(value = "SELECT COUNT(*) AS data, " +
-            "COALESCE(pos.COMMON_NM, '직급 없음') AS name " +
-            "FROM employee e1_0 " +
-            "LEFT JOIN (SELECT COMMON_CC, COMMON_NM " +
-                      "FROM COMMON_CODE " +
-                      "WHERE COMMON_GC = 'DEPARTMENT') pos " +
-            "ON e1_0.employee_dp = pos.COMMON_CC " +
-            "WHERE e1_0.employee_hd BETWEEN :startDt AND :endDt " +
-            "AND (e1_0.employee_rd IS NULL OR e1_0.employee_rd >= :startDt) " +
-            "GROUP BY e1_0.employee_dp, pos.COMMON_NM", nativeQuery = true)
-	List<Map<String, Object>> getEmployeeDeptStatsByDate(
-			@Param("startDt") String startDt, 
-			@Param("endDt") String endDt);
+	@Query(value = """
+		    SELECT 
+		        COUNT(*) AS data, 
+		        COALESCE(pos.COMMON_NM, '직급 없음') AS name
+		    FROM employee e1_0
+		    LEFT JOIN (
+		        SELECT COMMON_CC, COMMON_NM
+		        FROM COMMON_CODE
+		        WHERE COMMON_GC = 'DEPARTMENT'
+		    ) pos ON e1_0.employee_dp = pos.COMMON_CC
+		    GROUP BY e1_0.employee_dp, pos.COMMON_NM
+	    """, nativeQuery = true)
+	List<Map<String, Object>> getEmployeeDeptStatsByDate();
 
 	// 직위별 인원 조회
-	@Query(value = "SELECT COUNT(*) AS data, " +
-            "COALESCE(pos.COMMON_NM, '직급 없음') AS name " +
-            "FROM employee e1_0 " +
-            "LEFT JOIN (SELECT COMMON_CC, COMMON_NM " +
-                      "FROM COMMON_CODE " +
-                      "WHERE COMMON_GC = 'POSITION') pos " +
-            "ON e1_0.employee_gd = pos.COMMON_CC " +
-            "WHERE e1_0.employee_hd BETWEEN :startDt AND :endDt " +
-            "AND (e1_0.employee_rd IS NULL OR e1_0.employee_rd >= :startDt) " +
-            "GROUP BY e1_0.employee_gd, pos.COMMON_NM", nativeQuery = true)
-List<Map<String, Object>> getEmployeePosiStatsByDate(
-        @Param("startDt") String startDt, 
-        @Param("endDt") String endDt);
+	@Query(value = """
+		    SELECT 
+		        COUNT(*) AS data, 
+		        COALESCE(pos.COMMON_NM, '직급 없음') AS name
+		    FROM employee e1_0
+		    LEFT JOIN (
+		        SELECT COMMON_CC, COMMON_NM
+		        FROM COMMON_CODE
+		        WHERE COMMON_GC = 'POSITION'
+		    ) pos ON e1_0.employee_gd = pos.COMMON_CC
+		    GROUP BY e1_0.employee_gd, pos.COMMON_NM
+	    """, nativeQuery = true)
+List<Map<String, Object>> getEmployeePosiStatsByDate();
 
 	
 	

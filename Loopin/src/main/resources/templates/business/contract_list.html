@@ -127,7 +127,7 @@
 	    });
 
 	    $('#contract_am').val(totalQty);
-	    $('#contract_mn').val(`₩${totalAmount.toLocaleString()}`);
+	    $('#contract_mn').val(`${totalAmount.toLocaleString()}원`);
 	}	
 	
 		
@@ -172,16 +172,20 @@
 	                        <form id="appointment_form" method="post" enctype="multipart/form-data">
 	                            <input type="hidden" id="contract_cd" name="contract_cd">
 	                            <div class="row mb-3">
-	                                <div class="col-md-4">
-	                                    <label for="contract_ps" class="form-label">담당자명</label>
-	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps">
+	                                <div class="col-md-3">
+	                                    <label for="contract_ps" class="form-label">사원코드</label>
+	                                    <input type="text" class="form-control" id="employee_cd" name="employee_cd" readonly>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
+	                                    <label for="contract_ps" class="form-label">담당자명</label>
+	                                    <input type="text" class="form-control" id="contract_ps" name="contract_ps" readonly>
+	                                </div>
+	                                <div class="col-md-3">
 	                                    <label for="contract_sd" class="form-label">수주일</label>
 	                                    <input type="text" class="form-control" id="contract_sd" name="contract_sd" readonly>
 	                                    <div id="modal_startpicker-container"></div>
 	                                </div>
-	                                <div class="col-md-4">
+	                                <div class="col-md-3">
 	                                    <label for="contract_ed" class="form-label">납기일</label>
 	                                    <input type="text" class="form-control" id="contract_ed" name="contract_ed" readonly>
 	                                    <div id="modal_endpicker-container"></div>
@@ -210,10 +214,15 @@
 									</div>
 	                            </div>
 	                            <div class="row mb-3">
-	                                <div class="col-sm-12 text-end">
-	                                    <button type="button" id="addProductBtn" class="btn btn-primary">추가</button>
-										<button type="button" id="deleteProductBtn" class="btn btn-danger">행 삭제</button>
-	                                </div>
+			                        <div class="col-sm-3 text-start">
+		                            	<h5 class="modal-title">수주 제품 목록</h5>
+									</div>
+		                            <div class="col-sm-9 text-end">
+		                                <div class="col-sm-12 text-end">
+		                                    <button type="button" id="addProductBtn" class="btn btn-primary">추가</button>
+											<button type="button" id="deleteProductBtn" class="btn btn-danger">행 삭제</button>
+		                                </div>
+		                            </div>
 	                            </div>
 	                            <div class="row">
 	                                <div id="productGrid"></div>
@@ -280,6 +289,7 @@
 			
 			$('#contract_cd').val(rowData.contract.contract_cd || '');
 			$('#account_cd').val(rowData.contract.account_cd || '');
+			$('#employee_cd').val(rowData.contract.employee_cd || '');
 			$('#contract_ps').val(rowData.contract.contract_ps || '');
 			$('#contract_sd').val(rowData.contract.contract_sd || '');
 			$('#contract_ed').val(rowData.contract.contract_ed || '').prop('disabled', false); // 값 설정 후 활성화
@@ -358,6 +368,7 @@
 		    const contractDTO = {
 					contract_cd: $('#contract_cd').val(),
 			        account_cd: $('#account_cd').val(),
+			        employee_cd: $('#employee_cd').val(),
 			        contract_ps: $('#contract_ps').val(),
 			        contract_sd: $('#contract_sd').val(),
 			        contract_ed: $('#contract_ed').val(),
@@ -418,8 +429,8 @@
 	        { id: '#contract_sd', message: '수주일자를 입력해주세요.' },
 	        { id: '#account_cd', message: '거래처코드를 입력해주세요.' },
 	        { id: '#contract_st', message: '수주상태를 선택해주세요.' },
-	        { id: '#contract_am', message: '수주수량을 입력해주세요.' },
-	        { id: '#contract_mn', message: '수주금액을 입력해주세요.' }
+	        { id: '#contract_am', message: '수주제품을 추가해주세요.' },
+	        { id: '#contract_mn', message: '수주제품을 추가해주세요.' }
 	    ];
 
 	    requiredFields.forEach(field => {
@@ -559,12 +570,12 @@
 	        status = "대기중";
 	    } 
 	    else if (contractSd <= today) {
-	        // 종료일이 없거나 오늘 이후이면 → "진행중"
-	        if (!contractEd || contractEd >= today) {
+	        // 종료일이 없거나 오늘이후 → "진행중"
+	        if (!contractEd || contractEd > today) {
 	            status = "진행중";
 	        } 
-	        // 종료일이 오늘 이전이면 → "완료"
-	        else if (contractEd < today) {
+	        // 종료일이 오늘 이전이거나 오늘이면 → "완료"
+	        else if (contractEd <= today) {
 	            status = "완료";
 	        }
 	    }
@@ -621,10 +632,8 @@
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			    	product_sz: {
-			            template: (valueMap) => {
-			                return `총  ${valueMap.cnt} 건`
-			            }
+			    	product_un: {
+						template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 			        }
 			    }
 			}
@@ -788,9 +797,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	                account_nm: {
-	                    template: (valueMap) => {
-	                    	return `총  ${valueMap.cnt} 건`
-	                    }
+	                	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -911,14 +918,12 @@
     
 		
 		
-    // 담당자 클릭 시 담당자 선택 모달 열기
-	$(document).on('click', '#contract_ps', function () {
-	    console.log('담당자 선택 input 클릭됨!'); // 클릭 이벤트 확인
+	// 담당자명(#contract_ps) 또는 사원코드(#employee_cd) 클릭 시 담당자 선택 모달 열기
+	$(document).on('click', '#contract_ps, #employee_cd', function () {
+	    console.log('담당자 선택 input 또는 사원 코드 클릭됨!'); // 클릭 이벤트 확인
 	    openPersonModal();
 	});
-
-    
-    
+	
     // 담당자 선택 모달
 	function openPersonModal() {
 	    $('#personSelectModal').remove();
@@ -966,9 +971,7 @@
 	            position: 'bottom',
 	            columnContent: {
 	            	employee_gd: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`;
-	                    }
+	            		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }
@@ -1074,6 +1077,7 @@
 	        
 	        if (selectedRow) {
 	            // 선택된 담당자 데이터를 input에 설정
+	            $('#employee_cd').val(selectedRow.employee_cd);
 	            $('#contract_ps').val(selectedRow.employee_nm);
 	            personModal.hide(); // 모달 닫기
 	        } else {
@@ -1182,8 +1186,8 @@
     	
         // 필터 설정
         const filterConfig = [
-            { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
-            { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd'},
+            { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+            { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
             { key: 'contractCd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
             { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-4' },
             { key: 'contractPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-4' },
@@ -1206,6 +1210,7 @@
             .then(filteredData => {
                 console.log('필터링된 데이터:', filteredData);
                 contract_grid.resetData(filteredData); // 그리드 데이터 갱신
+                make_detail_grid(); // 필터 검색 시 수주 상세 초기화
             })
             .catch(error => console.error('필터 적용 오류:', error));
         });
@@ -1241,6 +1246,7 @@
 		        success: function(filteredData) {
 		        	console.log('엔터키로 필터링된 데이터:', filteredData);
 		        	contract_grid.resetData(filteredData); // 그리드 데이터 갱신
+					make_detail_grid(); // 필터 검색 시 수주 상세 초기화
 		        },
 		        error: function(error) {
 		            console.error('엔터키 필터 적용 오류:', error);
@@ -1266,6 +1272,7 @@
                     contract_grid.resetData(contractList.map(row => ({
                         contract_cd: row.contract_cd,
                         account_cd: row.account_cd,
+                        employee_cd: row.employee_cd,
                         contract_ps: row.contract_ps,
                         contract_sd: row.contract_sd,
                         contract_ed: row.contract_ed,
@@ -1285,6 +1292,7 @@
                         data: contractList.map(row => ({
                             contract_cd: row.contract_cd,
                             account_cd: row.account_cd,
+                            employee_cd: row.employee_cd,
                             contract_ps: row.contract_ps,
                             contract_sd: row.contract_sd,
                             contract_ed: row.contract_ed,
@@ -1307,11 +1315,12 @@
                         columns: [
                             { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
                             { header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+                            { header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
                             { header: '담당자명', name: 'contract_ps', align: 'center', sortable: true },
                             { header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
                             { header: '납기일자', name: 'contract_ed', align: 'center', sortable: true },
-                            { header: '수주수량', name: 'contract_am', align: 'center', sortable: true },
-                            { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`},
+                            { header: '수주수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+                            { header: '수주금액', name: 'contract_mn', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`},
                             { header: '수주상태', name: 'contract_st', align: 'center', sortable: true },
                             
                             // 숨김 컬럼
@@ -1325,11 +1334,15 @@
         				    height: 40,
         				    position: 'bottom', // or 'top'
         				    columnContent: {
-        				    	contract_st: {
-        				            template: (valueMap) => {
-        				                return `총  ${valueMap.cnt} 건`
-        				            }
-        				        }
+        				    	contract_am: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+    	                        },
+    	                        contract_mn: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 원</div>`
+    	                        },
+    	                        contract_st: {
+    	                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+    	                        }
         				    }
         				}
                     });
@@ -1356,6 +1369,9 @@
                         
                         make_detail_grid(rowData); // 하단 그리드 갱신 함수 호출
                     });
+                    
+    				// 수주관리 엑셀
+    				addExcelButton(contract_grid, '수주관리');
 
                 }
             },
@@ -1380,20 +1396,21 @@
 					 { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
 					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
 					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
-					 { header: '제품수량', name: 'product_am', align: 'center', sortable: true },
-					 { header: '단가', name: 'contract_ct', align: 'center', formatter: ({ value }) => `₩${value.toLocaleString()}`}, 
 					 { header: '기준단위', name: 'product_un', align: 'center', sortable: true },
+					 { header: '단가', name: 'contract_ct', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}원`}, 
+					 { header: '제품수량', name: 'product_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
 					 { header: '납기일', name: 'contract_ed', align: 'center', sortable: true },
 	            ],
 				summary: {
 				    height: 40,
 				    position: 'bottom', // or 'top'
 				    columnContent: {
-				    	contract_ed: {
-				            template: (valueMap) => {
-				                return `총  ${valueMap.cnt} 건`
-				            }
-				        }
+				    	product_am: {
+                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+                        },
+                        contract_ed: {
+                        	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+                        }
 				    }
 				}
 	        });
@@ -1482,11 +1499,16 @@
 	            { header: '색상', name: 'product_cr', align: 'center' },
 	            { header: '사이즈', name: 'product_sz', align: 'center' },
 	            { header: '기준단위', name: 'product_un', align: 'center' },
-	            { header: '수량', name: 'product_am', align: 'center', editor: {type: 'text', options: { type: 'number', min: 1 }}},
-	            { header: '단가', name: 'contract_ct', align: 'center',  editor: 'text',     formatter: ({ value }) => {
+	            { header: '수량', name: 'product_am', align: 'center', editor: 'text', formatter: ({ value }) => {
 	                const num = Number(value);
-	                if (isNaN(num)) return '₩0';
-	                return `₩${num.toLocaleString()}`;
+	                if (isNaN(num)) return '0개';
+	                return `${num.toLocaleString()}개`;
+	            	}
+	            },
+	            { header: '단가', name: 'contract_ct', align: 'center',  editor: 'text', formatter: ({ value }) => {
+	                const num = Number(value);
+	                if (isNaN(num)) return '0원';
+	                return `${num.toLocaleString()}원`;
 	            	}
 	            }
 	        ],
@@ -1497,10 +1519,11 @@
 	            height: 40,
 	            position: 'bottom',
 	            columnContent: {
+	            	product_am: {
+	                    template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+	                },
 	                contract_ct: {
-	                    template: (valueMap) => {
-	                        return `총 ${valueMap.cnt} 건`
-	                    }
+	                	template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
 	                }
 	            }
 	        }

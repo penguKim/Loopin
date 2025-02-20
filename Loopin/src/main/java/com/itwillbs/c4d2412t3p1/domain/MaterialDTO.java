@@ -24,7 +24,7 @@ public class MaterialDTO {
 	private String material_gd;
 	private String material_un;
 	private String material_wh;
-	private String material_pr;
+	private int material_pr;
 	private String material_pc;
 	private String material_rm;
 	private boolean material_us;

@@ -3,6 +3,22 @@
 				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
 				layout:decorate="~{layout}" 
 				layout:fragment="content">
+				
+				
+<style>
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.chart-container {
+    display: flex;
+    justify-content: center; /* 가로 중앙 정렬 */
+    align-items: center; /* 세로 중앙 정렬 */
+    width: 100%; /* 전체 너비 */
+}
+
+</style>					
 <body>
 	<main id="main" class="main">
 		<section class="section">
@@ -11,35 +27,47 @@
 					<div class="card">
 						<div class="card-body">
 							<h5 class="card-title">인사현황</h5>
-							<div class="row mb-3">
-							    <label for="inputDate" class="col-sm-1 col-form-label text-center">시작일<span class="text-danger"> *</span></label>
-								<div class="col-sm-1">
-								    <input type="text" class="form-control" id="start_dt" name="start_dt" aria-label="Date">
-							        <div id="startpicker-container" style="margin-left: -1px; position: absolute; z-index: 1050;"></div>
+							<div class="row mb-3 align-items-end">
+							    <div class="col-md-2">
+							        <label for="start_dt" class="form-label">시작일</label>
+							        <input type="text" class="form-control" id="start_dt" name="start_dt" aria-label="Date">
+							        <div id="startpicker-container"></div>
 							    </div>
-							    <label for="inputDate" class="col-sm-1 col-form-label text-center">종료일<span class="text-danger"> *</span></label>
-								<div class="col-sm-1">
+							    <div class="col-md-2">
+							        <label for="end_dt" class="form-label">종료일</label>
 							        <input type="text" class="form-control" id="end_dt" name="end_dt" aria-label="Date">
-							        <div id="endpicker-container" style="margin-left: -1px; position: absolute; z-index: 1050;"></div>
+							        <div id="endpicker-container"></div>
 							    </div>
-								<button type="button" class="btn btn-primary col-sm-1" id="search-btn">조회</button>												
+							
+							    <!-- 조회 버튼을 입력 필드와 같은 높이에 배치 -->
+							    <div class="col-md-3 d-flex align-items-end">
+							        <button type="button" class="btn btn-primary" id="search-btn">조회</button>
+							    </div>
 							</div>
-							<!-- 차트 -->
+							<!-- 차트 레이아웃 조정 -->
 							<div class="row mb-3">
-								<div class="col-sm-6">
-									<div id="chart-gender"></div>
-								</div>
-								<div class="col-sm-6">
-									<div id="chart-dept"></div>
-								</div>
+							    <div class="col-md-6">
+							        <div class="chart-container">
+							            <div id="chart-hdrd"></div>
+							        </div>
+							    </div>
+							    <div class="col-md-6">
+							        <div class="chart-container">
+							            <div id="chart-dept"></div>
+							        </div>
+							    </div>
 							</div>
 							<div class="row mb-3">
-								<div class="col-sm-6">
-									<div id="chart-posi"></div>
-								</div>
-								<div class="col-sm-6">
-									<div id="chart-hdrd"></div>
-								</div>
+							    <div class="col-md-6">
+							        <div class="chart-container">
+							            <div id="chart-posi"></div>
+							        </div>
+							    </div>
+							    <div class="col-md-6">
+							        <div class="chart-container">
+							            <div id="chart-gender"></div>
+							        </div>
+							    </div>
 							</div>
 						</div>
 					</div>
@@ -61,6 +89,7 @@ $(document).ready(function () {
 
     // 범위 선택기 초기화
     const rangePicker = tui.DatePicker.createRangePicker({
+    	language: 'ko',
         startpicker: {
             date: oneMonthAgo, // 1달 전 날짜로 초기화
             input: '#start_dt',
@@ -115,10 +144,6 @@ $(document).ready(function () {
             headers: {
                 [csrfHeader]: csrfToken // CSRF 토큰 헤더 추가
             },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
-            },
             success: function (response) {
                 renderGenderChart(response);
             },
@@ -135,10 +160,6 @@ $(document).ready(function () {
             headers: {
                 [csrfHeader]: csrfToken
             },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
-            },
             success: function (response) {
                 renderDeptChart(response);
             },
@@ -154,10 +175,6 @@ $(document).ready(function () {
             method: 'GET',
             headers: {
                 [csrfHeader]: csrfToken
-            },
-            data: {
-                start_dt: startDt,
-                end_dt: endDt
             },
             success: function (response) {
                 renderPosiChart(response);
@@ -195,8 +212,8 @@ $(document).ready(function () {
         const options = {
             chart: {
                 title: '남녀 성비 현황',
-                width: 600,
-                height: 400
+                width: 700,
+                height: 290
             },
         };
         $('#chart-gender').empty();
@@ -210,8 +227,8 @@ $(document).ready(function () {
         const options = {
             chart: {
                 title: '부서별 인원 현황',
-                width: 600,
-                height: 400
+                width: 700,
+                height: 290
             },
         };
         $('#chart-dept').empty();
@@ -228,8 +245,8 @@ $(document).ready(function () {
         const options = {
             chart: {
                 title: '직위별 인원 현황',
-                width: 600,
-                height: 400
+                width: 700,
+                height: 290
             },
             xAxis: { title: '직위' },
             yAxis: { title: '인원 수' },
@@ -261,9 +278,9 @@ $(document).ready(function () {
 
         const options = {
             chart: {
-                title: '입퇴사자 인원 현황',
-                width: 600,
-                height: 400
+                title: '기간별 입퇴사자 인원 현황',
+                width: 700,
+                height: 290
             },
             xAxis: { title: '기간', categories: categories },
             yAxis: { title: '인원 수', min: 0 },

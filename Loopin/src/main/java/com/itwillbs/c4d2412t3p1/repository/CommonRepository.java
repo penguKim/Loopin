@@ -49,7 +49,7 @@ public interface CommonRepository extends JpaRepository<Common_code, common_code
     );
 
 
-    @Query(value = "SELECT common_cc, common_nm FROM COMMON_CODE WHERE common_gc = :common_gc ORDER BY common_in", nativeQuery = true)
+    @Query(value = "SELECT common_cc, common_nm FROM COMMON_CODE WHERE common_gc = :common_gc ORDER BY CAST(common_in AS INT)", nativeQuery = true)
 	List<Common_codeDTO> select_COMMON_list(@Param("common_gc") String data);
 
     
