@@ -24,7 +24,7 @@ public class ProductDTO {
 	private String product_gd;
 	private String product_un;
 	private String product_wh;
-	private String product_pr;
+	private int product_pr;
 	private String product_pc;
 	private String product_rm;
 	private boolean product_us;

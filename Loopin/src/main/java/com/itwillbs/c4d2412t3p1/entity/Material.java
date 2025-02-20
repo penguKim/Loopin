@@ -49,8 +49,8 @@ public class Material {
 	private String material_un;
 	@Column(name = "material_wh", length = 30)
 	private String material_wh;
-	@Column(name = "material_pr", length = 20)
-	private String material_pr;
+	@Column(name = "material_pr", precision = 19, scale = 0)
+	private int material_pr;
 	@Column(name = "material_pc", length = 255)
 	private String material_pc;
 	@Column(name = "material_rm", length = 1000)

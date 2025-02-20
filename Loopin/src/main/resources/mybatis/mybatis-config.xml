@@ -11,6 +11,8 @@
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.WarehouseDTO" alias="Warehouse"/>
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.ProductDTO" alias="Product"/>
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.MaterialDTO" alias="Material"/>
+        <typeAlias type="com.itwillbs.c4d2412t3p1.domain.StockDTO" alias="Stock"/>
         <typeAlias type="com.itwillbs.c4d2412t3p1.domain.EquipmentDTO" alias="Equipment"/>
+        <typeAlias type="com.itwillbs.c4d2412t3p1.domain.InoutDTO" alias="Inout"/>
     </typeAliases>
 </configuration>
