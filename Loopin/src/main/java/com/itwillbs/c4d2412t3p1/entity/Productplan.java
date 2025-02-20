@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -60,5 +61,17 @@ public class Productplan {
 
 	@Column(name = "PRODUCTPLAN_MD")
 	private Timestamp productplan_md;
+
+	@Transient // 다중 PK 처리용
+	private String contract_cd;
+
+	@Transient
+	private String product_cd;
+
+	@Transient
+	private String productplan_sd_str; // yyyy-MM-dd 변환용
+
+	@Transient
+	private String productplan_ed_str; // yyyy-MM-dd 변환용
 
 }
