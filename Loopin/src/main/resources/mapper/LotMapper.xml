@@ -19,114 +19,113 @@
 	</select>
 	
 	<select id="select_LOT_list" resultType="map">
-	    SELECT L.LOT_CD
-	    	   , CONTRACT_CD
-	    	   , PRODUCT_CD
-	    	   , L.PROCESS_CD
-	    	   , TO_CHAR(LOT_CR, 'YYYY-MM-DD') AS LOT_CR
-	    	   , NVL(W.WORKORDER_ST, '계획중') AS WORKORDER_ST
-		  FROM LOT L
-	 LEFT JOIN WORKORDER W ON W.LOT_CD = L. LOT_CD AND L.PROCESS_CD = W.PROCESS_CD
-		 WHERE 1=1
+	    WITH WORKORDER_STATUS AS (
+	        SELECT 
+	            LOT_CD, 
+	            PROCESS_CD, 
+	            WORKORDER_ST,
+	            ROW_NUMBER() OVER (
+	                PARTITION BY LOT_CD 
+	                ORDER BY 
+	                    CASE 
+	                        WHEN WORKORDER_ST = '진행중' THEN 1  -- 진행중이면 우선 선택
+	                        WHEN PROCESS_CD = 'ASSEMBLY' THEN 2  -- 없으면 ASSEMBLY 공정 선택
+	                        ELSE 3 
+	                    END, WORKORDER_SD DESC
+	            ) AS RN
+	        FROM WORKORDER
+	    )
+	    SELECT 
+	        L.LOT_CD,
+	        MIN(L.CONTRACT_CD) AS CONTRACT_CD,
+	        MIN(L.PRODUCT_CD) AS PRODUCT_CD,
+	        MIN(L.PRODUCT_SZ) AS PRODUCT_SZ,
+	        MIN(L.PRODUCT_CR) AS PRODUCT_CR,
+	        NVL(MIN(WS.PROCESS_CD), 'UPPER') AS PROCESS_CD,
+	        TO_CHAR(MIN(L.LOT_CR), 'YYYY-MM-DD') AS LOT_CR,
+	        NVL(MIN(WS.WORKORDER_ST), '계획중') AS WORKORDER_ST
+	    FROM LOT L
+	    LEFT JOIN (
+	        SELECT LOT_CD, PROCESS_CD, WORKORDER_ST 
+	        FROM WORKORDER_STATUS 
+	        WHERE RN = 1
+	    ) WS ON WS.LOT_CD = L.LOT_CD
+	
+	    <where>
 	        <if test="lot_cd != null and lot_cd != ''">
 	            AND L.LOT_CD = #{lot_cd}
 	        </if>
 	        <if test="contract_cd != null and contract_cd != ''">
-	            AND CONTRACT_CD = #{contract_cd}
+	            AND L.CONTRACT_CD = #{contract_cd}
 	        </if>
 	        <if test="product_cd != null and product_cd != ''">
-	            AND PRODUCT_CD = #{product_cd}
+	            AND L.PRODUCT_CD = #{product_cd}
 	        </if>
 	        <if test="process_cd != null and process_cd != ''">
-	            AND L.PROCESS_CD = #{process_cd}
+	            AND WS.PROCESS_CD = #{process_cd}
 	        </if>
-	        <if test="workorder_st != null and workorder_st != '' or workorder_st != ALL">
-	            AND W.WORKORDER_ST = #{workorder_st}
+	        <if test="workorder_st != null and workorder_st != '' and workorder_st != 'ALL'">
+	            AND WS.WORKORDER_ST = #{workorder_st}
 	        </if>
-	  ORDER BY L.LOT_CD DESC
-<!-- 	    <where> 1=1 -->
-<!-- 	    		AND c.COMMON_GC = 'DEPARTMENT' -->
-<!-- 	        <if test="employee_nm != null and employee_nm != ''"> -->
-<!-- 	            AND e.EMPLOYEE_NM = #{employee_nm} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="employee_dp != null and employee_dp != ''"> -->
-<!-- 	            AND e.EMPLOYEE_DP = #{employee_dp} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="employee_hd1 != null and employee_hd1 != '' and employee_hd2 != null and employee_hd2 != ''"> -->
-<!-- 	            AND #{employee_hd1} &lt;= e.EMPLOYEE_HD AND e.EMPLOYEE_HD &lt;= #{employee_hd2} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="annual_ra != null and annual_ra != ''"> -->
-<!-- 	            AND a.ANNUAL_RA = #{annual_ra} -->
-<!-- 	        </if> -->
-<!-- 	    </where> -->
-<!-- 	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC -->
+	    </where>
+	
+	    GROUP BY L.LOT_CD
+	    ORDER BY MIN(L.LOT_CR) DESC
 	</select>
+
 	
 	
 	<select id="select_LOT_json" resultType="map">
 		WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
 		    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
-		      FROM BOMPROCESS
-		     WHERE BOMPROCESS_AP = 'NONE'
-		       AND PRODUCT_CD = #{PRODUCT_CD}
-		     UNION ALL
+		    FROM BOMPROCESS
+		    WHERE BOMPROCESS_AP = 'NONE'
+		      AND PRODUCT_CD = #{PRODUCT_CD}
+		    UNION ALL
 		    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 LVL
-		      FROM BOMPROCESS BP
-		      JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
-		     WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
+		    FROM BOMPROCESS BP
+		    JOIN BOM_HIERARCHY BH 
+		        ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS 
+		       AND BP.PRODUCT_CD = BH.PRODUCT_CD
+		    WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
 		),
-		WORKORDER_STATUS AS (
-		    -- LOT별 최신 작업 상태 가져오기
-		    SELECT LOT_CD, NVL(WORKORDER_ST, '계획중') AS PROCESS_CD, WORKORDER_ST
+		WORKORDER_STATUS AS (  
+		    SELECT PROCESS_CD, LOT_CD, WORKORDER_ST AS process  
 		    FROM WORKORDER
-		    WHERE LOT_CD IN (SELECT BOMPROCESS_CD FROM BOM_HIERARCHY)
+		    WHERE LOT_CD = #{LOT_CD}
 		)
 		SELECT JSON_OBJECT(
 		    'name' VALUE #{PRODUCT_CD},
 		    'title' VALUE '제품',
-		    'lot_st' VALUE #{PRODUCT_CD},
-		    'process' VALUE '대기',
+		    'process' VALUE NVL(W.process, '계획중'),  -- 🚀 W.process를 참조할 수 있도록 JOIN
 		    'children' VALUE (
 		        SELECT JSON_ARRAYAGG(
 		            JSON_OBJECT(
 		                'name' VALUE A.CURRENT_PROCESS,
 		                'title' VALUE '반제품',
-		                'lot_st' VALUE A.CURRENT_PROCESS,
-		                'process' VALUE (
-		                    SELECT CASE WHEN W.workorder_st = '진행중' THEN '진행중'
-	                        	   ELSE '완료'
-		                    		END
-		                      FROM WORKORDER W
-		                    WHERE W.LOT_CD = A.CURRENT_PROCESS
-		                    FETCH FIRST 1 ROWS ONLY
-		                ),
+		                'process' VALUE NVL(W.process, '계획중'), 
 		                'children' VALUE (
 		                    SELECT JSON_ARRAYAGG(
 		                        JSON_OBJECT(
 		                            'name' VALUE B.CURRENT_PROCESS,
 		                            'title' VALUE '반제품',
-		                            'lot_st' VALUE B.CURRENT_PROCESS,
-		                            'process' VALUE (
-		                                SELECT CASE 
-		                                    WHEN W.workorder_st = '진행중' THEN '진행중'
-		                                    ELSE '완료'
-		                                END
-		                                FROM WORKORDER W
-		                                WHERE W.LOT_CD = B.CURRENT_PROCESS
-		                                FETCH FIRST 1 ROWS ONLY
-		                            )
+		                            'process' VALUE NVL(W2.process, '계획중') 
 		                        )
 		                    ) 
-		                    FROM BOM_HIERARCHY B 
+		                    FROM BOM_HIERARCHY B
+		                    LEFT JOIN WORKORDER_STATUS W2 ON B.CURRENT_PROCESS = W2.PROCESS_CD 
 		                    WHERE B.BOMPROCESS_AP = A.CURRENT_PROCESS
 		                )
 		            ) RETURNING CLOB
 		        ) 
-		        FROM BOM_HIERARCHY A 
+		        FROM BOM_HIERARCHY A
+		        LEFT JOIN WORKORDER_STATUS W ON A.CURRENT_PROCESS = W.PROCESS_CD  
 		        WHERE A.BOMPROCESS_AP = 'ASSEMBLY'
 		    )
 		) AS json_data
-		FROM DUAL
+		FROM BOM_HIERARCHY BH
+		LEFT JOIN WORKORDER_STATUS W ON BH.CURRENT_PROCESS = W.PROCESS_CD  -- 🚀 JSON_OBJECT를 만드는 쿼리에 JOIN 추가
+		WHERE BH.BOMPROCESS_AP = 'NONE'
 	</select>
 	
 	<select id="select_RESULT_list" resultType="map">
@@ -143,47 +142,46 @@
 	LEFT JOIN PRODUCT P ON CD.PRODUCT_CD = P.PRODUCT_CD
 		 JOIN CONTRACT c ON CD.CONTRACT_CD = C.CONTRACT_CD AND C.CONTRACT_ST = '완료'
 	LEFT JOIN ACCOUNT A ON A.ACCOUNT_CD = C.ACCOUNT_CD
-	<where> 1=1
-	    <if test="contract_cd != null and contract_cd != ''">
-	        AND CD.CONTRACT_CD = #{contract_cd}
+		<where> 1=1
+		    <if test="contract_cd != null and contract_cd != ''">
+		        AND CD.CONTRACT_CD = #{contract_cd}
+		    </if>
+		    <if test="account_cd != null and account_cd != ''">
+		        AND A.ACCOUNT_CD = #{account_cd}
+		    </if>
+		    <if test="product_cd != null and product_cd != ''">
+		        AND P.PRODUCT_NM LIKE '%' || #{product_cd} || '%'
+		    </if>
+		    <if test="startDate != null and startDate != ''">
+			    AND TO_TIMESTAMP(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') &lt;= C.CONTRACT_SD
+			</if>
+			<if test="endDate != null and endDate != ''">
+			    AND TO_TIMESTAMP(#{endDate}, 'YYYY-MM-DD HH24:MI:SS') &gt;= C.CONTRACT_ED
+			</if>
+		</where>
+	 GROUP BY CD.CONTRACT_CD, P.PRODUCT_NM, P.PRODUCT_PR, C.CONTRACT_ED, A.ACCOUNT_NM, C.CONTRACT_SD
+		<if test="contract_am != null and contract_am != '' or product_pr != null and product_pr != ''">
+			HAVING 
+			<trim prefixOverrides="AND">
+	            <if test="contract_am != null and contract_am != ''">
+	                AND SUM(C.CONTRACT_AM) &gt;= TO_NUMBER(#{contract_am})
+	            </if>
+	            <if test="product_pr != null and product_pr != ''">
+	                AND P.PRODUCT_PR &gt;= TO_NUMBER(#{product_pr})
+	            </if>
+	        </trim>
 	    </if>
-	    <if test="account_cd != null and account_cd != ''">
-	        AND A.ACCOUNT_CD = #{account_cd}
-	    </if>
-	    <if test="product_cd != null and product_cd != ''">
-	        AND P.PRODUCT_NM LIKE '%' || #{product_cd} || '%'
-	    </if>
-	    <if test="startDate != null and startDate != ''">
-		    AND TO_TIMESTAMP(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') &lt;= C.CONTRACT_SD
-		</if>
-		<if test="endDate != null and endDate != ''">
-		    AND TO_TIMESTAMP(#{endDate}, 'YYYY-MM-DD HH24:MI:SS') &gt;= C.CONTRACT_ED
-		</if>
-	</where>
-	GROUP BY CD.CONTRACT_CD, P.PRODUCT_NM, P.PRODUCT_PR, C.CONTRACT_ED, A.ACCOUNT_NM, C.CONTRACT_SD
-	<if test="contract_am != null and contract_am != '' or product_pr != null and product_pr != ''">
-		HAVING 
-		<trim prefixOverrides="AND">
-            <if test="contract_am != null and contract_am != ''">
-                AND SUM(C.CONTRACT_AM) &gt;= TO_NUMBER(#{contract_am})
-            </if>
-            <if test="product_pr != null and product_pr != ''">
-                AND P.PRODUCT_PR &gt;= TO_NUMBER(#{product_pr})
-            </if>
-        </trim>
-    </if>
-	<choose>
-	    <when test="contract_mn == 'HIGH'">
-	        ORDER BY SUM(C.CONTRACT_MN) DESC
-	    </when>
-	    <when test="contract_mn == 'LOW'">
-	        ORDER BY SUM(C.CONTRACT_MN) ASC
-	    </when>
-	    <otherwise>
-	        ORDER BY CD.CONTRACT_CD DESC  <!-- 기본 정렬 조건 -->
-	    </otherwise>
-	</choose>
-
+		<choose>
+		    <when test="contract_mn == 'HIGH'">
+		        ORDER BY SUM(C.CONTRACT_MN) DESC
+		    </when>
+		    <when test="contract_mn == 'LOW'">
+		        ORDER BY SUM(C.CONTRACT_MN) ASC
+		    </when>
+		    <otherwise>
+		        ORDER BY CD.CONTRACT_CD DESC  <!-- 기본 정렬 조건 -->
+		    </otherwise>
+		</choose>
     </select>
 		
 </mapper>

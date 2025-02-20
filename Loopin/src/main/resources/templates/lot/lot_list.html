@@ -221,8 +221,8 @@
 	// 트리 생성 함수
 	function make_chart(data){
 		chart.orgchart({
-			'data': {"name":"조던1","title":"제품","lot_st":"JORDAN001","process":"대기중","children":[{"name":"UPPER","title":"반제품","lot_st":"BANTEST","process":"진행중","children":null},{"name":"INSOLE","title":"반제품","lot_st":"IN001","process":"진행중","children":null},{"name":"STOCK-FIT","title":"반제품","lot_st":"SOLE001","process":"진행중","children":[{"name":"PHYLON","title":"반제품","lot_st":"BAN001","process":"완료"},{"name":"OUTSOLE","title":"반제품","lot_st":"OUT001","process":"완료"}]}]}, // 데이터 입력
-			'nodeContent': data.lot_st, // 노드에 표시할 속성
+			'data': data, // 데이터 입력
+			'nodeContent': data.name, // 노드에 표시할 속성
 			//'pan': true, // 패닝 활성화
 			'direction': 't2b', // 방향 설정 (bottom to top)
 			'nodeTemplate': function(data) {
