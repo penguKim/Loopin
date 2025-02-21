@@ -43,6 +43,10 @@ public class InoutDTO {
 	private String item_gn; // 품목대분류명
 	private String item_cn; // 품목소분류명
 	private String employee_nm; // 담당자명
+	private String account_cd; // 거래처코드
+	private String account_nm; // 거래처명
+	private String item_sz; // 사이즈
+	private String item_cr; // 색상
 	
 	
 }
