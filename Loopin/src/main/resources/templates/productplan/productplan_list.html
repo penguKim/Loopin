@@ -1,939 +1,1005 @@
 <!DOCTYPE html>
-<html lang="ko"
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}" layout:fragment="content">
-<body>
-<main id="main" class="main">
-  <section class="section">
-    <div class="row">
-      <div class="col-lg-12">
-        <div class="card" id="div_card">
-          <div class="card-body">
-            <h5 class="card-title">생산계획</h5>
-
-            <!-- 필터 UI -->
-            <div id="filterModule" class="mb-3"></div>
-
-            <!-- 메인 그리드 -->
-            <div id="grid"></div>
-
-            <!-- 버튼 영역 -->
-            <div id="btn_area" class="mt-3 d-flex">
-              <div>
-                <button type="button" class="btn btn-primary" id="btn_insert">등록</button>
-                <button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
-              </div>
-              <button type="button" class="btn btn-primary ms-auto" id="btn_insert_daily">
-                일일생산계획 등록
-              </button>
-            </div>
-            <br>
-
-            <!-- 생산계획 등록/수정 모달 -->
-            <div class="modal" id="productPlanModal" tabindex="-1"
-                 aria-labelledby="modalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="modalTitle">생산계획 등록</h5>
-                    <button type="button" class="btn-close"
-                            data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <form id="productPlanForm">
-                      <!-- 첫 번째 줄: 수주번호, 품목코드, 작업 시작일, 작업 종료일 -->
-                      <div class="row mb-3">
-                        <div class="col-md-3">
-                          <label for="contract_cd" class="form-label" style="pointer-events: none;">
-                            수주번호
-                          </label>
-                          <input type="text" class="form-control" id="contract_cd">
-                        </div>
-                        <div class="col-md-3">
-                          <label for="product_cd" class="form-label">품목코드</label>
-                          <input type="text" class="form-control" id="product_cd">
-                        </div>
-                        <div class="col-md-3">
-                          <label class="form-label">작업 시작일</label>
-                          <!-- RangePicker start -->
-                          <input id="startpicker-input" type="text" class="form-control" readonly>
-                          <div id="startpicker-container"></div>
-                        </div>
-                        <div class="col-md-3">
-                          <label class="form-label">작업 종료일</label>
-                          <input id="endpicker-input" type="text" class="form-control" readonly>
-                          <div id="endpicker-container"></div>
-                        </div>
-                        <!-- 숨김 input -->
-                        <input type="hidden" id="productplan_sd">
-                        <input type="hidden" id="productplan_ed">
-                      </div>
-
-                      <!-- 두 번째 줄: 담당자, 창고코드, 지시수량, 비고 -->
-                      <div class="row mb-3">
-                        <div class="col-md-3">
-                          <label for="productplan_dd" class="form-label">담당자</label>
-                          <input type="text" class="form-control" id="productplan_dd">
-                        </div>
-                        <div class="col-md-3">
-                          <label for="warehouse_cd" class="form-label">창고코드</label>
-                          <input type="text" class="form-control" id="warehouse_cd">
-                        </div>
-                        <div class="col-md-3">
-                          <label for="productplan_js" class="form-label">지시수량</label>
-                          <input type="number" class="form-control" id="productplan_js">
-                        </div>
-                        <div class="col-md-3">
-                          <label for="productplan_bg" class="form-label">비고</label>
-                          <textarea class="form-control" id="productplan_bg" rows="1"></textarea>
-                        </div>
-                      </div>
-
-                      <input type="hidden" id="modalMode" value="insert">
-                    </form>
-
-                    <hr>
-                    <h5>공정리스트</h5>
-                    <div id="subGrid1" style="margin-bottom: 20px;"></div>
-
-                    <h5>BOM</h5>
-                    <div id="subGrid2"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                      취소
-                    </button>
-                    <button type="button" class="btn btn-primary" id="btnSaveProcessOrder">
-                      저장
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 다목적 검색 모달 -->
-            <div class="modal" id="searchModal" tabindex="-1">
-              <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="searchModalTitle">검색 모달</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                  </div>
-                  <br>
-                  <div class="col d-flex align-items-center">
-                    <input type="text" id="searchInput" class="form-control me-2"
-                           placeholder="검색어 입력" style="width: 150px; margin-left: 15px;">
-                    <input type="button" id="btnSearch" class="btn btn-primary" value="검색">
-                  </div>
-                  <div class="modal-body">
-                    <div id="searchGrid"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                      닫기
-                    </button>
-                    <button type="button" class="btn btn-primary" id="selectBtn">
-                      추가
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 일일생산계획 등록 모달 -->
-            <div class="modal" id="dailyProductPlanModal" tabindex="-1"
-                 aria-labelledby="modalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered modal-lg">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="dailyModalTitle">일일생산계획 등록</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    <form id="dailyProductPlanForm">
-                      <div class="row mb-3">
-                        <div class="col-md-3">
-                          <label for="dailyproductplan_sd" class="form-label">작업일자</label>
-                          <input type="text" class="form-control" id="dailyproductplan_sd" readonly>
-                          <div id="datepicker-container"></div>
-                        </div>
-                        <div class="col-md-3">
-                          <label for="process_cd" class="form-label">공정코드</label>
-                          <select class="form-select" id="process_cd"></select>
-                        </div>
-                        <div class="col-md-3">
-                          <label for="dailyproductplan_jb" class="form-label">작업자번호</label>
-                          <input type="text" class="form-control" id="dailyproductplan_jb">
-                        </div>
-                        <div class="col-md-3">
-                          <label for="dailyproductplan_product_cd" class="form-label">품목코드</label>
-                          <select class="form-select" id="dailyproductplan_product_cd"></select>
-                        </div>
-                      </div>
-                      <div class="row mb-3">
-                        <div class="col-md-3">
-                          <label for="dailyproductplan_js" class="form-label">작업수량</label>
-                          <input type="number" class="form-control" id="dailyproductplan_js">
-                        </div>
-                      </div>
-                    </form>
-                    <hr>
-                    <h5>작업 현황</h5>
-                    <div id="dailyGrid"></div>
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            data-bs-dismiss="modal">취소</button>
-                    <button type="button" class="btn btn-primary"
-                            id="btnSaveDailyPlan">저장</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-          </div> <!-- card-body -->
-        </div> <!-- card -->
-      </div>
-    </div>
-  </section>
-</main>
-
-</body>
-
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+<head>
+<meta charset="UTF-8">
+<title>생산계획</title>
 <style>
-  /* DateRangePicker가 subGrid 뒤에 가려지지 않도록 z-index 상향 */
-  .tui-datepicker,
-  .tui-timepicker,
-  .tui-calendar {
-    z-index: 9999 !important;
-  }
+.tui-datepicker, .tui-timepicker, .tui-calendar {
+	z-index: 9999 !important;
+}
 </style>
-
-<script th:inline="javascript">
-  let rangePicker;
-  let subGrid1, subGrid2;
-  let dailyPicker;     // 단일 DatePicker
-  let dailyGrid;       // 일일생산계획 현황 그리드
-
-  document.addEventListener("DOMContentLoaded", function () {
-    // ✅ CSRF 설정
-    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
-
-    fetchProductPlanList();
-
-    // ---------------------------
-    // 생산계획 모달 관련
-    // ---------------------------
-    const productPlanModalEl = document.getElementById("productPlanModal");
-    const productPlanModal   = new bootstrap.Modal(productPlanModalEl);
-
-    // 일일생산계획 모달
-    const dailyProductPlanModalEl = document.getElementById("dailyProductPlanModal");
-    const dailyProductPlanModal   = new bootstrap.Modal(dailyProductPlanModalEl);
-
-    const modalTitle  = document.getElementById("modalTitle");
-    const modalMode   = document.getElementById("modalMode");
-
-    // 생산계획 필드
-    const contractCdInput   = document.getElementById("contract_cd");
-    const productCdInput    = document.getElementById("product_cd");
-    const productPlanStInput= document.getElementById("productplan_st");
-
-    const productplanSdInput= document.getElementById("productplan_sd");
-    const productplanEdInput= document.getElementById("productplan_ed");
-    const productplanDdInput= document.getElementById("productplan_dd"); 
-    const warehouseCdInput  = document.getElementById("warehouse_cd");   
-    const productplanJsInput= document.getElementById("productplan_js");
-    const productplanBgInput= document.getElementById("productplan_bg");
-
-    // ✅ DateRangePicker (생산계획)
-    const today = new Date();
-    const oneMonthLater = new Date();
-    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-
-    rangePicker = tui.DatePicker.createRangePicker({
-      startpicker: {
-        date: today,
-        input: '#startpicker-input',
-        container: '#startpicker-container'
-      },
-      endpicker: {
-        date: oneMonthLater,
-        input: '#endpicker-input',
-        container: '#endpicker-container'
-      },
-      format: 'yyyy-MM-dd',
-      timePicker: false
-    });
-
-    rangePicker.on('change:end', function () {
-      const startDate = rangePicker.getStartDate();
-      const endDate   = rangePicker.getEndDate();
-      productplanSdInput.value = startDate ? formatDate(startDate) : "";
-      productplanEdInput.value = endDate   ? formatDate(endDate)   : "";
-    });
-
-    // ---------------------------
-    // 일일생산계획 모달 관련
-    // ---------------------------
-    // (1) 단일 DatePicker
-    dailyPicker = new tui.DatePicker('#datepicker-container', {
-      date: new Date(),
-      input: {
-        element: '#dailyproductplan_sd',
-        format: 'yyyy-MM-dd'
-      }
-    });
-
-    // (2) 일일생산계획 현황 그리드
-    dailyGrid = new tui.Grid({
-      el: document.getElementById("dailyGrid"),
-      columns: [
-        { header: '작업일자',      name: 'dailyproductplan_sd' },
-        { header: '공정코드',      name: 'process_cd' },
-        { header: '작업자번호',    name: 'dailyproductplan_jb' },
-        { header: '품목코드',      name: 'product_cd' },
-        { header: '작업수량',      name: 'dailyproductplan_js' }
-      ],
-      data: [],
-      scrollX: false,
-      scrollY: false
-    });
-
-    // ---------------------------
-    // 헬퍼 함수
-    // ---------------------------
-    function formatDate(dateObj) {
-      const yyyy = dateObj.getFullYear();
-      const mm   = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const dd   = String(dateObj.getDate()).padStart(2, '0');
-      return `${yyyy}-${mm}-${dd}`;
-    }
-    function getDate(date) {
-      // (Timestamp -> yyyy-MM-dd) 변환용
-      const year = date.getFullYear();
-      const month= String(date.getMonth()+1).padStart(2,'0');
-      const day  = String(date.getDate()).padStart(2,'0');
-      return `${year}-${month}-${day}`;
-    }
-
-    // 모달 표시 후 subGrid 새로고침
-    productPlanModalEl.addEventListener('shown.bs.modal', () => {
-      subGrid1.refreshLayout();
-      subGrid2.refreshLayout();
-    });
-
-    // ---------------------------
-    // 검색 모달 관련
-    // ---------------------------
-    document.getElementById("contract_cd").addEventListener("click", () => {
-      openSearchModal("contract");
-    });
-    document.getElementById("productplan_dd").addEventListener("click", () => {
-      openSearchModal("employee");
-    });
-    document.getElementById("warehouse_cd").addEventListener("click", () => {
-      openSearchModal("warehouse");
-    });
-
-    let searchGrid;
-    let targetInputId         = "";
-    let targetProductInputId  = "";
-    let targetProductAmInputId= "";
-
-    const modeActions = {
-      contract: (data) => {
-        contractCdInput.value = data.contract_cd;
-        if (targetProductInputId) {
-          productCdInput.value = data.product_cd;
-        }
-        if (targetProductAmInputId) {
-          document.getElementById(targetProductAmInputId).value = data.product_am;
-        }
-        // 지시수량에 product_am 대입 (예: 수주상세 수량)
-        document.getElementById("productplan_js").value = data.product_am || 0;
-
-        // BOM/자재 조회
-        if (data.product_cd) {
-          fetchBOMProcessAndOrder(data.contract_cd, data.product_cd);
-          fetchAllMaterials(data.product_cd);
-        }
-      },
-      employee: (data) => {
-        document.getElementById(targetInputId).value = data.employee_cd;
-      },
-      warehouse: (data) => {
-        document.getElementById(targetInputId).value = data.warehouse_cd;
-      }
-    };
-
-    function fetchSearchList(apiUrl, grid) {
-      fetch(apiUrl, { method: "GET" })
-        .then(response => response.json())
-        .then(data => {
-          grid.resetData(data);
-        })
-        .catch(error => console.error("검색 오류:", error));
-    }
-    function fetchSearchListWithInput(apiUrl, grid) {
-      const searchValue = document.getElementById("searchInput").value.trim();
-      if (!searchValue) {
-        alert("검색어를 입력하세요.");
-        return;
-      }
-      fetch(`${apiUrl}?searchValue=${encodeURIComponent(searchValue)}`, { method: "GET" })
-        .then(response => response.json())
-        .then(data => {
-          grid.resetData(data);
-        })
-        .catch(error => console.error("검색 오류:", error));
-    }
-
-    function openSearchModal(mode) {
-      const modalTitleEl = document.getElementById('searchModalTitle');
-      const searchInput  = document.getElementById('searchInput');
-      const searchBtn    = document.getElementById('btnSearch');
-
-      let apiUrl = "";
-      let gridColumns = [];
-      targetInputId         = "";
-      targetProductInputId  = "";
-      targetProductAmInputId= "";
-
-      if (mode === "contract") {
-        modalTitleEl.textContent = "수주번호 검색";
-        apiUrl = "/select_CONTRACTCD_list";
-        targetInputId = "contract_cd";
-        targetProductInputId = "product_cd";
-        targetProductAmInputId= "productplan_js";
-        gridColumns = [
-          { header: "수주번호",  name: "contract_cd", align: "center" },
-          { header: "품목코드",  name: "product_cd",  align: "center" },
-          { header: "색상",     name: "product_cr",  align: "center" },
-          { header: "사이즈",   name: "product_sz",  align: "center" }
-        ];
-      } else if (mode === "employee") {
-        modalTitleEl.textContent = "담당자 검색";
-        apiUrl = "/select_EMPLOYEE_list";
-        targetInputId = "productplan_dd";
-        gridColumns = [
-          { header: "사원번호",     name: "employee_cd",    align: "center" },
-          { header: "담당자명",     name: "employee_nm",    align: "center" },
-          { header: "부서",         name: "departmentName", align: "center" },
-          { header: "직급",         name: "positionName",   align: "center" }
-        ];
-      } else if (mode === "warehouse") {
-        modalTitleEl.textContent = "담당자 검색";
-        apiUrl = "/select_WAREHOUSE_list";
-        targetInputId = "warehouse_cd";
-        gridColumns = [
-          { header: "창고코드",  name: "warehouse_cd",  align: "center" },
-          { header: "창고명",    name: "warehouse_nm",  align: "center" },
-          { header: "창고유형",  name: "warehouseName", align: "center" },
-          { header: "비고",      name: "warehouse_rm",  align: "center" }
-        ];
-      }
-
-      const searchGridContainer = document.getElementById('searchGrid');
-      searchGridContainer.innerHTML = '';
-      searchGrid = new tui.Grid({
-        el: searchGridContainer,
-        columns: gridColumns,
-        scrollX: false,
-        scrollY: true,
-        rowHeaders: ["checkbox"],
-        autoResize: true
-      });
-
-      // 전체 리스트 로드
-      fetchSearchList(apiUrl, searchGrid);
-
-      // 검색 버튼
-      searchBtn.onclick = () => fetchSearchListWithInput(apiUrl, searchGrid);
-
-      // dblclick
-      searchGrid.off("dblclick");
-      searchGrid.on("dblclick", (ev) => {
-        const rowData = searchGrid.getRow(ev.rowKey);
-        if (!rowData) return;
-        console.log(rowData);
-
-        const action = modeActions[mode];
-        if (action) action(rowData);
-
-        bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
-        productPlanModal.show();
-      });
-
-      // 검색 모달 열기
-      const searchModal = new bootstrap.Modal(document.getElementById("searchModal"));
-      searchModal.show();
-    }
-
-    // ---------------------------
-    // subGrid1, subGrid2 초기화
-    // ---------------------------
-    subGrid1 = new tui.Grid({
-      el: document.getElementById("subGrid1"),
-      columns: [
-        { header: '공정코드',   name: 'process_cd'    },
-        { header: '생산제품',   name: 'bomprocess_cd' },
-        { header: '소요시간',   name: 'bomprocess_rt' },
-        { header: '후공정코드', name: 'bomprocess_ap' },
-        {
-          header: '공정순서', name: 'process_se',
-          editor: { type: 'text' }
-        }
-      ],
-      data: [],
-      scrollX: false,
-      scrollY: false
-    });
-
-    subGrid2 = new tui.Grid({
-      el: document.getElementById("subGrid2"),
-      columns: [
-        { header: '자재 코드', name: 'material_cd' },
-        { header: '자재 이름', name: 'material_nm' },
-        { header: '자재 유형', name: 'material_gc' },
-        { header: '총 소요량', name: 'totalAmount' }
-      ],
-      data: [],
-      scrollX: false,
-      scrollY: false
-    });
-
-    // 공정순서 편집 제한
-    subGrid1.on('beforeEdit', (ev) => {
-      if (ev.columnName === 'process_se') {
-        const rowData = subGrid1.getRow(ev.rowKey);
-        const code = rowData.process_cd;
-        // 하위 4개 공정만 순서 입력 가능
-        if (!['PHYLON','OUTSOLE','UPPER','INSOLE'].includes(code)) {
-          ev.stop();
-        }
-      }
-    });
-
-    // BOMPROCESS + PRODUCTPLANPROCESS 병합
-    function fetchBOMProcessAndOrder(contractCd, productCd) {
-      if (!contractCd || !productCd) return;
-      const bomUrl   = `/select_BOMPROCESS_list?product_cd=${encodeURIComponent(productCd)}`;
-      const orderUrl = `/select_PRODUCTPLANPROCESS_list?contract_cd=${encodeURIComponent(contractCd)}&product_cd=${encodeURIComponent(productCd)}`;
-
-      Promise.all([
-        fetch(bomUrl).then(res => res.json()),
-        fetch(orderUrl).then(res => res.json())
-      ])
-      .then(([bomProcessData, planProcessData]) => {
-        const orderMap = {};
-        planProcessData.forEach(item => {
-          orderMap[item.process_cd] = item.process_se;
-        });
-        const merged = bomProcessData.map(bom => {
-          const processCd = bom.process_cd;
-          return {
-            ...bom,
-            process_se: orderMap[processCd] || ""
-          };
-        });
-        subGrid1.resetData(merged);
-      })
-      .catch(err => {
-        console.error("공정+공정순서 병합 오류:", err);
-        alert("BOMPROCESS / PRODUCTPLANPROCESS 조회 중 오류");
-      });
-    }
-
-    // 자재(BOM) 조회 -> subGrid2
-    function fetchAllMaterials(productCd) {
-      if (!productCd) {
-        alert("제품코드가 없습니다.");
-        return;
-      }
-      fetch(`/select_BOMMATERIALS?product_cd=${encodeURIComponent(productCd)}`)
-        .then(response => {
-          if (!response.ok) throw new Error("재료 조회 실패");
-          return response.json();
-        })
-        .then(data => {
-          subGrid2.resetData(data);
-        })
-        .catch(err => {
-          console.error("BOM 조회 오류:", err);
-          alert("재료 조회 중 오류 발생: " + err.message);
-        });
-    }
-
-    // 생산계획 저장
-    document.getElementById("btnSaveProcessOrder").addEventListener("click", () => {
-      const productplan = {
-        contract_cd   : contractCdInput.value,
-        product_cd    : productCdInput.value,
-        productplan_sd: productplanSdInput.value,
-        productplan_ed: productplanEdInput.value,
-        productplan_dd: productplanDdInput.value,
-        warehouse_cd  : warehouseCdInput.value,
-        productplan_js: productplanJsInput.value,
-        productplan_bg: productplanBgInput.value
-      };
-      const allRows = subGrid1.getData();
-      const processList = allRows
-        .filter(r => r.process_se && r.process_se.trim() !== "")
-        .map(r => ({
-          process_cd: r.process_cd,
-          process_se: r.process_se
-        }));
-      const requestBody = { productplan, processList };
-
-      fetch("/save_PRODUCTPLAN", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          [csrfHeader]: csrfToken
-        },
-        body: JSON.stringify(requestBody)
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("저장 실패");
-        return res.json();
-      })
-      .then(data => {
-        alert("저장 완료");
-        productPlanModal.hide();
-        fetchProductPlanList();
-      })
-      .catch(err => {
-        console.error("저장 오류:", err);
-        alert("저장 중 오류 발생");
-      });
-    });
-
-    // ---------------------------
-    // 메인 그리드
-    // ---------------------------
-    const grid = new tui.Grid({
-      el: document.getElementById("grid"),
-      rowHeaders : ['checkbox'],
-      columns: [
-        { header: '수주번호',     name: 'contract_cd'    },
-        { header: '품목코드',     name: 'product_cd'     },
-        { header: '작업 시작일',   name: 'productplan_sd' },
-        { header: '작업 종료일',   name: 'productplan_ed' },
-        { header: '담당자',       name: 'productplan_dd' },
-        { header: '지시수량',     name: 'productplan_js' },
-        { header: '창고코드',     name: 'warehouse_cd'    },
-        { header: '계획상태',     name: 'productplan_st' },
-        { header: '비고',         name: 'productplan_bg' }
-      ],
-      data: [],
-      scrollX: false,
-      scrollY: false
-    });
-
-    // 생산계획 목록 조회
-    function fetchProductPlanList(filters = {}) {
-      // GET 방식으로 예시
-      fetch("select_PRODUCTPLAN_list", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(response => response.json())
-      .then(data => {
-        // 날짜 변환
-        const formattedData = data.map(plan => ({
-          ...plan,
-          productplan_sd: plan.productplan_sd ? getDate(new Date(plan.productplan_sd)) : "",
-          productplan_ed: plan.productplan_ed ? getDate(new Date(plan.productplan_ed)) : ""
-        }));
-        grid.resetData(formattedData);
-      })
-      .catch(error => console.error("데이터 조회 중 오류 발생:", error));
-    }
-
-    // ---------------------------
-    // 생산계획 모달 열기
-    // ---------------------------
-    function openProductPlanModal(mode, data = null) {
-      console.log("mode:", mode);
-      modalMode.value = mode;
-
-      if (mode === "insert") {
-        modalTitle.textContent = "생산계획 등록";
-        // 날짜 초기화
-        const today = new Date();
-        const oneMonthLater = new Date();
-        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
-        rangePicker.setStartDate(today);
-        rangePicker.setEndDate(oneMonthLater);
-        productplanSdInput.value = formatDate(today);
-        productplanEdInput.value = formatDate(oneMonthLater);
-
-        // 필드 초기화
-        contractCdInput.value    = "";
-        productCdInput.value     = "";
-        productplanDdInput.value = "";
-        warehouseCdInput.value   = "";
-        productplanJsInput.value = "";
-        productplanBgInput.value = "";
-
-        // subGrid 초기화
-        subGrid1.resetData([]);
-        subGrid2.resetData([]);
-
-      } else if (mode === "update" && data) {
-        modalTitle.textContent = "생산계획 수정";
-        contractCdInput.value    = data.contract_cd;
-        productCdInput.value     = data.product_cd;
-        productplanSdInput.value = data.productplan_sd || "";
-        productplanEdInput.value = data.productplan_ed || "";
-        productplanDdInput.value = data.productplan_dd || "";
-        warehouseCdInput.value   = data.warehouse_cd   || "";
-        productplanJsInput.value = data.productplan_js || "";
-        productplanBgInput.value = data.productplan_bg || "";
-
-        // RangePicker 값 세팅
-        if (data.productplan_sd && data.productplan_ed) {
-          const start = new Date(data.productplan_sd);
-          const end   = new Date(data.productplan_ed);
-          rangePicker.setStartDate(start);
-          rangePicker.setEndDate(end);
-        }
-
-        // subGrid1, subGrid2 조회
-        if (data.product_cd && data.contract_cd) {
-          fetchBOMProcessAndOrder(data.contract_cd, data.product_cd);
-          fetchAllMaterials(data.product_cd);
-        }
-      }
-      productPlanModal.show();
-    }
-
-    // 등록 버튼
-    document.getElementById("btn_insert").addEventListener("click", () => {
-      openProductPlanModal("insert");
-    });
-
-    // 메인 그리드 더블클릭 -> 수정
-    grid.on("dblclick", (ev) => {
-      const rowData = grid.getRow(ev.rowKey);
-      if (!rowData) return;
-
-      // 상태 체크
-      if (rowData.productplan_st === "대기") {
-        openProductPlanModal("update", rowData);
-      } else {
-        alert("대기 상태인 생산계획만 수정할 수 있습니다.");
-      }
-    });
-
-    // 삭제 버튼
-    document.getElementById("btn_delete").addEventListener("click", () => {
-      const checkedRows = grid.getCheckedRows();
-      if (checkedRows.length === 0) {
-        alert("삭제할 대상을 선택하세요.");
-        return;
-      }
-      // 대기 상태만 필터링
-      const deletableRows = checkedRows.filter(row => row.productplan_st === "대기");
-      if (deletableRows.length === 0) {
-        alert("대기 상태인 생산계획만 삭제할 수 있습니다.");
-        return;
-      }
-      const requestBody = deletableRows.map(row => ({
-        contract_cd: row.contract_cd,
-        product_cd : row.product_cd
-      }));
-      fetch("/delete_PRODUCTPLAN_list", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
-        body: JSON.stringify(requestBody)
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("삭제 실패");
-        return res.json();
-      })
-      .then(data => {
-        if (data.status === "SUCCESS") {
-          alert("삭제 완료");
-          fetchProductPlanList();
-        }
-      })
-      .catch(err => {
-        console.error("삭제 오류:", err);
-        alert("삭제 중 오류 발생");
-      });
-    });
-
-    // ---------------------------
-    // 일일생산계획 모달 열기
-    // ---------------------------
-    function openDailyProductPlanModal() {
-      const checkedRows = grid.getCheckedRows();
-      if (checkedRows.length !== 1) {
-        alert("일일생산계획 등록은 하나의 생산계획을 선택해야 합니다.");
-        return;
-      }
-      const selectedPlan = checkedRows[0];
-      const contractCd   = selectedPlan.contract_cd;
-      const productCd    = selectedPlan.product_cd;
-
-      // 모달 필드 초기화
-      dailyPicker.setDate(new Date()); // 오늘 날짜로 세팅
-      document.getElementById("dailyproductplan_sd").value = ""; // datePicker와 연동되므로 빈값
-      document.getElementById("dailyproductplan_jb").value = "";
-      document.getElementById("dailyproductplan_js").value = "";
-
-      // 품목코드 select 초기화
-      const productSelect = document.getElementById("dailyproductplan_product_cd");
-      productSelect.innerHTML = "";
-      const opt = document.createElement("option");
-      opt.value = productCd;
-      opt.text  = productCd;
-      productSelect.appendChild(opt);
-
-      // 공정코드 select
-      const processSelect = document.getElementById("process_cd");
-      processSelect.innerHTML = "";
-
-      // 공정코드 리스트 가져오기 (예: /select_PROCESS_LIST)
-      fetch(`/select_PROCESS_LIST?contract_cd=${contractCd}&product_cd=${productCd}`)
-        .then(res => {
-          if (!res.ok) throw new Error("공정 조회 실패");
-          return res.json();
-        })
-        .then(data => {
-          data.forEach(proc => {
-            // proc: { process_cd: 'PHYLON', ... }
-            const option = document.createElement("option");
-            option.value = proc.process_cd;
-            option.text  = proc.process_cd;
-            processSelect.appendChild(option);
-          });
-        })
-        .catch(err => {
-          console.error("공정코드 조회 오류:", err);
-          alert("공정코드 조회 중 오류 발생");
-        });
-
-      // 작업 현황 그리드 갱신 (예: /select_DAILYPLAN_list?contract_cd=...&product_cd=...)
-      fetchDailyPlanList(contractCd, productCd);
-
-      dailyProductPlanModal.show();
-    }
-
-    // 일일생산계획 등록 버튼 → 모달 열기
-    document.getElementById("btn_insert_daily").addEventListener("click", () => {
-      openDailyProductPlanModal();
-    });
-
-    // ---------------------------
-    // 일일생산계획 현황 조회
-    // ---------------------------
-    function fetchDailyPlanList(contractCd, productCd) {
-      fetch(`/select_DAILYPLAN_list?contract_cd=${contractCd}&product_cd=${productCd}`)
-        .then(res => {
-          if (!res.ok) throw new Error("일일생산계획 조회 실패");
-          return res.json();
-        })
-        .then(data => {
-          // 필요하다면 날짜 변환
-          const formatted = data.map(d => ({
-            ...d,
-            dailyproductplan_sd: d.dailyproductplan_sd ? getDate(new Date(d.dailyproductplan_sd)) : ""
-          }));
-          dailyGrid.resetData(formatted);
-        })
-        .catch(err => {
-          console.error("일일생산계획 조회 오류:", err);
-          alert("일일생산계획 조회 중 오류 발생");
-        });
-    }
-
-    // ---------------------------
-    // 일일생산계획 저장
-    // ---------------------------
-    document.getElementById("btnSaveDailyPlan").addEventListener("click", () => {
-      // 모달 내부 값
-      const dailyDate   = document.getElementById("dailyproductplan_sd").value; // datePicker와 동기화
-      const processCd   = document.getElementById("process_cd").value;
-      const workerCd    = document.getElementById("dailyproductplan_jb").value;
-      const productCdDD = document.getElementById("dailyproductplan_product_cd").value;
-      const dailyJs     = document.getElementById("dailyproductplan_js").value;
-
-      // 여기서, 메인 그리드에서 체크된 생산계획(단일) 정보를 다시 가져올 수도 있음
-      const checkedRows = grid.getCheckedRows();
-      if (checkedRows.length !== 1) {
-        alert("선택된 생산계획이 없습니다.");
-        return;
-      }
-      const plan = checkedRows[0]; // { contract_cd, product_cd, ... }
-
-      // 예시 RequestBody
-      const reqBody = {
-        dailyproductplan_sd: dailyDate,
-        contract_cd        : plan.contract_cd,
-        product_cd         : productCdDD,      // 모달에서 선택된 품목코드
-        process_cd         : processCd,
-        dailyproductplan_jb: workerCd,
-        dailyproductplan_js: dailyJs
-      };
-
-      fetch("/save_DAILYPLAN", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          [csrfHeader]: csrfToken
-        },
-        body: JSON.stringify(reqBody)
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("일일생산계획 저장 실패");
-        return res.json();
-      })
-      .then(data => {
-        alert("일일생산계획 저장 완료");
-        dailyProductPlanModal.hide();
-        // 저장 후 다시 목록 조회
-        fetchDailyPlanList(plan.contract_cd, productCdDD);
-      })
-      .catch(err => {
-        console.error("일일생산계획 저장 오류:", err);
-        alert("일일생산계획 저장 중 오류 발생");
-      });
-    });
-
-    // ---------------------------
-    // 필터 모듈
-    // ---------------------------
-    const filterConfig = [
-      { key: 'startDate', label: '시작일', type: 'date', format: 'YYYY-MM-dd', value: '' },
-      { key: 'endDate',   label: '종료일', type: 'date', format: 'YYYY-MM-dd', value: '' },
-      { key: 'contract_cd', label: '수주번호', type: 'text', col: 'col-md-3', placeholder: '수주번호 입력' },
-      { key: 'product_cd',  label: '품목코드', type: 'text', col: 'col-md-3', placeholder: '품목코드 입력' },
-      {
-        key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3',
-        list: [
-          { value: 'ALL',        text: '전체' },
-          { value: 'PENDING',    text: '대기' },
-          { value: 'IN_PROGRESS',text: '진행중' },
-          { value: 'COMPLETED',  text: '완료' }
-        ]
-      }
-    ];
-    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-      // 필터 적용 시 -> 서버에 POST 로직 or GET 쿼리 파라미터
-      // 여기서는 단순히 fetchProductPlanList() 호출 가정
-      // 실제론 /select_PRODUCTPLAN_list?{filters} 식으로 구성
-      // or body: JSON.stringify(filters)
-      console.log("필터값:", filterValues);
-      // 임시: 필터 미사용
-      fetchProductPlanList();
-    });
-  });
-</script>
+</head>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card" id="div_card">
+						<div class="card-body">
+							<h5 class="card-title">생산계획</h5>
+							<!-- 필터 UI -->
+							<div id="filterModule" class="mb-3"></div>
+							<!-- 메인 그리드 -->
+							<div id="grid"></div>
+							<!-- 버튼 영역 -->
+							<div id="btn_area" class="mt-3 d-flex">
+								<div>
+									<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+									<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+								</div>
+								<button type="button" class="btn btn-primary ms-auto"
+									id="btn_insert_daily">일일생산계획 등록</button>
+							</div>
+							<br>
+
+							<!-- 생산계획 등록/수정 모달 -->
+							<div class="modal" id="productPlanModal" tabindex="-1"
+								aria-labelledby="modalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="modalTitle">생산계획 등록</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="productPlanForm">
+												<!-- 첫 번째 줄: 수주번호, 품목코드, 작업 시작일, 작업 종료일 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="contract_cd" class="form-label"
+															style="pointer-events: none;">수주번호</label> <input
+															type="text" class="form-control" id="contract_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="product_cd" class="form-label">품목코드</label> <input
+															type="text" class="form-control" id="product_cd">
+													</div>
+													<div class="col-md-3">
+														<label class="form-label">작업 시작일</label> <input
+															id="startpicker-input" type="text" class="form-control"
+															readonly>
+														<div id="startpicker-container"></div>
+													</div>
+													<div class="col-md-3">
+														<label class="form-label">작업 종료일</label> <input
+															id="endpicker-input" type="text" class="form-control"
+															readonly>
+														<div id="endpicker-container"></div>
+													</div>
+													<!-- 숨김 input -->
+													<input type="hidden" id="productplan_sd"> <input
+														type="hidden" id="productplan_ed">
+												</div>
+
+												<!-- 두 번째 줄: 담당자, 창고코드, 지시수량, 비고 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="productplan_dd" class="form-label">담당자</label>
+														<input type="text" class="form-control"
+															id="productplan_dd">
+													</div>
+													<div class="col-md-3">
+														<label for="warehouse_cd" class="form-label">창고코드</label>
+														<input type="text" class="form-control" id="warehouse_cd">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_js" class="form-label">지시수량</label>
+														<input type="number" class="form-control"
+															id="productplan_js">
+													</div>
+													<div class="col-md-3">
+														<label for="productplan_bg" class="form-label">비고</label>
+														<textarea class="form-control" id="productplan_bg"
+															rows="1"></textarea>
+													</div>
+												</div>
+
+												<input type="hidden" id="modalMode" value="insert">
+											</form>
+
+											<hr>
+											<h5>공정리스트</h5>
+											<div id="subGrid1" style="margin-bottom: 20px;"></div>
+											<h5>BOM</h5>
+											<div id="subGrid2"></div>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">취소</button>
+											<button type="button" class="btn btn-primary"
+												id="btnSaveProcessOrder">저장</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 다목적 검색 모달 -->
+							<div class="modal" id="searchModal" tabindex="-1">
+								<div
+									class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="searchModalTitle">검색 모달</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal"></button>
+										</div>
+										<br>
+										<div class="col d-flex align-items-center">
+											<input type="text" id="searchInput" class="form-control me-2"
+												placeholder="검색어 입력"
+												style="width: 150px; margin-left: 15px;"> <input
+												type="button" id="btnSearch" class="btn btn-primary"
+												value="검색">
+										</div>
+										<div class="modal-body">
+											<div id="searchGrid"></div>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">닫기</button>
+											<button type="button" class="btn btn-primary" id="selectBtn">추가</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 일일생산계획 등록 모달 -->
+							<div class="modal" id="dailyProductPlanModal" tabindex="-1"
+								aria-labelledby="modalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="dailyModalTitle">일일생산계획 등록</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="dailyProductPlanForm">
+												<div class="row mb-3">
+													<!-- 작업일자 (DatePicker) -->
+													<div class="col-md-3">
+														<label for="dailyproductplan_sd" class="form-label">작업일자</label>
+														<input type="text" class="form-control"
+															id="dailyproductplan_sd" readonly>
+														<div id="datepicker-container"></div>
+													</div>
+													<!-- 공정코드 -->
+													<div class="col-md-3">
+														<label for="process_cd" class="form-label">공정코드</label> <select
+															class="form-select" id="process_cd"></select>
+													</div>
+													<!-- 작업자번호 -->
+													<div class="col-md-3">
+														<label for="dailyproductplan_jb" class="form-label">작업자번호</label>
+														<input type="text" class="form-control"
+															id="dailyproductplan_jb">
+													</div>
+													<!-- 품목코드 -->
+													<div class="col-md-3">
+														<label for="dailyproductplan_product_cd"
+															class="form-label">품목코드</label> <select
+															class="form-select" id="dailyproductplan_product_cd"></select>
+													</div>
+												</div>
+												<!-- 추가: 색상, 사이즈, 작업수량 -->
+												<div class="row mb-3">
+													<div class="col-md-3">
+														<label for="dailyproductplan_cr" class="form-label">색상</label>
+														<select class="form-select" id="dailyproductplan_cr"></select>
+													</div>
+													<div class="col-md-3">
+														<label for="dailyproductplan_sz" class="form-label">사이즈</label>
+														<select class="form-select" id="dailyproductplan_sz"></select>
+													</div>
+													<div class="col-md-3">
+														<label for="dailyproductplan_js" class="form-label">전체수량</label>
+														<input type="number" class="form-control"
+															id="dailyproductplan_js">
+													</div>
+													<div class="col-md-3">
+														<label for="dailyproductplan_js" class="form-label">작업수량</label>
+														<input type="number" class="form-control"
+															id="dailyproductplan_js">
+													</div>
+												</div>
+											</form>
+											<hr>
+											<h5>작업 현황</h5>
+											<div id="dailyGrid"></div>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">취소</button>
+											<button type="button" class="btn btn-primary"
+												id="btnSaveDailyPlan">저장</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+						</div>
+						<!-- card-body -->
+					</div>
+					<!-- card -->
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<!-- 스크립트 (필요한 라이브러리 로드 후 아래 스크립트 포함) -->
+	<script th:inline="javascript">
+	  // 전역 변수들
+	  let rangePicker, subGrid1, subGrid2, dailyPicker, dailyGrid;
+	  let contractDetailList = []; // 색상/사이즈 목록
+	  
+	  document.addEventListener("DOMContentLoaded", function () {
+	    const csrfToken  = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	  
+	    fetchProductPlanList();
+	  
+	    // 모달 초기화
+	    const productPlanModalEl = document.getElementById("productPlanModal");
+	    const productPlanModal   = new bootstrap.Modal(productPlanModalEl);
+	    const dailyProductPlanModalEl = document.getElementById("dailyProductPlanModal");
+	    const dailyProductPlanModal   = new bootstrap.Modal(dailyProductPlanModalEl);
+	  
+	    const modalTitle = document.getElementById("modalTitle");
+	    const modalMode  = document.getElementById("modalMode");
+	  
+	    // 생산계획 필드
+	    const contractCdInput    = document.getElementById("contract_cd");
+	    const productCdInput     = document.getElementById("product_cd");
+	    const productplanSdInput = document.getElementById("productplan_sd");
+	    const productplanEdInput = document.getElementById("productplan_ed");
+	    const productplanDdInput = document.getElementById("productplan_dd");
+	    const warehouseCdInput   = document.getElementById("warehouse_cd");
+	    const productplanJsInput = document.getElementById("productplan_js");
+	    const productplanBgInput = document.getElementById("productplan_bg");
+	  
+	    // ✅ DateRangePicker (생산계획)
+	    const today = new Date();
+	    const oneMonthLater = new Date();
+	    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+	  
+	    rangePicker = tui.DatePicker.createRangePicker({
+	      startpicker: {
+	        date: today,
+	        input: '#startpicker-input',
+	        container: '#startpicker-container'
+	      },
+	      endpicker: {
+	        date: oneMonthLater,
+	        input: '#endpicker-input',
+	        container: '#endpicker-container'
+	      },
+	      format: 'yyyy-MM-dd',
+	      timePicker: false
+	    });
+	  
+	    rangePicker.on('change:end', function () {
+	      const startDate = rangePicker.getStartDate();
+	      const endDate   = rangePicker.getEndDate();
+	      productplanSdInput.value = startDate ? formatDate(startDate) : "";
+	      productplanEdInput.value = endDate   ? formatDate(endDate)   : "";
+	    });
+	  
+	    // ---------------------------
+	    // 일일생산계획: DatePicker + Grid
+	    // ---------------------------
+	    dailyPicker = new tui.DatePicker('#datepicker-container', {
+	      date: today,
+	      input: {
+	        element: '#dailyproductplan_sd',
+	        format: 'yyyy-MM-dd'
+	      }
+	    });
+	  
+	    dailyGrid = new tui.Grid({
+	      el: document.getElementById("dailyGrid"),
+	      columns: [
+	        { header: '작업일자',       name: 'dailyproductplan_sd' },
+	        { header: '공정코드',       name: 'process_cd' },
+	        { header: '작업자번호',     name: 'dailyproductplan_jb' },
+	        { header: '품목코드',       name: 'product_cd' },
+	        { header: '색상',          name: 'product_cr' },
+	        { header: '사이즈',         name: 'product_sz' },
+	        { header: '작업수량',       name: 'dailyproductplan_js' }
+	      ],
+	      data: [],
+	      scrollX: false,
+	      scrollY: false
+	    });
+	  
+	    // 헬퍼 함수들
+	    function formatDate(dateObj) {
+	      const yyyy = dateObj.getFullYear();
+	      const mm   = String(dateObj.getMonth() + 1).padStart(2, '0');
+	      const dd   = String(dateObj.getDate()).padStart(2, '0');
+	      return `${yyyy}-${mm}-${dd}`;
+	    }
+	    function getDate(date) {
+	      const year = date.getFullYear();
+	      const month = String(date.getMonth() + 1).padStart(2, '0');
+	      const day = String(date.getDate()).padStart(2, '0');
+	      return `${year}-${month}-${day}`;
+	    }
+	  
+	    productPlanModalEl.addEventListener('shown.bs.modal', () => {
+	      subGrid1.refreshLayout();
+	      subGrid2.refreshLayout();
+	    });
+	  
+	    // ---------------------------
+	    // 검색 모달 및 이벤트 설정
+	    // ---------------------------
+	    document.getElementById("contract_cd").addEventListener("click", () => { openSearchModal("contract"); });
+	    document.getElementById("productplan_dd").addEventListener("click", () => { openSearchModal("employee"); });
+	    document.getElementById("warehouse_cd").addEventListener("click", () => { openSearchModal("warehouse"); });
+	    document.getElementById("dailyproductplan_jb").addEventListener("click", () => { openSearchModal("worker"); });
+	  
+	    let searchGrid;
+	    let targetInputId = "";
+	    let targetProductInputId = "";
+	    let targetProductAmInputId = "";
+	  
+	    const modeActions = {
+	      contract: (data) => {
+	        contractCdInput.value = data.contract_cd;
+	        if (targetProductInputId) {
+	          productCdInput.value = data.product_cd;
+	        }
+	        if (targetProductAmInputId) {
+	          document.getElementById(targetProductAmInputId).value = data.product_am;
+	        }
+	        productplanJsInput.value = data.product_am || 0;
+	        if (data.product_cd) {
+	          fetchBOMProcessAndOrder(data.contract_cd, data.product_cd);
+	          fetchAllMaterials(data.product_cd);
+	        }
+	      },
+	      employee: (data) => {
+	        document.getElementById(targetInputId).value = data.employee_cd;
+	      },
+	      warehouse: (data) => {
+	        document.getElementById(targetInputId).value = data.warehouse_cd;
+	      },
+	      worker: (data) => {
+	        document.getElementById(targetInputId).value = data.employee_cd;
+	      }
+	    };
+	  
+	    function fetchSearchList(apiUrl, grid) {
+	        // 1) 작업일자, 품목코드, 공정코드 값 가져오기
+	        const dailyDate = document.getElementById("dailyproductplan_sd").value; // "YYYY-MM-DD" 형식
+	        const productCd = document.getElementById("dailyproductplan_product_cd").value;
+	        const processCd = document.getElementById("process_cd").value;
+
+	        // 2) 만약 worker 모드가 아닐 때(=다른 모달)에는 dailyDate가 필요 없을 수도 있음.
+
+	        // 3) 최종 URL 생성
+	        let finalUrl = apiUrl; 
+	        // "/select_WORKABLE_EMPLOYEE_list"일 경우 → 쿼리 파라미터 추가
+	        if (apiUrl.includes("select_WORKABLE_EMPLOYEE_list")) {
+	          finalUrl += `?workDate=${encodeURIComponent(dailyDate)}`
+	                   + `&productCd=${encodeURIComponent(productCd)}`
+	                   + `&processCd=${encodeURIComponent(processCd)}`;
+	        }
+
+	        // 4) fetch 호출
+	        fetch(finalUrl, { method: "GET" })
+	          .then(response => response.json())
+	          .then(data => {
+	            grid.resetData(data);
+	          })
+	          .catch(error => console.error("검색 오류:", error));
+	      }
+
+	    function fetchSearchListWithInput(apiUrl, grid) {
+	        const searchValue = document.getElementById("searchInput").value.trim();
+	        if (!searchValue) {
+	          alert("검색어를 입력하세요.");
+	          return;
+	        }
+
+	        const dailyDate = document.getElementById("dailyproductplan_sd").value;
+	        const productCd = document.getElementById("dailyproductplan_product_cd").value;
+	        const processCd = document.getElementById("process_cd").value;
+
+	        let finalUrl = `${apiUrl}?searchValue=${encodeURIComponent(searchValue)}`;
+	        if (apiUrl.includes("select_WORKABLE_EMPLOYEE_list")) {
+	          finalUrl += `&workDate=${encodeURIComponent(dailyDate)}`
+	                   + `&productCd=${encodeURIComponent(productCd)}`
+	                   + `&processCd=${encodeURIComponent(processCd)}`;
+	        }
+
+	        fetch(finalUrl, { method: "GET" })
+	          .then(response => response.json())
+	          .then(data => {
+	            grid.resetData(data);
+	          })
+	          .catch(error => console.error("검색 오류:", error));
+	      }
+
+	  
+	    function openSearchModal(mode) {
+	      const modalTitleEl = document.getElementById('searchModalTitle');
+	      const searchInput  = document.getElementById('searchInput');
+	      const searchBtn    = document.getElementById('btnSearch');
+	  
+	      let apiUrl = "";
+	      let gridColumns = [];
+	      targetInputId = "";
+	      targetProductInputId = "";
+	      targetProductAmInputId = "";
+	  
+	      if (mode === "contract") {
+	        modalTitleEl.textContent = "수주번호 검색";
+	        apiUrl = "/select_CONTRACTCD_list";
+	        targetInputId = "contract_cd";
+	        targetProductInputId = "product_cd";
+	        targetProductAmInputId = "productplan_js";
+	        gridColumns = [
+	          { header: "수주번호", name: "contract_cd", align: "center" },
+	          { header: "품목코드", name: "product_cd", align: "center" },
+	          { header: "색상", name: "product_cr", align: "center" },
+	          { header: "사이즈", name: "product_sz", align: "center" }
+	        ];
+	      } else if (mode === "employee") {
+	        modalTitleEl.textContent = "담당자 검색";
+	        apiUrl = "/select_EMPLOYEE_list";
+	        targetInputId = "productplan_dd";
+	        gridColumns = [
+	          { header: "사원번호", name: "employee_cd", align: "center" },
+	          { header: "담당자명", name: "employee_nm", align: "center" },
+	          { header: "부서", name: "departmentName", align: "center" },
+	          { header: "직급", name: "positionName", align: "center" }
+	        ];
+	      } else if (mode === "warehouse") {
+	        modalTitleEl.textContent = "담당자 검색";
+	        apiUrl = "/select_WAREHOUSE_list";
+	        targetInputId = "warehouse_cd";
+	        gridColumns = [
+	          { header: "창고코드", name: "warehouse_cd", align: "center" },
+	          { header: "창고명", name: "warehouse_nm", align: "center" },
+	          { header: "창고유형", name: "warehouseName", align: "center" },
+	          { header: "비고", name: "warehouse_rm", align: "center" }
+	        ];
+	      } else if (mode === "worker") {
+	        modalTitleEl.textContent = "작업자 검색";
+	        apiUrl = "/select_WORKABLE_EMPLOYEE_list";
+	        targetInputId = "dailyproductplan_jb";
+	        gridColumns = [
+	            { header: "작업자번호", name: "employee_cd", align: "center" },  // 사원번호
+	            { header: "작업자명", name: "employee_nm", align: "center" },  // 사원명
+	            { header: "총 근무 시간", name: "total_hours", align: "center" },  // 총 근무 가능 시간 (예: 8시간)
+	            { header: "투입된 시간", name: "total_hours_used", align: "center" },  // 현재까지 배정된 시간
+	            { header: "공정 소요시간", name: "new_process_time", align: "center" },  // 추가할 공정 소요시간
+	            { header: "근무 가능시간", name: "final_remaining_hours", align: "center" },  // 최종 남은 근무 가능 시간
+	          ];
+
+	      }
+	      
+	  
+	      const searchGridContainer = document.getElementById('searchGrid');
+	      searchGridContainer.innerHTML = '';
+	      searchGrid = new tui.Grid({
+	        el: searchGridContainer,
+	        columns: gridColumns,
+	        scrollX: false,
+	        scrollY: true,
+	        rowHeaders: ["checkbox"],
+	        autoResize: true
+	      });
+	  
+	      fetchSearchList(apiUrl, searchGrid);
+	      searchBtn.onclick = () => fetchSearchListWithInput(apiUrl, searchGrid);
+	  
+	      searchGrid.off("dblclick");
+	      searchGrid.on("dblclick", (ev) => {
+	        const rowData = searchGrid.getRow(ev.rowKey);
+	        if (!rowData) return;
+	        console.log(rowData);
+	  
+	        // 모드별 액션 실행
+	        const action = modeActions[mode];
+	        if (action) action(rowData);
+	  
+	        // 검색 모달 닫기
+	        bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+	  
+	        // 모달 분기: worker면 일일생산계획 모달, 그 외는 생산계획 모달
+	        if (mode === "worker") {
+	          dailyProductPlanModal.show();
+	        } else {
+	          productPlanModal.show();
+	        }
+	      });
+	  
+	      // ★ 검색 모달을 띄울 때, 일일생산계획 모달이 열려있다면 z-index를 조정
+	      const searchModalEl = document.getElementById("searchModal");
+	      const dailyModalEl = document.getElementById("dailyProductPlanModal");
+	      if (dailyModalEl.classList.contains("show")) {
+	        dailyModalEl.style.zIndex = "1040";
+	      }
+	      searchModalEl.style.zIndex = "1060";
+	      const searchModal = new bootstrap.Modal(searchModalEl, { backdrop: false });
+	      searchModal.show();
+	  
+	      searchModalEl.addEventListener("hidden.bs.modal", () => {
+	        if (dailyModalEl.classList.contains("show")) {
+	          dailyModalEl.style.zIndex = "1055"; // 복구
+	        }
+	      });
+	    }
+	  
+	    // ---------------------------
+	    // subGrid1, subGrid2 초기화
+	    // ---------------------------
+	    subGrid1 = new tui.Grid({
+	      el: document.getElementById("subGrid1"),
+	      columns: [
+	        { header: '공정코드', name: 'process_cd' },
+	        { header: '생산제품', name: 'bomprocess_cd' },
+	        { header: '소요시간', name: 'bomprocess_rt' },
+	        { header: '후공정코드', name: 'bomprocess_ap' },
+	        { header: '공정순서', name: 'process_se', editor: { type: 'text' } }
+	      ],
+	      data: [],
+	      scrollX: false,
+	      scrollY: false
+	    });
+	    subGrid2 = new tui.Grid({
+	      el: document.getElementById("subGrid2"),
+	      columns: [
+	        { header: '자재 코드', name: 'material_cd' },
+	        { header: '자재 이름', name: 'material_nm' },
+	        { header: '자재 유형', name: 'material_gc' },
+	        { header: '총 소요량', name: 'totalAmount' }
+	      ],
+	      data: [],
+	      scrollX: false,
+	      scrollY: false
+	    });
+	  
+	    subGrid1.on('beforeEdit', (ev) => {
+	      const rowData = subGrid1.getRow(ev.rowKey);
+	      if (ev.columnName === 'process_se' && !['PHYLON','OUTSOLE','UPPER','INSOLE'].includes(rowData.process_cd)) {
+	        ev.stop();
+	      }
+	    });
+	  
+	    function fetchBOMProcessAndOrder(contractCd, productCd) {
+	      if (!contractCd || !productCd) return;
+	      const bomUrl = `/select_BOMPROCESS_list?product_cd=${encodeURIComponent(productCd)}`;
+	      const orderUrl = `/select_PRODUCTPLANPROCESS_list?contract_cd=${encodeURIComponent(contractCd)}&product_cd=${encodeURIComponent(productCd)}`;
+	      Promise.all([
+	        fetch(bomUrl).then(res => res.json()),
+	        fetch(orderUrl).then(res => res.json())
+	      ])
+	      .then(([bomProcessData, planProcessData]) => {
+	        const orderMap = {};
+	        planProcessData.forEach(item => { orderMap[item.process_cd] = item.process_se; });
+	        const merged = bomProcessData.map(bom => ({
+	          ...bom,
+	          process_se: orderMap[bom.process_cd] || ""
+	        }));
+	        subGrid1.resetData(merged);
+	      })
+	      .catch(err => {
+	        console.error("공정+공정순서 병합 오류:", err);
+	        alert("BOMPROCESS / PRODUCTPLANPROCESS 조회 중 오류");
+	      });
+	    }
+	    function fetchAllMaterials(productCd) {
+	      if (!productCd) {
+	        alert("제품코드가 없습니다.");
+	        return;
+	      }
+	      fetch(`/select_BOMMATERIALS?product_cd=${encodeURIComponent(productCd)}`)
+	        .then(response => {
+	          if (!response.ok) throw new Error("재료 조회 실패");
+	          return response.json();
+	        })
+	        .then(data => { subGrid2.resetData(data); })
+	        .catch(err => {
+	          console.error("BOM 조회 오류:", err);
+	          alert("재료 조회 중 오류 발생: " + err.message);
+	        });
+	    }
+	  
+	    // ---------------------------
+	    // 생산계획 저장
+	    // ---------------------------
+	    document.getElementById("btnSaveProcessOrder").addEventListener("click", () => {
+	      const productplan = {
+	        contract_cd: contractCdInput.value,
+	        product_cd: productCdInput.value,
+	        productplan_sd: productplanSdInput.value,
+	        productplan_ed: productplanEdInput.value,
+	        productplan_dd: productplanDdInput.value,
+	        warehouse_cd: warehouseCdInput.value,
+	        productplan_js: productplanJsInput.value,
+	        productplan_bg: productplanBgInput.value
+	      };
+	      const allRows = subGrid1.getData();
+	      const processList = allRows.filter(r => r.process_se && r.process_se.trim() !== "")
+	        .map(r => ({ process_cd: r.process_cd, process_se: r.process_se }));
+	      const requestBody = { productplan, processList };
+	  
+	      fetch("/save_PRODUCTPLAN", {
+	        method: "POST",
+	        headers: {
+	          "Content-Type": "application/json",
+	          [csrfHeader]: csrfToken
+	        },
+	        body: JSON.stringify(requestBody)
+	      })
+	      .then(res => {
+	        if (!res.ok) throw new Error("저장 실패");
+	        return res.json();
+	      })
+	      .then(data => {
+	        alert("저장 완료");
+	        productPlanModal.hide();
+	        fetchProductPlanList();
+	      })
+	      .catch(err => {
+	        console.error("저장 오류:", err);
+	        alert("저장 중 오류 발생");
+	      });
+	    });
+	  
+	    // ---------------------------
+	    // 메인 그리드 초기화
+	    // ---------------------------
+	    const grid = new tui.Grid({
+	      el: document.getElementById("grid"),
+	      rowHeaders: ['checkbox'],
+	      columns: [
+	        { header: '수주번호', name: 'contract_cd' },
+	        { header: '품목코드', name: 'product_cd' },
+	        { header: '작업 시작일', name: 'productplan_sd' },
+	        { header: '작업 종료일', name: 'productplan_ed' },
+	        { header: '담당자', name: 'productplan_dd' },
+	        { header: '지시수량', name: 'productplan_js' },
+	        { header: '창고코드', name: 'warehouse_cd' },
+	        { header: '계획상태', name: 'productplan_st' },
+	        { header: '비고', name: 'productplan_bg' }
+	      ],
+	      data: [],
+	      scrollX: false,
+	      scrollY: false
+	    });
+	  
+	    // ---------------------------
+	    // 생산계획 목록 조회
+	    // ---------------------------
+	    function fetchProductPlanList() {
+	      fetch("select_PRODUCTPLAN_list", {
+	        method: "GET",
+	        headers: { "Content-Type": "application/json" }
+	      })
+	      .then(response => response.json())
+	      .then(data => {
+	        const formattedData = data.map(plan => ({
+	          ...plan,
+	          productplan_sd: plan.productplan_sd ? getDate(new Date(plan.productplan_sd)) : "",
+	          productplan_ed: plan.productplan_ed ? getDate(new Date(plan.productplan_ed)) : ""
+	        }));
+	        grid.resetData(formattedData);
+	      })
+	      .catch(error => console.error("데이터 조회 중 오류 발생:", error));
+	    }
+	  
+	    // ---------------------------
+	    // 생산계획 모달 열기
+	    // ---------------------------
+	    function openProductPlanModal(mode, data = null) {
+	      modalMode.value = mode;
+	      if (mode === "insert") {
+	        modalTitle.textContent = "생산계획 등록";
+	        const today = new Date();
+	        const oneMonthLater = new Date();
+	        oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+	        rangePicker.setStartDate(today);
+	        rangePicker.setEndDate(oneMonthLater);
+	        productplanSdInput.value = formatDate(today);
+	        productplanEdInput.value = formatDate(oneMonthLater);
+	  
+	        contractCdInput.value = "";
+	        productCdInput.value = "";
+	        productplanDdInput.value = "";
+	        warehouseCdInput.value = "";
+	        productplanJsInput.value = "";
+	        productplanBgInput.value = "";
+	  
+	        subGrid1.resetData([]);
+	        subGrid2.resetData([]);
+	      } else if (mode === "update" && data) {
+	        modalTitle.textContent = "생산계획 수정";
+	        contractCdInput.value = data.contract_cd;
+	        productCdInput.value = data.product_cd;
+	        productplanSdInput.value = data.productplan_sd || "";
+	        productplanEdInput.value = data.productplan_ed || "";
+	        productplanDdInput.value = data.productplan_dd || "";
+	        warehouseCdInput.value = data.warehouse_cd || "";
+	        productplanJsInput.value = data.productplan_js || "";
+	        productplanBgInput.value = data.productplan_bg || "";
+	  
+	        if (data.productplan_sd && data.productplan_ed) {
+	          const start = new Date(data.productplan_sd);
+	          const end = new Date(data.productplan_ed);
+	          rangePicker.setStartDate(start);
+	          rangePicker.setEndDate(end);
+	        }
+	        if (data.product_cd && data.contract_cd) {
+	          fetchBOMProcessAndOrder(data.contract_cd, data.product_cd);
+	          fetchAllMaterials(data.product_cd);
+	        }
+	      }
+	      productPlanModal.show();
+	    }
+	  
+	    document.getElementById("btn_insert").addEventListener("click", () => { openProductPlanModal("insert"); });
+	  
+	    grid.on("dblclick", (ev) => {
+	      const rowData = grid.getRow(ev.rowKey);
+	      if (!rowData) return;
+	      if (rowData.productplan_st === "대기") {
+	        openProductPlanModal("update", rowData);
+	      } else {
+	        alert("대기 상태인 생산계획만 수정할 수 있습니다.");
+	      }
+	    });
+	  
+	    // ---------------------------
+	    // 생산계획 삭제
+	    // ---------------------------
+	    document.getElementById("btn_delete").addEventListener("click", () => {
+	      const checkedRows = grid.getCheckedRows();
+	      if (checkedRows.length === 0) {
+	        alert("삭제할 대상을 선택하세요.");
+	        return;
+	      }
+	      const deletableRows = checkedRows.filter(row => row.productplan_st === "대기");
+	      if (deletableRows.length === 0) {
+	        alert("대기 상태인 생산계획만 삭제할 수 있습니다.");
+	        return;
+	      }
+	      const requestBody = deletableRows.map(row => ({
+	        contract_cd: row.contract_cd,
+	        product_cd: row.product_cd
+	      }));
+	      fetch("/delete_PRODUCTPLAN_list", {
+	        method: "POST",
+	        headers: { "Content-Type": "application/json", [csrfHeader]: csrfToken },
+	        body: JSON.stringify(requestBody)
+	      })
+	      .then(res => {
+	        if (!res.ok) throw new Error("삭제 실패");
+	        return res.json();
+	      })
+	      .then(data => {
+	        if (data.status === "SUCCESS") {
+	          alert("삭제 완료");
+	          fetchProductPlanList();
+	        }
+	      })
+	      .catch(err => {
+	        console.error("삭제 오류:", err);
+	        alert("삭제 중 오류 발생");
+	      });
+	    });
+	  
+	    // ---------------------------
+	    // 일일생산계획 모달 열기
+	    // ---------------------------
+	    function openDailyProductPlanModal() {
+	      const checkedRows = grid.getCheckedRows();
+	      if (checkedRows.length !== 1) {
+	        alert("일일생산계획 등록은 하나의 생산계획을 선택해야 합니다.");
+	        return;
+	      }
+	      const selectedPlan = checkedRows[0];
+	      const contractCd = selectedPlan.contract_cd;
+	      const productCd = selectedPlan.product_cd;
+	  
+	      // 1) 날짜 초기화 (오늘)
+	      dailyPicker.setDate(new Date());
+	      document.getElementById("dailyproductplan_sd").value = getDate(today);
+	      document.getElementById("dailyproductplan_jb").value = "";
+	      document.getElementById("dailyproductplan_js").value = "";
+	  
+	      // 2) 품목코드 select
+	      const productSelect = document.getElementById("dailyproductplan_product_cd");
+	      productSelect.innerHTML = "";
+	      const opt = document.createElement("option");
+	      opt.value = productCd;
+	      opt.text = productCd;
+	      productSelect.appendChild(opt);
+	  
+	      // 3) 공정코드 select
+	      const processSelect = document.getElementById("process_cd");
+	      processSelect.innerHTML = "";
+	      fetch(`/select_PROCESS_LIST?contract_cd=${contractCd}&product_cd=${productCd}`)
+	        .then(res => {
+	          if (!res.ok) throw new Error("공정 조회 실패");
+	          return res.json();
+	        })
+	        .then(data => {
+	          data.forEach(proc => {
+	            const option = document.createElement("option");
+	            option.value = proc.process_cd;
+	            option.text = proc.process_cd;
+	            processSelect.appendChild(option);
+	          });
+	        })
+	        .catch(err => {
+	          console.error("공정코드 조회 오류:", err);
+	          alert("공정코드 조회 중 오류 발생");
+	        });
+	  
+	      // 4) 색상/사이즈 select
+	      const colorSelect = document.getElementById("dailyproductplan_cr");
+	      const sizeSelect = document.getElementById("dailyproductplan_sz");
+	      colorSelect.innerHTML = "";
+	      sizeSelect.innerHTML = "";
+	      contractDetailList = [];
+	  
+	      fetch(`/select_CONTRACTDETAIL_colorsizes?contract_cd=${contractCd}&product_cd=${productCd}`)
+	        .then(res => {
+	          if (!res.ok) throw new Error("컬러/사이즈 조회 실패");
+	          return res.json();
+	        })
+	        .then(data => {
+	          contractDetailList = data;
+	          const uniqueColors = [...new Set(data.map(item => item.product_cr))];
+	          uniqueColors.forEach(cr => {
+	            const copt = document.createElement("option");
+	            copt.value = cr;
+	            copt.text = cr;
+	            colorSelect.appendChild(copt);
+	          });
+	          if (uniqueColors.length > 0) {
+	            colorSelect.value = uniqueColors[0];
+	            updateSizeSelect();
+	          }
+	        })
+	        .catch(err => {
+	          console.error("컬러/사이즈 조회 오류:", err);
+	          alert("컬러/사이즈 조회 중 오류 발생");
+	        });
+	  
+	      colorSelect.onchange = () => updateSizeSelect();
+	      sizeSelect.onchange = () => updateDailyAmount();
+	  
+	      function updateSizeSelect() {
+	        const selectedCr = colorSelect.value;
+	        const matched = contractDetailList.filter(item => item.product_cr === selectedCr);
+	        const uniqueSizes = [...new Set(matched.map(m => m.product_sz))];
+	        sizeSelect.innerHTML = "";
+	        uniqueSizes.forEach(sz => {
+	          const sopt = document.createElement("option");
+	          sopt.value = sz;
+	          sopt.text = sz;
+	          sizeSelect.appendChild(sopt);
+	        });
+	        if (uniqueSizes.length > 0) {
+	          sizeSelect.value = uniqueSizes[0];
+	        }
+	        updateDailyAmount();
+	      }
+	  
+	      function updateDailyAmount() {
+	        const cr = colorSelect.value;
+	        const sz = sizeSelect.value;
+	        const found = contractDetailList.find(item => item.product_cr === cr && item.product_sz === sz);
+	        document.getElementById("dailyproductplan_js").value = found ? found.product_am : "";
+	      }
+	  
+	      // 5) 일일생산계획 현황 조회
+	      fetchDailyPlanList(contractCd, productCd);
+	  
+	      dailyProductPlanModal.show();
+	    }
+	  
+	    document.getElementById("btn_insert_daily").addEventListener("click", () => { openDailyProductPlanModal(); });
+	  
+	    function fetchDailyPlanList(contractCd, productCd) {
+	      fetch(`/select_DAILYPLAN_list?contract_cd=${contractCd}&product_cd=${productCd}`)
+	        .then(res => {
+	          if (!res.ok) throw new Error("일일생산계획 조회 실패");
+	          return res.json();
+	        })
+	        .then(data => {
+	          const formatted = data.map(d => ({
+	            ...d,
+	            dailyproductplan_sd: d.dailyproductplan_sd ? getDate(new Date(d.dailyproductplan_sd)) : ""
+	          }));
+	          dailyGrid.resetData(formatted);
+	        })
+	        .catch(err => {
+	          console.error("일일생산계획 조회 오류:", err);
+	          alert("일일생산계획 조회 중 오류 발생");
+	        });
+	    }
+	  
+	    // 일일생산계획 저장
+	    document.getElementById("btnSaveDailyPlan").addEventListener("click", () => {
+	      const dailyDate   = document.getElementById("dailyproductplan_sd").value;
+	      const processCd   = document.getElementById("process_cd").value;
+	      const workerCd    = document.getElementById("dailyproductplan_jb").value;
+	      const productCdDD = document.getElementById("dailyproductplan_product_cd").value;
+	      const colorVal    = document.getElementById("dailyproductplan_cr").value;
+	      const sizeVal     = document.getElementById("dailyproductplan_sz").value;
+	      const dailyJs     = document.getElementById("dailyproductplan_js").value;
+	  
+	      const checkedRows = grid.getCheckedRows();
+	      if (checkedRows.length !== 1) {
+	        alert("선택된 생산계획이 없습니다.");
+	        return;
+	      }
+	      const plan = checkedRows[0];
+	  
+	      const reqBody = {
+	        dailyproductplan_sd: dailyDate,
+	        contract_cd: plan.contract_cd,
+	        product_cd: productCdDD,
+	        process_cd: processCd,
+	        product_cr: colorVal,
+	        product_sz: sizeVal,
+	        dailyproductplan_jb: workerCd,
+	        dailyproductplan_js: dailyJs
+	      };
+	  
+	      fetch("/save_DAILYPLAN", {
+	        method: "POST",
+	        headers: {
+	          "Content-Type": "application/json",
+	          [csrfHeader]: csrfToken
+	        },
+	        body: JSON.stringify(reqBody)
+	      })
+	      .then(res => {
+	        if (!res.ok) throw new Error("일일생산계획 저장 실패");
+	        return res.json();
+	      })
+	      .then(data => {
+	        alert("일일생산계획 저장 완료");
+	        dailyProductPlanModal.hide();
+	        fetchDailyPlanList(plan.contract_cd, productCdDD);
+	      })
+	      .catch(err => {
+	        console.error("일일생산계획 저장 오류:", err);
+	        alert("일일생산계획 저장 중 오류 발생");
+	      });
+	    });
+	  
+	    // 필터 모듈 초기화
+	    const filterConfig = [
+	      { key: 'startDate', label: '시작일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+	      { key: 'endDate', label: '종료일', type: 'date', format: 'YYYY-MM-dd', value: '' },
+	      { key: 'contract_cd', label: '수주번호', type: 'text', col: 'col-md-3', placeholder: '수주번호 입력' },
+	      { key: 'product_cd', label: '품목코드', type: 'text', col: 'col-md-3', placeholder: '품목코드 입력' },
+	      {
+	        key: 'productplan_st', label: '계획상태', type: 'select', col: 'col-md-3',
+	        list: [
+	          { value: 'ALL', text: '전체' },
+	          { value: 'PENDING', text: '대기' },
+	          { value: 'IN_PROGRESS', text: '진행중' },
+	          { value: 'COMPLETED', text: '완료' }
+	        ]
+	      }
+	    ];
+	    initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	      console.log("필터값:", filterValues);
+	      fetchProductPlanList();
+	    });
+	  });
+	</script>
+</body>
 </html>
