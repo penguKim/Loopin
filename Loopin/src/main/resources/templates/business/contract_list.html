@@ -69,6 +69,34 @@
 </body>
 
 <script>
+	function disableAllFields(isDisabled) {
+		// 모든 입력 필드 비활성화
+		$('#contractInsertModal input, #contractInsertModal textarea, #contractInsertModal select')
+			.prop('disabled', isDisabled);
+		
+		// 모달 내 모든 버튼 비활성화
+		$('#contractInsertModal button:not(.btn-secondary[data-bs-dismiss="modal"])')
+		.prop('disabled', isDisabled);
+	
+	    // "X" 닫기 버튼은 항상 활성화
+	    $('#contractInsertModal .btn-close').prop('disabled', false);
+		
+		// 제품 추가/삭제 버튼 숨김
+		$('#addProductBtn, #deleteProductBtn').toggle(!isDisabled);
+	
+	    // 등록/수정 버튼 숨김
+		$('#modal_submit_button').toggle(!isDisabled);
+	
+		// 제품 그리드 편집 불가능하게 설정
+		if (typeof productGrid !== "undefined") {
+			productGrid.setColumns(productGrid.getColumns().map(column => ({
+				...column,
+				editor: isDisabled ? false : "text" // 편집 불가능하게 설정
+				})));
+			}
+	}
+
+
 	// 수주 상세 정보 불러오기 함수 (수정 모드에서 사용)
 	function fetchContractDetails(contract_cd) {
 	    console.log(`fetchContractDetails 호출: contract_cd=${contract_cd}`); // 디버깅 로그 추가
@@ -156,9 +184,13 @@
 	    $('#contractInsertModal').remove();
 
 		// 모달 제목 및 버튼 텍스트 설정
-		const modalTitle = mode === 'edit' ? '수주 수정' : '수주 등록';
-		const submitButtonText = mode === 'edit' ? '수정' : '등록';
+		let modalTitle = mode === 'edit' ? '수주 수정' : '수주 등록';
+		let submitButtonText = mode === 'edit' ? '수정' : '등록';
 			
+	    let contractStatus = (rowData && rowData.contract && rowData.contract.contract_st)
+        ? rowData.contract.contract_st.trim()
+        : "진행중";
+		
 	    // 모달 HTML 생성
 	    const modalHtml = `
 	        <div class="modal" id="contractInsertModal" tabindex="-1" aria-labelledby="contractInsertModalLabel" aria-hidden="true">
@@ -240,8 +272,6 @@
 	            </div>
 	        </div>`;
 
-	    var status_list = window.status_list || [];
-
 		// 모달 HTML을 동적으로 body에 추가
 		document.body.insertAdjacentHTML('beforeend', modalHtml);
 
@@ -252,25 +282,12 @@
 		    return;
 		}
 		
-	    
-		// 셀렉트 박스 관련 함수
-		function populateSelectOptions(selectId, dataList) {
-		    const selectElement = document.getElementById(selectId);
-		    if (Array.isArray(dataList) && dataList.length > 0) {
-		        dataList.forEach(item => {
-		            const option = document.createElement('option');
-		            option.value = item.common_cc;
-		            option.textContent = item.common_nm;
-		            selectElement.appendChild(option);
-		        });
-		    }
-		}
-
-		// 거래처 구분 (contract_st) 옵션 추가
-		populateSelectOptions('contract_st', window.status_list);
-		    
-	    // Bootstrap 모달 표시
-	    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
+   		// Bootstrap 모달 생성 및 ESC/배경 클릭 방지 설정
+		modalInstance = new bootstrap.Modal(modalElement, {
+			backdrop: 'static',  // 모달 바깥 클릭 방지
+			keyboard: false      // ESC 키 방지
+		});
+   		
 	    modalInstance.show();
 		    
 	    // 제품 그리드 초기화
@@ -308,6 +325,16 @@
 			    productGrid.resetData(rowData.details);
 			}
 		}
+		
+		
+		// 완료 시 처리
+		if (contractStatus === "완료") {
+			disableAllFields(true);
+			modalTitle = '수주 완료';
+		} 
+		
+		// 변경된 modalTitle을 모달에 적용
+		$('#dynamicModalLabel').text(modalTitle);
 		
 		// 행 삭제 버튼 클릭 이벤트
 		$('#deleteProductBtn').on('click', function () {
