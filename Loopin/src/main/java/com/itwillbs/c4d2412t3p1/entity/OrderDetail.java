@@ -39,7 +39,7 @@ public class OrderDetail {
     private Long material_am;
 
     @Column(name = "order_ct")
-    private BigDecimal order_ct;
+    private Long order_ct;
 
     @Column(name = "order_ed")
     private String order_ed;
