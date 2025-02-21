@@ -224,8 +224,12 @@
 		}
 		
 	    
-	    // Bootstrap 모달 표시
-	    const modalInstance = new bootstrap.Modal(document.getElementById('contractInsertModal'));
+		// Bootstrap 모달 생성 및 ESC/배경 클릭 방지 설정
+		modalInstance = new bootstrap.Modal(modalElement, {
+			backdrop: 'static',  // 모달 바깥 클릭 방지
+			keyboard: false      // ESC 키 방지
+		});
+		
 	    modalInstance.show();
 		    
 	    // 제품 그리드 초기화

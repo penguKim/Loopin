@@ -18,8 +18,8 @@ public class OrderDTO {
 	private String order_ps;
 	private String order_sd;
 	private String order_ed;
-	private long order_am;
-	private BigDecimal order_mn;
+	private Long order_am;
+	private Long order_mn;
 	private String order_st;
 	private String order_rm;
 	private String order_wr;

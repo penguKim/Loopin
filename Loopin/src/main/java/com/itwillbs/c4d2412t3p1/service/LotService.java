@@ -73,5 +73,15 @@ public class LotService {
 	public List<Map<String, Object>> select_RESULT_list(Map<String, Object> params) {
 		return lotMapper.select_RESULT_list(params);
 	}
+
+
+	public List<Map<String, Object>> select_LOTHISTORY_list(String lot_cd) {
+		return lotMapper.select_LOTHISTORY_list(lot_cd);
+	}
+
+
+	public List<Map<String, Object>> select_RESULT_detail(String contract_cd) {
+		return lotMapper.select_RESULT_detail(contract_cd);
+	}
 	
 }

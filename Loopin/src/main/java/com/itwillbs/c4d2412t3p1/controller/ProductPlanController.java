@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.itwillbs.c4d2412t3p1.domain.BomMaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
+import com.itwillbs.c4d2412t3p1.domain.ContractDetailProductInfoDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
@@ -24,6 +25,7 @@ import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest.ProcessOrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
+import com.itwillbs.c4d2412t3p1.domain.WorkableEmployeeProjection;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Productplan;
 import com.itwillbs.c4d2412t3p1.service.ProductplanService;
@@ -126,13 +128,41 @@ public class ProductPlanController {
 
 	@GetMapping("/select_PROCESS_LIST")
 	@ResponseBody
-	public ResponseEntity<List<ProductPlanProcessDTO>> selectProcessList(
-	        @RequestParam("contract_cd") String contractCd,
-	        @RequestParam("product_cd") String productCd) {
+	public ResponseEntity<List<ProductPlanProcessDTO>> selectProcessList(@RequestParam("contract_cd") String contractCd,
+			@RequestParam("product_cd") String productCd) {
 
-	    List<ProductPlanProcessDTO> processList = productplanService.getProcessList(contractCd, productCd);
-	    return ResponseEntity.ok(processList);
+		List<ProductPlanProcessDTO> processList = productplanService.getProcessList(contractCd, productCd);
+		return ResponseEntity.ok(processList);
 	}
 
+	/**
+	 * (수주번호, 품목코드)에 해당하는 Color/Size/수량 리스트 반환
+	 */
+	@GetMapping("/select_CONTRACTDETAIL_colorsizes")
+	@ResponseBody // JSON 응답
+	public ResponseEntity<List<ContractDetailProductInfoDTO>> selectContractDetailColorSizes(
+			@RequestParam("contract_cd") String contractCd, @RequestParam("product_cd") String productCd) {
+		log.info("색상·사이즈 조회 요청: contractCd=" + contractCd + ", productCd=" + productCd);
+
+		// 1) Service 호출 -> DTO 목록
+		List<ContractDetailProductInfoDTO> list = productplanService.findColorSizeList(contractCd, productCd);
+		log.info(list.toString());
+
+		// 2) ResponseEntity로 반환
+		return ResponseEntity.ok(list);
+	}
+
+	/**
+	 * 일일생산계획 모달에서 "작업자" 검색 시 → 근무 가능 사원 목록 ex)
+	 */
+	@GetMapping("/select_WORKABLE_EMPLOYEE_list")
+	@ResponseBody
+	public ResponseEntity<List<WorkableEmployeeProjection>> select_WORKABLE_EMPLOYEE_list(
+			@RequestParam("workDate") String workDate, @RequestParam("productCd") String productCd,
+			@RequestParam("processCd") String processCd) {
+		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
+				processCd);
+		return ResponseEntity.ok(list);
+	}
 
 }

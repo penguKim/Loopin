@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
 import com.itwillbs.c4d2412t3p1.entity.Bom;
 import com.itwillbs.c4d2412t3p1.entity.BomId;
 
@@ -27,5 +28,7 @@ public interface BomRepository extends JpaRepository<Bom, BomId> {
 			   CONNECT BY PRIOR b.bom_cd = b.product_cd
 			""", nativeQuery = true)
 	List<Object[]> findRecursiveBomByProductCd(@Param("productCd") String productCd);
+
+	void save(BomallDTO bomItem);
 
 }

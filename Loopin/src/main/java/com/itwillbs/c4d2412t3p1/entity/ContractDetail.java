@@ -47,7 +47,7 @@ public class ContractDetail {
     private Long product_am;
 
     @Column(name = "contract_ct")
-    private BigDecimal contract_ct;
+    private Long contract_ct;
 
     @Column(name = "contract_ed")
     private String contract_ed;

@@ -225,52 +225,51 @@ public class EmployeeService {
     	return EmployeeRepository.existsByEmployeeId(employee_id) == 0;// 아이디 존재 여부 체크
     }
 
-//    public List<Employee> select_FILTERED_EMPLOYEE(EmployeeFilterRequest filterRequest) {
-//    	return EmployeeRepository.select_FILTERED_EMPLOYEE(filterRequest);
-//    }
+    public List<Map<String, Object>> select_EMPLOYEE_DETAIL(String type, String currentCd) {
 
-	public List<Map<String, Object>> select_EMPLOYEE_DETAIL() {
+        List<Object[]> result;
+        
+        if (type != null && type.equals("1")) {
+            result = EmployeeRepository.findAllWithDetailsCd(currentCd);
+        } else {
+            result = EmployeeRepository.findAllWithDetails();
+        }
 
-		List<Object[]> result;
-		
-		result = EmployeeRepository.findAllWithDetails();
-		
-		return result.stream().map(row -> {
-			Map<String, Object> employee = new HashMap<>();
-			employee.put("employee_cd", row[0]);
-		    employee.put("employee_id", row[1]);
-		    employee.put("employee_pw", row[2]);
-		    employee.put("employee_dp", row[3]);
-		    employee.put("employee_gd", row[4]);
-		    employee.put("employee_hd", row[5]);
-		    employee.put("employee_rd", row[6]);
-		    employee.put("employee_rr", row[7]);
-		    employee.put("employee_cg", row[8]);
-		    employee.put("employee_nt", row[9]);
-		    employee.put("employee_nm", row[10]);
-		    employee.put("employee_bd", row[11]);
-		    employee.put("employee_ad", row[12]);
-		    employee.put("employee_sb", row[13]);
-		    employee.put("employee_ph", row[14]);
-		    employee.put("employee_em", row[15]);
-		    employee.put("employee_pi", row[16]);
-		    employee.put("employee_bs", row[17]);
-		    employee.put("employee_bk", row[18]);
-		    employee.put("employee_an", row[19]);
-		    employee.put("employee_dt", row[20]);
-		    employee.put("employee_wr", row[21]);
-		    employee.put("employee_wd", row[22]);
-		    employee.put("employee_mf", row[23]);
-		    employee.put("employee_md", row[24]);
-		    employee.put("employee_mg", row[25]);
-		    employee.put("employee_rl", row[26]);
-		    employee.put("employee_us", row[27]);
-		    
-		    log.info(employee + "!!!!!!!!!!@@@@@@@@@");
-		    
-			return employee;
-		}).collect(Collectors.toList());
-	}
+        return result.stream().map(row -> {
+            Map<String, Object> employee = new HashMap<>();
+            employee.put("employee_cd", row[0]);
+            employee.put("employee_id", row[1]);
+            employee.put("employee_pw", row[2]);
+            employee.put("employee_dp", row[3]);
+            employee.put("employee_gd", row[4]);
+            employee.put("employee_hd", row[5]);
+            employee.put("employee_rd", row[6]);
+            employee.put("employee_rr", row[7]);
+            employee.put("employee_cg", row[8]);
+            employee.put("employee_nt", row[9]);
+            employee.put("employee_nm", row[10]);
+            employee.put("employee_bd", row[11]);
+            employee.put("employee_ad", row[12]);
+            employee.put("employee_sb", row[13]);
+            employee.put("employee_ph", row[14]);
+            employee.put("employee_em", row[15]);
+            employee.put("employee_pi", row[16]);
+            employee.put("employee_bs", row[17]);
+            employee.put("employee_bk", row[18]);
+            employee.put("employee_an", row[19]);
+            employee.put("employee_dt", row[20]);
+            employee.put("employee_wr", row[21]);
+            employee.put("employee_wd", row[22]);
+            employee.put("employee_mf", row[23]);
+            employee.put("employee_md", row[24]);
+            employee.put("employee_mg", row[25]);
+            employee.put("employee_rl", row[26]);
+            employee.put("employee_us", row[27]);
+
+            return employee;
+        }).collect(Collectors.toList());
+    }
+
 
 	public List<Map<String, Object>> select_EMPLOYEE_DETAIL_CD(String currentCd) {
 
@@ -311,8 +310,6 @@ public class EmployeeService {
 		    employee.put("employee_rl", row[26]);
 		    employee.put("employee_us", row[27]);
 		    
-		    log.info(employee + "!!!!!!!!!!@@@@@@@@@");
-		    
 			return employee;
 		}).collect(Collectors.toList());
 	}
@@ -351,7 +348,6 @@ public class EmployeeService {
 	        employee.put("employee_rl", row[26]);
 	        employee.put("employee_us", row[27]);
 
-	        System.out.println("@@@@@@@@" + employee);
 	        return employee;
 	    }).collect(Collectors.toList());
 	}
@@ -391,7 +387,6 @@ public class EmployeeService {
 			employee.put("employee_rl", row[26]);
 			employee.put("employee_us", row[27]);
 			
-			System.out.println("@@@@@@@@" + employee);
 			return employee;
 		}).collect(Collectors.toList());
 	}
@@ -440,7 +435,6 @@ public class EmployeeService {
 			employee.put("employee_rl", row[26]);
 			employee.put("employee_us", row[27]);
 			
-			System.out.println("@@@@@@@@" + employee);
 			return employee;
 		}).collect(Collectors.toList());
 	}

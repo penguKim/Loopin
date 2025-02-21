@@ -621,7 +621,7 @@ function setGridTheme() {
 		row: {
 			even: {
 				background: '#FFFFFF',
-			}
+			},
 		},
 		cell: {
 	        normal: {
