@@ -221,8 +221,8 @@
 	// 트리 생성 함수
 	function make_chart(data){
 		chart.orgchart({
-			'data': {"name":"조던1","title":"제품","lot_st":"JORDAN001","process":"대기중","children":[{"name":"UPPER","title":"반제품","lot_st":"BANTEST","process":"진행중","children":null},{"name":"INSOLE","title":"반제품","lot_st":"IN001","process":"진행중","children":null},{"name":"STOCK-FIT","title":"반제품","lot_st":"SOLE001","process":"진행중","children":[{"name":"PHYLON","title":"반제품","lot_st":"BAN001","process":"완료"},{"name":"OUTSOLE","title":"반제품","lot_st":"OUT001","process":"완료"}]}]}, // 데이터 입력
-			'nodeContent': data.lot_st, // 노드에 표시할 속성
+			'data': data, // 데이터 입력
+			'nodeContent': data.name, // 노드에 표시할 속성
 			//'pan': true, // 패닝 활성화
 			'direction': 't2b', // 방향 설정 (bottom to top)
 			'nodeTemplate': function(data) {
@@ -308,13 +308,8 @@
 	    modalElement.addEventListener("hidden.bs.modal", function () {
 	        modalElement.remove(); // 모달 삭제
 
-	        // 🔹 모달 내부 모든 요소에서 포커스 제거
 	        document.activeElement.blur();
-
-	        // 🔹 모달 백드롭 제거
 	        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-
-	        // 🔹 body 상태 초기화 (스크롤 가능하도록 복구)
 	        document.body.classList.remove("modal-open");
 	        document.body.style.overflow = "";
 	    });
@@ -330,9 +325,23 @@
 	
 	// 모달 그리드 생성
 	function make_modal_grid(data) {
+		
+		
+		const dataSource = {
+		    api: {
+		        readData: {
+		            url: '/select_LOTHISTORY_list',
+		            method: 'GET',
+		            initParams: {
+						lot_cd: data.lot_cd
+					}
+		        }
+		    }
+		}
+		
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : [], //{api: {readData: {url: '/select_detail_ANNUAL', method: 'GET', initParams: {lot_cd: data.lot_cd} }}}
+			data : {api: {readData: {url: '/select_LOTHISTORY_list', method: 'GET',initParams: {lot_cd: data.lot_cd}}}},
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
@@ -340,26 +349,21 @@
 			],
 			bodyHeight : 200,
 			columns : [
-				{header : '로트번호', name : 'lot_cd', sortable : true, filter: 'text'},
-				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '색상', name : 'product_cr', sortable : true, filter: 'text'}, 
-				{header : '사이즈', name : 'product_sz', sortable : true, filter: 'text'}, 
-				{header : '작업시작일', name : 'lothistory_st', sortable : true, filter: 'text'}, 
-				{header : '작업종료일', name : 'lothistory_en', sortable : true, filter: 'text'}, 
-				{header : '작업수량', name : 'lothistory_wq', sortable : true, filter: 'text'}, 
-				{header : '불량수량', name : 'lothistory_bq', sortable : true, filter: 'text'}, 
-				{header : '완료여부', name : 'workorder_st', sortable : true, filter: 'select',
-					formatter: function({value}) {
-						return value == true ? '사용' : value == false ? '미사용' : '';
-					}
-				}, 
+				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text', width: 200,},
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
+				{header : '색상', name : 'PRODUCT_CR', sortable : true, filter: 'text'}, 
+				{header : '사이즈', name : 'PRODUCT_SZ', sortable : true, filter: 'text'}, 
+				{header : '작업시작일', name : 'LOTHISTORY_ST', sortable : true, filter: 'text'}, 
+				{header : '작업종료일', name : 'LOTHISTORY_EN', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'LOTHISTORY_WQ', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'LOTHISTORY_BQ', sortable : true, filter: 'text'}, 
 			],
 			summary: {
 				height: 40,
 				position: 'bottom', // or 'top'
 				columnContent: {
-					workorder_st: {
+					LOTHISTORY_BQ: {
 						template: (valueMap) => {
 							return `총 ${valueMap.cnt} 건`
 						}
@@ -367,7 +371,13 @@
 				}
 			},
 		});
+		
+		console.log();
 	}
+	
+	
+	
+	
 	
 </script>
 </html>
