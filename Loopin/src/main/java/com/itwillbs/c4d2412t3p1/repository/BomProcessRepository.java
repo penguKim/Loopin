@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
+import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.BomProcessID;
 
@@ -50,9 +52,14 @@ public interface BomProcessRepository extends JpaRepository<BomProcess, BomProce
 			 ORDER BY LVL
 			""", nativeQuery = true)
 	List<Object[]> selectRawData(@Param("product_cd") String productCd);
-	
+
 	// BomProcessId : (product_cd, process_cd, bomprocess_cd)
 	// 생산계획 등록 시 원자재, 부자재 소요량 추적 위함
-    @Query("SELECT bp FROM BomProcess bp WHERE bp.product_cd = :productCd")
-    List<BomProcess> findByProductCd(@Param("productCd") String productCd);
+	@Query("SELECT bp FROM BomProcess bp WHERE bp.product_cd = :productCd")
+	List<BomProcess> findByProductCd(@Param("productCd") String productCd);
+
+	@Query("SELECT DISTINCT new com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO(b.id.process_cd, '') "
+			+ "FROM BomProcess b " + "WHERE b.id.product_cd = :productCd")
+	List<ProductPlanProcessDTO> findBomProcessesByProduct(@Param("productCd") String productCd);
+
 }
