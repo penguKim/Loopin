@@ -24,6 +24,8 @@ public interface LotMapper {
 	List<Map<String, Object>> select_ACCOUNT_list();
 
 	List<Map<String, Object>> select_LOTHISTORY_list(String lot_cd);
+
+	List<Map<String, Object>> select_RESULT_detail(String contract_cd);
 	
 	
 }

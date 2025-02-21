@@ -308,13 +308,8 @@
 	    modalElement.addEventListener("hidden.bs.modal", function () {
 	        modalElement.remove(); // 모달 삭제
 
-	        // 🔹 모달 내부 모든 요소에서 포커스 제거
 	        document.activeElement.blur();
-
-	        // 🔹 모달 백드롭 제거
 	        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-
-	        // 🔹 body 상태 초기화 (스크롤 가능하도록 복구)
 	        document.body.classList.remove("modal-open");
 	        document.body.style.overflow = "";
 	    });

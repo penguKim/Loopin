@@ -101,6 +101,26 @@ public class LotController {
 		}
 	}
 	
+	// 로트 상세조회
+	@ResponseBody
+	@GetMapping("/select_LOTHISTORY_list")
+	public ResponseEntity<Map<String, Object>> select_LOTHISTORY_list(@RequestParam("lot_cd") String lot_cd) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> list = lotService.select_LOTHISTORY_list(lot_cd);
+			Map<String, Object> data = new HashMap<>();
+			response.put("result", true);
+			data.put("contents", list);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 	// 생산실적 조회
 	@ResponseBody
 	@PostMapping("/select_RESULT_list")
@@ -121,12 +141,12 @@ public class LotController {
 	
 	// 생산실적 조회
 	@ResponseBody
-	@GetMapping("/select_LOTHISTORY_list")
-	public ResponseEntity<Map<String, Object>> select_LOTHISTORY_list(@RequestParam("lot_cd") String lot_cd) {
+	@GetMapping("/select_RESULT_detail")
+	public ResponseEntity<Map<String, Object>> select_RESULT_detail(@RequestParam("contract_cd") String contract_cd) {
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
-			List<Map<String, Object>> list = lotService.select_LOTHISTORY_list(lot_cd);
+			List<Map<String, Object>> list = lotService.select_RESULT_detail(contract_cd);
 			Map<String, Object> data = new HashMap<>();
 			response.put("result", true);
 			data.put("contents", list);
@@ -138,6 +158,8 @@ public class LotController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	
 	
 //	// 생산실적 차트
 //	@ResponseBody
