@@ -19,8 +19,8 @@ public class OrderDetailDTO {
 	
 	private String order_cd;
 	private String material_cd;
-	private long material_am;
-	private BigDecimal order_ct;
+	private Long material_am;
+	private Long order_ct;
 	private String order_ed;
 	private String material_un;
 	
