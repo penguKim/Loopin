@@ -132,8 +132,7 @@ public class EmployeeController {
 	// 인사 카드 조회
 	@GetMapping("/select_EMPLOYEE")
 	@ResponseBody
-	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE() {
-		
+	public ResponseEntity<List<Map<String, Object>>> select_EMPLOYEE(@RequestParam(name = "type", required = false) String type) {
 		
 		try {
 			EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -144,7 +143,7 @@ public class EmployeeController {
 		    
 		 // 서비스 호출 후 결과 반환
 		    if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
-		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL();
+		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL(type, currentCd);
 		    	return ResponseEntity.ok(response);
 		    } else {
 		    	List<Map<String, Object>> response = employeeService.select_EMPLOYEE_DETAIL_CD(currentCd);
@@ -155,7 +154,6 @@ public class EmployeeController {
 			e.printStackTrace();
 			return ResponseEntity.status(500).body(null);
 		}
-	    
 	    
 	}
 	
@@ -439,7 +437,10 @@ public class EmployeeController {
 
     // 필터 데이터 가져오기
 	@PostMapping("/select_FILTERED_EMPLOYEE")
-    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_EMPLOYEE(@RequestBody EmployeeFilterRequest filterRequest) {
+    public ResponseEntity<List<Map<String, Object>>> select_FILTERED_EMPLOYEE(
+    		@RequestBody EmployeeFilterRequest filterRequest
+    		, @RequestParam(name = "type", required = false) String type
+    		) {
 	    EmployeeDetails employeeDetails = (EmployeeDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 	    
 	    String currentCd = employeeDetails.getEmployee_cd(); // 현재 사용자의 코드
@@ -448,17 +449,22 @@ public class EmployeeController {
 	    try {
 	        // HR_ADMIN 또는 SYS_ADMIN 권한일 경우
 	        if (currentRole.contains("HR_ADMIN") || currentRole.contains("SYS_ADMIN")) {
-	            // 필터 조건이 비어 있으면 전체 인사정보 반환
-	            if (filterRequest.isEmpty()) {
-	                List<Map<String, Object>> employees = employeeService.select_EMPLOYEE_ALL();
-	                log.info("employees@@@@@"+ employees);
-	                return ResponseEntity.ok(employees);
+	        	// 나의 메뉴에서 확인 시 
+	            if ("1".equals(type)) {  
+	                // 필터가 있으면 필터 자기 자신 데이터 조회
+	                if (filterRequest.isEmpty() == false) {
+	                    List<Map<String, Object>> selfInfo = employeeService.select_FILTERED_EMPLOYEE(filterRequest, currentCd);
+	                    return ResponseEntity.ok(selfInfo);
+	                }
 	            }
 
+	        	if (filterRequest.isEmpty()) {
+	        		List<Map<String, Object>> employees = employeeService.select_EMPLOYEE_ALL();
+	        		return ResponseEntity.ok(employees);
+	        	}
 
 	            // 필터 조건에 따른 필터링된 인사정보 반환
 	            List<Map<String, Object>> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest, null);
-	            log.info("filteredEmployeeList@@@@@1"+ filteredEmployeeList);
 	            return ResponseEntity.ok(filteredEmployeeList);
 	        } else {
 	            // HR_ADMIN 또는 SYS_ADMIN이 아닌 경우, currentCd로 필터링된 정보만 반환
@@ -466,13 +472,11 @@ public class EmployeeController {
 	            // 필터 조건이 비어 있으면 본인 정보 반환
 	            if (filterRequest.isEmpty()) {
 	                List<Map<String, Object>> selfInfo = employeeService.select_EMPLOYEE_ALL_CD(currentCd);
-	                log.info("selfInfo@@@@"+ selfInfo);
 	                return ResponseEntity.ok(selfInfo);
 	            }
 
 	            // 필터 조건에 따른 본인 정보 반환
 	            List<Map<String, Object>> filteredEmployeeList = employeeService.select_FILTERED_EMPLOYEE(filterRequest, currentCd);
-	            log.info("filteredEmployeeList@@@@2"+ filteredEmployeeList);
 	            return ResponseEntity.ok(filteredEmployeeList);
 	        }
 	    } catch (Exception e) {
