@@ -287,15 +287,15 @@ const fetchBOM = async () => {
 		});
 		const data = await response.json();
 		console.log('초기 데이터'+data);
-// 		data.map(i => ({
-// 			return{
-// 			...i,
-// 			if(i.BOMPROCESS_AP === "NONE"){
-				
-// 			}
-// 			}
-// 		}));
-		pdgrid.resetData(data);
+		const updatedata = data.map(i => {
+			if(i.BOMPROCESS_AP === "NONE"){
+				i.BOMPROCESS_AN = "-"
+			}
+			return{
+			...i,
+			}
+		});
+		pdgrid.resetData(updatedata);
 	} catch(error){
 		console.log('BOM데이터를 로드하는데 실패했습니다.'+error);
 		swal.fire({
