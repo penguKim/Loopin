@@ -93,5 +93,14 @@ public class BomController {
 		}
 	}
 	
-	
+	@GetMapping("/selectpcbom")
+	public ResponseEntity<Map<String, Object>> selectpcbom(@RequestParam("bpap") String bpap, @RequestParam("pdcd") String pdcd,@RequestParam("bpcd") String bpcd,@RequestParam("bppc") String bppc) {
+		
+		System.out.println("너 먼데"+bpap);
+		System.out.println("너 먼데"+pdcd);
+		System.out.println("너 먼데"+bpcd);
+		
+	        Map<String, Object> list = bS.selectbom(bpap, pdcd, bpcd, bppc); 
+	        return ResponseEntity.ok(list);
+	}
 }

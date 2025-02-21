@@ -1,7 +1,9 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
@@ -76,13 +78,24 @@ public class BomService {
 			bompcdata.setProcess_cd(bomItem.getProcess_cd());
 			bompcdata.setProduct_cd(bomItem.getProduct_cd());
 			bompcdata.setBomprocess_rt(bomItem.getBomprocess_rt());
-			bompcdata.setBomprocess_ra(bomItem.getBomprocess_ra());
 			bompcdata.setBomprocess_er(bomItem.getBomprocess_er());
 			bompcdata.setBomprocess_wr(bomItem.getBomprocess_wr());
 			bompcdata.setBomprocess_wd(new Timestamp(System.currentTimeMillis()));
 			bompcdata.setBomprocess_bg(bomItem.getBomprocess_bg());
 			bpR.save(bompcdata);
 		}
+	}
+
+	public Map<String, Object> selectbom(String bpap, String pdcd, String bpcd, String bppc) {
+		
+		List<Map<String, Object>> pcgriddata = bM.selectpcsfrompd(bpap, pdcd, bppc);
+		List<Map<String, Object>> bomgriddata = bM.selectbomsformpd(pdcd, bpcd);
+		
+		Map<String, Object> response = new HashMap<>();
+		response.put("pcgrid", pcgriddata);
+		response.put("bomgrid", bomgriddata);
+		
+		return response;
 	}
 
 

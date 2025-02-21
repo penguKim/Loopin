@@ -64,11 +64,11 @@ public class Contract {
 	
 	// 수주수량
 	@Column(name = "contract_am")
-	private long contract_am;
+	private Long contract_am;
 
 	// 수주금액
 	@Column(name = "contract_mn")
-	private BigDecimal contract_mn;
+	private Long contract_mn;
 	
 	// 수주상태
 	@Column(name = "contract_st", length = 20)
@@ -105,8 +105,8 @@ public class Contract {
 			String contract_ps,
 			String contract_sd,
 			String contract_ed,
-			long contract_am,
-			BigDecimal contract_mn,
+			Long contract_am,
+			Long contract_mn,
 			String contract_st,
 			String contract_rm,
 			String contract_wr,

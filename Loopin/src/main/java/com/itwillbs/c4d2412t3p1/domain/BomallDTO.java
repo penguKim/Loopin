@@ -27,9 +27,6 @@ public class BomallDTO {
 	    @JsonProperty("BOMPROCESS_RT")
 	    private String bomprocess_rt;
 
-	    @JsonProperty("BOMPROCESS_RA")
-	    private long bomprocess_ra;
-
 	    @JsonProperty("BOMPROCESS_ER")
 	    private String bomprocess_er;
 
