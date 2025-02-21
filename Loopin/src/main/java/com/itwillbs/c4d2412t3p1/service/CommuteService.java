@@ -22,13 +22,17 @@ import java.util.stream.Collectors;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
+import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Comhistory;
 import com.itwillbs.c4d2412t3p1.entity.ComhistoryPK;
 import com.itwillbs.c4d2412t3p1.entity.Common_code;
@@ -49,7 +53,6 @@ import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
 
@@ -62,7 +65,6 @@ public class CommuteService {
 	private final CommuteRepository commuteRepository;
 	private final WorkinghourRepository workinghourRepository;
 	private final HolidayRepository holidayRepository;
-	private final EmployeeRepository employeeRepository;
 	
 	private final CommuteMapper commuteMapper; 
 	private final HolidayMapper holidayMapper;
@@ -78,9 +80,8 @@ public class CommuteService {
 	// 출퇴근 기록부 --------------------------------------------
 	
     // 출퇴근 기록부 달력 조회
-	public List<CommuteDTO> select_COMMUTE_calendar(String employee_cd, boolean isAdmin, String startDate, String endDate) {
-//		return commuteRepository.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
-		return commuteMapper.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate);
+	public List<CommuteDTO> select_COMMUTE_calendar(String employee_cd, boolean isAdmin, String startDate, String endDate, String type) {
+		return commuteMapper.select_COMMUTE_calendar(employee_cd, isAdmin, startDate, endDate, type);
 	}
 	
 	// 출퇴근 기록부 달력 상세 조회
@@ -89,8 +90,8 @@ public class CommuteService {
 	}
 	
 	// 출퇴근 기록부 그리드 조회
-	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin) {
-		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin);
+	public List<CommuteDTO> select_COMMUTE_grid(CommuteFilterRequest filter, String employee_cd, boolean isAdmin, String type) {
+		return commuteMapper.select_COMMUTE_grid(filter, employee_cd, isAdmin, type);
 	}
 	
 	// 근로시간 조회
@@ -230,9 +231,9 @@ public class CommuteService {
 	
 	// 출근 -------------------------------------
 	// 출퇴근 기록 찾기
-	public Commute findById(String employee_cd, String workinghour_id) {
-		String today = LocalDate.now().toString();
-		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, today)).orElse(null);
+	public Commute findById(String employee_cd, String workinghour_id, String date) {
+
+		return commuteRepository.findById(new CommutePK(employee_cd, workinghour_id, date)).orElse(null);
 	}
 	
 	// 출근하기
@@ -268,6 +269,56 @@ public class CommuteService {
 			return commuteRepository.save(commute);
 		}
 	}
+	
+	// 임시 전체 출근하기
+	@Transactional
+	public void insert_COMMUTE_list(List<String> employee_list, String day, String time) {
+	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
+	    Timestamp regDate = new Timestamp(System.currentTimeMillis());
+
+	    for(String employee_cd : employee_list) {
+	        try {
+	        	EmployeeDTO employee = commuteMapper.select_EMPLOYEE(employee_cd);
+
+	    	    String workinghour_id = employee.getWorkinghour_id();
+	    	    Commute commute = findById(employee.getEmployee_cd(), workinghour_id, day);
+	    	    
+	    	    if(commute != null) {
+	    	        updateCommute(commute, day, time, regUser, regDate);
+	    	    } else {
+	    	        insertCommute(employee.getEmployee_cd(), workinghour_id, day, time, regUser, regDate);
+	    	    }
+	        } catch (Exception e) {
+	            continue;
+	        }
+	    }
+	}
+
+
+	private void updateCommute(Commute commute, String day, String time, String regUser, Timestamp regDate) {
+	    commute.setCommute_ld(day);
+	    commute.setCommute_lt(time);
+	    commute.setCommute_uu(regUser);
+	    commute.setCommute_ud(regDate);
+	    setCOMMUTE_hour(commute, false);
+	    commuteRepository.save(commute);
+	}
+
+	private void insertCommute(String employee_cd, String workinghour_id, String day, String time, 
+	                         String regUser, Timestamp regDate) {
+	    Commute insertCommute = Commute.builder()
+	        .employee_cd(employee_cd)
+	        .workinghour_id(workinghour_id)
+	        .commute_wd(day)
+	        .commute_wt(time)
+	        .commute_ru(regUser)
+	        .commute_rd(regDate)
+	        .build();
+	    commuteRepository.save(insertCommute);
+	}
+
+
+
 	
 	
 	// 출퇴근 현황 --------------------------------------------
@@ -403,7 +454,29 @@ public class CommuteService {
 
 
 
-	
+	// 일자별 근로시간 차트
+	public List<CommuteDTO> select_COMMUTE_dayCommuteChart(CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_dayCommuteChart(filter);
+	}
+	// 근로시간 차트
+	public List<CommuteDTO> select_COMMUTE_commuteChart(CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_commuteChart(filter);
+	}
+	// 직급, 부서별 차트
+	public List<CommuteDTO> select_COMMUTE_barChart(String sort, CommuteFilterRequest filter) {
+		return commuteMapper.select_COMMUTE_gradeChart(sort, filter);
+	}
+
+	public List<String> select_EMPLOYEE_CD_list() {
+		return commuteMapper.select_EMPLOYEE_CD_list();
+	}
+
+	public Map<String, Object> createSeriesData(String name, Function<CommuteDTO, Object> mapper, List<CommuteDTO> data) {
+		Map<String, Object> series = new HashMap<>();
+		series.put("name", name);
+		series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
+		return series;
+	}
 	
 	
 	
@@ -445,25 +518,13 @@ public class CommuteService {
 	    return true;
 	}
 
-	// 일자별 근로시간 차트
-	public List<CommuteDTO> select_COMMUTE_dayCommuteChart(CommuteFilterRequest filter) {
-		return commuteMapper.select_COMMUTE_dayCommuteChart(filter);
-	}
-	// 근로시간 차트
-	public List<CommuteDTO> select_COMMUTE_commuteChart(CommuteFilterRequest filter) {
-		return commuteMapper.select_COMMUTE_commuteChart(filter);
-	}
-	// 직급, 부서별 차트
-	public List<CommuteDTO> select_COMMUTE_barChart(String sort, CommuteFilterRequest filter) {
-		return commuteMapper.select_COMMUTE_gradeChart(sort, filter);
+	// 휴가 결재 찾기
+	public String select_APPROVAL(String employee_cd, String today) {
+		
+		return commuteMapper.select_APPROVAL(employee_cd, today);
 	}
 
-	public Map<String, Object> createSeriesData(String name, Function<CommuteDTO, Object> mapper, List<CommuteDTO> data) {
-		Map<String, Object> series = new HashMap<>();
-		series.put("name", name);
-		series.put("data", data.stream().map(mapper).collect(Collectors.toList()));
-		return series;
-	}
+
 
 
 

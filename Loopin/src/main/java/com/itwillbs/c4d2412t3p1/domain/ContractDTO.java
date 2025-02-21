@@ -21,8 +21,8 @@ public class ContractDTO {
 	private String contract_ps;
 	private String contract_sd;
 	private String contract_ed;
-	private long contract_am;
-	private BigDecimal contract_mn;
+	private Long contract_am;
+	private Long contract_mn;
 	private String contract_st;
 	private String contract_rm;
 	private String contract_wr;
