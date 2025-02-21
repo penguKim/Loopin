@@ -1,6 +1,8 @@
 package com.itwillbs.c4d2412t3p1.controller;
 
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -20,15 +22,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
+import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
+import com.itwillbs.c4d2412t3p1.service.AttendanceService;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.CommuteService;
 import com.itwillbs.c4d2412t3p1.service.EmployeeService;
@@ -46,6 +51,7 @@ public class CommuteController {
 	
 	private final CommuteService commuteService;
 	private final EmployeeService employeeService;
+	private final AttendanceService attendanceService;
 	private final UtilService util;
 	
 
@@ -65,11 +71,12 @@ public class CommuteController {
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
 		filter.setStartDate(startDate);
 		filter.setEndDate(EndDate);
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate);
+		List<CommuteDTO> list = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate, type);
 		List<Holiday> holidayList = commuteService.select_HOLIDAY_month(startDate, EndDate); // 공휴일 리스트
 		CommuteDTO commute = commuteService.selcet_COMMUTE_time(filter, employee.getEmployee_cd(), isAdmin);
 
@@ -131,6 +138,7 @@ public class CommuteController {
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		String startDate = commuteRequest.getCalendarStartDate();
 		String EndDate = commuteRequest.getCalendarEndDate();
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filter = new CommuteFilterRequest();
 		filter.setStartDate(startDate);
 		filter.setEndDate(EndDate);
@@ -140,7 +148,7 @@ public class CommuteController {
 			commuteService.insert_COMMUTE_modal(employee);
 			
 			List<CommuteDTO> gridList = commuteService.select_COMMUTE_detail(employee.getEmployee_cd(), isAdmin,employee.getCommute_wd());
-			List<CommuteDTO> calendarList = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate );
+			List<CommuteDTO> calendarList = commuteService.select_COMMUTE_calendar(employee.getEmployee_cd(), isAdmin, startDate, EndDate, type);
 			CommuteDTO commute = commuteService.selcet_COMMUTE_time(filter, employee.getEmployee_cd(), isAdmin);
 
 			response.put("result", true);
@@ -163,8 +171,9 @@ public class CommuteController {
 		EmployeeDetails employee = util.getEmployee();
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
+		String type = commuteRequest.getType();
 		
-		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
+		List<CommuteDTO> list = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin, type);
 		CommuteDTO commute = commuteService.selcet_COMMUTE_time(filterRequest, employee.getEmployee_cd(), isAdmin);
 		log.info(list.toString());
 		
@@ -183,13 +192,14 @@ public class CommuteController {
 	public ResponseEntity<Map<String, Object>> insert_COMMUTE_grid(@RequestBody CommuteRequestDTO commuteRequest) {
 		EmployeeDetails employee = util.getEmployee();
 		boolean isAdmin = util.isAuthority("SYS_ADMIN", "AT_ADMIN");
+		String type = commuteRequest.getType();
 		CommuteFilterRequest filterRequest = commuteRequest.getCommuteFilter();
 		
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			commuteService.insert_COMMUTE_modal(commuteRequest.getCommute());
 			
-			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin);
+			List<CommuteDTO> gridList = commuteService.select_COMMUTE_grid(filterRequest, employee.getEmployee_cd(), isAdmin, type);
 			CommuteDTO commute = commuteService.selcet_COMMUTE_time(filterRequest, employee.getEmployee_cd(), isAdmin);
 			
 			response.put("result", true);
@@ -334,17 +344,29 @@ public class CommuteController {
 		String employee_cd = employeeDetails.getEmployee_cd();
 		Employee employee = employeeService.findEmployeeById(employee_cd);
 		String workinghour_id = employee.getWorkinghour_id();
+		String today = LocalDate.now().toString();
 		if(workinghour_id == null) {
 			response.put("msg", "근무형태를 등록해야합니다.<br>관리자에게 문의하세요.");
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
+		LocalTime currentTime = LocalTime.now();
+		String annual = util.checkNull(commuteService.select_APPROVAL(employee_cd, today));
+		if(annual.equals("AMBN") && currentTime.isBefore(LocalTime.of(12, 0))) {
+	        response.put("msg", "오전 반차 기간입니다.<br>시간이 지난 후 출근해주세요.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		} else if(annual.equals("PMBN") && !isAttendance && currentTime.isBefore(LocalTime.of(12, 0))) {
+			response.put("msg", "아직 오후 반차 시간 이전입니다.<br>점심시간 이후 퇴근해주세요.");
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		} else if(annual.equals("AN")) {
+			// 연차~
+		}
 		
 		try {
-			Commute commute = commuteService.findById(employee_cd, workinghour_id);
-			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
+//			Commute commute = commuteService.findById(employee_cd, workinghour_id, today);
+//			commute = commuteService.insert_COMMUTE(employee_cd, workinghour_id, commute);	
 			
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "하였습니다.");
-			response.put("commute", commute);
+//			response.put("commute", commute);
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
 			response.put("msg", (isAttendance ? "출근" : "퇴근") + "에 실패했습니다.");
@@ -471,7 +493,21 @@ public class CommuteController {
 	
 	
 	
-	
+	@ResponseBody
+	@PostMapping("/insert_COMMUTE_list")
+	public ResponseEntity<Map<String, Object>> insert_COMMUTE_list(@RequestBody CommuteRequestDTO commuteRequest) {
+		String[] arr = new String[] {"EM25-0010", "EM25-0071", "EM25-0011", "EM25-0044", "EM25-0042", "EM25-0014", "EM25-0039",
+				"EM25-0067", "EM25-0034", "EM25-0037", "EM25-0041", "EM25-0005", "EM25-0038", "EM25-0026", "EM25-0007", "EM25-0043", "EM25-0040"};
+		Map<String, Object> response = new HashMap<>();
+		List<String> employee_list = commuteService.select_EMPLOYEE_CD_list();
+		
+		System.out.println(commuteRequest.getDay());
+		System.out.println(commuteRequest.getTime());
+		System.out.println(employee_list.toString());
+		commuteService.insert_COMMUTE_list(employee_list, commuteRequest.getDay(), commuteRequest.getTime());	
+		
+		return ResponseEntity.ok(response);
+	}
 
 	
 }

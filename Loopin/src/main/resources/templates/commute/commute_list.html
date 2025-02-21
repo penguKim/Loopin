@@ -21,14 +21,6 @@
 		z-index: 9999 !important;
 		overflow: visible !important;
 	}
-	
-	.tui-grid-cell-summary {
-	    background-color: #ddd;
-	    border-color: #fff;
-	    border-left-width: 1px;
-	    border-right-width: 1px;
-	    color: #333;
-	}
 </style>
 <body>
 	<main id="main" class="main">
@@ -71,6 +63,12 @@
 									<div id="grid"></div>
 								</div>
 							</div>
+							<div style="display: none;">
+								<input type="text" id="day">
+								<input type="text" id="time">								
+								<input type="button" id="commute_list_work" value="임시일괄출근">
+								<input type="button" id="commute_list_leave" value="임시일괄퇴근">
+							</div>
 						</div>
 					</div>
 				</div>
@@ -99,6 +97,8 @@
 	const div_commute_time = $('#div_commute_time');
 	// 관리자인지 확인(권한 설정 후 달라질 수 있음)
 	const isAdmin = /*[[${#authorization.expression('hasAnyRole("SYS_ADMIN", "AT_ADMIN")')}]]*/ false;
+	// 나의메뉴 파라미터
+	const paramType = new URLSearchParams(window.location.search).get("type") || 0;
 	// 필터 항목
 	const today = new Date();
 	const startDate = isAdmin ? getPrevDate(7) : getFirstDayOfMonth(today);
@@ -119,11 +119,33 @@
 	
 	
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		make_calendar();
 		
-
+		$('#commute_list_work, #commute_list_leave').on('click', function() {
+			
+			let data = {
+				day: $('#day').val(),
+				time: $('#time').val(),
+				attendance: $(this) == $('#commute_list_work') ? true : false
+			}
+			
+			$.ajax({
+				type: 'post',
+				url: '/insert_COMMUTE_list',
+				contentType: 'application/json',
+				data: JSON.stringify(data),
+				beforeSend : function(xhr) {
+				    xhr.setRequestHeader(header, token);
+				},
+				success: function(data) {
+					alert('등록성공');
+				},
+				error : function(xhr, textStatus, errorThrown) {
+					console.log('조회 실패');
+				}
+			});
+		});
 		
 		// 필터 -------------------------
 		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
@@ -295,7 +317,7 @@
 		});
 	    
 	    calendar.on('clickEvent', ({ event }) => {
-			if(isAdmin) {
+			if(isAdmin && paramType != 1) {
 				modal_detail(event);
 			}
 		});
@@ -323,8 +345,9 @@
 			    xhr.setRequestHeader(header, token);
 			},
 			data: JSON.stringify({
-			    calendarStartDate: calendarStartDate,
-			    calendarEndDate: calendarEndDate
+			    calendarStartDate,
+			    calendarEndDate,
+			    type: paramType,
 			}),
 			success: function(data) {
 				if(!data['result']) {
@@ -359,7 +382,7 @@
 										</span>
 									</span>`;
 								}
-								if(isAdmin && work) {
+								if(isAdmin && paramType != 1 && work) {
 									return `
 									<span class="tui-full-calendar-weekday-grid-date ms-1">
 										${dayNum}
@@ -379,17 +402,21 @@
 					// calendar.render();
 					calendar.clear();
 									
+			
 					let list = data['list'];
 					const event = list.map(commute => {
-					    if (isAdmin) {
-					        return {
+						let commuteEvent = {
 					            id: `${commute.commute_wd}`,
-					            title: `지각: ${commute.late} 근무중: ${commute.working} 퇴근: ${commute.leave}`,
 					            start: commute.commute_wd,
 					            end: commute.commute_wd,
 					            isAllday: true,
 					            category: 'allday',
 					            backgroundColor: '#fff'
+							};
+					    if (isAdmin && paramType != 1) {
+					        return {
+					        	...commuteEvent,
+					            title: `지각: ${commute.late} 근무중: ${commute.working} 퇴근: ${commute.leave}`,
 					        };
 					    } else {
 					        let title = '';
@@ -402,13 +429,8 @@
 					        }
 					        
 					        return {
-					            id: `${commute.commute_wd}`,
+					        	...commuteEvent,
 					            title: title,
-					            start: commute.commute_wd,
-					            end: commute.commute_wd,
-					            isAllday: true,
-					            category: 'allday',
-					            backgroundColor: '#fff'
 					        };
 					    }
 					});
@@ -448,7 +470,8 @@
 		        {
 		        	startDate: mainDateRangeStartInput.value, 
 	        	 	endDate: mainDateRangeEndInput.value 
-	        	 }
+	        	 },
+	        	 type: paramType
 		    };
 		
 		$.ajax({
@@ -542,7 +565,7 @@
 		});
 		
 		grid.on('dblclick', function(ev) {
-			if(isAdmin) {
+			if(isAdmin && paramType != 1) {
 				let row = grid.getRow(ev.rowKey);
 				if(row['commute_pr']) {
 					showAlert('', 'warning', '정산 완료', '정산이 완료된 기록은<br>수정이 불가능합니다.');
@@ -826,7 +849,8 @@
 				let data = {
 					commute: commute,
 					calendarStartDate: calendarStartDate,
-					calendarEndDate: calendarEndDate
+					calendarEndDate: calendarEndDate,
+					type: paramType,
 				}
 				
 				if(process == 'grid') {
