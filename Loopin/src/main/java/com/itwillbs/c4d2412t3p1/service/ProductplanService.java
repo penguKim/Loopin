@@ -26,6 +26,7 @@ import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest.ProcessOrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
+import com.itwillbs.c4d2412t3p1.domain.WorkableEmployeeProjection;
 import com.itwillbs.c4d2412t3p1.entity.Bom;
 import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
@@ -424,5 +425,9 @@ public class ProductplanService {
 				.map(d -> new ContractDetailProductInfoDTO(d.getProduct_cr(), d.getProduct_sz(), d.getProduct_am()))
 				.collect(Collectors.toList());
 	}
-
+	
+	public List<WorkableEmployeeProjection> select_WORKABLE_EMPLOYEE_list(String workDate, String productCd, String processCd) {
+        return productplanRepository.findWorkableEmployees(workDate, productCd, processCd);
+    }
+	
 }

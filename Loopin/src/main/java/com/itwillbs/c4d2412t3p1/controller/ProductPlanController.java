@@ -25,6 +25,7 @@ import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest.ProcessOrderDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
+import com.itwillbs.c4d2412t3p1.domain.WorkableEmployeeProjection;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Productplan;
 import com.itwillbs.c4d2412t3p1.service.ProductplanService;
@@ -146,8 +147,21 @@ public class ProductPlanController {
 		// 1) Service 호출 -> DTO 목록
 		List<ContractDetailProductInfoDTO> list = productplanService.findColorSizeList(contractCd, productCd);
 		log.info(list.toString());
-		
+
 		// 2) ResponseEntity로 반환
+		return ResponseEntity.ok(list);
+	}
+
+	/**
+	 * 일일생산계획 모달에서 "작업자" 검색 시 → 근무 가능 사원 목록 ex)
+	 */
+	@GetMapping("/select_WORKABLE_EMPLOYEE_list")
+	@ResponseBody
+	public ResponseEntity<List<WorkableEmployeeProjection>> select_WORKABLE_EMPLOYEE_list(
+			@RequestParam("workDate") String workDate, @RequestParam("productCd") String productCd,
+			@RequestParam("processCd") String processCd) {
+		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
+				processCd);
 		return ResponseEntity.ok(list);
 	}
 
