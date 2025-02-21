@@ -68,7 +68,7 @@
             <ul class="navbar-nav">
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">ERP</a>
-                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                <ul class="dropdown-menu" aria-labelledby="navbarDarkDropdownMenuLink">
                <li>
                   <a class="dropdown-item d-flex align-items-center" th:href="@{/employee_list(type=1)}">
                      <span>인사</span>
@@ -90,40 +90,76 @@
           </div>
         </div>
       </nav>
-      <nav class="header-nav ms-auto">
-         <ul class="d-flex align-items-center">
-            <li class="nav-item dropdown pe-3">
-               <div id="redirect">
+      <nav class="navbar navbar-expand-lg ms-auto" id="redirect">
+        <div class="container-fluid">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDarkDropdown" aria-controls="navbarNavDarkDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+            <ul class="navbar-nav">
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">MES</a>
+                <ul class="dropdown-menu" aria-labelledby="navbarDarkDropdownMenuLink">
+              		<li>
+                    <a class="dropdown-item d-flex align-items-center" href="warehouse_list">
+                       <span>기준정보</span>
+                    </a>
+                 </li>
+                 <li>
+                    <a class="dropdown-item d-flex align-items-center" href="order_list">
+                       <span>영업</span>
+                    </a>
+                 </li>
+                 <li>
+                    <a class="dropdown-item d-flex align-items-center" href="lot_list">
+                       <span>생산</span>
+                    </a>
+                 </li>
+                 <li>
+                    <a class="dropdown-item d-flex align-items-center" href="stock_list">
+                       <span>자재</span>
+                    </a>
+                 </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </nav>
+<!--       <nav class="header-nav ms-auto"> -->
+<!--          <ul class="d-flex align-items-center"> -->
+<!--             <li class="nav-item dropdown pe-3"> -->
+<!--                <div id="redirect"> -->
                   
-                  <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown" >MES</a><!-- End Profile Iamge Icon -->
-                  <ul class="dropdown-menu dropdown-menu-xl-start">
-                     <li class="dropdown-header">
-                     </li>
-                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="warehouse_list">
-                           <span>기준정보</span>
-                        </a>
-                     </li>
-                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="order_list">
-                           <span>영업</span>
-                        </a>
-                     </li>
-                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="lot_list">
-                           <span>생산</span>
-                        </a>
-                     </li>
-                     <li>
-                        <a class="dropdown-item d-flex align-items-center" href="stock_list">
-                           <span>자재</span>
-                        </a>
-                     </li>
-                  </ul>
-               </div>
-            </li><!-- End Profile Nav -->
-         </ul>
-      </nav><!-- End Icons Navigation -->
+<!--                   <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown" >MES</a>End Profile Iamge Icon -->
+<!--                   <ul class="dropdown-menu dropdown-menu-xl-start"> -->
+<!--                      <li class="dropdown-header"> -->
+<!--                      </li> -->
+<!--                      <li> -->
+<!--                         <a class="dropdown-item d-flex align-items-center" href="warehouse_list"> -->
+<!--                            <span>기준정보</span> -->
+<!--                         </a> -->
+<!--                      </li> -->
+<!--                      <li> -->
+<!--                         <a class="dropdown-item d-flex align-items-center" href="order_list"> -->
+<!--                            <span>영업</span> -->
+<!--                         </a> -->
+<!--                      </li> -->
+<!--                      <li> -->
+<!--                         <a class="dropdown-item d-flex align-items-center" href="lot_list"> -->
+<!--                            <span>생산</span> -->
+<!--                         </a> -->
+<!--                      </li> -->
+<!--                      <li> -->
+<!--                         <a class="dropdown-item d-flex align-items-center" href="stock_list"> -->
+<!--                            <span>자재</span> -->
+<!--                         </a> -->
+<!--                      </li> -->
+<!--                   </ul> -->
+<!--                </div> -->
+<!--             </li>End Profile Nav -->
+<!--          </ul> -->
+<!--       </nav>End Icons Navigation -->
       <nav class="header-nav ms-auto">
          <ul class="d-flex align-items-center">
             <li class="nav-item dropdown pe-3">
