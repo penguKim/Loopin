@@ -4,9 +4,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
+import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
+import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
-import com.itwillbs.c4d2412t3p1.entity.Commute;
+import com.itwillbs.c4d2412t3p1.entity.Approval;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
 
 import java.util.List;
@@ -15,9 +17,11 @@ import java.util.List;
 public interface CommuteMapper {
 	
 	// 출퇴근 캘린더 탭 조회
-	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, @Param("startDate") String startDate, @Param("endDate") String endDate);
+	List<CommuteDTO> select_COMMUTE_calendar(@Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin, 
+			@Param("startDate") String startDate, @Param("endDate") String endDate, @Param("type") String type);
 	// 출퇴근 그리드 탭 조회
-	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
+	List<CommuteDTO> select_COMMUTE_grid(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, 
+			@Param("isAdmin") boolean isAdmin, @Param("type") String type);
 	// 근로시간 조회
 	CommuteDTO selcet_COMMUTE_time(@Param("filter") CommuteFilterRequest filter, @Param("employee_cd") String employee_cd, @Param("isAdmin") boolean isAdmin);
 	// 일자별 출퇴근 기록 조회
@@ -49,4 +53,12 @@ public interface CommuteMapper {
 	// 등록된 사원 카운트
 	int countEmployeeWorkinghour(@Param("work") String work);
     
+	// 임시 -----------
+	// 입사인원 코드 조회
+	List<String> select_EMPLOYEE_CD_list();
+	EmployeeDTO select_EMPLOYEE(String employee_cd);
+	
+	
+	String select_APPROVAL(@Param("employee_cd") String employee_cd, @Param("date") String date);
+	
 }

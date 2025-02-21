@@ -18,7 +18,7 @@
 		LEFT OUTER JOIN COMMON_CODE CC2 ON CC2.COMMON_GC = 'POSITION' AND CC2.COMMON_CC = EM.EMPLOYEE_GD
 		LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = EM.WORKINGHOUR_ID
 		WHERE 1 = 1
-	    <if test="isAdmin == false">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
+	    <if test="isAdmin == false or (isAdmin == true and type == 1)">AND CM.EMPLOYEE_CD = #{employee_cd}</if>
 	    <if test="filter.employee_cd != null and filter.employee_cd != ''">AND CM.EMPLOYEE_CD LIKE '%${filter.employee_cd}%'</if>
 	    <if test="filter.employee_nm != null and filter.employee_nm != ''">AND EM.EMPLOYEE_NM LIKE '%${filter.employee_nm}%'</if>
 	    <if test="filter.employee_dp != null and filter.employee_dp != ''">AND CC.COMMON_NM LIKE '%${filter.employee_dp}%'</if>
@@ -64,7 +64,7 @@
 	<select id="select_COMMUTE_calendar" resultType="Commute">
 		SELECT
 			<choose>
-				<when test="isAdmin == false">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
+				<when test="isAdmin == false or (isAdmin == true and type == 1)">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
 				<otherwise>
 					CM.COMMUTE_WD,(SELECT COUNT(*) FROM EMPLOYEE EM) AS total_emp,
 				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late,
@@ -73,10 +73,10 @@
 				</otherwise>
 			</choose>
 		FROM COMMUTE CM
-		<if test="isAdmin == true">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
+		<if test="isAdmin == true and type != 1">LEFT OUTER JOIN WORKINGHOUR WH ON WH.WORKINGHOUR_ID = CM.WORKINGHOUR_ID</if>
 		WHERE COMMUTE_WD BETWEEN TO_DATE(#{startDate}, 'YYYY-MM-DD') AND TO_DATE(#{endDate}, 'YYYY-MM-DD')
-	    <if test="isAdmin == false">AND EMPLOYEE_CD = #{employee_cd}</if>
-		<if test="isAdmin == true">GROUP BY CM.COMMUTE_WD</if>
+	    <if test="isAdmin == false or (isAdmin == true and type == 1)">AND EMPLOYEE_CD = #{employee_cd}</if>
+		<if test="isAdmin == true and type != 1">GROUP BY CM.COMMUTE_WD</if>
 	</select>	
 	
 	<!-- 근로시간 조회 -->
@@ -191,6 +191,17 @@
 		ORDER BY DT.COMMUTE_WD
 	</select>
 	
+	<select id="select_EMPLOYEE_CD_list">
+		SELECT EMPLOYEE_CD
+		  FROM EMPLOYEE
+		 WHERE EMPLOYEE_US = 1
+	</select>
+	<select id="select_EMPLOYEE">
+		SELECT EMPLOYEE_CD, WORKINGHOUR_ID
+		  FROM EMPLOYEE
+		 WHERE EMPLOYEE_CD = #{employee_cd}
+	 </select>
+	 
 	<!-- 근로시간 차트 -->
 	<select id="select_COMMUTE_commuteChart" resultType="Commute">
 		SELECT 
@@ -229,5 +240,20 @@
 		WHERE DT.COMMUTE_WD BETWEEN TO_DATE('2025-01-07', 'YYYY-MM-DD') AND TO_DATE('2025-02-07', 'YYYY-MM-DD')
 		GROUP BY DT.COMMON_CC, DT.COMMON_NM
 		ORDER BY DT.COMMON_CC
+	</select>
+	
+	<select id="select_APPROVAL">
+		SELECT AP.ANNUAL_TYPE
+		FROM (
+		SELECT EM.EMPLOYEE_CD, AP.APPROVAL_WR,
+		    JSON_VALUE(APPROVAL_CT, '$.startday') as START_DATE,
+		    JSON_VALUE(APPROVAL_CT, '$.endday') as END_DATE,
+		    JSON_VALUE(APPROVAL_CT, '$.annualtype') as ANNUAL_TYPE
+		FROM APPROVAL AP
+		LEFT OUTER JOIN EMPLOYEE EM ON EM.EMPLOYEE_ID = AP.APPROVAL_WR
+		) AP
+		WHERE AP.EMPLOYEE_CD = #{employee_cd}
+		AND #{date} BETWEEN AP.START_DATE AND AP.END_DATE
+		AND ROWNUM = 1
 	</select>
 </mapper>

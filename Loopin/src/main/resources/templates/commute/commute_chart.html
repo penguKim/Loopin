@@ -110,9 +110,7 @@
 	const endContainer = document.querySelector(`#mainDateRangeEndContainer`);
 	
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
-		
+		setGridTheme();
 		
 		// 엑셀 다운로드
 		$('#btn_excel_download').on('click', function() {
