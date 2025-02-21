@@ -49,6 +49,9 @@ public class Inout {
 	@Id
 	@Column(name="item_cd", length = 30)
 	private String item_cd;
+	@Id
+	@Column(name="inout_io", length = 1)
+	private String inout_io;
 	@Column(name="inout_ia", length = 30)
 	private String inout_ia;
 	@Column(name="inout_oa", length = 30)
@@ -67,8 +70,6 @@ public class Inout {
 	private Integer inout_in;
 	@Column(name="inout_fn", precision = 19, scale = 0)
 	private Integer inout_fn;
-	@Column(name="inout_io", length = 1)
-	private String inout_io;
 	@Column(name="employee_cd", length = 30)
 	private String employee_cd;
 	@Column(name="inout_ru", length = 50)

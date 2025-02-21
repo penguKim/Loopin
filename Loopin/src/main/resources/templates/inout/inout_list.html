@@ -82,7 +82,7 @@
 </body>
 <script th:inline="javascript">
 	// 변수 지정
-	let grid, order_grid, item_grid, treeMap;
+	let grid, order_grid, item_grid, treeMap, modal;
 	const btn_insert = $('#btn_insert');
 	const btn_delete = $('#btn_delete');
 	const token = $("meta[name='_csrf']").attr("content")
@@ -190,10 +190,21 @@
 			}
 		});
 		
-		
+		// 모달 이벤트 ---------------------------
 		// 입출고 등록
 		btn_insert.on('click', function() {
 			make_modal_detail();
+		});
+		
+		// 수발주구분 선택
+		$(document).on('change', '#modal_inout_tp', function() {
+			$('#modal_inout_co').val('');
+			$('#modal_inout_ec').val('');
+			$('#modal_inout_en').val('');
+			$('#modal_inout_ic').val('');
+			$('#modal_inout_in').val('');
+			$('#modal_inout_nn').val('');
+			$('#modal_inout_un').val('');
 		});
 		
 		// 수발주코드 선택
@@ -214,6 +225,29 @@
 			}
 			make_item_modal(conFlag, $('#modal_inout_co').val());
 		});
+		
+		
+		// 창고 선택
+		$(document).on('change', '#modal_inout_iw, #modal_inout_ow', function() {
+			const sourceId = $(this).attr('id');
+			const targetId = (sourceId == 'modal_inout_iw') ? 'ia' : 'oa';
+			changeSelectBox(`#${sourceId}`, `#modal_inout_${targetId}`, '/select_WAREAREA_CC', 'warehouse_cd');
+		});
+		$(document).on('click', '#modal_inout_ia, #modal_inout_oa', function(ev) {
+			const targetId = $(this).attr('id');
+			const sourceId = (targetId == 'modal_inout_ia') ? 'iw' : 'ow';
+			if (!$(`#modal_inout_${sourceId}`).val()) {
+				const text = (sourceId === 'iw') ? '출발' : '도착';
+				showAlert($(`#modal_inout_${sourceId}`), 'info', `${text}창고 선택`, `${text}창고를 먼저 선택해주세요.`);
+				return;
+			}
+		});
+		
+		$(document).on('click', '#btn_modal_save', function (){
+			insert_INOUT();
+		});
+		
+		// 모달 이벤트 끝 ---------------------------
 		
 		// 재고 삭제
 		btn_delete.on('click', function() {
@@ -382,6 +416,14 @@
 									<label for="modal_inout_en" class="form-label">담당자명<span class="text-danger">*</span></label>
 									<input type="text" id="modal_inout_en" class="form-control" readonly>
 								</div>
+								<div class="col-3">
+									<label for="modal_inout_ln" class="form-label">로트번호<span class="text-danger">*</span></label>
+									<input type="text" id="modal_inout_ln" class="form-control" readonly>
+								</div>
+								<div class="col-3">
+									<label for="modal_inout_pc" class="form-label">공정코드<span class="text-danger">*</span></label>
+									<input type="text" id="modal_inout_pc" class="form-control" readonly>
+								</div>
 							</div>
 							<div class="row mb-3">
 								<div class="col-3">
@@ -405,19 +447,19 @@
 							<div class="row mb-3">
 								<div class="col-3">
 									<label for="modal_inout_iw" class="form-label">출발창고<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_iw" readonly>
+									<select class="form-select" id="modal_inout_iw"></select>
 								</div>
 								<div class="col-3">
 									<label for="modal_inout_ia" class="form-label">출발구역<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_ia" readonly>
+									<select class="form-select" id="modal_inout_ia"></select>
 								</div>
 								<div class="col-3">
 									<label for="modal_inout_ow" class="form-label">도착창고<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_ow" readonly>
+									<select class="form-select" id="modal_inout_ow"></select>
 								</div>
 								<div class="col-3">
 									<label for="modal_inout_oa" class="form-label">도착구역<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_oa" readonly>
+									<select class="form-select" id="modal_inout_oa"></select>
 								</div>
 							</div>
 						</div>
@@ -442,15 +484,18 @@
         modalElement.addEventListener('shown.bs.modal', function () {
 			createSelectBox($('#modal_inout_tp'), commonList['COTYPE'], '선택하세요.');
 			createSelectBox($('#modal_inout_io'), commonList['IOTYPE'], '선택하세요.');
+			createSelectBox($('#modal_inout_iw'), warehouseList, '선택하세요.');
+			createSelectBox($('#modal_inout_ow'), warehouseList, '선택하세요.');
+			createSelectBox($('#modal_inout_oa'), [], '선택하세요.');
+			createSelectBox($('#modal_inout_ia'), [], '선택하세요.');
 			
-			var datepicker = new tui.DatePicker('#wrapper', {
+			let datepicker = new tui.DatePicker('#wrapper', {
 				language: 'ko',
 		        date: new Date(),
 		        input: {
 		            element: '#modal_inout_dt',
 		            format: 'yyyy-MM-dd HH:mm' // 초까지 포함한 포맷
 		        },
-		        //timePicker: true // 또는 필요에 따라 timePicker: { inputType: 'spinbox' } 등 옵션 추가 가능
 		        timePicker: { inputType: 'spinbox' },
 		        container: document.body,
 		    });
@@ -523,7 +568,7 @@
 	function make_order_grid(flag) {
 		let prefix = getPrefix(flag);
 		let text = $("#modal_inout_tp option:selected").text();
-		
+
 		const dataSource = {
 			    api: {
 			        readData: {
@@ -733,6 +778,68 @@
 	    } catch (error) {
 	        showAlert('', 'error', '조회 실패', error.msg);
 	    }
+	}
+	
+	// 입출고 등록
+	async function insert_INOUT() {
+	    const validations = [
+	        { field: $('#modal_inout_io'), message: '입출고구분을 선택해주세요.' },
+	        { field: $('#modal_inout_dt'), message: '입출고일자를 선택해주세요.' },
+	        { field: $('#modal_inout_tp'), message: '수발주구분을 선택해주세요.' },
+	        { field: $('#modal_inout_co'), message: '수발주코드를 선택해주세요.' },
+	        { field: $('#modal_inout_ic'), message: '품목코드를 선택해주세요.' },
+	        { field: $('#modal_inout_iw'), message: '출발창고를 선택해주세요.' },
+	        { field: $('#modal_inout_ia'), message: '출발구역을 선택해주세요.' },
+	        { field: $('#modal_inout_ow'), message: '도착창고를 선택해주세요.' },
+	        { field: $('#modal_inout_oa'), message: '도착구역을 선택해주세요.' },
+	        // { field: $('#modal_item_sz'), message: '사이즈를 선택해주세요.', checkIf: () => $('.div_select').is(':visible') },
+	        // { field: $('#modal_item_cr'), message: '색상을 선택해주세요.',  checkIf: () => $('.div_select').is(':visible') },
+	    ];
+	
+	    const invalidField = validations.find(v => {
+	        if (v.checkIf && !v.checkIf()) return false;
+	        const value = v.field.val();
+	        return !value?.trim();
+	    });
+	
+	    if (invalidField) {
+	        showAlert(invalidField.field, 'warning', '', invalidField.message);
+	        return;
+	    }
+	    
+		if(!await showConfirm(`입출고 등록`, `입출고 내역을 등록하시겠습니까?`)) {
+			return;
+		}
+		
+	    // 기본 제품 정보
+	    const data = {
+    		inout: {
+    			inout_io: $('#modal_inout_io').val(),
+    			inout_dt: $('#modal_inout_dt').val(),
+    			inout_tp: $('#modal_inout_tp').val(),
+    			inout_co: $('#modal_inout_co').val(),
+    			employee_cd: $('#modal_inout_ec').val(),
+    			item_cd: $('#modal_inout_ic').val(),
+    			inout_nn: $('#modal_inout_nn').val(),
+    			inout_iw: $('#modal_inout_iw').val(),
+    			inout_ia: $('#modal_inout_ia').val(),
+    			inout_ow: $('#modal_inout_ow').val(),
+    			inout_oa: $('#modal_inout_oa').val(),
+    		}
+	    }
+	    
+		try {
+		    let ajaxData = await callAjaxPost('/insert_INOUT', JSON.stringify(data));
+		    
+			grid.resetData(ajaxData['list']);
+			//setGridClass();
+			// resetSearchInput();
+			modal.hide();
+			showAlert('', 'success', `등록 성공`, `등록에 성공하였습니다.`);
+		} catch (error) {
+			console.log(error);
+			showAlert('', 'error', `입출고 실패`, error['msg']);
+		}
 	}
 	
 	/*

@@ -80,7 +80,7 @@
 	</select>	
 	
 	<!-- 근로시간 조회 -->
-	<select id="selcet_COMMUTE_time" resultType="Workinghour">
+	<select id="selcet_COMMUTE_time" resultType="Commute">
 		SELECT NVL(SUM(COMMUTE_IG),0) COMMUTE_IG, NVL(SUM(COMMUTE_EG),0) COMMUTE_EG, 
 			NVL(SUM(COMMUTE_YG),0) COMMUTE_YG, NVL(SUM(COMMUTE_JG),0) COMMUTE_JG, NVL(SUM(COMMUTE_HG),0) COMMUTE_HG,
 			NVL(SUM(COMMUTE_IG),0) + NVL(SUM(COMMUTE_EG),0) + NVL(SUM(COMMUTE_YG),0) + 

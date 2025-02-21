@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -22,9 +23,12 @@ import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
 import com.itwillbs.c4d2412t3p1.domain.InoutRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.StockDTO;
 import com.itwillbs.c4d2412t3p1.domain.StockRequestDTO;
+import com.itwillbs.c4d2412t3p1.entity.Inout;
+import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.InoutService;
 import com.itwillbs.c4d2412t3p1.service.PrimaryService;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.InoutFilterRequest;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.StockFilterRequest;
 
 
@@ -76,16 +80,17 @@ public class InoutController {
 		Map<String, Object> data = new HashMap<>();
 		List<InoutDTO> list = null;
 		response.put("result", false);
-		if(prefix.equalsIgnoreCase("ORDER")) {
-			list = inoutService.select_INOUT_ORDER();
-			response.put("result", true);
-			data.put("contents", list);
-			response.put("data", data);
-		} else if(prefix.equalsIgnoreCase("CONTRACT")) {
-		    // list = stockService.select_STOCK_PRODUCT(stockRequest.getProduct_gc(), stockRequest.getProduct_cc(), filter);
-			response.put("result", true);
-			data.put("contents", list);
-			response.put("data", data);
+		
+		if (prefix.equalsIgnoreCase("ORDER")) {
+		    list = inoutService.select_INOUT_ORDER();
+		} else if (prefix.equalsIgnoreCase("CONTRACT")) {
+		    list = inoutService.select_INOUT_CONTRACT();
+		}
+
+		if (list != null) {
+		    response.put("result", true);
+		    data.put("contents", list);
+		    response.put("data", data);
 		}
 		
 		return ResponseEntity.ok(response);
@@ -99,19 +104,48 @@ public class InoutController {
 		Map<String, Object> data = new HashMap<>();
 		List<InoutDTO> list = null;
 		response.put("result", false);
+		
 		if(prefix.equalsIgnoreCase("ORDER")) {
-			 list = inoutService.select_INOUT_ORDERDETAIL();
-			response.put("result", true);
-			data.put("contents", list);
-			response.put("data", data);
+			list = inoutService.select_INOUT_ORDERDETAIL(inoutRequest.getOrder_cd());
 		} else if(prefix.equalsIgnoreCase("CONTRACT")) {
-			response.put("result", true);
-			data.put("contents", list);
-			response.put("data", data);
+			list = inoutService.select_INOUT_CONTRACTDETAIL(inoutRequest.getContract_cd());
+		}
+		
+		if (list != null) {
+		    response.put("result", true);
+		    data.put("contents", list);
+		    response.put("data", data);
 		}
 		
 		return ResponseEntity.ok(response);
 	}
 	
+	// 입출고 등록
+	// @LogActivity(value = "등록", action = "입출고등록")
+	@ResponseBody
+	@PostMapping("/insert_INOUT")
+	public ResponseEntity<Map<String, Object>> insert_INOUT(@RequestBody InoutRequestDTO inoutRequest) {
+		Map<String , Object> response = new HashMap<>();
+		InoutFilterRequest filter = inoutRequest.getInoutfilter();
+		InoutDTO inout = inoutRequest.getInout();
+	    try {
+	    	if(inout.getInout_tp().equals("O")) {
+	    		// 발주건 인서트
+	    		inoutService.insert_INOUT_ORDER(inout);
+	    	} else if(inout.getInout_tp().equals("C")) {
+	    		// 수주건 인서트
+	    		inoutService.insert_INOUT_CONTRACT(inout);
+	    	}
+	    	
+	    	List<InoutDTO> list = inoutService.select_INOUT_list();
+	    	response.put("list", list);
+	    	
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			e.printStackTrace();
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
 
 }
