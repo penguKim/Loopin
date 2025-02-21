@@ -14,6 +14,11 @@
     height: 400px; /* 그리드 높이 설정 */
     width: 100%; /* 부모 요소 크기에 맞게 너비 조정 */
   }
+  
+.tui-datepicker {
+    z-index: 9999 !important; /* Datepicker를 최상위 레이어로 올림 */
+}
+
 
 /*--------------------------------------------------------------
 # General
@@ -1306,7 +1311,7 @@ h6 {
     background-color: #774df1;
 }
 .nav-link, .nav-link:hover {
-	color: #000;
+	color: #012970;
 }
 .nav-link:hover {
     color: #997af3;

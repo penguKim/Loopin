@@ -66,7 +66,7 @@
 			<choose>
 				<when test="isAdmin == false or (isAdmin == true and type == 1)">COMMUTE_WD, COMMUTE_WT, COMMUTE_LT </when>
 				<otherwise>
-					CM.COMMUTE_WD,(SELECT COUNT(*) FROM EMPLOYEE EM WHERE EM.EMPLOYEE_US = 1 ) AS total_emp,
+					CM.COMMUTE_WD,(SELECT COUNT(*) FROM EMPLOYEE EM) AS total_emp,
 				    SUM(CASE WHEN CM.COMMUTE_WT > WH.WORKINGHOUR_WT THEN 1 ELSE 0 END) AS late,
 				    SUM(CASE WHEN CM.COMMUTE_LT IS NULL THEN 1 ELSE 0 END) AS working,
 				    COUNT(CM.COMMUTE_LT) AS leave, count(*) total

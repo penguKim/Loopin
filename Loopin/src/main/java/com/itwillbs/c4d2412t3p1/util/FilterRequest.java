@@ -191,6 +191,125 @@ public class FilterRequest {
 					&& (accountPs == null || accountPs.isEmpty()) && (accountDv == null || accountDv.isEmpty());
 		}
 	}
+	
+	// 제품관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class EquipmentFilterRequest extends FilterRequest {
+		
+		private String equipment_cd;
+		private String model_cd;
+		private String equipment_nm;
+		private String warehouse_cd;
+		private String product_cd;
+		private String equipment_us;
+		
+		public EquipmentFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (equipment_cd == null || equipment_cd.isEmpty())
+					&& (model_cd == null || model_cd.isEmpty()) && (equipment_nm == null || equipment_nm.isEmpty())
+					&& (product_cd == null || product_cd.isEmpty()) && (equipment_us == null || equipment_us.isEmpty()
+					&& (warehouse_cd == null || warehouse_cd.isEmpty()));
+		}
+	}
+		
+	// 발주관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class OrderFilterRequest extends FilterRequest {
+		
+		private String orderCd;
+		private String accountCd;
+		private String orderPs;
+		
+		public OrderFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (orderCd == null || orderCd.isEmpty())
+					&& (accountCd == null || accountCd.isEmpty()) && (orderPs == null || orderPs.isEmpty());
+		}
+	}
+
+	// 재고관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class StockFilterRequest extends FilterRequest {
+		
+		private String warehouse_cd;
+		private String warearea_cd;
+		private String item_gc;
+		private String item_cc;
+		private String item_nm;
+		private String item_cd;
+		private String item_sz;
+		private String item_cr;
+		
+		
+		public StockFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (warehouse_cd == null || warehouse_cd.isEmpty())
+					&& (warearea_cd == null || warearea_cd.isEmpty()) && (item_gc == null || item_gc.isEmpty())
+					&& (item_cc == null || item_cc.isEmpty()) && (item_nm == null || item_nm.isEmpty());
+		}
+	}
+	
+	// 수주관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class ContractFilterRequest extends FilterRequest {
+		
+		private String contractCd;
+		private String accountCd;
+		private String contractPs;
+		
+		public ContractFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (contractCd == null || contractCd.isEmpty())
+					&& (accountCd == null || accountCd.isEmpty()) && (contractPs == null || contractPs.isEmpty());
+		}
+	}
+	
+	// 입출고관리 필터 클래스
+	@Getter
+	@Setter
+	@ToString
+	public static class InoutFilterRequest extends FilterRequest {
+		
+		private String warehouse_cd;
+		private String warearea_cd;
+		private String item_gc;
+		private String item_cc;
+		private String item_nm;
+		
+		public InoutFilterRequest() {
+			super();
+		}
+		// 로그 필터 조건이 비어 있는지 확인
+		@Override
+		public boolean isEmpty() {
+			return super.isEmpty() && (warehouse_cd == null || warehouse_cd.isEmpty())
+					&& (warearea_cd == null || warearea_cd.isEmpty()) && (item_gc == null || item_gc.isEmpty())
+					&& (item_cc == null || item_cc.isEmpty()) && (item_nm == null || item_nm.isEmpty());
+		}
+	}
 
 }
-

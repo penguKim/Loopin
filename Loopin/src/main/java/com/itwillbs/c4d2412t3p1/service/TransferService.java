@@ -33,11 +33,12 @@ public class TransferService {
 
 	public List<Map<String, Object>> select_TRANSFER_DETAIL(String role, String employee_cd) {
 		List<Object[]> result;
-
+		
 		if ("SYS_ADMIN".equals(role) || "HR_ADMIN".equals(role)) {
 			// 전체 조회
 			result = transferRepository.findAllWithDetails();
 		} else {
+			
 			// 본인 데이터만 조회
 			result = transferRepository.findAllWithDetailsByEmployeeCd(employee_cd);
 		}
