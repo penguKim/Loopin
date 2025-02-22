@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="card">
+					<div class="card-body">
+						<h1 class="card-title">생산 실적</h1>
+						<ul class="nav nav-pills mb-3" id="lot-tab" role="tablist">
+							<li class="nav-item" role="presentation">
+								<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+								type="button" role="tab" aria-controls="tab_grid" aria-selected="true">그리드</button>
+							</li>
+							<li class="nav-item" role="presentation">
+								<button class="nav-link" id="btn_chart_tab" data-bs-toggle="pill" data-bs-target="#tab_chart" 
+								type="button" role="tab" aria-controls="tab_chart" aria-selected="false">차트</button>
+							</li>
+						</ul>
+						<div class="tab-content pt-2" id="myTabContent">
+							<!-- 달력 탭 -->
+							<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
+								<div id="filterModule" class="mb-3"></div>
+								<div>
+									<div id="grid"></div>
+								</div>
+							</div>
+							<!-- 그리드 탭 -->
+							<div class="tab-pane fade" id="tab_chart" role="tabpanel" aria-labelledby="chart-tab">
+								<div class="col d-flex justify-content-end align-items-center mt-3">
+									<div id="btn_chart">
+								        <button id="btn_month" class="btn btn-primary me-2">월별</button>
+								        <button id="btn_process" class="btn btn-primary me-2">공정별</button>
+								        <button id="btn_product" class="btn btn-primary me-2">제품별</button>
+									</div>
+							    </div>
+								<div id="chart">
+<!--								<div class="row mb-3">-->
+<!--									<div class="col-sm-6">-->
+<!-- 										<div id="productionChart"></div> -->
+<!--									</div>-->
+<!--									<div class="col-sm-6">-->
+<!-- 										<div id="errorChart"></div> -->
+<!--									</div>-->
+<!--								</div>-->
+<!--								<div class="row">-->
+<!--									<div class="col-sm-6">-->
+<!-- 										<div id="processChart"></div> -->
+<!--									</div>-->
+<!--								</div>-->
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>																																																																																																																																																																																																																											
+<script th:inline="javascript">
+	let grid, modal_grid, rangePicker, lineChart, gradeChart;
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	let chart = $("#chart");
+	let btn_month = $("#btn_month");
+	let btn_process = $("#btn_process");
+	let btn_product = $("#btn_product");
+	let useList = /*[[${commonList['USE']}]]*/[];
+	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
+	let accountList = /*[[${accountList}]]*/ [];
+	let transformedAccountList = accountList.map(item => {
+	    return {
+	        common_cc: item.COMMON_CC,
+	        common_nm: item.COMMON_NM
+	    };
+	});
+	const today = new Date();
+	const oneMonthAgo = new Date();
+	oneMonthAgo.setMonth(today.getMonth() - 1);
+	const filterConfig = [
+		{ key: 'startDate', label: '수주일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(oneMonthAgo) },
+		{ key: 'endDate', label: '출하일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: getDate(today) },
+	    { key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
+	    { key: 'account_cd', label: '거래처명', type: 'select', list: setFilterList(transformedAccountList), col: 'col-2' },
+	    { key: 'product_cd', label: '제품명', type: 'text', placeholder: '제품명 입력', col: 'col-2' },
+	    { key: 'contract_am', label: '지시수량', type: 'text', placeholder: '수량 입력', col: 'col-2' },
+	    { key: 'product_pr', label: '판매단가', type: 'text', placeholder: '단가 입력', col: 'col-2' },
+		{ key: 'contract_mn', label: '실적금액', type: 'radio', list: [ 
+			{ value: 'ALL', text: '기본', checked: true },
+			{ value: 'HIGH', text: '높은순'},
+			{ value: 'LOW', text: '낮은순' },
+		], col: 'col' },
+	];
+	
+	// 로딩
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		make_grid();
+		getGridList();
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -430);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -430);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+		
+		initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+			getGridList(filterValues);
+        });
+		
+		addExcelButton(grid, '생산실적');
+		
+        $(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -490);
+		    } else {
+		        setGridHeight(grid, -430);
+		    }
+		});
+		// 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		    getGridList(filterValues);
+		});
+		
+		$("#btn_chart_tab").on('click', function() {
+			chart.empty();
+		    productionChart();
+			errorChart();
+		});
+		btn_month.on('click', function(e) {
+			chart.empty();
+			console.log(e);
+		    productionChart("month");
+			errorChart("month");
+		});
+		btn_process.on('click', function() {
+			chart.empty();
+		    productionChart("process");
+			errorChart("process");
+		});
+		btn_product.on('click', function() {
+			chart.empty();
+		    productionChart("product");
+			errorChart("product");
+		});
+	});
+	
+	// ------------함수------------
+	// 그리드 데이터 함수
+	async function getGridList(filter) {
+		let jsonData = JSON.stringify(filter);
+		let ajaxData = await callAjaxPost('/select_RESULT_list', jsonData);
+		grid.resetData(ajaxData.data);
+	}
+	
+	// 그리드 생성 함수
+	function make_grid() {
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '거래처', name : 'ACCOUNT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text', align: 'center'},
+				{header : '수주일', name : 'CONTRACT_SD', sortable : true, filter: 'text', align: 'center'}, 
+				{header : '출하일', name : 'CONTRACT_ED', sortable : true, filter: 'text', align: 'center'}, 
+				{header : '지시수량', name : 'CONTRACT_AM', sortable : true, filter: 'text', align: 'right'}, 
+				{header : '판매단가', name : 'CONTRACT_CT', sortable : true, filter: 'text', align: 'right'}, 
+				{header : '실적금액', name : 'CONTRACT_MN', sortable : true, filter: 'text', align: 'right'}, 
+			],
+			summary: {
+				height: 40,
+				position: 'bottom', // or 'top'
+				columnContent: {
+					CONTRACT_MN: {
+						template: (valueMap) => {
+							return `총 ${valueMap.cnt} 건`
+						}
+					}
+				}
+			},
+
+		});
+		
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			if(row == null) {
+				return;
+			}
+			console.log(row);
+			modal_detail(row);
+		});
+	}
+	
+	
+	// 모달 생성
+	function modal_detail(data) {
+		const div_modal = 'div_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">실적 상세조회</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="modal_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	make_modal_grid(data);
+			
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+		$(window).resize(function() {
+			setGridHeight(modal_grid, -600);
+		});
+	}
+	
+	// 모달 그리드 생성
+	function make_modal_grid(data) {
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
+			data : {api: {readData: {url: '/select_RESULT_detail', method: 'GET',initParams: {contract_cd: data.contract_cd}}}},
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+			],
+			bodyHeight : 200,
+			columns : [
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
+				{header : '실소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '실소요시간', name : 'LOTHISTORY_ST', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'LOTHISTORY_WQ', sortable : true, filter: 'text'}, 
+				{header : '양품수량', name : 'INOUT_NN', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'LOTHISTORY_BQ', sortable : true, filter: 'text'}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom',
+			    columnContent: {
+			    	INOUT_NN: {
+			            template: (valueMap) => `총 수량: ${valueMap.cnt}건`
+			        },
+			        LOTHISTORY_BQ: {
+			            template: (valueMap) => `합계: ${valueMap.sum.toLocaleString()}`
+			        },
+			        LOTHISTORY_ST: {
+			            template: (valueMap) => `총 시간: ${valueMap.avg.toFixed(2)}`
+			        }
+			    }
+			},
+		});
+		
+	}
+	
+	// 차트 데이터 조회
+	function getChartList(filter) {
+		const data = {
+				filter: filter || 
+		        {
+					startDate: rangeStart.val(),
+					endDate: rangeEnd.val() 
+		    	}
+		    };
+
+		$.ajax({
+			type: 'post',
+			url: '/select_RESULT_chart',
+			contentType: 'application/json',
+			data: JSON.stringify(data),
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(response) {
+				productionChart(response['productionChart']);
+				errorChart(response['errorChart']);
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log(xhr);
+				showAlert('', 'error', '차트 조회 실패' , '차트 조회에 실패하였습니다.<br>다시 접속해주세요.');
+			}
+		});
+	}
+	
+	// 생산량 차트
+	function productionChart(productionChart){
+		if(lineChart) {
+			lineChart.destroy();
+		}
+		
+		let el = document.getElementById("productionChart");
+	    if (!el) {
+	        el = document.createElement("div"); // 새로운 div 요소 생성
+	        el.id = "productionChart"; // ID 설정
+	        document.getElementById("chart").appendChild(el); // #chart 내부에 추가
+	    }
+	    const parentElement = el.parentElement;
+
+	    
+	    const data = {
+// 	        categories: productionChart.categories,
+// 	        series: productionChart.series.map(series => ({
+// 	            name: series.name,
+// 	            data: series.data.map(value => parseFloat(value) || 0)
+// 	        }))
+			categories: ['1월', '2월', '3월', '4월', '5월'],
+		    series: [
+		      {
+		        name: '매출',
+		        data: [5000, 7000, 8000, 6000, 9000]
+		      },
+		      {
+		        name: '이익',
+		        data: [3000, 5000, 6000, 4000, 7000]
+		      }
+		    ]
+	    };
+	    
+	    const options = {
+	        chart: { 
+	            title: '생산량',
+	            ...getChartSize(document.getElementById('chart'))
+	        },
+	        xAxis: {
+	            title: '원'
+	        },
+	        yAxis: {
+	            title: '원'
+	        },
+	        tooltip: {
+	            formatted: (value) => `${value}시간`
+	        },
+	        legend: {
+	            align: 'bottom'
+	        },
+	        series: {
+	            spline: true,
+	            showDot: true
+	        },
+	        theme: {
+	            series: {
+	                colors: ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96c93d', '#7950f2']
+	            }
+	        }
+	    };
+
+	    lineChart = toastui.Chart.lineChart({ el, data, options });
+	    
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(document.getElementById('chart'));
+	        lineChart.resize({ width, height });
+	    });
+	}
+	
+	// 불량률 차트
+	function errorChart(){
+		if(gradeChart) {
+			gradeChart.destroy();
+		}
+		
+		let el = document.getElementById("errorChart");
+	    if (!el) {
+	        el = document.createElement("div"); // 새로운 div 요소 생성
+	        el.id = "errorChart"; // ID 설정
+	        document.getElementById("chart").appendChild(el); // #chart 내부에 추가
+	    }
+	    const parentElement = el.parentElement;
+	    
+	    const data = {
+// 		        categories: chart.categories,
+// 		        series: chart.series.map(series => ({
+// 		            name: series.name,
+// 		            data: series.data.map(value => parseFloat(value) || 0)
+// 		        }))
+				categories: ['JORDAN01', 'JORDAN02', 'JORDAN03', 'JORDAN04', 'JORDAN05'],
+			    series: [
+			      {
+			        name: '양품수량',
+			        data: [500, 700, 800, 600, 900]
+			      },
+			      {
+			        name: '불량수량',
+			        data: [100, 200, 50, 40, 60]
+			      }
+			    ]
+		    };
+
+		const options = {
+		    chart: { 
+		        title: '불량률',
+		        ...getChartSize(parentElement)
+		    },
+		    legend: {
+		        align: 'bottom'
+		    },
+		    series: {
+		        stack: true,
+		        dataLabels: {
+		            visible: true
+		        }
+		    },
+		    theme: {
+		        series: {
+		            colors: ['#4ecdc4', '#ff6b6b']
+		        }
+		    }
+		};
+
+		gradeChart = toastui.Chart.barChart({ el, data, options });
+
+	    // resize 이벤트 핸들러
+	    window.addEventListener('resize', () => {
+	        const { width, height } = getChartSize(parentElement);
+	        gradeChart.resize({ width, height });
+	    });
+	}
+	
+	function processChart(){
+		console.log("processChart 함수 호출!");
+	}
+	
+	// 차트 크기를 계산하는 함수
+    function getChartSize(el) {
+        return {
+			width: el.clientWidth-100,
+            height: window.innerHeight - 640
+        };
+    }
+	
+</script>
+</html>

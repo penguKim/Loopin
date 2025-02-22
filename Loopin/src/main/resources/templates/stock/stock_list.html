@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+.orgchart .node .content {
+  white-space: pre-wrap; /* 줄바꿈 허용 */
+}
+.orgchart {
+  background: none !important; /* 배경 제거 */
+}
+/* 각 레벨별 배경색 */
+.orgchart .node .title.level-1 { background-color: #FF6F61; color: white; }
+.orgchart .node .title.level-2 { background-color: #FFB74D; color: white; }
+.orgchart .node .title.level-3 { background-color: #FFD54F; color: white; }
+.orgchart .node .title.level-4 { background-color: #81C784; color: white; }
+.orgchart .node .title.level-5 { background-color: #64B5F6; color: white; }
+/* 각 레벨별 내용 영역 테두리 색상 */
+.orgchart .node .content.level-1 { border-color: #FF6F61; }
+.orgchart .node .content.level-2 { border-color: #FFB74D; }
+.orgchart .node .content.level-3 { border-color: #FFD54F; }
+.orgchart .node .content.level-4 { border-color: #81C784; }
+.orgchart .node .content.level-5 { border-color: #64B5F6; }
+</style>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">재고관리</h1>
+							<!-- 탭 헤드 -->
+							<div class="d-flex justify-content-between">
+								<div class="">
+									<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
+										<li class="nav-item" role="presentation">
+											<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
+											type="button" role="tab" aria-controls="tab_grid" aria-selected="false">그리드</button>
+										</li>
+										<li class="nav-item" role="presentation">
+											<button class="nav-link" id="btn_tree_tab" data-bs-toggle="pill" data-bs-target="#tab_tree" 
+											type="button" role="tab" aria-controls="tab_tree" aria-selected="true">트리</button>
+										</li>
+									</ul>
+								</div>
+							</div>
+							<div id="filterModule" class="mb-3"></div>
+							<!-- 탭 바디 -->
+							<div class="tab-content pt-2" id="myTabContent">
+								<!-- 그리드 탭 -->
+								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
+									<div id="grid"></div>
+									<div id="btn_area" class="mt-2">
+										<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+										<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+									</div>
+								</div>
+								<!-- 트리 탭 -->
+								<div class="tab-pane fade d-flex justify-content-center" id="tab_tree" role="tabpanel" aria-labelledby="tree-tab">
+								 	<div id="orgChart"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, item_grid, detail_grid, treeMap, modal;
+	let itemFlag = false;
+	const btn_insert = $('#btn_insert');
+	const btn_delete = $('#btn_delete');
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	const filterConfig = [
+	    { key: 'warehouse_cd', label: '보관창고', type: 'select', list: [], col: 'col' },
+	    { key: 'warearea_cd', label: '창고구역', type: 'select', list: [], col: 'col' },
+	    { key: 'item_gc', label: '품목대분류', type: 'select', list: [], col: 'col' },
+	    { key: 'item_cc', label: '품목소분류', type: 'select', list: [], col: 'col' },
+	    { key: 'item_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col' },
+	];
+	let commonList = [];
+	let warehouseList = /*[[${warehouseList}]]*/[];
+	let sizeList = /*[[${commonList['SIZE']}]]*/ [];
+
+	// ------------------------------
+	
+	$(function() {
+		setGridTheme();
+		make_grid();
+		getGridList();
+		getList();
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -464);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -464);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+		
+		$('#btn_grid_tab').on('click', function() {
+			if(grid == null) {
+				make_grid();
+			}
+			resetSearchInput(filterConfig);
+			getGridList();
+			setElementHeight('#orgChart', -window.innerHeight);
+	        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	           	getGridList(filterValues);
+	        });
+			createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
+			createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
+		    if($('#btn_excel_download').length === 0) {
+		        $('#resetFilter').before(
+		        		'<input type="button" id="btn_excel_download" class="btn btn-primary me-2" value="엑셀">'
+		        		);
+		        
+		        $('#btn_excel_download').on('click', function() {
+		        	gridExcelDownload(grid, '출퇴근기록');
+		        });
+		    }
+		});
+		
+		$('#btn_tree_tab').on('click', function() {
+			getChartList();
+			setElementHeight('#orgChart', -320);
+	        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	        	getChartList(filterValues);
+	        });
+			createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
+			createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
+
+		});
+		
+		// 검색필터
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+           	getGridList(filterValues);
+        });
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '재고관리');
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        $('#tab_grid').hasClass('active') ? setGridHeight(grid, -534) : setElementHeight('#orgChart', -390);
+		    } else {
+		        $('#tab_grid').hasClass('active') ? setGridHeight(grid, -464) : setElementHeight('#orgChart', -320);
+		    }
+		});
+		
+		// 필터 엔터키 검색 이벤트
+		$(document).on('keypress', '#filterModule', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		    $('#tab_grid').hasClass('active')? getGridList(filterValues) : getChartList(filterValues);
+		});
+		// 필터 체인지 검색 이벤트
+		$(document).on('change', '#filterModule select', function(e) {
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        filterValues[config.key] = $(`#${config.key}`).val();
+		    }
+		    
+		    $('#tab_grid').hasClass('active')? getGridList(filterValues) : getChartList(filterValues);
+		});
+
+		// 보관창고 선택
+		$(document).on('change', '#warehouse_cd', function() {
+			changeSelectBox('#warehouse_cd', '#warearea_cd', '/select_WAREAREA_CC', 'warehouse_cd');
+		});
+		
+		// 보관구역 선택
+		$(document).on('click', '#warearea_cd', function(ev) {
+			if(!$('#warehouse_cd').val()) {
+				showAlert($('#warehouse_cd'), 'info', '보관창고 선택', '보관창고를 먼저 선택해주세요.');
+				return;
+			}
+		});
+		
+		// 품목대분류 선택
+		$(document).on('change', '#item_gc', function() {
+			changeSelectBox('#item_gc', '#item_cc', '/select_PRODUCT_CC', 'product_gc');
+		});
+		
+		// 품목소분류 선택
+		$(document).on('click', '#item_cc', function(ev) {
+			if(!$('#item_gc').val()) {
+				showAlert($('#item_gc'), 'info', '대분류 선택', '품목 대분류를 먼저 선택해주세요.');
+				return;
+			}
+		});
+		
+		// 재고 등록
+		btn_insert.on('click', function() {
+			make_modal_detail('');
+		});
+		
+		// 모달 품목대분류 선택
+		$(document).on('change', '#modal_item_gc', function() {
+			changeSelectBox('#modal_item_gc', '#modal_item_cc', '/select_PRODUCT_CC', 'product_gc');
+			$('.div_select')[['HALFPRO', 'PRODUCT'].includes($(this).val()) ? 'show' : 'hide']();
+			if($('#modal_item_cd').val()) {
+				inputClear(false);
+			}
+		});
+		
+		// 모달 품목소분류 선택
+		$(document).on('click', '#modal_item_cc', function(ev) {
+			if(!$('#modal_item_gc').val()) {
+				showAlert($('#modal_item_gc'), 'info', '대분류 선택', '품목 대분류를 먼저 선택해주세요.');
+				return;
+			}
+		});
+		$(document).on('change', '#modal_item_cc', function(ev) {
+			if($('#modal_item_cd').val()) {
+				inputClear(false);
+			}
+		});
+		
+		// 모달 품목코드 선택
+		$(document).on('click', '#modal_item_cd, #modal_item_nm', function(ev) {
+			if(!$('#modal_item_gc').val()) {
+				showAlert($('#modal_item_gc'), 'info', '대분류 선택', '품목 대분류를 먼저 선택해주세요.');
+				return;
+			}
+			if(!$('#modal_item_cc').val()) {
+				showAlert($('#modal_item_cc'), 'info', '소분류 선택', '품목 소분류를 먼저 선택해주세요.');
+				return;
+			}
+			let flag = ['HALFPRO', 'PRODUCT'].includes($('#modal_item_gc').val());
+			make_item_modal(flag);
+		});
+		
+		// 모달 보관구역 선택
+		$(document).on('click', '#modal_warearea_cd', function() {
+			if(!$('#modal_warehouse_cd').val()) {
+				showAlert($('#modal_warehouse_cd'), 'info', '보관창고 선택', '보관창고를 먼저 선택해주세요.');
+				return;
+			}
+		});
+		$(document).on('change', '#modal_warearea_cd', function() {
+			if($(this).val()) {
+				check_STOCK_AQ(itemFlag);
+			} else {
+				$('#modal_warearea_aq').val('');
+				$('#modal_warearea_sq').val('');
+			}
+		});
+
+		// 품목모달 검색
+		$(document).on('click', '#applyItemFilter', function() {
+			getItemGridList(itemFlag);
+		});
+		
+		$(document).on('keypress', '#itemFilters', function(e) {
+		    if (e.keyCode !== 13) return;
+		    getItemGridList(itemFlag);
+		});
+		$(document).on('change', '#itemFilters select', function() {
+			getItemGridList(itemFlag);
+		});
+		
+		// 재고 등록
+		$(document).on('click', '#btn_modal_save', function() {
+			insert_STOCK(itemFlag);
+		});
+		
+		// 등록 모달 초기화
+		$(document).on('click', '#btn_modal_reset', function( ){
+			inputClear(true);
+		});
+		
+		// 재고 삭제
+		btn_delete.on('click', function() {
+			let checkedRows = grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 재고를 체크해주세요.');
+			    return;
+			}
+			delete_STOCK(checkedRows);				
+		});
+		
+	});
+	
+	//  함수 --------------------------------
+	
+	// 모달 인풋 초기화
+	function inputClear(flag) {
+		if(flag) {
+			$('#modal_item_gc').val('');
+			$('#modal_item_cc').val('');			
+		}
+		$('#modal_item_cd').val('');
+		$('#modal_item_nm').val('');
+		$('#modal_item_sz').val('');
+		$('#modal_item_cn').val('');
+		$('#modal_item_cr').val('');
+		$('#modal_warehouse_nm').val('');
+		$('#modal_warehouse_cd').val('');
+		$('#modal_item_un').val('');
+		$('#modal_stock_aq').val('');
+		createSelectBox($('#modal_warearea_cd'), [], '선택하세요.');
+	}
+	
+	// 검색 인풋 초기화
+	function resetSearchInput(filter){
+		$('#warehouse_cd').val('');
+		$('#warearea_cd').val('');
+		$('#item_gc').val('');
+		$('#item_cc').val('');
+		$('#item_nm').val('');
+		if(!$('#additionalFilters').hasClass('d-none')) {
+			$('#toggleFilters').click();
+		}
+		
+	}
+
+	// 인풋 입력
+	function setModalValues(data, prefix) {
+		createSelectBox($('#modal_product_cc'), data['ccList'], '선택하세요.');
+		modal_product_cd.val(data[`${prefix}_cd`]);
+		modal_product_nm.val(data[`${prefix}_nm`]);
+		modal_product_gc.val(data[`${prefix}_gc`]);
+		$('.div_select')[['HALFPRO', 'PRODUCT'].includes(data[`${prefix}_gc`]) ? 'show' : 'hide']();
+		modal_product_cc.val(data[`${prefix}_cc`]);
+		modal_product_gd.val(data[`${prefix}_gd`]);
+		modal_product_un.val(data[`${prefix}_un`]);
+		modal_product_pr.val(data[`${prefix}_pr`]);
+		modal_product_wh.val(data[`${prefix}_wh`]);
+		modal_product_us.val(data[`${prefix}_us`]);
+		modal_product_rm.val(data[`${prefix}_rm`]);
+	    if ($('.div_select').is(':visible')) {
+	        $('#modal_product_sz').val(data['product_sz'].split(', ')).trigger('change');
+	        $('#modal_product_cr').val(data['product_cr'].split(', ')).trigger('change');
+	    }
+	    if(data[`${prefix}_pc`]) {
+			const imagePath = `/upload/${data[`${prefix}_pc`]}`;
+	        $('.uploadText').hide();
+	        $('.photoPreview').attr('src', imagePath).show();
+	        $('#btn_image_remove').removeClass('d-none');
+	    }
+	}
+	
+	// 그리드, 모달 -----------------------
+	
+	// 그리드 생성
+	function make_grid() {	
+		let baseColumns = [
+			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
+			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
+		    {header: '구역 잔량', name: 'WAREAREA_CP', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString()}`},		    
+		    {header: '품목대분류', name: 'ITEM_GN', sortable: true, filter: 'select'},
+		    {header: '품목소분류', name: 'ITEM_CN', sortable: true, filter: 'select'},
+		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
+		    // {header: '품목분류코드', name: 'stock_cd', hidden: true},
+   		    {header: '품목코드', name: 'ITEM_CD', sortable: true, filter: 'text'},
+		    {header: '품목명', name: 'ITEM_NM', sortable: true, filter: 'text'},
+		    {header: '색상', name: 'COLOR_NM', sortable: true, filter: 'select'},
+		    {header: '총 수량', name: 'STOCK_AQ', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString()}`},
+		    {header: '단위', name: 'ITEM_UN', align: 'center', sortable: true, filter: 'select'},
+		];
+		let additionalColumns = [];
+		
+		for(let i = 0; i <sizeList.length; i++) {
+			let temp = sizeList[i];
+			let column = {header : `${temp['common_cc']}`, name : `SIZE_${temp['common_cc']}`, width: '50', formatter: (cell) => `${cell.value?.toLocaleString()}`};
+			additionalColumns.push(column);
+		}
+		
+		const finalColumns = [
+		    ...baseColumns,
+		    ...additionalColumns,
+		];
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data: [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+		    header: {
+				height: 60,
+		        complexColumns: [
+					{
+						header: '사이즈',
+						name: 'SIZE',
+						childNames: sizeList.map(item => `SIZE_${item.common_cc}`)
+					}
+				]
+			},
+			columns : finalColumns,
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	ITEM_UN: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+				},
+			},
+		});
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			console.log(row);
+			if (ev.columnName.includes('SIZE_')) {
+				console.log(row[ev.columnName]);
+				make_stock_modal_detail(row, ev.columnName);
+			}
+		});
+    }
+	
+	// 그리드 클래스 지정
+	function setGridClass() {
+		grid.getData().forEach((row, index) => {
+	       	if(['MATERIALS', 'SUBMAT'].includes(row['ITEM_GC'])) {
+				grid.addCellClassName(index, 'STOCK_AQ', 'bg-opacity-50');
+				grid.addCellClassName(index, 'STOCK_AQ', 'text-black');
+				grid.addCellClassName(index, 'STOCK_AQ', 'bg-warning');
+	       	} else {
+	        	sizeList.forEach(item => {
+	        		let colName = `SIZE_${item.common_cc}`;
+	        		if(row[colName] > 0) {
+						grid.addCellClassName(index, colName, 'bg-opacity-50');
+						grid.addCellClassName(index, colName, 'text-black');
+						grid.addCellClassName(index, colName, 'bg-warning');
+	        		}
+	        	});
+			}
+       });
+	}
+	
+	// 상세 모달
+	function make_modal_detail(process) {
+		let text = !process ? '등록' : '수정';
+		let title = `재고 ${text}`;
+		const div_modal = 'div_STOCK_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+								<label for="modal_item_gc" class="col-2 col-form-label">품목대분류<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_item_gc" class="form-select"></select></div>
+								<label for="modal_item_cc" class="col-2 col-form-label">품목소분류<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_item_cc" class="form-select"></select></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_item_cd" class="col-2 col-form-label">품목코드<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_item_cd" readonly></div>
+								<label for="modal_item_nm" class="col-2 col-form-label">품목명<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_item_nm" readonly></div>
+							</div>
+							<div class="row mb-3 div_select" style="display: none;">
+								<label for="modal_item_sz" class="col-2 col-form-label">사이즈<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" id="modal_item_sz" class="form-control" readonly></div>
+								<label for="modal_item_cn" class="col-2 col-form-label">색상<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" id="modal_item_cn" class="form-control" readonly></div>
+								<input type="hidden" id="modal_item_cr">
+							</div>
+							<div class="row mb-3">
+								<label for="modal_warehouse_nm" class="col-2 col-form-label">보관창고<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" id="modal_warehouse_nm" class="form-control" readonly></div>
+								<input type="hidden" id="modal_warehouse_cd">
+								<label for="modal_warearea_cd" class="col-2 col-form-label">보관구역<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_warearea_cd" class="form-select"></select></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_warearea_aq" class="col-2 col-form-label">구역잔량</label>
+								<div class="col-4"><input type="text" id="modal_warearea_aq" class="form-control" disabled></div>
+								<label for="modal_warearea_sq" class="col-2 col-form-label">재고적재량</label>
+								<div class="col-4"><input type="text" id="modal_warearea_sq" class="form-control" disabled></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_item_un" class="col-2 col-form-label">기준단위</label>
+								<div class="col-4"><input type="text" id="modal_item_un" class="form-control" readonly></div>
+								<label for="modal_stock_aq" class="col-2 col-form-label">수량<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_stock_aq"></div>
+							</div>
+						</div>
+						<div class="modal-footer d-flex justify-content-between">
+							<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
+							<div>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="submit" id="btn_modal_save" class="btn btn-primary">${text}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			createSelectBox($('#modal_item_gc'), commonList['PRDTYPE'], '선택하세요.');
+			createSelectBox($('#modal_item_cc'), [], '선택하세요.');
+			createSelectBox($('#modal_warearea_cd'), [], '선택하세요.');
+			
+			$('#modal_stock_aq').mask('000,000,000', {
+			    reverse: true,
+			});
+			
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+ 			itemFlag = false;
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	// 품목 선택 모달
+	function make_item_modal(flag) {
+		let title = '품목 선택';
+		const div_modal = 'div_item_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="itemFilters" class="row mb-3">
+						        <div class="col">
+						            <label for="itemModal_item_cd" class="form-label">품목코드</label>
+						            <input type="text" id="itemModal_item_cd" class="form-control" placeholder="품목코드 입력">
+						        </div>
+						        <div class="col">
+						            <label for="itemModal_item_nm" class="form-label">품목명</label>
+						            <input type="text" id="itemModal_item_nm" class="form-control" placeholder="품목명 입력">
+						        </div>
+						        <div class="col ${!flag ? 'd-none' : ''}">
+						            <label for="itemModal_item_sz" class="form-label">사이즈</label>
+						            <select id="itemModal_item_sz" class="form-select"></select>
+						        </div>
+						        <div class="col ${!flag ? 'd-none' : ''}">
+						            <label for="itemModal_item_cr" class="form-label">색상</label>
+						            <select id="itemModal_item_cr" class="form-select"></select>
+						        </div>
+						        <div class="col d-flex justify-content-end align-items-end mt-3">
+						            <button id="applyItemFilter" class="btn btn-primary me-2">검색</button>
+						        </div>
+			                </div>
+							<div id="item_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	createSelectBox($('#itemModal_item_sz'), commonList['SIZE'], '선택하세요.');
+        	createSelectBox($('#itemModal_item_cr'), commonList['COLOR'], '선택하세요.');
+        	
+        	itemFlag = ['HALFPRO', 'PRODUCT'].includes($('#modal_item_gc').val());
+			make_item_grid(itemFlag);
+			getItemGridList(itemFlag);
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	// 품목지정 그리드
+	function make_item_grid(flag) {	
+		let baseColumns = [
+		    {header: '대분류', name: 'item_gn', sortable: true, filter: 'select'},
+		    {header: '소분류', name: 'item_cn', sortable: true, filter: 'select'},
+		    {header: '품목대분류코드', name: 'item_gc', hidden: true},
+		    {header: '품목소분류코드', name: 'item_cc', hidden: true},
+		    {header: '품목코드', name: 'item_cd', sortable: true, filter: 'text'},
+		    {header: '품목명', name: 'item_nm', sortable: true, filter: 'text'},
+		];
+		let additionalColumns = [
+		    {header: '사이즈', name: 'item_sz', sortable: true, filter: 'select'},
+		    {header: '색상', name: 'color_nm', sortable: true, filter: 'select'},
+		];
+		let endColumns = [
+			{header: '단위', name: 'item_un', align: 'center', sortable: true, filter: 'select'},
+			{header: '보관가능창고', name: 'warehouse_nm', sortable: true, filter: 'select'},
+			{header: '선택', name: 'choice', align: 'center',
+				formatter: () => `<button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">선택</button>`
+			}
+		];
+		
+		const finalColumns = [
+		    ...baseColumns,
+		    ...(flag ? additionalColumns : []),
+		    ...endColumns
+		];
+		item_grid = new tui.Grid({
+			el : document.getElementById('item_grid'),
+			data: [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+			],
+			bodyHeight : 400,
+			columns : finalColumns,
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	choice: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+				},
+			},
+		});
+		
+		item_grid.on('click', function(ev) {
+			if (ev.columnName == 'choice') {
+				let row = item_grid.getRow(ev.rowKey);
+				$('#modal_item_cd').val(row['item_cd']);	
+				$('#modal_item_nm').val(row['item_nm']);	
+				$('#modal_item_un').val(row['item_un']);
+				$('#modal_warehouse_cd').val(row['warehouse_cd']);
+				$('#modal_warehouse_nm').val(row['warehouse_nm']);
+				changeSelectBox('#modal_warehouse_cd', '#modal_warearea_cd', '/select_WAREAREA_CC', 'warehouse_cd');
+				
+				if(['HALFPRO', 'PRODUCT'].includes($('#modal_item_gc').val())) {
+					$('#modal_item_sz').val(row['item_sz']);
+					$('#modal_item_cn').val(row['color_nm']);
+					$('#modal_item_cr').val(row['color']);
+				}
+			}
+		});
+
+    }
+	
+	
+	// 재고 상세정보 모달
+	function make_stock_modal_detail(row, columnName) {
+		let title = '재고 상세정보';
+		const div_modal = 'div_detail_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="detail_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	// createSelectBox($('#itemModal_item_sz'), commonList['SIZE'], '선택하세요.');
+        	// createSelectBox($('#itemModal_item_cr'), commonList['COLOR'], '선택하세요.');
+        	
+        	// itemFlag = ['HALFPRO', 'PRODUCT'].includes($('#modal_item_gc').val());
+			make_detail_grid(itemFlag);
+			// getItemGridList(itemFlag);
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	// 재고 상세정보 그리드
+	function make_detail_grid(flag) {	
+		let baseColumns = [
+		    {header: '대분류', name: 'item_gn', sortable: true, filter: 'select'},
+		    {header: '소분류', name: 'item_cn', sortable: true, filter: 'select'},
+		    {header: '품목대분류코드', name: 'item_gc', hidden: true},
+		    {header: '품목소분류코드', name: 'item_cc', hidden: true},
+		    {header: '품목코드', name: 'item_cd', sortable: true, filter: 'text'},
+		    {header: '품목명', name: 'item_nm', sortable: true, filter: 'text'},
+		];
+		let additionalColumns = [
+		    {header: '사이즈', name: 'item_sz', sortable: true, filter: 'select'},
+		    {header: '색상', name: 'color_nm', sortable: true, filter: 'select'},
+		];
+		let endColumns = [
+			{header: '단위', name: 'item_un', align: 'center', sortable: true, filter: 'select'},
+		];
+		
+		const finalColumns = [
+		    ...baseColumns,
+		    ...(flag ? additionalColumns : []),
+		    ...endColumns
+		];
+		detail_grid = new tui.Grid({
+			el : document.getElementById('detail_grid'),
+			data: [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+			],
+			bodyHeight : 400,
+			columns : finalColumns,
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	choice: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+				},
+			},
+		});
+
+    }
+	
+	// 차트 생성
+	function make_treeMap(list) {
+		$('#orgChart').orgchart({
+			data: list,
+			nodeContent: 'contentSummary',
+			pan: true,
+			zoom: true,
+			verticalLevel: 6,
+			nodeTemplate: function(data) {
+				const titleHTML = `<div class="title fs-6 level-${data.level}">${data.name}</div>`;
+				const height = data.nodeHeight || 0;
+				const contentHTML = `<div class="content level-${data.level}" style="height:${height}px;">${data.contentSummary || ''}</div>`;
+				return titleHTML + contentHTML;
+			},
+		});
+	}
+	
+	// 차트 데이터 계증구조 생성
+	function setChartData(data) {
+		const treeObjs = [];
+		const warehouseMap = {};
+	
+		data.forEach(row => {
+			const {
+				WAREHOUSE_CD, WAREHOUSE_NM, WAREAREA_CD, WAREAREA_NM,
+				ITEM_GC, ITEM_GN, ITEM_CD, ITEM_NM, STOCK_TP,
+				COLOR, COLOR_NM, SIZE, STOCK_AQ
+			} = row;
+	
+			// 1. 창고 노드 (level 1)
+			if (!warehouseMap[WAREHOUSE_CD]) {
+				warehouseMap[WAREHOUSE_CD] = {
+					id: WAREHOUSE_CD,
+					name: WAREHOUSE_NM,
+					level: 1,
+					children: []
+				};
+				treeObjs.push(warehouseMap[WAREHOUSE_CD]);
+			}
+			const whNode = warehouseMap[WAREHOUSE_CD];
+			// 2. 구역 노드 (level 2)
+			let areaNode = whNode.children.find(child => child.id === `${WAREHOUSE_CD}-${WAREAREA_CD}`);
+			if (!areaNode) {
+				areaNode = {
+					id: `${WAREHOUSE_CD}-${WAREAREA_CD}`,
+					name: WAREAREA_NM,
+					level: 2,
+					children: []
+				};
+				whNode.children.push(areaNode);
+			}
+			// 3. 품목 대분류 노드 (level 3)
+			let itemGCNode = areaNode.children.find(child => child.id === `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}`);
+			if (!itemGCNode) {
+				itemGCNode = {
+					id: `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}`,
+					name: ITEM_GN,
+					level: 3,
+					children: []
+				};
+				areaNode.children.push(itemGCNode);
+			}
+			// 4. 품목 코드 노드 (level 4)
+			let itemNode = itemGCNode.children.find(child => child.id === `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}-${ITEM_CD}`);
+			if (!itemNode) {
+				itemNode = {
+					id: `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}-${ITEM_CD}`,
+					name: ITEM_NM,
+					level: 4,
+					children: []
+				};
+				itemGCNode.children.push(itemNode);
+			}
+	
+			// 5. STOCK_TP가 "Y"인 경우: 색상 노드 (최하위, level 5)에서 사이즈별 수량 집계
+			if (STOCK_TP === 'Y') {
+				let colorNode = itemNode.children.find(child => child.id === `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}-${ITEM_CD}-${COLOR}`);
+				if (!colorNode) {
+					colorNode = {
+						id: `${WAREHOUSE_CD}-${WAREAREA_CD}-${ITEM_GC}-${ITEM_CD}-${COLOR}`,
+						name: COLOR_NM,  // 색상명을 제목에 표시
+						level: 5,
+						contentSummary: "",  // 하위에서 집계된 사이즈별 수량을 저장 (최종 노드)
+						sizesSummary: {},
+						children: []
+					};
+					itemNode.children.push(colorNode);
+				}
+				// 사이즈별 수량 집계
+				if (!colorNode.sizesSummary[SIZE]) {
+					colorNode.sizesSummary[SIZE] = 0;
+				}
+				colorNode.sizesSummary[SIZE] += STOCK_AQ;
+				// 집계한 사이즈 정보를 줄바꿈으로 구분한 문자열로 생성
+				const sizesStr = Object.entries(colorNode.sizesSummary)
+					.map(([sz, qty]) => `${sz}: ${qty}개`)
+					.join("\n");
+				colorNode.contentSummary = `<div class="text-start fs-6 fw-bolder ps-3 pb-1">${sizesStr}</div>`;
+				// 색상 노드 높이를, 집계된 사이즈 행의 수 * 20px 로 지정
+				const numOfSizeLines = Object.keys(colorNode.sizesSummary).length;
+				colorNode.nodeHeight = numOfSizeLines * 20;
+			} else if (STOCK_TP === 'N') {
+				// STOCK_TP가 "N"인 경우: ITEM_CD 노드에 수량 정보 추가 (최종 노드는 level 4)
+				itemNode.name = ITEM_NM;
+				itemNode.contentSummary = `<div class="text-start fs-6 fw-bolder ps-3 pb-1">${STOCK_AQ}개</div>`;
+				itemNode.level = 6;
+				itemNode.nodeHeight = 20;
+			}
+		});
+		return treeObjs;
+	}
+
+	// ajax 함수 --------------------
+	// 공통코드 조회
+	async function getList() {
+		commonList = await getCommonList("PRDTYPE", "SIZE", "COLOR");
+		createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
+		createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
+	}
+	
+	// 그리드 조회
+	async function getGridList(filter = {}) {
+	    try {
+	        const jsonData = {
+	            stockFilter: {
+					...filter,
+				}
+	        };
+	        
+	        const ajaxData = await callAjaxPost(`/select_STOCK_list`, JSON.stringify(jsonData));
+	        grid.resetData(ajaxData.data.contents);
+	        setGridClass();
+	    } catch (error) {
+	        console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+	
+	// 품목 선택 그리드 조회
+	async function getItemGridList(flag) {
+		let prefix = flag ? 'product' : 'material';
+	    try {
+	        const jsonData = {
+	        	stockFilter: {
+	        		item_cd: $('#itemModal_item_cd').val().toUpperCase() || '',
+	        		item_nm: $('#itemModal_item_nm').val() || '',
+	        		...(flag ? {
+		        		item_sz: $('#itemModal_item_sz').val() || '',
+		        		item_cr: $('#itemModal_item_cr').val() || '',
+		        		} : {})
+	        		},
+        		[`${prefix}_gc`]: $('#modal_item_gc').val(),
+        		[`${prefix}_cc`]: $('#modal_item_cc').val(),
+	        };
+	        
+	        const ajaxData = await callAjaxPost(`/select_STOCK_${prefix.toUpperCase()}`, JSON.stringify(jsonData));
+	        item_grid.resetData(ajaxData);
+	    } catch (error) {
+	        console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+	
+	// 차트 조회
+	async function getChartList(filter = {}) {
+		try {
+	        const jsonData = {
+	            stockFilter: {
+					...filter,
+				}
+	        };
+			
+		    const ajaxData = await callAjaxPost(`/select_STOCK_chart`, JSON.stringify(jsonData));
+			
+			let chartList = ajaxData['list'];
+		    let orgChartData = setChartData(chartList);
+		    let finalData = {
+	    	      id: "root",
+	    	      name: "Loopin",
+	    	      children: orgChartData
+	    	    };
+		    let datalist;
+		    $('#orgChart').empty();
+		    make_treeMap(orgChartData.length == 1 ? orgChartData[0] : finalData);
+
+		} catch(error) {
+	        console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+		}
+		
+	}
+	
+	// 품목 대분류 선택
+	async function changeSelectBox(sourceId, targetId, api, key, rowValue) {
+		const source = sourceId && $(`${sourceId}`);
+		const value = source?.val() || rowValue;
+
+	    try {
+	        let ajaxData = await callAjaxPost(api, JSON.stringify({[key]: value}));
+	        createSelectBox($(`${targetId}`), ajaxData['list'], '선택하세요.');
+	    } catch (error) {
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+
+
+	// 품목 등록
+	async function insert_STOCK(flag) {
+		let prefix = flag ? 'product' : 'material';
+	    let item_cd = $('#modal_item_cd').val();
+	    if(flag) {
+	    	item_cd = [$('#modal_item_cd').val(), $('#modal_item_sz').val(), $('#modal_item_cr').val()].join('-');
+	    }
+	    const validations = [
+	        { field: $('#modal_item_gc'), message: '품목대분류를 선택해주세요.' },
+	        { field: $('#modal_item_cc'), message: '품목소분류를 선택해주세요.' },
+	        { field: $('#modal_item_cd'), message: '품목을 선택해주세요.' },
+	        { field: $('#modal_item_nm'), message: '품목을 선택해주세요.' },
+	        { field: $('#modal_item_sz'), message: '사이즈를 선택해주세요.', checkIf: () => $('.div_select').is(':visible') },
+	        { field: $('#modal_item_cr'), message: '색상을 선택해주세요.',  checkIf: () => $('.div_select').is(':visible') },
+	        { field: $('#modal_warearea_cd'), message: '보관구역을 선택해주세요.' },
+	        // { field: $('#modal_stock_aq'), message: '수량을 입력해주세요.' },
+	    ];
+	
+	    const invalidField = validations.find(v => {
+	        if (v.checkIf && !v.checkIf()) return false;
+	        const value = v.field.val();
+	        return !value?.trim();
+	    });
+	
+	    if (invalidField) {
+	        showAlert(invalidField.field, 'warning', '', invalidField.message);
+	        return;
+	    }
+	    
+	    let areaQty = parseInt($('#modal_warearea_aq').val().replace(/,/g, ''));
+	    let areaStockQty = parseInt($('#modal_warearea_sq').val().replace(/,/g, ''));
+	    let stockQty = parseInt($('#modal_stock_aq').val().replace(/,/g, ''));
+	    let count = areaQty - (areaStockQty + stockQty);
+		if(count < 0) {
+	        showAlert($('#modal_stock_aq'), 'warning', '', '재고 수량은 구역잔량을 초과할 수 없습니다.');
+	        return;
+		}
+	    
+	    
+		if(!await showConfirm(`재고 등록`, `재고를 등록하시겠습니까?`)) {
+			return;
+		}
+		
+	    // 기본 제품 정보
+	    const data = {
+    		stock: {
+    			item_cd,
+    			warehouse_cd: $('#modal_warehouse_cd').val(),
+    			warearea_cd: $('#modal_warearea_cd').val(),
+    			stock_aq: parseInt($('#modal_stock_aq').val().replace(/,/g, '')),
+    	        stock_tp: flag ? 'Y' : 'N',
+    		}
+	    }
+	    
+		try {
+		    let ajaxData = await callAjaxPost('/insert_STOCK', JSON.stringify(data));
+		    
+			grid.resetData(ajaxData['list']);
+			setGridClass();
+			resetSearchInput();
+			modal.hide();
+			showAlert('', 'success', `등록 성공`, `등록에 성공하였습니다.`);
+		} catch (error) {
+			console.log(error);
+			showAlert('', 'error', `등록 실패`, `등록에 실패하였습니다.`);
+		}
+	}
+
+
+	// 품목 삭제
+	async function delete_STOCK(checkedRows) {
+		if (!await showConfirm(`재고 삭제`, '선택한 재고를 삭제하시겠습니까?')) { 
+			return;
+		}
+		try {
+			let ajaxData = await callAjaxPost('/delete_STOCK', JSON.stringify({stockList: checkedRows}));
+			
+			grid.resetData(ajaxData['list']);
+			setGridClass();
+			resetSearchInput();
+			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
+		} catch (error) {
+			console.log(error);
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
+	}
+	
+
+
+	async function check_STOCK_AQ(flag){
+	    let item_cd = $('#modal_item_cd').val();
+	    if(flag) {
+	    	item_cd = [$('#modal_item_cd').val(), $('#modal_item_sz').val(), $('#modal_item_cr').val()].join('-');
+	    }
+	    let data = {
+	   		stock: {
+	   			item_cd,
+	   			warehouse_cd: $('#modal_warehouse_cd').val(),
+	   			warearea_cd: $('#modal_warearea_cd').val(),
+	   		}
+	    }
+	    
+		try {
+			const ajaxData = await callAjaxPost('/check_STOCK_AQ', JSON.stringify(data));
+			
+			let stock = ajaxData['stock'];
+			let msg = `해당 구역에는 <span class="fw-bold">${stock['stock_aq']}개</span>의 재고가 있습니다.<br>수정하시겠습니까?`;
+			if(stock['stock_aq'] > 0) {
+				let con = await showConfirm('', msg);
+				if(con) {
+					$('#modal_warearea_aq').val(stock['warearea_cp'].toLocaleString());
+					$('#modal_warearea_sq').val(stock['stock_aq'].toLocaleString());
+					// $('#modal_stock_aq').val(count.toLocaleString());
+				} else {
+					$('#modal_warearea_cd').val('');
+				}
+			}
+			
+		} catch (error) {
+			console.log(error);
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
+	}
+
+</script>
+</html>

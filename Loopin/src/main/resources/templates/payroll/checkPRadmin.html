@@ -1,0 +1,430 @@
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet"
+	href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<main id="main" class="main">
+	<div class="card">
+		<div class="card" id="div_card">
+			<div class="card-body">
+				<div class="card-title"> 급여 이력 조회</div>
+				<div id="gridbase"></div>
+			</div>
+		</div>
+	</div>
+</main>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped');
+	
+	function formatCurrency(value) {
+		if (typeof value === 'number') {
+		    return value.toLocaleString('ko-KR') + '원';
+		  }
+	}
+	
+	  ///////////////
+	 // 그리드 AJAX //
+	////////////////
+
+	/* 메인그리드 */
+	$.ajax({
+		url: "/checkpradmin",
+		method:"GET",
+		dataType:"JSON",
+		success : function (data){
+			console.log('가져온 데이터',data);
+			const basedata = data.map((item, index) => ({
+				...item,
+				NUM : data.length - index,
+				PR_TA : formatCurrency(item.PR_TA),
+				PR_TD : formatCurrency(item.PR_TD),
+			}));
+			gridbase.resetData(basedata);
+		},
+		error : function(xhr, status, error){
+			console.log("관리자 급여 조회 데이터를 불러오는데 실패했습니다.",error);
+		}
+	});
+	
+	  //////////////
+	 // 그리드 생성 //
+	//////////////
+	
+	/* 메인그리드 */
+	const gridbase = new tui.Grid({
+		el: document.getElementById('gridbase'),
+		responsive: true,
+		scrollX: true,
+		scrollY: true,
+		//bodyHeight : 665,
+		columns: [
+			{header: 'NO.', name: 'NUM', align: 'center'},
+			{header: '지급년월', name: 'PR_GM', align: 'center'},
+			{header: '귀속년월', name: 'PR_WM', align: 'center'},
+			{header: '지급총액', name: 'PR_TA', align: 'right'},
+			{header: '공제총액', name: 'PR_TD', align: 'right'},
+			{
+				header: '명세서',
+				name: 'details',
+				align: 'center',
+				formatter: function () {
+					return `
+					<button type="button" class="btn btn-link btn_detail" data-bs-toggle="modal" data-bs-target="#firstmodal">조회</button>
+					<button type="button" class="btn btn-link btn_email">이메일</button>
+				`;
+				}
+			}
+		],
+	});
+	  
+	/* 세번째 그리드 함수 */
+	function make_gridspe(gridContainer2) {
+	    return new tui.Grid({
+	        el: gridContainer2,  
+	        responsive: true,
+	        scrollX: true,
+	        scrollY: true,
+	        bodyHeight: 300,
+	        header: {
+				height : 160,
+            	complexColumns:[
+    				{
+    					header : '지급액',
+    					name : 'PAY',
+    					childNames: ['PRDETAIL_BS','PRDETAIL_MT','PRDETAIL_OT','PRDETAIL_NA','PRDETAIL_WA','PRDETAIL_HA','PRDETAIL_RL','PRDETAIL_BN']
+    				}, 
+    				{
+    					header : '공제액',
+    					name : 'DEDUCATION',
+    					childNames: ['PRDETAIL_GM','PRDETAIL_GY','PRDETAIL_GG','PRDETAIL_LG']
+    				}, 
+    				{
+    					header : '명세서',
+    					name : 'SEPC',
+    					childNames: ['PRDETAIL_RS','PRDETAIL_TA','PAY','PRDETAIL_TD','DEDUCATION']
+    				}, 
+            		
+            	]
+            },
+            columns: [
+            	{
+					header : '사원번호',
+					name : 'EMPLOYEE_CD',
+					align: 'center',
+				}, 
+				{
+					header : '사원명',
+					name : 'EMPLOYEE_NM',
+					align: 'center',
+				}, 
+				{
+					header : '실지급액',
+					name : 'PRDETAIL_RS',
+					align: 'right',
+				}, 
+				{
+					header : '총지급액',
+					name : 'PRDETAIL_TA',
+					align: 'right',
+				}, 
+				{
+					header : '기본급',
+					name : 'PRDETAIL_BS',
+					align: 'right',
+				}, 
+				{
+					header : '식대',
+					name : 'PRDETAIL_MT',
+					align: 'right',
+				}, 
+				{
+					header : '연장수당',
+					name : 'PRDETAIL_OT',
+					align: 'right',
+				}, 
+				{
+					header : '야근수당',
+					name : 'PRDETAIL_NA',
+					align: 'right',
+				}, 
+				{
+					header : '주말근무수당',
+					name : 'PRDETAIL_WA',
+					align: 'right',
+				}, 
+				{
+					header : '휴일수당',
+					name : 'PRDETAIL_HA',
+					align: 'right',
+				}, 
+				{
+					header : '연차수당',
+					name : 'PRDETAIL_RL',
+					align: 'right',
+				}, 
+				{
+					header : '상여',
+					name : 'PRDETAIL_BN',
+					align: 'right',
+				}, 
+				{
+					header : '총공제액',
+					name : 'PRDETAIL_TD',
+					align: 'right',
+				}, 
+				{
+					header : '국민연금',
+					name : 'PRDETAIL_GM',
+					align: 'right',
+				}, 
+				{
+					header : '고용보험',
+					name : 'PRDETAIL_GY',
+					align: 'right',
+				}, 
+				{
+					header : '건강보험',
+					name : 'PRDETAIL_GG',
+					align: 'right',
+				}, 
+				{
+					header : '장기요양',
+					name : 'PRDETAIL_LG',
+					align: 'right',
+				}, 
+            ],
+            columnOptions: {
+    			resizable: true,
+    		},
+	    });
+	}
+	
+	  /////////////
+	 // 조회 버튼 //
+	/////////////
+
+	$ ('#gridbase').on('click', '.btn_detail', function(event) {
+		console.log('조회 버튼 클릭됨');
+		
+		const basetarget = event.target;
+		console.log('베이스 타겟', basetarget); 
+		
+		const basetargetcell = basetarget.closest('.tui-grid-cell');
+		console.log('베이스 타겟 셀 정보',basetargetcell);
+		
+	    const basetargetrowkey = basetargetcell.dataset.rowKey;
+		console.log('베이스 타겟 행 키 정보', basetargetrowkey);
+		
+		const basetargetrowdata = gridbase.getRow(basetargetrowkey);
+		console.log('베이스 타겟 행 정보',basetargetrowdata);
+		
+		const modalid = 'firstmodal';
+		let modalEl = document.getElementById(modalid);
+		
+		if(!modalEl){
+			const modalHtml = `
+				<div class="modal" id="${modalid}" tabindex="-1">
+					<div class="modal-dialog modal-dialog-centered modal-xl">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">${basetargetrowdata.PR_WM}(귀속년월) 명세서</h5>
+								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+							</div>
+							<div class="modal-body">
+								<div id="gridspes"></div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+								<button type="button" class="btn btn-primary">메일보내기</button>
+							</div>
+						</div>
+					</div>
+				</div>`;
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			modalEl= document.getElementById(modalid);
+		}
+	     // 모달이 닫힐 때 DOM에서 제거
+		modalEl.addEventListener('hidden.bs.modal', function () {
+			modalEl.remove();
+			console.log('첫번째 모달이 닫히고 삭제되었습니다.');
+		});
+	     
+	 	const modal = new bootstrap.Modal(modalEl);
+        
+		modalEl.addEventListener('shown.bs.modal', function () {
+			 // 그리드 컨테이너가 DOM에 생성된 후
+            const gridContainer = document.getElementById('gridspes');
+            console.log('gridcon', gridContainer);
+			
+			if(gridContainer){
+				const pr_id = basetargetrowdata.PR_ID;
+				console.log('prid',pr_id);
+				/* 두번째 그리드 */
+				$.ajax({
+					url: "/PRadminmadal1",
+					method:"GET",
+					dataType:"JSON",
+					data : {
+						pr_id : pr_id
+					},
+					success : function (data){
+						console.log('가져온 데이터',data);
+						const spesdata = data.map((item, index) => ({
+							...item,
+							num : data.length - index,
+							PRDETAIL_BS : formatCurrency(item.PRDETAIL_BS),
+							PRDETAIL_RS : formatCurrency(item.PRDETAIL_RS),
+							PRDETAIL_TA : formatCurrency(item.PRDETAIL_TA),
+							PRDETAIL_TD : formatCurrency(item.PRDETAIL_TD),
+						}));
+						
+						const gridspes = new tui.Grid({
+		                    el: gridContainer,
+		                    responsive: true,
+		                    scrollX: true,
+		                    scrollY: true,
+		                    bodyHeight: 400,
+		                    columns: [
+		                        {header: 'NO.', name: 'num', align:'center'},
+		                        {header: '사원코드', name: 'EMPLOYEE_CD', align:'center'},
+		                        {header: '사원명', name: 'EMPLOYEE_NM', align:'center'},
+		                        {header: '기본급', name: 'PRDETAIL_BS', align: 'right'},
+		                        {header: '총지급액', name: 'PRDETAIL_TA', align: 'right'},
+		                        {header: '총공제액', name: 'PRDETAIL_TD', align: 'right'},
+		                        {header: '실지급액', name: 'PRDETAIL_RS', align: 'right'},
+		                    ]
+		                });
+						
+						gridspes.resetData(spesdata); // 사원명 join할건지 테이블에 포함시킬건지 정해야함.
+						
+						  ///////////////////
+						 // 두번째 그리드 선택 //
+						///////////////////
+				        $(gridspes.el).on('click', '.tui-grid-cell', function(e){
+				        	console.log('두번재 그리드 셀 클릭');
+				        	const spescell = e.target.closest('.tui-grid-cell');
+				        	console.log('두번째 그리드 셀 정보',spescell);
+				        	const spescellrowkey = spescell.dataset.rowKey;
+				    		console.log('두번째 그리드 행 키 정보', spescellrowkey);
+				    		const spescellrowdata = gridspes.getRow(spescellrowkey);
+				    		console.log('두번째 그리드 타겟 행 정보',spescellrowdata);
+				    		
+				    		const modalid = 'secondmodal';
+				    		let modalEl = document.getElementById(modalid);
+				    		
+				    		if(!modalEl){
+				    			const modalHtml = `
+				    				<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false" >
+				    					<div class="modal-dialog modal-dialog-centered modal-xl">
+				    						<div class="modal-content">
+				    							<div class="modal-header">
+				    								<h5 class="modal-title">${basetargetrowdata.PR_WM}(귀속년월) 명세서</h5>
+				    								<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				    							</div>
+				    							<div class="modal-body">
+				    								<div id="gridspe"></div>
+				    							</div>
+				    							<div class="modal-footer">
+				    								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+				    							</div>
+				    						</div>
+				    					</div>
+				    				</div>`;
+				    			document.body.insertAdjacentHTML('beforeend', modalHtml);
+				    			modalEl= document.getElementById(modalid);
+				    		}
+				    	     // 모달이 닫힐 때 DOM에서 제거
+				    		modalEl.addEventListener('hidden.bs.modal', function () {
+				    			modalEl.remove();
+				    			console.log('두번째 모달이 닫히고 삭제되었습니다.');
+				    		});
+				    	     
+				    	 	const modal = new bootstrap.Modal(modalEl);
+				            
+				    		modalEl.addEventListener('shown.bs.modal', function () {
+				    			console.log('두번째 모달이 열렸습니다.');
+				    			// 그리드 컨테이너가 DOM에 생성된 후
+				                const gridContainer2 = document.getElementById('gridspe');
+				                console.log('gridcon2', gridContainer2);
+				    			
+				    			if(gridContainer){
+				    				const prdetail_id = spescellrowdata.PRDETAIL_ID;
+				    				console.log('prdetailid',prdetail_id);
+					    			$.ajax({
+										url: "/PRadminmadal2",
+										method:"GET",
+										dataType:"JSON",
+										data : {
+											prdetail_id : prdetail_id,
+										},
+										success : function (data){
+											console.log('모달2 데이터',data);
+											const m2data = data.map(item => ({
+													...item,
+													PRDETAIL_RS : formatCurrency(item.PRDETAIL_RS),
+					            					PRDETAIL_BN : formatCurrency(item.PRDETAIL_BN),
+					            					PRDETAIL_BS : formatCurrency(item.PRDETAIL_BS),
+					            					PRDETAIL_GG : formatCurrency(item.PRDETAIL_GG),
+					            					PRDETAIL_GM : formatCurrency(item.PRDETAIL_GM),
+					            					PRDETAIL_GY : formatCurrency(item.PRDETAIL_GY),
+					            					PRDETAIL_HA : formatCurrency(item.PRDETAIL_HA),
+					            					PRDETAIL_LG : formatCurrency(item.PRDETAIL_LG),
+					            					PRDETAIL_MT : formatCurrency(item.PRDETAIL_MT),
+					            					PRDETAIL_NA : formatCurrency(item.PRDETAIL_NA),
+					            					PRDETAIL_OT : formatCurrency(item.PRDETAIL_OT),
+					            					PRDETAIL_TA : formatCurrency(item.PRDETAIL_TA),
+					            					PRDETAIL_TD : formatCurrency(item.PRDETAIL_TD),
+					            					PRDETAIL_WA : formatCurrency(item.PRDETAIL_WA),
+					            					PRDETAIL_RL : formatCurrency(item.PRDETAIL_RL),
+											}));
+											const gridspe = make_gridspe(gridContainer2);
+											gridspe.resetData(m2data); // 사원명 join할건지 테이블에 포함시킬건지 정해야함.
+										},
+										error : function(xhr, status, error){
+											console.log("관리자 급여 모달2 데이터를 불러오는데 실패했습니다.",error);
+										}
+									});
+				    			}
+				    		});
+				    		modal.show()
+				            
+				        })
+				        
+					},
+					error : function(xhr, status, error){
+						console.log("관리자 급여 모달1 데이터를 불러오는데 실패했습니다.",error);
+					}
+				});
+			}
+		});
+		modal.show()
+		
+	}); 
+
+        
+        
+        
+	  //////////////
+	 // 이메일 버튼 //
+	//////////////
+	$('#gridbase').on('click', '.btn_email', function(event) {
+		console.log('이메일 버튼 클릭됨');
+		console.log('이벤트 타겟', event.target); 
+	});
+	
+	  
+	setElementHeight('#div_card', -105);
+	
+	$(window).resize(function() {
+		setElementHeight('#div_card', -105);
+		setElementHeight('#div_calendar', -320);
+		if(grid != null) {
+			setGridHeight(grid, -430);
+		}
+	});
+	
+</script>

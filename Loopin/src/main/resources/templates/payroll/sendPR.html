@@ -1,0 +1,1020 @@
+<html lang="ko" xmln	s:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}" layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<body>
+<span id="employee_cd" sec:authentication="principal.employee_cd" style="display: none;"></span>
+<span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
+	<main id="main" class="main">
+		<div class="pagetitle"></div>
+		<div id="loadingSpinner" class="loading-overlay" style="display: none;">
+		    <div class="spinner-border text-primary" style="width: 60px; height: 60px;" role="status">
+		        <span class="visually-hidden">Loading...</span>
+		    </div>
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<div class="card" id="div_card">
+					<div class="card-body">
+						<div class="card-title d-flex">
+							<h5 id="premth"></h5>
+							<h5>급여이체</h5>
+						</div>
+						<div class="d-flex justify-content-end align-items-end p-1">
+						<div class="p-1">
+							<input type="button" id="btn_wt" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#wtmodal" value="근태마감">
+						</div>
+						<div class="p-1">
+							<input type="button" id="btn_bn" class="btn btn-primary ml-3" data-bs-toggle="modal" data-bs-target="#bnmodal" value="공통상여">
+						</div>
+						</div>
+						<div id="grid" class="p-1"></div>
+						<div class="card-footer d-flex justify-content-end align-items-end p-1">
+							<input type="button" id="btn_send" class="btn btn-primary ml-3" value="이체하기">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+<!-- Toast UI grid JS File -->
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	var empcd = document.getElementById('employee_cd').textContent;
+	tui.Grid.setLanguage('ko');
+	tui.Grid.applyTheme('striped');
+	
+	function formatCurrency(value) {
+	  if (typeof value === 'number') {
+	    return value;
+	  }
+	  return Number(value);
+	}
+	
+	//////////////
+	// 그리드 생성 // 
+	//////////////
+	/* 결과그리드 */
+	const grid = new tui.Grid({
+		el: document.getElementById('grid'),
+		responsive: true,
+		scrollX: true,
+		scrollY: true,
+		//bodyHeight: 450,
+		header: {
+			height: 130,
+			complexColumns: [
+				{
+					header: '지급액',
+					name: 'PAY',
+					childNames: ['PRDETAIL_BS', 'PRDETAIL_MT', 'PRDETAIL_OT', 'PRDETAIL_NA', 'PRDETAIL_WA', 'PRDETAIL_HA', 'PRDETAIL_RL', 'PRDETAIL_BN']
+				},
+				{
+					header: '공제액',
+					name: 'DEDUCATION',
+					childNames: ['PRDETAIL_GM', 'PRDETAIL_GY', 'PRDETAIL_GG', 'PRDETAIL_LG']
+				},
+			]
+		},
+		columns: [
+			{
+				header: 'prdetail_id',
+				name: 'PRDETAIL_ID',
+				hidden: true,
+			},
+			{
+				header: '사원번호',
+				name: 'EMPLOYEE_CD',
+				align : 'center'
+				
+			},
+			{
+				header: '사원명',
+				name: 'EMPLOYEE_NM',
+				align : 'center',
+			},
+			{
+				header: '실지급액',
+				name: 'PRDETAIL_RS',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '총지급액',
+				name: 'PRDETAIL_TA',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '기본급',
+				name: 'PRDETAIL_BS',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '식대',
+				name: 'PRDETAIL_MT',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '연장수당',
+				name: 'PRDETAIL_OT',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '야근수당',
+				name: 'PRDETAIL_NA',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '주말근무수당',
+				name: 'PRDETAIL_WA',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '휴일수당',
+				name: 'PRDETAIL_HA',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '연차수당',
+				name: 'PRDETAIL_RL',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '상여',
+				name: 'PRDETAIL_BN',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '총공제액',
+				name: 'PRDETAIL_TD',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '국민연금',
+				name: 'PRDETAIL_GM',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '고용보험',
+				name: 'PRDETAIL_GY',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '건강보험',
+				name: 'PRDETAIL_GG',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+			{
+				header: '장기요양',
+				name: 'PRDETAIL_LG',
+				align : 'right',
+				formatter: function(value){
+					if(value.value != null ){
+						return `${(value.value).toLocaleString('kr-KR')}원`;
+					}
+				},
+			},
+		],
+		columnOptions: {
+			resizable: true,
+		},
+		summary: {
+		    height: 40,
+		    position: 'bottom',
+		    columnContent: {
+		    	EMPLOYEE_NM: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 명`
+		            }
+		        },
+		        PRDETAIL_RS: {
+		            template: (valueMap) => {
+		                return `총  ${(valueMap.sum).toLocaleString('kr-KR')} 원`
+		            }
+		        },
+		        PRDETAIL_TA: {
+		            template: (valueMap) => {
+		                return `총  ${(valueMap.sum).toLocaleString('kr-KR')} 원`
+		            }
+		        },
+		        PRDETAIL_TD: {
+		            template: (valueMap) => {
+		                return `총  ${(valueMap.sum).toLocaleString('kr-KR')} 원`
+		            }
+		        },
+		    }
+		},
+	});
+
+	//   ===========
+	//	|| 날짜 함수 ||
+	//   ===========
+
+	//귀속년월 구하기
+	function getpreMth() {
+		const today = new Date();
+		console.log('today', today)
+		today.setMonth(today.getMonth() - 1);
+		var year = today.getFullYear();
+		console.log('year', year);
+		var month = today.getMonth() + 1;
+		if (month < 10) {
+			month = '0' + month;
+		}
+		return year + '-' + month;
+	};
+	const premth = getpreMth();
+	document.addEventListener('DOMContentLoaded', function () {
+		document.getElementById('premth').innerText = getpreMth();
+	});
+
+
+	//////////
+	// AJAX // 
+	//////////		
+
+	$.ajax({
+		url: "/getempandbs",
+		method: "GET",
+		dataType: "JSON",
+		data:{premth},
+		success: function (empdata) {
+			console.log('첫 데이터', empdata);
+			const firstdata = empdata.map(item => {
+				return {
+					...item,
+					EMPLOYEE_CD: item.EMPLOYEE_CD,
+					EMPLOYEE_NM: item.EMPLOYEE_NM,
+					BS: item.BS,
+					PRDETAIL_BS: item.PRDETAIL_BS,
+					PRDETAIL_RS: item.PRDETAIL_RS,
+					PRDETAIL_TA: item.PRDETAIL_TA,
+					PRDETAIL_TD: item.PRDETAIL_TD,
+					PRDETAIL_BN: item.PRDETAIL_BN,
+					PRDETAIL_HA: item.PRDETAIL_HA,
+					PRDETAIL_MT: item.PRDETAIL_MT,
+					PRDETAIL_NA: item.PRDETAIL_NA,
+					PRDETAIL_OT: item.PRDETAIL_OT,
+					PRDETAIL_RL: item.PRDETAIL_RL,
+					PRDETAIL_WA: item.PRDETAIL_WA,
+					PRDETAIL_GG: item.PRDETAIL_GG,
+					PRDETAIL_GM: item.PRDETAIL_GM,
+					PRDETAIL_GY: item.PRDETAIL_GY,
+					PRDETAIL_LG: item.PRDETAIL_LG,
+				};
+			})
+			//debugger;
+			console.log('결과그리드데이터',firstdata);
+			grid.resetData(firstdata);
+			setGridHeight(grid, -476);;
+			const BSwempcd = empdata.map(item => {return {employee_cd: item.EMPLOYEE_CD, BS: item.BS}});
+			const employee_cd = empdata.map(item => item.EMPLOYEE_CD);
+			window.BSwempcd = BSwempcd;
+			window.employee_cd = employee_cd;
+		},
+		error: function (xhr, status, error) {
+			console.log('premth',typeof(premth));
+			console.log('사원정보 데이터 조회 실패했습니다.')
+		}
+	});
+
+	/////////////
+	// 버튼 함수 // 
+	/////////////
+
+	//근태확인 버튼
+	document.getElementById('btn_wt').addEventListener('click', function () {
+			const currentday = new Date();
+			console.log('근태cday', currentday);
+			const day = currentday.getDate();
+			
+			$.ajax({
+				url:"/iscal",
+				method:"GET",
+				data:{premth:premth},
+				success:function(iscaldata){
+					console.log('근태마감했나요',iscaldata);
+					//debugger
+ 					if(iscaldata !== ""){
+						swal.fire({
+							title:"마감불가",
+							icon:"warning",
+							text:"이미 마감을 했습니다."
+						})
+						saveBtnState(true);
+					}else{
+						if(day < 1 || day > 7) {
+							swal.fire({
+								icon: 'error',
+								title: '사용불가',
+								text: '1일부터 7일 사이에만 조회 가능합니다.'
+							});
+							return;
+						}
+						
+						const modalid = 'wtmodal';
+						let modalEl = document.getElementById(modalid);
+						
+						if (!modalEl) {
+							const modalHtml = `
+			            <div class="modal" id="${modalid}" tabindex="-1">
+			                <div class="modal-dialog modal-dialog-centered modal-xl">
+			                    <div class="modal-content">
+			                        <div class="modal-header">
+			                            <h5 class="modal-title">근태마감</h5>
+			                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			                        </div>
+			                        <div class="modal-body">
+			                            <div id="grid_wt"></div>
+			                        </div>
+			                        <div class="modal-footer">
+			                            <button type="button" class="btn btn-primary" id="btn_ct">마감</button>
+			                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                        </div>
+			                    </div>
+			                </div>
+			            </div>`;
+							document.body.insertAdjacentHTML('beforeend', modalHtml);
+							modalEl = document.getElementById(modalid);
+						}
+						
+						modalEl.addEventListener('hidden.bs.modal', function () {
+							modalEl.remove();
+							console.log('근태 확인 모달이 닫히고 삭제되었습니다.');
+						});
+			
+						const modal = new bootstrap.Modal(modalEl);
+						
+						modalEl.addEventListener('shown.bs.modal', function () {
+							const gridContainer = document.getElementById('grid_wt');
+							console.log('gridcon', gridContainer);
+			
+							if (gridContainer) {
+								console.log('day', day);
+								console.log('empCD', employee_cd);
+			
+									$.ajax({
+										url: "/getworkingtimeformth",
+										method: "GET",
+										dataType: "JSON",
+										data: {employee_cds: employee_cd, premth: premth},
+										success: function (data) {
+											console.log("근태 데이터", data);
+											const wtdata = data.map(item => {
+												return {
+													employee_cd: item.EMPLOYEE_CD !== undefined ? item.EMPLOYEE_CD : null,
+													employee_nm: item.EMPLOYEE_NM !== undefined ? item.EMPLOYEE_NM : "없음",
+													workingtime: item.WORKINGTIME !== undefined ? item.WORKINGTIME : 0,
+													overworkingtime: item.OVERWORKINGTIME !== undefined ? item.OVERWORKINGTIME : 0,
+													nightworkingtime: item.NIGHTWORKINGTIME !== undefined ? item.NIGHTWORKINGTIME : 0,
+													weekendworkingtime: item.WEEKENDWORKINGTIME !== undefined ? item.WEEKENDWORKINGTIME : 0,
+													holydayworkingtime: item.HOLYDAYWORKINGTIME !== undefined ? item.HOLYDAYWORKINGTIME : 0,
+													remainleave: item.ANNUAL_RA !== undefined ? item.ANNUAL_RA : 0,
+												};
+											});
+											console.log('데이터확인', wtdata);
+											const grid_wt = new tui.Grid({
+												el: gridContainer,
+												responsive: true,
+												scrollX: false,
+												scrollY: true,
+												bodyHeight: 330,
+												columns: [
+													{header: '사원코드', name: 'employee_cd', align: 'center'},
+													{header: '사원명', name: 'employee_nm', align: 'center'},
+													{header: '일반근무', name: 'workingtime', align: 'center'},
+													{header: '연장근무', name: 'overworkingtime', align: 'center'},
+													{header: '야간근무', name: 'nightworkingtime', align: 'center'},
+													{header: '주말근무', name: 'weekendworkingtime', align: 'center'},
+													{header: '휴일근무', name: 'holydayworkingtime', align: 'center'},
+													{header: '남은연차', name: 'remainleave', align: 'center'},
+												],
+												columnOptions: {
+													resizable: true,
+												},
+												summary: {
+														    height: 40,
+														    position: 'bottom',
+														    columnContent: {
+														    	employee_cd: {
+														            template: (valueMap) => {
+														                return `총  ${valueMap.cnt} 명`
+														            }
+														        },
+														    }
+														},
+											});
+											grid_wt.resetData(wtdata);
+			
+											/* 근태확정버튼 */
+											$(document).on('click', '#btn_ct', function () {
+												console.log('확정버튼누름!!!!!!!!');
+												const wdata = wtdata.map(item => {
+													let bsdata = BSwempcd.find(i => i.employee_cd === item.employee_cd);
+			
+													return {
+														...item,
+														BS: bsdata.BS,
+														wm: premth,
+														wr: empcd,
+													}
+												});
+												console.log('가져와', wdata);
+												swal.fire({
+													title: "정말 마감하시겠습니까?",
+													text: "마감하시면 더이상 수정은 불가능합니다.",
+													icon: "warning",
+													showCancelButton: true,
+													confirmButtonColor: "#774df1",
+													cancelButtonColor: "",
+													confirmButtonText: "마감"
+												}).then((result) => {
+													if (result.isConfirmed) {
+														$.ajax({
+															url: "/update_commuteprandcalpr",
+															method: "POST",
+															contentType: "application/json",
+															data: JSON.stringify(wdata),
+															beforeSend: function (xhr) {
+																xhr.setRequestHeader(header, token);
+																$("#loadingSpinner").show();
+															},
+															success: function (data) {
+																console.log('근태확정', data);
+																Swal.fire({
+																	title: "마감되었습니다.",
+																	icon: "success"
+																});
+																const result = data.map(item => {
+																	const calculatedData = item.calculated;  
+																	if (Array.isArray(calculatedData)) {
+																		const result = calculatedData.reduce((acc, calItem) => {
+																			acc[calItem.prdetail_nm] = calItem.amount;  // prdetail_nm을 키로, amount를 값으로 누적
+																			return acc;
+																		}, {
+																			ta: item.ta,
+																			td: item.td,
+																			rs: item.rs,
+																			employee_cd: item.employee_cd,
+																			employee_nm: item.employee_nm,
+																			PR_ID: item.pr_id,
+																			PRDETAIL_ID: item.prdetail_id
+																		});
+																		return result;
+																	}
+																	return {}; 
+																});
+																console.log('변환된 데이터:', result);
+																const resultA = result.map(item => ({
+																	...item,
+																	EMPLOYEE_CD: item.employee_cd,
+																	EMPLOYEE_NM: item.employee_nm,
+																	PRDETAIL_BS: item.BS,
+																	PRDETAIL_RS: item.rs,
+																	PRDETAIL_TA: item.ta,
+																	PRDETAIL_TD: item.td,
+																	PRDETAIL_BN: item.B_BN,
+																	PRDETAIL_HA: item.B_HA,
+																	PRDETAIL_MT: item.B_MT,
+																	PRDETAIL_NA: item.B_NA,
+																	PRDETAIL_OT: item.B_OT,
+																	PRDETAIL_RL: item.B_RL,
+																	PRDETAIL_WA: item.B_WA,
+																	PRDETAIL_GG: item.D_GG,
+																	PRDETAIL_GM: item.D_GM,
+																	PRDETAIL_GY: item.D_GY,
+																	PRDETAIL_LG: item.D_LG,
+																}))
+																grid.resetData(resultA);
+																modal.hide();
+															},
+															error: function (xhr, status, error) {
+																console.log('근태확정 데이터 전송에 실패했습니다.', error);
+																Swal.fire({
+																	title: "마감 실패",
+																	icon: "error",
+																	text: "데이터 전송에 실패했습니다. 다시 시도해주세요."
+																});
+															},
+															complete: function () {
+													            $("#loadingSpinner").hide(); // 요청 완료 후 스피너 숨김
+													        }
+														});
+													}
+												});
+											});
+										},
+										error: function (xhr, status, error) {
+											console.log("근태 확정 데이터 조회에 실패했습니다.", error);
+											Swal.fire({
+												title: "오류",
+												icon: "error",
+												text: "근태 데이터를 불러오는 데 실패했습니다."
+											});
+										}
+									});
+							}
+						});
+						modal.show();
+					}
+				},
+				error:function(xhr,state,error){
+					console.log('근태 마감여부 확인에 실패했습니다.',error);
+				}
+			});
+	});
+
+	  //////////////////
+	 // 상여 업데이트 //
+	//////////////////
+
+	$('#btn_bn').on('click',function(){
+		$.ajax({
+			url:"/iscal",
+			method:"GET",
+			data:{premth:premth},
+			success:function(iscaldata){
+				console.log('근태마감했나요',iscaldata);
+				//debugger
+				if(iscaldata !== ""){
+					// 상여계산 시작
+					const modalid = 'bnmodal';
+					let modalEl = document.getElementById(modalid);
+						
+					if (!modalEl) {
+						const modalHtml = `<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false">
+			                <div class="modal-dialog modal-dialog-centered">
+			                  <div class="modal-content">
+			                    <div class="modal-header">
+			                      <h5 class="modal-title">공통 상여 지급</h5>
+			                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			                    </div>
+			                    <div class="modal-body">
+				                    <div class="input-group mb-3">
+				                      <input type="text" class="form-control" aria-label="Amount" id="amountInput">
+					                  <span class="input-group-text">원</span>
+				                    </div>
+			                    </div>
+			                    <div class="modal-footer">
+			                      <button type="button" class="btn btn-primary btn_bg" id="btn_gb">지급하기</button>
+			                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+			                    </div>
+			                  </div>
+			                </div>
+			              </div>`;
+						document.body.insertAdjacentHTML('beforeend', modalHtml);
+						modalEl = document.getElementById(modalid);
+					}
+						
+					modalEl.addEventListener('hidden.bs.modal', function () {
+						modalEl.remove();
+						console.log('공통 상여 모달이 닫히고 삭제되었습니다.');
+					});
+		
+					const modal = new bootstrap.Modal(modalEl);
+					const amountInput = document.getElementById('amountInput');
+					
+					modalEl.addEventListener('input', function (e) {
+						let value = e.target.value.replace(/,/g,'');
+						if(value){
+							e.target.value = Number(value).toLocaleString();
+						}
+					});
+					
+					$(document).off('click', '#btn_gb');
+					
+					$(document).on('click','#btn_gb', function(e){
+						console.log('상여지급 버튼 누름');
+						console.log('모달 인풋값',amountInput.value);
+						let inputvalue = amountInput.value.replace(/,/g,'');
+						console.log('인풋값숫자',inputvalue);
+						
+						const griddata = grid.getData();
+						console.log('그리드',griddata);
+						const prid = [...new Set(griddata.map(i=>i.PR_ID))];
+						const pdid = griddata.map(i=>i.PRDETAIL_ID);
+						console.log('prID',prid[0]);
+						console.log('prID',typeof prid[0]);
+						console.log('pdID',pdid);
+						
+						const calbnData = {
+								prid: prid[0],
+					            pdid: pdid,
+					            bonus: inputvalue.toString()
+						} 
+						console.log('calbn',calbnData);
+						
+						$.ajax({
+							url:"/calwbn",
+							method:"POST",
+							contentType:"application/json",
+							data: JSON.stringify([calbnData]),
+							beforeSend:function(xhr){
+								xhr.setRequestHeader(header,token);
+					            $("#loadingSpinner").show();
+							},
+							success:function(calbndata){
+								console.log("상여계산",calbndata);
+								grid.resetData(calbndata);
+								Swal.fire({
+									title: "지급되었습니다.",
+									icon: "success"
+								});
+								modal.hide();
+								
+							},
+							error:function(xhr,state,error){
+								console.log("공통상여 계산에 실패했습니다.",error);
+							},							
+							complete: function () {
+					            $("#loadingSpinner").hide();
+					        }
+						});
+						
+					})
+					
+					modal.show();
+					
+				}else{
+					swal.fire({
+						title:"설정불가",
+						icon:"warning",
+						text:"근태마감을 먼저 해주세요."
+					})
+				}
+			},
+			error:function(xhr,state,error){
+				console.log('근태 마감여부 확인에 실패했습니다.',error);
+			}
+		});
+	});
+	
+	  //////////////////
+	 // 사원 개별 상여 //
+	//////////////////
+	  
+	grid.on('click', function(e){
+		const eRowKey = e.rowKey;
+		console.log('e',e);
+		if(eRowKey != null){
+			const selrowdata = grid.getData().find(row => row.rowKey === eRowKey);
+			console.log('rowdata',selrowdata);
+			const selempcd = selrowdata.EMPLOYEE_CD;
+			const selprid = selrowdata.PR_ID;
+			$.ajax({
+				url:"/getempprdata",
+				method:"GET",
+				data:{prid:selprid,empcd:selempcd},
+				success:function(data){
+					console.log("급여기본정보",data);
+					if(data != null){
+						const modalid = 'prmodal';
+						let modalEl = document.getElementById(modalid);
+							
+						if (!modalEl) {
+							const modalHtml = `
+							<div class="modal" id="${modalid}" tabindex="-1" data-bs-backdrop="false">
+				                <div class="modal-dialog modal-dialog-centered modal-lg">
+				                  <div class="modal-content">
+				                    <div class="modal-header">
+				                      <h5 class="modal-title"> ${selrowdata.EMPLOYEE_NM} 급여정보</h5>
+				                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				                    </div>
+				                    <div class="modal-body">
+				                    
+				                    	<form class="row g-3">
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">예금주</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_DT" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">은행</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_BK" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">계좌</label>
+							                      <input type="text" class="col-sm-9 form-control" id="EMPLOYEE_AN" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-6">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">기본급</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_BS" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">식대</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_MT" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">연장수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_OT" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">야근수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_NA" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">주말수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_WA" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">휴일수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_HA" disabled>
+							                    </div>
+				                   			</div>
+		                    				<div class="col-md-6">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">상여</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_BN">
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">연차수당</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_RL" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">국민연금</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GM" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">고용보험</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GY" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">건강보험</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_GG" disabled>
+							                    </div>
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-3 col-from-label">장기요양</label>
+							                      <input type="text" class="col-sm-9 form-control" id="PRDETAIL_LG" disabled>
+							                    </div>
+				                   			</div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">총지급액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_TA" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">총공제액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_TD" disabled>
+							                    </div>
+						                    </div>
+		                    				<div class="col-md-4">
+						                    	<div class="input-group mb-3">
+							                      <label for="" class="col-sm-4 col-from-label">실지급액</label>
+							                      <input type="text" class="col-sm-8 form-control" id="PRDETAIL_RS" disabled>
+							                    </div>
+						                    </div>
+				                    	</form>
+				                    </div>
+				                    <div class="modal-footer">
+				                      <button type="button" class="btn btn-primary btn_bg" id="btn_save">저장하기</button>
+				                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+				                    </div>
+				                  </div>
+				                </div>
+				              </div>`;
+							document.body.insertAdjacentHTML('beforeend', modalHtml);
+							modalEl = document.getElementById(modalid);
+						}
+							
+						modalEl.addEventListener('hidden.bs.modal', function () {
+							modalEl.remove();
+							console.log('사원 급여정보 모달이 닫히고 삭제되었습니다.');
+						});
+				        document.getElementById('EMPLOYEE_DT').value = data[0].EMPLOYEE_DT;
+			            document.getElementById('EMPLOYEE_BK').value = data[0].EMPLOYEE_BK;
+			            document.getElementById('EMPLOYEE_AN').value = data[0].EMPLOYEE_AN;
+			            document.getElementById('PRDETAIL_BS').value = `${data[0].PRDETAIL_BS.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_MT').value = `${data[0].PRDETAIL_MT.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_OT').value = `${data[0].PRDETAIL_OT.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_NA').value = `${data[0].PRDETAIL_NA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_WA').value = `${data[0].PRDETAIL_WA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_HA').value = `${data[0].PRDETAIL_HA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_BN').value = `${data[0].PRDETAIL_BN.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_RL').value = `${data[0].PRDETAIL_RL.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GM').value = `${data[0].PRDETAIL_GM.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GY').value = `${data[0].PRDETAIL_GY.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_GG').value = `${data[0].PRDETAIL_GG.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_LG').value = `${data[0].PRDETAIL_LG.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_TA').value = `${data[0].PRDETAIL_TA.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_TD').value = `${data[0].PRDETAIL_TD.toLocaleString('kr-KR')}원`;
+			            document.getElementById('PRDETAIL_RS').value = `${data[0].PRDETAIL_RS.toLocaleString('kr-KR')}원`;
+						
+						const modal = new bootstrap.Modal(modalEl);
+						modal.show();
+						
+						const amountInput = document.getElementById('PRDETAIL_BN');
+						console.log('확인',amountInput);
+						
+						amountInput.addEventListener('input', function (e) {
+						    let value = e.target.value;
+						    
+						    // 쉼표를 제거한 후 숫자만 남기기
+						    value = value.replace(/,/g, ''); // 쉼표 제거
+						    
+						    // 숫자로 변환 (NaN을 방지)
+						    if (!isNaN(value) && value.trim() !== '') {
+						        // 숫자에 천 단위 구분 쉼표 추가
+						        e.target.value = Number(value).toLocaleString('kr-KR');
+						    } else {
+						        // 입력 값이 숫자가 아닌 경우에는 빈 문자열로 처리
+						        e.target.value = '';
+						    }
+						});
+						
+						amountInput.addEventListener('blur',function(e){
+						    // "원"이 이미 끝에 있는지 확인
+						    if (!e.target.value.endsWith('원')) {
+						        // "원"이 없으면 추가
+						        e.target.value = e.target.value + '원';
+						    }
+						});
+						
+						document.getElementById("btn_save").addEventListener("click", function(e) {
+						    console.log("저장 버튼이 클릭되었습니다.");
+							
+							const calbnData = {
+									prid: data[0].PR_ID,
+						            pdid: [data[0].PRDETAIL_ID],
+						            bonus: Number(amountInput.value.replace(/,/g,'').replace('원', ''))
+							} 
+							console.log('calbn',calbnData);
+							if(amountInput.value.replace(/,/g,'').replace('원', '') == data[0].PRDETAIL_BN){
+								modal.hide();
+								Swal.fire({
+									title: "변경사항 없이 저장되었습니다.",
+									icon: "success"
+								});
+							}else{
+							    $.ajax({
+									url:"/calwbn",
+									method:"POST",
+									contentType:"application/json",
+									data: JSON.stringify([calbnData]),
+									beforeSend:function(xhr){
+										xhr.setRequestHeader(header,token);
+							            $("#loadingSpinner").show();
+									},
+									success:function(calbndata){
+										console.log("상여계산",calbndata);
+										grid.resetData(calbndata);
+										Swal.fire({
+											title: "저장되었습니다.",
+											icon: "success"
+										});
+										modal.hide();
+									},
+									error:function(xhr,state,error){
+										console.log("상여 계산에 실패했습니다.",error);
+									},							
+									complete: function () {
+							            $("#loadingSpinner").hide();
+							        }
+								}); 
+							}
+						});
+					}
+				},
+				error:function(xhr,status,error){
+					console.log("사원 급여정보 조회에 실패했습니다.",error);
+				}
+			});
+			
+			
+		}
+	});
+	  
+	document.getElementById('btn_send').addEventListener('click', function () {
+		const prid = Number(grid.getData()[0].PR_ID);
+		console.log('너 숫자아냐?',typeof prid)
+		$.ajax({
+			url:"/sendpr",
+			method:"POST",
+			contentType:"application/json",
+			data: JSON.stringify({prid:prid}),
+			beforeSend:function(xhr){
+				xhr.setRequestHeader(header,token);
+	            $("#loadingSpinner").show();
+			},
+			success:function(data){
+				console.log("급여이체",data);
+				if(data == grid.getData().length){
+					Swal.fire({
+						title: `총 ${data}건 이체 되었습니다.`,
+						icon: "success"
+					});
+				}else{
+					Swal.fire({
+						title: `${data-grid.getData().length}건이 이체 되지 않았습니다.`,
+						text: `이체 여부를 확인해 주세요.`,
+						icon: "warning"
+					});
+				};
+			},
+			error:function(xhr,state,error){
+				console.log("급여 이체에 실패했습니다.",error);
+				Swal.fire({
+					title: "이체에 실패했습니다.",
+					icon: "error"
+				});
+			},							
+			complete: function () {
+	            $("#loadingSpinner").hide();
+	        }
+		}); 
+	})
+	  //////////////////
+	 // 카드 크기 설정 //
+	//////////////////
+
+	setElementHeight('#div_card', -110);
+	
+	$(window).resize(function() {
+		setElementHeight('#div_card', -110);
+		if(grid != null) {
+			setGridHeight(grid, -430);
+		}
+	});
+	
+</script>

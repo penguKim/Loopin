@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+<style>
+.col1 {
+	width: 160px !important;
+	position: relative;
+	z-index: 9998;
+	margin-right: 5px;
+}
+
+.tui-datepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-timepicker {
+	z-index: 9999 !important;
+	overflow: visible !important;
+}
+
+.tui-grid-cell-summary {
+    background-color: #ddd;
+    border-color: #fff;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    color: #333;
+}
+</style>
+<body>
+	<main id="main" class="main">
+	    <div class="pagetitle"></div>
+	    <section class="section">
+			<!-- 상단 필터 영역 -->
+			<div class="row mb-3">
+			    <div class="col-12">
+			        <div class="card">
+			            <div class="card-body">
+			                <h5 class="card-title">필터</h5>
+			                <div id="filterModule"></div>
+	                        <div class="d-flex align-items-center justify-content-between">
+	                            <h5 class="card-title">출하 관리</h5>
+	                        </div>
+							<div class="col-sm-12">
+		                        <!-- 출하 관리 그리드 -->
+		                        <div id="contract_grid"></div>
+							</div>
+	                        <div class="d-flex align-items-center justify-content-between">
+	                            <h5 class="card-title">출하 상세</h5>
+	                        </div>
+	                        <!-- 출하 상세 그리드 -->
+	                        <div id="detail_grid"></div>
+			            </div>
+			        </div>
+			    </div>
+			</div>
+	    </section>
+	</main>
+</body>
+
+<script>
+	// 출하 상세 정보 불러오기 함수
+	function fetchShipmentDetails(contract_cd) {
+	    console.log(`fetchShipmentDetails 호출: contract_cd=${contract_cd}`); // 디버깅 로그 추가
+		
+		if (!contract_cd) {
+		    console.error("유효하지 않은 contract_cd입니다:", contract_cd);
+		    return;
+		}
+		
+	    $.ajax({
+	        url: `/get_CONTRACT_SHIPMENT?contract_cd=${contract_cd}`,
+	        method: 'GET',
+	        success: function (response) {
+	            console.log("서버 응답 데이터:", response); // 응답 데이터 확인
+
+				// 출하 데이터 검증
+				if (!response || !response.contract || !response.contract.contract_cd) {
+				    console.error("응답 데이터가 유효하지 않습니다:", response);
+				    Swal.fire({
+				        icon: 'error',
+				        title: '오류 발생!',
+				        text: '수정할 데이터를 가져올 수 없습니다.',
+				        confirmButtonText: '확인'
+				    });
+				    return;
+				}
+				
+				// 출하 데이터와 상세 데이터 전달하여 모달 열기
+				openModal(response);
+	        },
+	        error: function (xhr) {
+				window.isFetchingDetails = false; // 플래그 해제
+	            console.error("서버 요청 오류:", xhr.status, xhr.responseText);
+	            Swal.fire({
+	                icon: 'error',
+	                title: '오류 발생!',
+	                text: '출하 데이터를 불러오는 데 실패했습니다.',
+	                confirmButtonText: '확인'
+	            });
+	        }
+	    });
+	}
+
+	// 출하수량 업데이트 함수
+	function updateContractSummary(grid) {
+	    const data = grid.getData();
+	    let totalQty = 0;
+
+	    data.forEach(row => {
+	        const qty = parseFloat(row.product_am) || 0;
+
+	        totalQty += qty;
+	    });
+
+	    $('#contract_am').val(totalQty);
+	}	
+	
+		
+	// 동적 모달 생성 및 표시
+	function openModal(rowData) {
+		
+		console.log("openModal 호출됨", "rowData:", rowData);
+		
+		// 데이터 유효성 검사
+		if (!rowData || !rowData.contract || !rowData.contract.contract_cd) {
+		    console.error("rowData가 유효하지 않거나 contract_cd가 없습니다.", rowData);
+		    Swal.fire({
+		        icon: 'error',
+		        title: '오류 발생!',
+		        text: '수정할 데이터를 가져올 수 없습니다.',
+		        confirmButtonText: '확인'
+		    });
+		    return;
+		}
+
+		console.log("모달 초기화 성공:", rowData);
+
+	    // 기존 모달 제거
+	    $('#contractInsertModal').remove();
+
+		// 모달 제목 및 버튼 텍스트 설정
+		let modalTitle = '출하 등록';
+		const submitButtonText = '등록';
+			
+	    let contractStatus = rowData.contract.contract_st ? rowData.contract.contract_st.trim() : "진행중";
+	    let isCompleted = contractStatus === "완료";
+		
+	    // 모달 HTML 생성
+	    const modalHtml = `
+	        <div class="modal" id="contractInsertModal" tabindex="-1" aria-labelledby="contractInsertModalLabel" aria-hidden="true">
+	            <div class="modal-dialog modal-dialog-centered modal-xl">
+	                <div class="modal-content">
+	                    <div class="modal-header">
+	                        <h5 class="modal-title" id="dynamicModalLabel">${modalTitle}</h5>
+	                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                    </div>
+	                    <div class="modal-body">
+	                        <form id="appointment_form" method="post" enctype="multipart/form-data">
+	                            <div class="row mb-3">
+	                                <div class="col-md-4">
+	                                    <label for="contract_ps" class="form-label">수주번호</label>
+	                                    <input type="text" class="form-control" id="contract_cd" name="contract_cd" disabled>
+	                                </div>
+									<div class="col-md-4">
+									    <label for="account_sd" class="form-label">수주일</label>
+									    <input type="text" class="form-control" id="contract_sd" name="contract_sd" disabled>
+									    <div id="modal_startpicker-container"></div>
+									</div>
+									<div class="col-md-4">
+									    <label for="contract_ed" class="form-label">출하일</label>
+									    <input type="text" class="form-control" id="contract_ed" name="contract_ed" readonly>
+									    <div id="modal_endpicker-container"></div>
+									</div>
+	                            </div>
+								<div class="row mb-3">
+									<div class="col-md-4">
+									    <label for="account_cp" class="form-label">거래처코드</label>
+									    <input type="text" class="form-control" id="account_cd" name="account_cd" disabled>
+									</div>
+									<div class="col-md-4">
+									    <label for="contract_st" class="form-label">출하상태</label>
+									    <input type="text" class="form-control" id="contract_st" name="contract_st" disabled>
+									</div>
+									<div class="col-md-4">
+									    <label for="contract_am" class="form-label">출하수량</label>
+									    <input type="text" class="form-control" id="contract_am" name="contract_am" disabled>
+									</div>
+								</div>
+	                            <div class="row mb-3">
+			                        <div class="col-sm-3 text-start">
+		                            	<h5 class="modal-title">출하 제품 목록</h5>
+									</div>
+	                            </div>
+	                            <div class="row">
+	                                <div id="productGrid"></div>
+	                            </div>
+	                        </form>
+	                    </div>
+	                    <div class="modal-footer  d-flex justify-content-between">
+		                    <div>    
+		                    	<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		                        <button type="button" class="btn btn-primary" id="modal_submit_button">${submitButtonText}</button>
+		                    </div>
+	                    </div>
+	                </div>
+	            </div>
+	        </div>`;
+
+		// 모달 HTML을 동적으로 body에 추가
+		document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+		// 모달이 추가된 후 실행
+		const modalElement = document.getElementById('contractInsertModal');
+		if (!modalElement) {
+		    console.error("모달이 생성되지 않았습니다.");
+		    return;
+		}
+		
+	    
+		// Bootstrap 모달 생성 및 ESC/배경 클릭 방지 설정
+		modalInstance = new bootstrap.Modal(modalElement, {
+			backdrop: 'static',  // 모달 바깥 클릭 방지
+			keyboard: false      // ESC 키 방지
+		});
+		
+	    modalInstance.show();
+		    
+	    // 제품 그리드 초기화
+	    make_product_grid();
+
+	    // DatePicker 초기화
+	    initializeDatePickers();
+		
+	    // 출하 상태 설정 (기본 값) - grid 데이터 그대로 사용
+	    $('#contract_cd').val(rowData.contract.contract_cd || '');
+	    $('#account_cd').val(rowData.contract.account_cd || '');
+	    $('#contract_sd').val(rowData.contract.contract_sd || '');
+	    $('#contract_ed').val(rowData.contract.contract_ed || '');
+	    $('#contract_st').val(rowData.contract.contract_st || ''); // Grid의 데이터 사용
+	    $('#contract_am').val(rowData.contract.contract_am?.toLocaleString() || '');
+
+	    if (contractStatus === "완료") {
+	        $('#contract_ed').prop('disabled', true); // 출하일 비활성화
+	        $('#modal_submit_button').hide(); // 등록 버튼 숨김
+	        modalTitle = '출하 완료';
+	    } else {
+	        $('#contract_ed').prop('readonly', false); // 출하일 활성화
+	        $('#modal_submit_button').show(); // 등록 버튼 표시
+	    }
+	
+		// 변경된 modalTitle을 모달에 적용
+		$('#dynamicModalLabel').text(modalTitle);
+	    
+	    // 출하 상태에 따라 `productGrid` 컬럼 변경
+	    make_product_grid(isCompleted);
+	    
+		if (rowData.details && Array.isArray(rowData.details)) {
+		    // 첫 번째 상세 데이터의 납기일을 바인딩
+		    if (rowData.details.length > 0) {
+		        $('#detail_contract_ed').val(rowData.details[0].detail_contract_ed || '').prop('disabled', false); // 첫 번째 상세 데이터의 납기일 활성화
+		    }
+
+		    // 상세 데이터 `productGrid`에 적용
+		    productGrid.resetData(rowData.details);
+		}
+		
+
+		// Toast UI Grid 데이터 변경 시 출하수량 업데이트
+		productGrid.on('afterChange', function (ev) {
+		    updateContractSummary(productGrid);
+		});
+
+			
+		// 버튼 클릭 시 폼 제출 실행 (중복 방지)
+		$(document).off('click', '#modal_submit_button').on('click', '#modal_submit_button', function () {
+		    console.log("등록 버튼 클릭됨!");
+
+		    // 중복 클릭 방지 (버튼 비활성화)
+		    $(this).prop('disabled', true);
+
+		    // 폼이 존재하는지 확인 후 제출 실행
+		    if ($('#appointment_form').length > 0) {
+		        $('#appointment_form').trigger('submit');  // 폼 제출 실행
+		    } else {
+		        console.error("오류: #appointment_form 요소를 찾을 수 없음!");
+		        $(this).prop('disabled', false);  // 버튼 다시 활성화
+		    }
+		});
+		
+		
+		// 폼 제출 이벤트
+		$(document).off('submit', '#appointment_form').on('submit', '#appointment_form', function (event) {
+			
+	        event.preventDefault();
+	        
+		    if (!validateForm()) {
+		        console.log("폼 검증 실패, 버튼 다시 활성화");
+		        $('#modal_submit_button').prop('disabled', false);
+		        return false; // 검증 실패 시 제출 중단
+		    }
+	        
+		    const contractDTO = {
+		    	    contract_cd: $('#contract_cd').val(),
+		    	    contract_ed: $('#contract_ed').val(),
+		    	    contract_st: $('#contract_st').val()
+		    	};
+
+		    	const details = productGrid.getData().map(row => ({
+		    	    product_cd: row.product_cd,
+		    	    product_sz: row.product_sz,
+		    	    product_cr: row.product_cr,
+		    	    product_am: parseInt(row.product_am)
+		    	}));
+		    	
+			console.log("보낼 데이터:", { contract: contractDTO, details: details });
+		    
+	        // AJAX 요청으로 데이터 전송
+	        $.ajax({
+	            url: '/update_CONTRACT_SHIPMENT',
+	            method: 'POST',
+	            contentType: "application/json",  // JSON 형식 지정
+	            data: JSON.stringify({ contract: contractDTO, details: details }),
+	            headers: { 'X-CSRF-TOKEN': csrfToken },
+	            success: function (response) {
+	                if (response.success) {
+	                    Swal.fire({ icon: 'success', title: '출하 완료', text: response.message });
+	                } else {
+	                    Swal.fire({ icon: 'error', title: '출하 실패', text: response.message });
+	                }
+	            	modalInstance.hide();
+	            	make_contract_grid();
+				    make_detail_grid({ contract_cd: contractDTO.contract_cd });
+	            },
+	            error: function () {
+	            	Swal.fire({ icon: 'error', title: '오류 발생!', text: '작업 중 오류가 발생했습니다.', confirmButtonText: '확인' });
+	            }
+	        });
+	    });
+	}
+	
+	function validateForm() {
+	    let isValid = true;
+	    let errorMessage = "";
+
+	    // 필수값 검증할 필드 목록
+	    const requiredFields = [
+	        { id: '#contract_ed', message: '출하일자를 입력해주세요.' }
+	    ];
+
+	    requiredFields.forEach(field => {
+	        const value = $(field.id).val()?.trim();
+	        if (!value) {
+	            errorMessage = field.message;
+	            isValid = false;
+	            return false; // 첫 번째 오류에서 중단
+	        }
+	    });
+
+	    if (!isValid) {
+	        Swal.fire({
+	            icon: 'error',
+	            title: '입력 오류',
+	            text: errorMessage,
+	            confirmButtonText: '확인'
+	        });
+	        return false;
+	    }
+
+	    return true; // 모든 필수값이 입력된 경우 true 반환
+	}
+
+	
+	
+	// DatePicker 초기화 함수
+	function initializeDatePickers() {
+		 console.log('DatePicker 초기화 시작');
+		
+		const today = new Date(); // 오늘 날짜
+
+	    
+	    // 시작일과 종료일 DatePicker 초기화
+	    const startPicker = tui.DatePicker.createRangePicker({
+	    	language: 'ko',
+	    	startpicker: {
+	            date: today,
+	            input: '#contract_sd',
+	            container: '#modal_startpicker-container',
+	        },
+	        endpicker: {
+	            date: null,
+	            input: '#contract_ed',
+	            container: '#modal_endpicker-container',
+	            disabled: true,
+	        },
+	        format: 'YYYY-MM-dd',
+	        timePicker: false,
+	    });
+
+	    // 올바른 시작일 변경 이벤트
+	    startPicker.getStartpicker().on('change', function () {
+	        const startDate = startPicker.getStartpicker().getDate(); // 시작일 가져오기
+	        console.log('선택된 시작일:', startDate);
+
+	        if (!startDate) {
+	            console.error('시작 날짜를 가져오지 못했습니다!');
+	            return;
+	        }
+
+	        const minEndDate = new Date(startDate);
+	        minEndDate.setDate(minEndDate.getDate() + 1);
+
+	        startPicker.getEndpicker().setDate({
+	            date: minEndDate,
+	            disabled: false,
+	        });
+
+	        updateShipmentStatus();
+	    });
+
+		// 올바른 종료일 변경 이벤트
+	    startPicker.getEndpicker().on('change', function () {
+	        const endDate = startPicker.getEndpicker().getDate(); // 종료일 가져오기
+	        console.log('선택된 종료일:', endDate);
+
+	        if (!endDate) {
+	            console.error('종료 날짜를 가져오지 못했습니다!');
+	            return;
+	        }
+
+	        updateShipmentStatus();
+	    });
+	}
+	
+	// 날짜를 YYYY-MM-DD 형식으로 변환하는 함수
+	function formatDate(date) {
+	    if (!date) return null;
+	    let d = new Date(date);
+	    let year = d.getFullYear();
+	    let month = String(d.getMonth() + 1).padStart(2, '0');
+	    let day = String(d.getDate()).padStart(2, '0');
+	    return `${year}-${month}-${day}`;
+	}
+
+	// 출하 상태 자동 설정 함수
+	function updateShipmentStatus() {
+	    let contractSd = $('#contract_sd').val();
+	    let contractEd = $('#contract_ed').val();
+	    let today = new Date().toISOString().split('T')[0]; // 오늘 날짜 (YYYY-MM-DD)
+
+	    console.log("updateShipmentStatus 실행됨 | contract_sd:", contractSd, "contract_ed:", contractEd, "today:", today);
+
+	    contractSd = formatDate(new Date(contractSd));
+	    contractEd = contractEd ? formatDate(new Date(contractEd)) : "";
+	    
+	    let status = "알 수 없음";
+
+	    if (contractSd > today) {
+	        status = "대기중";
+	    } 
+	    else if (contractSd <= today) {
+	        // 종료일이 없거나 오늘이후 "진행중"
+	        if (!contractEd || contractEd > today) {
+	            status = "진행중";
+	        } 
+	        // 종료일이 오늘 이전이거나 오늘이면  "완료"
+	        else if (contractEd <= today) {
+	            status = "완료";
+	        }
+	    }
+
+	    console.log("계산된 수주 상태:", status);
+	    $('#contract_st').val(status);
+	}
+	
+</script>
+
+
+<script th:inline="javascript">
+	const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+    // 변수 지정
+    let contract_grid;
+    let detail_grid;
+    let productGrid;
+    setGridTheme();
+    
+    
+    const token = $("meta[name='_csrf']").attr("content");
+    const header = $("meta[name='_csrf_header']").attr("content");
+
+    $(function () {
+    	
+		// 필터 설정
+        const filterConfig = [
+            { key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
+            { key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
+            { key: 'contractCd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
+            { key: 'accountCd', label: '거래처코드', type: 'text', placeholder: '거래처코드 입력', col: 'col-4' },
+            { key: 'contractPs', label: '담당자명', type: 'text', placeholder: '담당자명 입력', col: 'col-4' },
+        ];
+
+        // 필터 모듈 초기화
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            console.log('적용된 필터:', filterValues);
+
+            // 서버 요청 및 그리드 갱신
+            fetch('/select_FILTERED_CONTRACT_SHIPMENT', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [header]: token, // CSRF 토큰
+                },
+                body: JSON.stringify(filterValues)
+            })
+            .then(response => response.json())
+            .then(filteredData => {
+                console.log('필터링된 데이터:', filteredData);
+                contract_grid.resetData(filteredData); // 그리드 데이터 갱신
+                make_detail_grid(); // 필터 검색 시 출하 상세 초기화
+            })
+            .catch(error => console.error('필터 적용 오류:', error));
+        });
+
+        // 상단(Contract Grid) 생성
+		make_contract_grid();
+        // 하단(Detail Grid) 생성
+		make_detail_grid();
+        
+	    // 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function (e) {
+		    if (e.keyCode !== 13) return;
+		    const filterValues = {};
+	
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        let value = input.val();
+	
+		        filterValues[config.key] = value;
+				
+				console.log('필터값:', filterValues);  // 필터링된 값 확인
+		    }
+	
+		    // 서버 요청 및 그리드 갱신
+		    $.ajax({
+		        url: '/select_FILTERED_CONTRACT_SHIPMENT',
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		            [csrfHeader]: csrfToken,
+		        },
+		        data: JSON.stringify(filterValues),
+		        success: function(filteredData) {
+		        	console.log('엔터키로 필터링된 데이터:', filteredData);
+		        	contract_grid.resetData(filteredData); // 그리드 데이터 갱신
+					make_detail_grid(); // 필터 검색 시 출하 상세 초기화
+		        },
+		        error: function(error) {
+		            console.error('엔터키 필터 적용 오류:', error);
+		        }
+		    });
+		});
+    });
+
+    
+    // 상단(Contract Grid) 생성 함수
+    function make_contract_grid() {
+		
+        $.ajax({
+            url: '/select_CONTRACT_SHIPMENT',
+            method: 'GET',
+            success: function (response) {
+                const contractList = response;
+
+                if (contract_grid) {
+                    // 기존 그리드가 있으면 데이터만 갱신
+                    contract_grid.resetData(contractList.map(row => ({
+                        contract_cd: row.contract_cd,
+                        account_cd: row.account_cd,
+                        employee_cd: row.employee_cd,
+                        contract_ps: row.contract_ps,
+                        contract_sd: row.contract_sd,
+                        contract_ed: row.contract_ed,
+                        contract_am: row.contract_am,
+                        contract_st: row.contract_st
+                    })));
+                } else {
+                    // 처음 로드 시 새로운 그리드 생성
+                    contract_grid = new tui.Grid({
+                        el: document.getElementById('contract_grid'),
+                        data: contractList.map(row => ({
+                            contract_cd: row.contract_cd,
+                            account_cd: row.account_cd,
+                            employee_cd: row.employee_cd,
+                            contract_ps: row.contract_ps,
+                            contract_sd: row.contract_sd,
+                            contract_ed: row.contract_ed,
+                            contract_am: row.contract_am,
+                            contract_st: row.contract_st
+                        })),
+                        scrollX: true,
+                        scrollY: true,
+                        autoWidth: true,
+                        rowHeight: 'auto',
+                        bodyHeight: 'fitToParent',
+                        zIndex: 100,
+                        columns: [
+							{ header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+							{ header: '거래처코드', name: 'account_cd', align: 'center', sortable: true },
+							{ header: '사원코드', name: 'employee_cd', align: 'center', sortable: true },
+							{ header: '출하요청자', name: 'contract_ps', align: 'center', sortable: true },
+							{ header: '수주일자', name: 'contract_sd', align: 'center', sortable: true },
+							{ header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
+							{ header: '출하수량', name: 'contract_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+							{ header: '출하상태', name: 'contract_st', align: 'center', sortable: true }
+                        ],
+        				summary: {
+        				    height: 40,
+        				    position: 'bottom', // or 'top'
+        				    columnContent: {
+        				    	contract_am: {
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+        				        },
+        				        contract_st: {
+        				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+        				        },
+        				    }
+        				}
+                    });
+
+                	 // 단일 클릭 이벤트: 상세 정보 표시
+                    contract_grid.on('click', (ev) => {
+                        const rowKey = ev.rowKey;
+                        const rowData = contract_grid.getRow(rowKey);
+
+                        if (rowKey === null || rowKey === undefined) {
+                            console.warn("헤더 클릭은 무시됩니다.");
+                            return;
+                        }
+
+                        console.log("클릭된 행 데이터:", rowData); // 디버깅용
+                        if (!rowData) {
+                            console.error("rowData가 없습니다!");
+                            return;
+                        }
+                        if (!rowData.contract_cd) {
+                            console.error("contract_cd가 없습니다!", rowData);
+                            return;
+                        }
+                        
+                        make_detail_grid(rowData); // 하단 그리드 갱신 함수 호출
+                        
+                    });
+                    
+					// 출하관리 엑셀
+					addExcelButton(contract_grid, '출하관리');
+                
+                }
+            },
+            error: function (error) {
+                console.error('출하 데이터 로드 실패:', error);
+            }
+        });
+    }
+
+    // 하단(Detail Grid) 생성 함수
+	function make_detail_grid(rowData = null) {
+	    // 상세 그리드가 없으면 먼저 빈 데이터로 초기화
+	    if (!detail_grid) {
+	        detail_grid = new tui.Grid({
+	            el: document.getElementById('detail_grid'),
+	            data: [], // 초기 데이터는 비어있음
+	            scrollX: false,
+	            scrollY: false,
+	            bodyHeight: 200, // 고정 높이 설정
+	            columns: [
+					 { header: '수주번호', name: 'contract_cd', align: 'center', sortable: true },
+					 { header: '제품코드', name: 'product_cd', align: 'center', sortable: true },
+					 { header: '사이즈', name: 'product_sz', align: 'center', sortable: true },
+					 { header: '색상', name: 'product_cr', align: 'center', sortable: true },
+					 { header: '제품수량', name: 'product_am', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+					 { header: '출하일자', name: 'contract_ed', align: 'center', sortable: true },
+	            ],
+				summary: {
+				    height: 40,
+				    position: 'bottom', // or 'top'
+				    columnContent: {
+				    	product_am: {
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.sum.toLocaleString()} 개</div>`
+				        },
+				    	contract_ed: {
+				    		template: (valueMap) => `<div style="text-align: center;">총 ${valueMap.cnt} 건</div>`
+				        }
+				    }
+				}
+	        });
+			
+			// 수정 모달 호출을 위한 클릭 이벤트
+			detail_grid.on('click', (ev) => {
+			    const rowKey = ev.rowKey;
+				const clickedRowData = detail_grid.getRow(rowKey);
+
+				// 클릭된 부분이 유효한 데이터인지 확인
+				if (!clickedRowData || Object.keys(clickedRowData).length === 0 || !clickedRowData.contract_cd) {
+				    console.warn("데이터가 없는 셀이 클릭되었습니다. 클릭된 데이터:", clickedRowData);
+				    return; // 데이터가 없는 경우 아무 작업도 하지 않음
+				}
+				
+				// 유효한 데이터가 있을 경우
+				console.log("출하 상세 클릭됨, contract_cd:", clickedRowData.contract_cd);
+
+				fetchShipmentDetails(clickedRowData.contract_cd);
+			});
+			
+	    }
+	
+		// 초기 또는 유효하지 않은 데이터일 경우 빈 데이터로 초기화
+		if (!rowData || !rowData.contract_cd) {
+		    console.warn("rowData가 유효하지 않아 빈 데이터로 초기화합니다.");
+		    detail_grid.resetData([]); // 빈 데이터로 초기화
+		    return;
+		}
+		
+	    console.log("선택된 출하 데이터:", rowData); // 디버깅 로그 추가
+	
+		
+	    $.ajax({
+	        url: '/select_CONTRACTDETAIL',
+	        method: 'GET',
+	        data: { contract_cd: rowData.contract_cd }, // 수주번호 전달
+	        success: function (response) {
+	            console.log("서버 응답 데이터:", response); // 디버깅 로그 추가
+	
+			    if (Array.isArray(response) && response.length > 0) {
+			        detail_grid.resetData(response);
+			        console.log("하단 그리드 갱신 완료");
+			    } else {
+			        console.warn("서버에서 데이터를 가져오지 못했습니다.");
+			        Swal.fire({
+			            icon: 'warning',
+			            title: '데이터 없음',
+			            text: '출하 상세 데이터를 가져올 수 없습니다.',
+			            confirmButtonText: '확인'
+			        });
+			        detail_grid.resetData([]); // 데이터가 없을 경우 초기화
+			    }
+			},
+			error: function (error) {
+			    console.error("상세 데이터를 가져오는 중 오류 발생:", error);
+			    Swal.fire({
+			        icon: 'error',
+			        title: '오류 발생!',
+			        text: '출하 상세 데이터를 가져오는 데 실패했습니다.',
+			        confirmButtonText: '확인'
+			    });
+			    detail_grid.resetData([]); // 오류 시 데이터 초기화
+	        }
+	    });
+
+    }
+    
+    
+	// 초기화된 productGrid를 다시 불러오는 함수
+	function make_product_grid(isCompleted) {
+	    // 기존 productGrid 제거 (만약 존재하면)
+	    if (productGrid) {
+	        productGrid.destroy(); // 그리드 완전 삭제
+	        $('#productGrid').empty(); // HTML 요소 초기화
+	        console.log("기존 productGrid 삭제 완료");
+	    }
+	
+	    console.log(`🚀 출하 상태 확인: ${isCompleted ? "완료" : "진행중"} | total_stock, can_ship 컬럼 제거 여부: ${isCompleted}`);
+	
+	    // 컬럼 설정 (출하 상태가 완료면 total_stock 및 can_ship 컬럼 제거)
+	    const columns = [
+	        { header: '제품코드', name: 'product_cd', align: 'center' },
+	        { header: '색상', name: 'product_cr', align: 'center' },
+	        { header: '사이즈', name: 'product_sz', align: 'center' },
+	        { header: '기준단위', name: 'product_un', align: 'center' },
+	        { header: '수량', name: 'product_am', align: 'center',  formatter: ({ value }) => `${value.toLocaleString()}개`},
+	    ];
+	
+	    if (!isCompleted) {
+	        columns.push(
+	            { header: '제품재고', name: 'total_stock', align: 'center', formatter: ({ value }) => `${value.toLocaleString()}개`},
+	            { 
+	                header: '출하여부', 
+	                name: 'can_ship', 
+	                align: 'center',
+	                formatter: ({ value }) => {
+	                    if (value && value.includes('재고부족')) {
+	                        return `<span style="color: red; font-weight: bold;">${value}</span>`;
+	                    } else {
+	                        return `<span style="color: green; font-weight: bold;">${value}</span>`;
+	                    }
+	                }
+	            }
+	        );
+	    }
+	
+	    // 새로운 그리드 생성
+	    const summaryConfig = {
+	        height: 40,
+	        position: 'bottom',
+	        columnContent: isCompleted
+	            ? {  // 완료 상태 → product_am 컬럼에 Summary 적용
+	                product_am: {
+	                    template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                }
+	            }
+	            : {  // 진행중 / 대기중 → can_ship 컬럼에 Summary 적용
+	                can_ship: {
+	                    template: (valueMap) => `총 ${valueMap.cnt} 건`
+	                }
+	            }
+	    };
+	
+	    // 새로운 그리드 생성
+	    productGrid = new tui.Grid({
+	        el: document.getElementById('productGrid'),
+	        data: [], // 초기 데이터 없음
+	        columns: columns,
+	        scrollX: false,
+	        scrollY: false,
+	        summary: summaryConfig
+	    });
+
+	
+	    productGrid.on('afterChange', function () {
+	        updateContractSummary(productGrid);
+	    });
+	
+	    console.log("✅ productGrid 컬럼 업데이트 완료 (데이터 유지)");
+	}
+
+</script>
+
+</html>
