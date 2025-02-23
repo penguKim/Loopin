@@ -98,5 +98,12 @@ public class BomService {
 		return response;
 	}
 
+	public int deletebom(List<BomallDTO> deletedata) {
+		
+		int list = bM.deletebom(deletedata);
+		
+		return list;
+	}
+
 
 }

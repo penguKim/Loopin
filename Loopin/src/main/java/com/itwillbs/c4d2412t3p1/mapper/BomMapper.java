@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 
@@ -26,5 +27,6 @@ public interface BomMapper {
 
 	List<Map<String, Object>> selectbomsformpd(@Param("pdcd") String pdcd, @Param("bpcd") String bpcd);
 
+	int deletebom(@Param("rowdata") List<BomallDTO> deletedata);
 
 }

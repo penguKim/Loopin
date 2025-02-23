@@ -100,7 +100,19 @@ public class BomController {
 		System.out.println("너 먼데"+pdcd);
 		System.out.println("너 먼데"+bpcd);
 		
-	        Map<String, Object> list = bS.selectbom(bpap, pdcd, bpcd, bppc); 
-	        return ResponseEntity.ok(list);
+        Map<String, Object> list = bS.selectbom(bpap, pdcd, bpcd, bppc); 
+        
+        return ResponseEntity.ok(list);
 	}
+	
+	@PostMapping("/deletebom")
+	public ResponseEntity<Integer> deletebom(@RequestBody List<BomallDTO> deletedata) {
+		
+		System.out.println("받아오니...?: "+deletedata.get(0).getBomproduct_cd());
+		
+		int list = bS.deletebom(deletedata);
+		
+		return ResponseEntity.ok(list);
+	}
+	
 }

@@ -17,6 +17,7 @@
 	SELECT DISTINCT 
 	    BP.BOMPROCESS_CD, 
 	    PR2.PRODUCT_NM AS BOMPROCESS_NM,
+	    PR2.PRODUCT_UN,
 	    BP.PRODUCT_CD, 
 	    PR.PRODUCT_NM,
 	    BP.PROCESS_CD, 
@@ -25,6 +26,7 @@
 	    PR.PRODUCT_CC,
 	    PC.PROCESS_NM AS BOMPROCESS_AN,  
 	    BP.BOMPROCESS_RT, 
+	    BP.BOMPROCESS_ER, 
 	    BP.BOMPROCESS_AP, 
 	    BP.BOMPROCESS_BG,
 	    BH.LVL,
@@ -161,7 +163,9 @@
 
 <select id="selectbomsformpd" resultType="map">
 	SELECT DISTINCT 
-	    BM.BOM_CD, 
+	    BM.BOM_CD,
+	    BM.PRODUCT_CD,
+	    BM.BOMPRODUCT_CD, 
 	    PR.PRODUCT_NM,
 	    PR.PRODUCT_GC, 
 	    PR.PRODUCT_CC,
@@ -177,11 +181,13 @@
 		AND PR.PRODUCT_NM IS NOT NULL
 	UNION ALL
 	SELECT DISTINCT 
-	    BM.BOM_CD, 
+	    BM.BOM_CD,
+	    BM.PRODUCT_CD, 
+	    BM.BOMPRODUCT_CD,
 	    MT.MATERIAL_NM AS PRODUCT_NM,
 	    MT.MATERIAL_GC AS PRODUCT_GC, 
 	    MT.MATERIAL_CC AS PRODUCT_CC, 
-	    MT.MATERIAL_UN AS PRODUCT_UN, 
+	    MT.MATERIAL_UN AS PRODUCT_UN,
 	    BM.BOM_AM
 	FROM 
 	    BOM BM
@@ -193,5 +199,15 @@
 		AND MT.MATERIAL_NM IS NOT NULL
 	ORDER BY PRODUCT_NM
 </select>
+
+<delete id="deletebom" parameterType="map">
+ 	DELETE FROM BOM B 
+ 	WHERE 
+ 	<foreach collection="rowdata" item="item" open="(" close=")" separator="OR">
+	 	(B.BOMPRODUCT_CD = #{item.bomproduct_cd} 
+	 	AND B.PRODUCT_CD = #{item.product_cd} 
+	 	AND B.BOM_CD = #{item.bom_cd})
+ 	</foreach>
+</delete>
 
 </mapper>

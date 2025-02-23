@@ -29,10 +29,10 @@
 						<ul class="nav nav-pills mb-2 d-flex" id="pills-tab" role="tablist">
 <!-- 							<div class="d-flex"> -->
 				                <li class="nav-item" role="presentation">
-				                  <button class="nav-link active" id="pills-process-tab" data-bs-toggle="pill" data-bs-target="#pills-process" type="button" role="tab" aria-controls="pills-process" aria-selected="true">공정</button>
+				                  <button class="nav-link active" id="pills-bom-tab" data-bs-toggle="pill" data-bs-target="#pills-bom" type="button" role="tab" aria-controls="pills-bom" aria-selected="true">BOM</button>
 				                </li>
 				                <li class="nav-item" role="presentation">
-				                  <button class="nav-link" id="pills-bom-tab" data-bs-toggle="pill" data-bs-target="#pills-bom" type="button" role="tab" aria-controls="pills-bom" aria-selected="false">BOM</button>
+				                  <button class="nav-link" id="pills-process-tab" data-bs-toggle="pill" data-bs-target="#pills-process" type="button" role="tab" aria-controls="pills-process" aria-selected="false">공정</button>
 				                </li>
 <!-- 							</div> -->
 <!-- 			                <li class="nav-item ms-auto"> -->
@@ -40,10 +40,10 @@
 <!-- 						    </li> -->
 		                </ul>
 		                <div class="tab-content pt-2" id="myTabContent">
-			                <div class="tab-pane show active" id="pills-process" role="tabpanel" aria-labelledby="process-tab">
+			                <div class="tab-pane" id="pills-process" role="tabpanel" aria-labelledby="process-tab">
 							<div id="pcgrid" class="p-1"></div>
 			                </div>
-			                <div class="tab-pane" id="pills-bom" role="tabpanel" aria-labelledby="bom-tab">
+			                <div class="tab-pane show active" id="pills-bom" role="tabpanel" aria-labelledby="bom-tab">
 							<div id="bomgrid" class="p-1"></div>
 			                </div>
 		                </div>
@@ -158,6 +158,7 @@ var empcd = document.getElementById('employee_cd').textContent;
 let pcdata = [];
 let bomdata = [];
 const btnregi = document.getElementById('btn_register');
+const btntabpc = document.getElementById('pills-process-tab');
 let modaltype = '';
 const modalregi = document.getElementById('registermodal');
 const modaladd = document.getElementById('addmodal');
@@ -391,7 +392,7 @@ const mgrid = new tui.Grid({
 	  el: document.getElementById('mgrid'),
 	  scrollX: true,
 	  scrollY: true,
-	  rowHeaders: ['checkbox','rowNum'],
+	  rowHeaders: ['checkbox'],
 	  columns: [
 		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
@@ -538,6 +539,20 @@ modalregi.addEventListener('hidden.bs.modal',function(){
 	currentClickRowkey = null;
 })
 
+function disableInput() {
+    pdcinput.removeAttribute("readonly");
+    pdninput.removeAttribute("readonly");
+    pdcinput.setAttribute("disabled", "true");
+    pdninput.setAttribute("disabled", "true");
+}
+
+function enableInput() {
+    pdcinput.removeAttribute("disabled");
+    pdninput.removeAttribute("disabled");
+    pdcinput.setAttribute("readonly", "true");
+    pdninput.setAttribute("readonly", "true");
+}
+
 async function clickppd(e) {
 
 	modaltype = 'selectPD'	
@@ -574,7 +589,7 @@ async function clickmbtnaddpc(){
 	}
 	modaltype = 'selectPC'
 	console.log('공정 추가할거야')
-	let pcdata = [];
+<!--	let pcdata = [];-->
 	try{
 		const response = await fetch('/selectPCs',{
 			method:"GET",
@@ -612,17 +627,45 @@ function clickmbtndelpc (){
 	m_bomgrid.resetData([]);
 }
 
-function clickmbtndelbom (){
+async function clickmbtndelbom (){
 	console.log('선택한 bom 삭제할거야')
 	const deldata = m_bomgrid.getCheckedRows();
 	const data = m_bomgrid.getData();
-	console.log('삭제할 행 rowkey'+deldata);
+	console.log('삭제할 행 rowkey'+JSON.stringify(deldata));
 	console.log('삭제할 행 rowkey'+deldata.map(i=> i.rowKey));
 	const selRowKey = deldata.map(i=> i.rowKey);
 	console.log('삭제할 행 rowkey'+ typeof selRowKey);
-	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
-	m_matStorage[currentClickRowkey] = deleteddata;
-	m_bomgrid.resetData(deleteddata);
+	
+	if(modaltype === 'modify'){
+		const pdcvalue = pdcinput.value
+		console.log('pdcvalue'+pdcvalue);
+		const deletedata = deldata.map(i => ({
+			BOMPRODUCT_CD : i.BOMPRODUCT_CD,
+			PRODUCT_CD : i.PRODUCT_CD,
+			BOM_CD : i.BOM_CD
+		}))
+		console.log('삭제할 데이터'+JSON.stringify(deletedata));
+		
+		try{
+			const response = await fetch (`/deletebom`,{
+				method:"POST",
+				headers:{
+					"Content-Type" : "application/json",
+					[csrfHeader]: csrfToken,
+				},
+				body: JSON.stringify(deletedata)
+			});
+			const data = await response.json();
+			console.log('다시 그리드에 뿌려'+JSON.stringify(data))
+			
+		}catch(error){
+			
+		}
+	}else{
+		const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+		m_matStorage[currentClickRowkey] = deleteddata;
+		m_bomgrid.resetData(deleteddata);
+	}
 }
 
 async function clickmbtnaddmat () {
@@ -943,11 +986,18 @@ pdgrid.on('click', async function(e) {
 		const data = await response.json();
 		console.log('조회했다!'+JSON.stringify(data));
 		
-		let pcdata = data.pcgrid;
-		let bomdata = data.bomgrid;
+		pcdata = data.pcgrid;
+		bomdata = data.bomgrid;
 		
-		pcgrid.resetData(pcdata);
-		bomgrid.resetData(bomdata);
+		if(pcdata.length === 0){
+			btntabpc.disabled = true;
+			pcgrid.resetData(pcdata);
+			bomgrid.resetData(bomdata);
+		}else{
+			btntabpc.disabled = false;
+			pcgrid.resetData(pcdata);
+			bomgrid.resetData(bomdata);
+		}
 		
 	}catch(error){
 		console.log('BOM 데이터 로드에 실패했습니다.'+error)
@@ -958,5 +1008,23 @@ pdgrid.on('click', async function(e) {
 		})
 	}
 })
+
+// 수정모달용
+pdgrid.on('dblclick', (e) => {
+	modaltype = 'modify';
+    console.log('체크된 행:', e.rowKey);
+
+    const dblrow = pdgrid.getRow(e.rowKey);
+    console.log('더블클릭한 행:', dblrow);
+    console.log('더블클릭한 행:', typeof dblrow);
+	
+	disableInput();
+	pdcinput.value = dblrow.PRODUCT_CD;
+	pdninput.value = dblrow.PRODUCT_NM;
+	mgrid.resetData([dblrow]);
+	m_bomgrid.resetData(bomdata);
+	m_matStorage[e.rowKey] = bomdata;
+	regimodal.show();
+});
 
 </script>
