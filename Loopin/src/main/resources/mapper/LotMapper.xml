@@ -64,7 +64,7 @@
 	            AND L.PROCESS_CD = #{process_cd}
 	        </if>
 	        <if test="workorder_st != null and workorder_st != '' and workorder_st != 'ALL'">
-	            AND L.WORKORDER_ST = #{workorder_st}
+	            AND WS.WORKORDER_ST = #{workorder_st}
 	        </if>
 	    </where>
 	    GROUP BY L.LOT_CD

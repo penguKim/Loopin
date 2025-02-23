@@ -8,16 +8,16 @@
  */
 function showAlert(element, icon, title, msg) {
 	Swal.fire({
-	    icon: icon,
-	    title: title,
-	    html: msg,
-	    didClose: () => {
-	        if (element) {
-	            setTimeout(() => {
-	                element.focus();
-	            }, 0);
-	        }
-	    }
+			icon: icon,
+			title: title,
+			html: msg,
+			didClose: () => {
+					if (element) {
+							setTimeout(() => {
+									element.focus();
+							}, 0);
+					}
+			}
 	});
 	
 }
@@ -30,21 +30,21 @@ function showAlert(element, icon, title, msg) {
  * @param {String} msg 내용
  */
 function showToast(element, icon, title, msg) {
-    Swal.fire({
-        toast: true,
-        position: 'center',
-        icon: icon,
-        title: title,
-        html: msg,
-        showConfirmButton: false,
-        timer: 1500,
+		Swal.fire({
+				toast: true,
+				position: 'center',
+				icon: icon,
+				title: title,
+				html: msg,
+				showConfirmButton: false,
+				timer: 1500,
 		didClose: () => {
-	        if (element) {
-	            setTimeout(() => {
-	                element.focus();
-	            }, 0);
-	        }
-	    }
+					if (element) {
+							setTimeout(() => {
+									element.focus();
+							}, 0);
+					}
+			}
 	});
 }
 
@@ -54,22 +54,22 @@ function showToast(element, icon, title, msg) {
  * @param {String} msg 내용
  */
 async function showConfirm(title, msg) {
-    const result = await Swal.fire({
-        title: title,
-        html: msg,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#997af3',
-        cancelButtonColor: '#f55d6c',
-        confirmButtonText: '확인',
-        cancelButtonText: '취소',
+		const result = await Swal.fire({
+				title: title,
+				html: msg,
+				icon: 'question',
+				showCancelButton: true,
+				confirmButtonColor: '#997af3',
+				cancelButtonColor: '#f55d6c',
+				confirmButtonText: '확인',
+				cancelButtonText: '취소',
 		reverseButtons: true, 
-		allowOutsideClick: false,  // 외부 클릭 방지
-		allowEscapeKey: false,     // ESC 키 방지
-		allowEnterKey: false       // 엔터키 방지
-    });
-    
-    return result.isConfirmed;
+		allowOutsideClick: false,	// 외부 클릭 방지
+		allowEscapeKey: false,		 // ESC 키 방지
+		allowEnterKey: false			 // 엔터키 방지
+		});
+		
+		return result.isConfirmed;
 }
 
 
@@ -79,10 +79,10 @@ async function showConfirm(title, msg) {
  * @returns {String} 년월일
  */
 function getDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
 }
 
 /**
@@ -91,9 +91,9 @@ function getDate(date) {
  * @returns {String} 년월일
  */
 function getPrevDate(num) {
-    const date = new Date();
-    date.setDate(date.getDate() - num);
-    return getDate(date);
+		const date = new Date();
+		date.setDate(date.getDate() - num);
+		return getDate(date);
 }
 
 /**
@@ -102,17 +102,17 @@ function getPrevDate(num) {
  * @returns {String} 년월일
  */
 function getNextDate(num) {
-    const date = new Date();
-    date.setDate(date.getDate() + num);
-    return getDate(date);
+		const date = new Date();
+		date.setDate(date.getDate() + num);
+		return getDate(date);
 }
 
 function getFirstDayOfMonth(date) {
-    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-    const year = firstDay.getFullYear();
-    const month = String(firstDay.getMonth() + 1).padStart(2, '0');
-    const day = String(firstDay.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+		const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+		const year = firstDay.getFullYear();
+		const month = String(firstDay.getMonth() + 1).padStart(2, '0');
+		const day = String(firstDay.getDate()).padStart(2, '0');
+		return `${year}-${month}-${day}`;
 }
 
 
@@ -122,10 +122,10 @@ function getFirstDayOfMonth(date) {
  * @returns {String} 년월일
  */
 function getTime(date) {
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${hours}:${minutes}:${seconds}`;
+		const hours = String(date.getHours()).padStart(2, '0');
+		const minutes = String(date.getMinutes()).padStart(2, '0');
+		const seconds = String(date.getSeconds()).padStart(2, '0');
+		return `${hours}:${minutes}:${seconds}`;
 }
 
 // 
@@ -135,16 +135,16 @@ function getTime(date) {
  * @returns {String} 년월일
  */
 function getDateTime(date) {
-    // 날짜 포맷팅
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    // 시간 포맷팅
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    
-    return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
+		// 날짜 포맷팅
+		const year = date.getFullYear();
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		// 시간 포맷팅
+		const hours = String(date.getHours()).padStart(2, '0');
+		const minutes = String(date.getMinutes()).padStart(2, '0');
+		const seconds = String(date.getSeconds()).padStart(2, '0');
+		
+		return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
 }
 
 /**
@@ -153,10 +153,10 @@ function getDateTime(date) {
  * @param {number} height 화면 높이에서 뺄 높이
  */
 function setElementHeight(el, height) {
-    const elements = document.querySelectorAll(el);
-    elements.forEach(element => {
-        element.style.height = `${window.innerHeight + height}px`;
-    });
+		const elements = document.querySelectorAll(el);
+		elements.forEach(element => {
+				element.style.height = `${window.innerHeight + height}px`;
+		});
 }
 
 
@@ -167,7 +167,7 @@ function setElementHeight(el, height) {
  */
 function setGridHeight(grid, height) {
 	const newHeight = window.innerHeight + height; // offset은 음수값
-    grid.setBodyHeight(newHeight);
+		grid.setBodyHeight(newHeight);
 }
 
 /**
@@ -177,7 +177,7 @@ function setGridHeight(grid, height) {
  */
 function setGridWidth(grid, width) {
 	const newWidth = $(grid.el).parent().width() + width;
-    grid.setWidth(newWidth);
+		grid.setWidth(newWidth);
 }
 
 
@@ -187,73 +187,73 @@ function setGridWidth(grid, width) {
  * @param {*} input 선택자 객체
  */
 function inputTimeFormat(input) {
-    // 숫자와 콜론만 입력 가능하도록 필터링
-    input.value = input.value.replace(/[^0-9:]/g, '');
-    input.addEventListener('blur', function() {
-        let value = this.value;
-        
-        // 입력값 검증
-        if (value === '') return;
-        
-        // 숫자만 입력된 경우 (시간만 입력)
-        if(/^\d{1,2}$/.test(value)) {
-            const hours = parseInt(value);
-            if(hours >= 0 && hours <= 23) {
-                this.value = value.padStart(2, '0') + ':00:00';
-            } else {
-                showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
-                this.value = '';
-            }
-            return;
-        }
-        
-        // HH:mm 형식으로 입력된 경우
-        if(/^([0-9]{1,2}):([0-9]{2})$/.test(value)) {
-            const [hours, minutes] = value.split(':').map(Number);
-            if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-                this.value = hours.toString().padStart(2, '0') + ':' + 
-                            minutes.toString().padStart(2, '0') + ':00';
-                return;
-            }
-        }
-        
-        // HH:mm:ss 형식 검증
-        if(!validateTime(value)) {
-            showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
-            this.value = '';
-            return;
-        }
-        
-        // 올바른 형식인 경우 포맷팅
-        const [hours, minutes, seconds = "00"] = value.split(':');
-        this.value = hours.padStart(2, '0') + ':' + 
-                    minutes.padStart(2, '0') + ':' + 
-                    seconds.padStart(2, '0');
-    });
+		// 숫자와 콜론만 입력 가능하도록 필터링
+		input.value = input.value.replace(/[^0-9:]/g, '');
+		input.addEventListener('blur', function() {
+				let value = this.value;
+				
+				// 입력값 검증
+				if (value === '') return;
+				
+				// 숫자만 입력된 경우 (시간만 입력)
+				if(/^\d{1,2}$/.test(value)) {
+						const hours = parseInt(value);
+						if(hours >= 0 && hours <= 23) {
+								this.value = value.padStart(2, '0') + ':00:00';
+						} else {
+								showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
+								this.value = '';
+						}
+						return;
+				}
+				
+				// HH:mm 형식으로 입력된 경우
+				if(/^([0-9]{1,2}):([0-9]{2})$/.test(value)) {
+						const [hours, minutes] = value.split(':').map(Number);
+						if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+								this.value = hours.toString().padStart(2, '0') + ':' + 
+														minutes.toString().padStart(2, '0') + ':00';
+								return;
+						}
+				}
+				
+				// HH:mm:ss 형식 검증
+				if(!validateTime(value)) {
+						showToast(input, 'error', '올바른 시간 형식이 아닙니다', '00:00:00 ~ 23:59:59 사이의 값을<br>입력해주세요');
+						this.value = '';
+						return;
+				}
+				
+				// 올바른 형식인 경우 포맷팅
+				const [hours, minutes, seconds = "00"] = value.split(':');
+				this.value = hours.padStart(2, '0') + ':' + 
+										minutes.padStart(2, '0') + ':' + 
+										seconds.padStart(2, '0');
+		});
 
-    // 입력 중 콜론 자동 추가
-    if(input.value.length === 2 && !input.value.includes(':')) {
-        const hours = parseInt(input.value);
-        if(hours >= 0 && hours <= 23) {
-            input.value = input.value + ':';
-        }
-    } else if(input.value.length === 5 && input.value.split(':').length === 2) {
-        const [hours, minutes] = input.value.split(':').map(Number);
-        if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
-            input.value = input.value + ':';
-        }
-    }
+		// 입력 중 콜론 자동 추가
+		if(input.value.length === 2 && !input.value.includes(':')) {
+				const hours = parseInt(input.value);
+				if(hours >= 0 && hours <= 23) {
+						input.value = input.value + ':';
+				}
+		} else if(input.value.length === 5 && input.value.split(':').length === 2) {
+				const [hours, minutes] = input.value.split(':').map(Number);
+				if(hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59) {
+						input.value = input.value + ':';
+				}
+		}
 }
 
 // 시간 형식 검증 함수
 function validateTime(timeStr) {
-    const timePattern = /^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?$/;
-    if (!timePattern.test(timeStr)) return false;
-    
-    const [hours, minutes, seconds = "00"] = timeStr.split(':').map(Number);
-    return hours >= 0 && hours <= 23 && 
-           minutes >= 0 && minutes <= 59 && 
-           seconds >= 0 && seconds <= 59;
+		const timePattern = /^([0-9]{1,2}):([0-9]{2})(?::([0-9]{2}))?$/;
+		if (!timePattern.test(timeStr)) return false;
+		
+		const [hours, minutes, seconds = "00"] = timeStr.split(':').map(Number);
+		return hours >= 0 && hours <= 23 && 
+					 minutes >= 0 && minutes <= 59 && 
+					 seconds >= 0 && seconds <= 59;
 }
 
 /**
@@ -262,7 +262,7 @@ function validateTime(timeStr) {
  * @param {String} value 값
  */
 function setRadioValue(radioName, value) {
-    $(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
+		$(`input:radio[name=${radioName}][value=${value}]`).prop('checked', true);
 }
 
 function getRadioValue(radioName) {
@@ -276,16 +276,16 @@ function getRadioValue(radioName) {
  * @param {String} title 기본값
  */
 function createSelectBox(el, list, title) {
-    const selectBox = $(el);
+		const selectBox = $(el);
 
-    selectBox.empty();
+		selectBox.empty();
 	
 	if(title) {
-	    selectBox.append(`<option value="">${title}</option>`);		
+			selectBox.append(`<option value="">${title}</option>`);		
 	}
-    list.forEach(data => {
-        selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
-    });
+		list.forEach(data => {
+				selectBox.append(`<option value="${data.common_cc}">${data.common_nm}</option>`);
+		});
 }
 
 /**
@@ -296,29 +296,29 @@ function createSelectBox(el, list, title) {
  * @param {boolean} flag true -> 전체 버튼 추가
  */
 function createRadio(el, list, name, flag) {
-    const container = $(el);
-    
-    container.empty();
-    
+		const container = $(el);
+		
+		container.empty();
+		
 	if(flag) {
-	    container.append(`
-	        <div class="form-check">
-	            <input class="form-check-input" type="radio" 
-	                   name="${name}" id="${name}_ALL" value="ALL" checked>
-	            <label class="form-check-label" for="${name}_ALL">전체</label>
-	        </div>
-	    `);
+			container.append(`
+					<div class="form-check">
+							<input class="form-check-input" type="radio" 
+										 name="${name}" id="${name}_ALL" value="ALL" checked>
+							<label class="form-check-label" for="${name}_ALL">전체</label>
+					</div>
+			`);
 	}
-    
-    list.forEach(data => {
-        container.append(`
+		
+		list.forEach(data => {
+				container.append(`
 			<div class="form-check">
-			    <input type="radio" id="${name}_${data.common_cc}"name="${name}" value="${data.common_cc}" 
-			        class="form-check-input">
-			    <label class="form-check-label" for="${name}_${data.common_cc}">${data.common_nm}</label>
+					<input type="radio" id="${name}_${data.common_cc}"name="${name}" value="${data.common_cc}" 
+							class="form-check-input">
+					<label class="form-check-label" for="${name}_${data.common_cc}">${data.common_nm}</label>
 			</div>
-        `);
-    });
+				`);
+		});
 }
 
 /**
@@ -329,31 +329,31 @@ function createRadio(el, list, name, flag) {
  * @param {boolean} flag true -> 전체 버튼 추가
  */
 function createSelect2(selectId, data, placeholder, parentModal) {
-    const select = $(`${selectId}`);
-    select.select2({
-        dropdownParent: $(`#${parentModal}`),
-        placeholder: placeholder,
-        width: '100%',
-        data: data.map(item => ({
-            id: item['common_cc'],
-            text: item['common_nm']
-        }))
-    }).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId.substring(1)}">전체 선택</button>`);
+		const select = $(`${selectId}`);
+		select.select2({
+				dropdownParent: $(`#${parentModal}`),
+				placeholder: placeholder,
+				width: '100%',
+				data: data.map(item => ({
+						id: item['common_cc'],
+						text: item['common_nm']
+				}))
+		}).next().after(`<button type="button" class="btn btn-sm btn-secondary mt-1" id="select-all-${selectId.substring(1)}">전체 선택</button>`);
 
-    $(document).on('click', `#select-all-${selectId.substring(1)}`, function() {
-        const button = $(this);
-        
-        if (select.val() && select.val().length == select.find('option').length) {
-            select.val(null);
-        } else {
-            const allOptions = select.find('option').map(function() {
-                return $(this).val();
-            }).get();
-            select.val(allOptions);
-        }
-        
-        select.trigger('change');
-    });
+		$(document).on('click', `#select-all-${selectId.substring(1)}`, function() {
+				const button = $(this);
+				
+				if (select.val() && select.val().length == select.find('option').length) {
+						select.val(null);
+				} else {
+						const allOptions = select.find('option').map(function() {
+								return $(this).val();
+						}).get();
+						select.val(allOptions);
+				}
+				
+				select.trigger('change');
+		});
 }
 
 
@@ -366,48 +366,48 @@ function createSelect2(selectId, data, placeholder, parentModal) {
 function gridExcelDownload(grid, title) {
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
-    const headers = grid.getColumns();
-    const rows = grid.getData();
-    
-    const data = {
-        headers: headers,
-        rows: rows,
-        title: title
-    };
-    
-    $.ajax({
-        type: 'post',
-        url: '/excelDownload',
-        contentType: 'application/json',
-        data: JSON.stringify(data),
-        xhrFields: {
-            responseType: 'blob'
-        },
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader(header, token);
-        },
-        success: function(blob) {
-            const file = new Blob([blob], {
-                type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            });
-            
-            const url = window.URL.createObjectURL(file);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = title + '.xlsx';
-            
-            document.body.appendChild(a);
-            a.click();
-            
-            setTimeout(function() {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }, 100);
-        },
-        error: function(xhr, textStatus, errorThrown) {
-            console.error('엑셀 다운로드 실패:', errorThrown);
-        }
-    });
+		const headers = grid.getColumns();
+		const rows = grid.getData();
+		
+		const data = {
+				headers: headers,
+				rows: rows,
+				title: title
+		};
+		
+		$.ajax({
+				type: 'post',
+				url: '/excelDownload',
+				contentType: 'application/json',
+				data: JSON.stringify(data),
+				xhrFields: {
+						responseType: 'blob'
+				},
+				beforeSend: function(xhr) {
+						xhr.setRequestHeader(header, token);
+				},
+				success: function(blob) {
+						const file = new Blob([blob], {
+								type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+						});
+						
+						const url = window.URL.createObjectURL(file);
+						const a = document.createElement('a');
+						a.href = url;
+						a.download = title + '.xlsx';
+						
+						document.body.appendChild(a);
+						a.click();
+						
+						setTimeout(function() {
+								document.body.removeChild(a);
+								window.URL.revokeObjectURL(url);
+						}, 100);
+				},
+				error: function(xhr, textStatus, errorThrown) {
+						console.error('엑셀 다운로드 실패:', errorThrown);
+				}
+		});
 }
 
 /**
@@ -416,18 +416,18 @@ function gridExcelDownload(grid, title) {
  * @param {String} title 엑셀 파일명
  */
 function addExcelButton(grid, title) {
-    const resetFilter = $('#resetFilter');
-    if (!$('#btn_excel_download').length && resetFilter.length) {
-        const excelBtn = $('<button>', {
-            id: 'btn_excel_download',
-            class: 'btn btn-primary me-2',
-            text: '엑셀'
-        }).on('click', () => {
-            gridExcelDownload(grid, title);
-        });
-        
-        resetFilter.before(excelBtn);
-    }
+		const resetFilter = $('#resetFilter');
+		if (!$('#btn_excel_download').length && resetFilter.length) {
+				const excelBtn = $('<button>', {
+						id: 'btn_excel_download',
+						class: 'btn btn-primary me-2',
+						text: '엑셀'
+				}).on('click', () => {
+						gridExcelDownload(grid, title);
+				});
+				
+				resetFilter.before(excelBtn);
+		}
 }
 
 /**
@@ -439,21 +439,21 @@ function addExcelButton(grid, title) {
 function callAjaxPost(url, jsonData) {
 	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            type: 'post',
-            url: url,
-            contentType: 'application/json',
-            data: jsonData,
+		return new Promise((resolve, reject) => {
+				$.ajax({
+						type: 'post',
+						url: url,
+						contentType: 'application/json',
+						data: jsonData,
 			headers: {[header]: token},
-            success: function(response) {
-                resolve(response);
-            },
-            error: function(xhr) {
-                reject(xhr.responseJSON);
-            }
-        });
-    });
+						success: function(response) {
+								resolve(response);
+						},
+						error: function(xhr) {
+								reject(xhr.responseJSON);
+						}
+				});
+		});
 }
 
 /**
@@ -465,20 +465,20 @@ function callAjaxPost(url, jsonData) {
 function callAjaxGet(url, jsonData) {
 	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            type: 'get',
-            url: url,
-            data: jsonData,
+		return new Promise((resolve, reject) => {
+				$.ajax({
+						type: 'get',
+						url: url,
+						data: jsonData,
 			headers: {[header]: token},
-            success: function(response) {
-                resolve(response);
-            },
-            error: function(xhr) {
-                reject(xhr.responseJSON);
-            }
-        });
-    });
+						success: function(response) {
+								resolve(response);
+						},
+						error: function(xhr) {
+								reject(xhr.responseJSON);
+						}
+				});
+		});
 }
 
 /**
@@ -490,24 +490,24 @@ function callAjaxGet(url, jsonData) {
 function callAjaxFileUpload(url, formData) {
 	const token = $("meta[name='_csrf']").attr("content");
 	const header = $("meta[name='_csrf_header']").attr("content");
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            type: 'POST',
-            url: url,
+		return new Promise((resolve, reject) => {
+				$.ajax({
+						type: 'POST',
+						url: url,
 			processData: false,
 			contentType: false,
-            data: formData,
+						data: formData,
 			headers: {
 				[header]: token,
 		},
-            success: function(response) {
-                resolve(response);
-            },
-            error: function(xhr) {
-                reject(xhr.responseJSON);
-            }
-        });
-    });
+						success: function(response) {
+								resolve(response);
+						},
+						error: function(xhr) {
+								reject(xhr.responseJSON);
+						}
+				});
+		});
 }
 
 /**
@@ -521,7 +521,7 @@ async function getCommonList(...codes) {
 	};
 	let jsonData = JSON.stringify(data);
 	try {
-	    let ajaxData = await callAjaxPost('/select_COMMON_list', jsonData);
+			let ajaxData = await callAjaxPost('/select_COMMON_list', jsonData);
 		return ajaxData['commonList'];
 	} catch (error) {
 		console.log(error.msg);
@@ -535,13 +535,13 @@ async function getCommonList(...codes) {
  * @returns {*} 필터 리스트
  */
 function setFilterList(commonCode) {
-    if (!commonCode || !Array.isArray(commonCode)) return [];
-    
-    return commonCode.map((item, index) => ({
-        value: item.common_cc,
-        text: item.common_nm,
-        checked: index == 0 ? 'checked' : ''
-    }));
+		if (!commonCode || !Array.isArray(commonCode)) return [];
+		
+		return commonCode.map((item, index) => ({
+				value: item.common_cc,
+				text: item.common_nm,
+				checked: index == 0 ? 'checked' : ''
+		}));
 }
 
 /**
@@ -551,25 +551,25 @@ function setFilterList(commonCode) {
  * @returns {boolean} 
  */
 function byteCheck(selector, maxBytes) {
-    let element = $(selector);
-    let text = element.val();
-    let encoder = new TextEncoder();
-    let byteLength = encoder.encode(text).length;
-    if(byteLength > maxBytes) {
-        let cutText = '';
-        for(let i = 0; i < text.length; i++) {
-            let char = text.slice(0, i + 1);
-            let charByteLength = encoder.encode(char).length;
-            
-            if (charByteLength > maxBytes) break;
-            
-            cutText = char;
-        }
-        
-        element.val(cutText);
-        return false;
-    }
-    return true;
+		let element = $(selector);
+		let text = element.val();
+		let encoder = new TextEncoder();
+		let byteLength = encoder.encode(text).length;
+		if(byteLength > maxBytes) {
+				let cutText = '';
+				for(let i = 0; i < text.length; i++) {
+						let char = text.slice(0, i + 1);
+						let charByteLength = encoder.encode(char).length;
+						
+						if (charByteLength > maxBytes) break;
+						
+						cutText = char;
+				}
+				
+				element.val(cutText);
+				return false;
+		}
+		return true;
 }
 
 /**
@@ -579,32 +579,32 @@ function byteCheck(selector, maxBytes) {
  */
 function gridValidationCheck(grid) {
 	const ERROR_MESSAGES = {
-	    'REGEXP': '올바른 형식이 아닙니다.',
-	    'REQUIRED': '입력해주세요.',
-	    'NUMBER': '숫자만 입력 가능합니다.',
-	    'MIN': '최소값보다 작습니다.',
-	    'MAX': '최대값보다 큽니다.'
+			'REGEXP': '올바른 형식이 아닙니다.',
+			'REQUIRED': '입력해주세요.',
+			'NUMBER': '숫자만 입력 가능합니다.',
+			'MIN': '최소값보다 작습니다.',
+			'MAX': '최대값보다 큽니다.'
 	};
 	const getErrorMessage = (errorType, rowKey, header) => {
-	    return `${rowKey + 1}행의 ${header}은(는) ${ERROR_MESSAGES[errorType]}`;
+			return `${rowKey + 1}행의 ${header}은(는) ${ERROR_MESSAGES[errorType]}`;
 	};
-    const validationResult = grid.validate();
-    
-    for (const row of validationResult) {
-        const rowKey = row['rowKey'];
-        
-        for (const cell of row.errors) {
-            const column = grid.getColumns().find(col => col['name'] == cell.columnName);
-            const header = column['header'];
-            const errorType = cell.errorCode[0];
-            
-            const msg = getErrorMessage(errorType, rowKey, header);
-            showAlert('', 'error', '입력 체크', msg);
-            grid.focus(rowKey, cell.columnName);
-            return false;
-        }
-    }
-    return true;
+		const validationResult = grid.validate();
+		
+		for (const row of validationResult) {
+				const rowKey = row['rowKey'];
+				
+				for (const cell of row.errors) {
+						const column = grid.getColumns().find(col => col['name'] == cell.columnName);
+						const header = column['header'];
+						const errorType = cell.errorCode[0];
+						
+						const msg = getErrorMessage(errorType, rowKey, header);
+						showAlert('', 'error', '입력 체크', msg);
+						grid.focus(rowKey, cell.columnName);
+						return false;
+				}
+		}
+		return true;
 }
 
 /**
@@ -613,34 +613,182 @@ function gridValidationCheck(grid) {
 function setGridTheme() {
 	tui.Grid.setLanguage('ko');
 	tui.Grid.applyTheme('striped', {
-	    outline: {
-	        border: '#e0e0e0',
-	        showVerticalBorder: true,
-	        showHorizontalBorder: true
-	    },
+			outline: {
+					border: '#e0e0e0',
+					showVerticalBorder: true,
+					showHorizontalBorder: true
+			},
 		cell: {
-	        normal: {
-	            border: '#e0e0e0',
-	            showVerticalBorder: true,
-	            showHorizontalBorder: true
-	        },
-	        header: {
-	        	border: '#e0e0e0',
-	            showVerticalBorder: true,
-	            showHorizontalBorder: true
-	        },
-	        rowHeader: {
-	        	background: '#eee',
-	        	border: '#e0e0e0',
-	            showVerticalBorder: true,
-	            showHorizontalBorder: true
-	        },
-	        summary: {
-	        	background: '#ddd',
-	        	border: '#fff',
-	            showVerticalBorder: true,
-	            showHorizontalBorder: true
-	        },
-	    },
+					normal: {
+							border: '#e0e0e0',
+							showVerticalBorder: true,
+							showHorizontalBorder: true
+					},
+					header: {
+						border: '#e0e0e0',
+							showVerticalBorder: true,
+							showHorizontalBorder: true
+					},
+					rowHeader: {
+						background: '#eee',
+						border: '#e0e0e0',
+							showVerticalBorder: true,
+							showHorizontalBorder: true
+					},
+					summary: {
+						background: '#ddd',
+						border: '#fff',
+							showVerticalBorder: true,
+							showHorizontalBorder: true
+					},
+			},
 	});
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+	const sidebarNav = document.getElementById("sidebar-nav");	
+
+	// ── Sidebar 데이터 구성 ── //
+	const sidebarData = {
+		default: [
+			{ name: "인사관리", link: "employee_list", icon: "bi bi-person" },
+			{ name: "근태관리", link: "attendance_list", icon: "bi bi-calendar-check" },
+			{ name: "급여관리", link: "payroll_list", icon: "bi bi-cash" }
+		],
+		notice: [
+			{ name: "공지사항", link: "notice_list", icon: "bi bi-megaphone" }
+		],
+		generic: {
+			"인사": [
+				{ name: "인사관리", link: "employee_list", icon: "bi bi-person" },
+				{ name: "인사현황", link: "employee_chart", icon: "bi bi-graph-up" },
+				{ name: "인사발령", link: "transfer_list", icon: "bi bi-graph-up" }
+			],
+			"근태": [
+				{ name: "연차등록", link: "annual_regist", icon: "bi bi-calendar" },
+				{ name: "공휴일등록", link: "holiday_regist", icon: "bi bi-calendar-event" },
+				{ name: "휴가현황", link: "attendance_list", icon: "bi bi-calendar-check" },
+				{ name: "근로관리", link: "commute_type", icon: "bi bi-clock-history" },
+				{ name: "출퇴근기록부", link: "commute", icon: "bi bi-clock" },
+				{ name: "출퇴근기록부", link: "commute_chart", icon: "bi bi-bar-chart" }
+			],
+			"급여": [
+				{ name: "급여조회", link: "payroll_list", icon: "bi bi-cash" },
+				{ name: "급여계산기", link: "payroll_calc", icon: "bi bi-calculator" }
+			],
+			"기준정보": [
+				{ name: "제품관리", link: "product_list", icon: "bi bi-info-circle" },
+				{ name: "창고관리", link: "warehouse_list", icon: "bi bi-info-circle" },
+				{ name: "설비관리", link: "equipment_list", icon: "bi bi-info-circle" },
+				{ name: "공정관리", link: "process", icon: "bi bi-info-circle" }
+			],
+			"영업": [
+				{ name: "수주관리", link: "contract_list", icon: "bi bi-bar-chart" },
+				{ name: "발주관리", link: "order_list", icon: "bi bi-bar-chart" },
+				{ name: "출하관리", link: "shipment_list", icon: "bi bi-bar-chart" },
+				{ name: "영업현황", link: "business_state", icon: "bi bi-bar-chart" }
+			],
+			"자재": [
+				{ name: "재고관리", link: "stock_list", icon: "bi bi-box" },
+				{ name: "입출고관리", link: "inout_list", icon: "bi bi-archive" },
+			],
+			"생산": [
+				{ name: "BOM", link: "bom", icon: "bi bi-calendar3" },
+				{ name: "생산계획", link: "product_plan_list", icon: "bi bi-calendar3" },
+				{ name: "로트추적", link: "lot_list", icon: "bi bi-calendar3" },
+				{ name: "생산실적", link: "product_result", icon: "bi bi-calendar3" },
+			],
+			"나의인사": [
+				{ name: "나의 인사내역", link: "employee_list&type=1", icon: "bi bi-person" }
+			],
+			"나의근태": [
+				{ name: "나의 근태내역", link: "attendance_list&type=1", icon: "bi bi-calendar-check" }
+			],
+			"나의급여": [
+				{ name: "나의 급여내역", link: "my_payroll", icon: "bi bi-cash" }
+			]
+		}
+	};
+
+	// ── 사이드바 업데이트 함수 ── //
+	function updateSidebar(data) {
+		if (!sidebarNav) return;
+		sidebarNav.innerHTML = "";
+		data.forEach(item => {
+			const li = document.createElement("li");
+			li.className = "nav-item";
+			const a = document.createElement("a");
+			a.className = "nav-link collapsed";
+			a.href = item.link;
+			const icon = document.createElement("i");
+			icon.className = item.icon;
+			const span = document.createElement("span");
+			span.textContent = item.name;
+			a.appendChild(icon);
+			a.appendChild(span);
+			li.appendChild(a);
+			sidebarNav.appendChild(li);
+		});
+	}
+
+	function loadSidebar() {
+		const savedState = localStorage.getItem("sidebarState");
+		if (savedState) {
+			savedState === "notice" ? updateSidebar(sidebarData.notice) : updateSidebar(sidebarData.generic[savedState] || sidebarData.default);
+		} else {
+			updateSidebar(sidebarData.default);
+		}
+	}
+
+	// ── 페이지 로드 시 사이드바 업데이트 ── //
+	loadSidebar();
+
+	// ── 드롭다운 메뉴 클릭 시 첫 번째 항목으로 이동 (페이지 이동 후 사이드바 적용) ── //
+	document.querySelectorAll(".dropdown-item[data-menu]").forEach(item => {
+		item.addEventListener("click", function (event) {
+			event.preventDefault();
+			const menuName = this.getAttribute("data-menu");
+
+			if (!menuName || !sidebarData.generic[menuName]?.length) {
+				console.error("❌ 유효한 data-menu 값이 없음");
+				return;
+			}
+
+			localStorage.setItem("sidebarState", menuName);
+			const firstItem = sidebarData.generic[menuName][0];
+
+			console.log(`🔗 ${menuName} 클릭 → ${firstItem.link}로 이동`);
+			window.location.href = firstItem.link; // 바로 이동
+		});
+	});
+
+	// ── 공지사항 클릭 시 notice_list로 이동 (페이지 이동 후 사이드바 적용) ── //
+	const noticeLink = document.querySelector("a[href='notice_list']");
+	if (noticeLink) {
+		noticeLink.addEventListener("click", function (event) {
+			event.preventDefault();
+			localStorage.setItem("sidebarState", "notice");
+			console.log("📢 공지사항 클릭됨 → notice_list 이동");
+			window.location.href = "notice_list"; // 바로 이동
+		});
+	}
+
+	// ── 메인 메뉴(홈 버튼, 로고) 클릭 시 기본 사이드바 로드 (페이지 이동 후 적용) ── //
+	document.querySelectorAll("a[href='/']").forEach(link => {
+		link.addEventListener("click", function () {
+			localStorage.removeItem("sidebarState");
+			console.log("🏠 메인 메뉴 클릭됨 → 기본 사이드바 로드");
+			window.location.href = "/"; // 바로 이동
+		});
+	});
+
+	// ── 로그아웃: 기본 동작 유지, LocalStorage 초기화 ── //
+	document.querySelectorAll("a[href='logout']").forEach(link => {
+		link.addEventListener("click", function () {
+			localStorage.removeItem("sidebarState");
+			console.log("🔓 로그아웃 클릭됨");
+			// 기본 페이지 이동 유지 (event.preventDefault() 안 함)
+		});
+	});
+});
+
