@@ -645,150 +645,86 @@ function setGridTheme() {
 	});
 }
 
+
 document.addEventListener("DOMContentLoaded", function () {
-	const sidebarNav = document.getElementById("sidebar-nav");	
+    const headerNav = document.getElementById("header-nav");
+    const sidebarNav = document.getElementById("sidebar-nav");
+	
+    function updateHeader(menuItems) {
+        headerNav.innerHTML = "";
+        menuItems.forEach(item => {
+            const li = document.createElement("li");
+            li.className = "nav-item dropdown pe-3";
+            const a = document.createElement("a");
+            a.className = "nav-link nav-profile d-flex align-items-center pe-0 menu-item";
+            a.href = "#"; // 클릭 시 사이드바 변경만 함
+            a.setAttribute("data-menu", item.dataMenu);
+            a.textContent = item.name;
+            li.appendChild(a);
+            headerNav.appendChild(li);
+        });
 
-	// ── Sidebar 데이터 구성 ── //
-	const sidebarData = {
-		default: [
-			{ name: "인사관리", link: "employee_list", icon: "bi bi-person" },
-			{ name: "근태관리", link: "attendance_list", icon: "bi bi-calendar-check" },
-			{ name: "급여관리", link: "payroll_list", icon: "bi bi-cash" }
-		],
-		notice: [
-			{ name: "공지사항", link: "notice_list", icon: "bi bi-megaphone" }
-		],
-		generic: {
-			"인사": [
-				{ name: "인사관리", link: "employee_list", icon: "bi bi-person" },
-				{ name: "인사현황", link: "employee_chart", icon: "bi bi-graph-up" },
-				{ name: "인사발령", link: "transfer_list", icon: "bi bi-graph-up" }
-			],
-			"근태": [
-				{ name: "연차등록", link: "annual_regist", icon: "bi bi-calendar" },
-				{ name: "공휴일등록", link: "holiday_regist", icon: "bi bi-calendar-event" },
-				{ name: "휴가현황", link: "attendance_list", icon: "bi bi-calendar-check" },
-				{ name: "근로관리", link: "commute_type", icon: "bi bi-clock-history" },
-				{ name: "출퇴근기록부", link: "commute", icon: "bi bi-clock" },
-				{ name: "출퇴근기록부", link: "commute_chart", icon: "bi bi-bar-chart" }
-			],
-			"급여": [
-				{ name: "급여조회", link: "payroll_list", icon: "bi bi-cash" },
-				{ name: "급여계산기", link: "payroll_calc", icon: "bi bi-calculator" }
-			],
-			"기준정보": [
-				{ name: "제품관리", link: "product_list", icon: "bi bi-info-circle" },
-				{ name: "창고관리", link: "warehouse_list", icon: "bi bi-info-circle" },
-				{ name: "설비관리", link: "equipment_list", icon: "bi bi-info-circle" },
-				{ name: "공정관리", link: "process", icon: "bi bi-info-circle" }
-			],
-			"영업": [
-				{ name: "수주관리", link: "contract_list", icon: "bi bi-bar-chart" },
-				{ name: "발주관리", link: "order_list", icon: "bi bi-bar-chart" },
-				{ name: "출하관리", link: "shipment_list", icon: "bi bi-bar-chart" },
-				{ name: "영업현황", link: "business_state", icon: "bi bi-bar-chart" }
-			],
-			"자재": [
-				{ name: "재고관리", link: "stock_list", icon: "bi bi-box" },
-				{ name: "입출고관리", link: "inout_list", icon: "bi bi-archive" },
-			],
-			"생산": [
-				{ name: "BOM", link: "bom", icon: "bi bi-calendar3" },
-				{ name: "생산계획", link: "product_plan_list", icon: "bi bi-calendar3" },
-				{ name: "로트추적", link: "lot_list", icon: "bi bi-calendar3" },
-				{ name: "생산실적", link: "product_result", icon: "bi bi-calendar3" },
-			],
-			"나의인사": [
-				{ name: "나의 인사내역", link: "employee_list&type=1", icon: "bi bi-person" }
-			],
-			"나의근태": [
-				{ name: "나의 근태내역", link: "attendance_list&type=1", icon: "bi bi-calendar-check" }
-			],
-			"나의급여": [
-				{ name: "나의 급여내역", link: "my_payroll", icon: "bi bi-cash" }
-			]
-		}
-	};
+        // 헤더 메뉴 클릭 시 sidebar 업데이트
+        document.querySelectorAll(".menu-item").forEach(item => {
+            item.addEventListener("click", function (event) {
+                event.preventDefault();
+                const menuType = this.getAttribute("data-menu");
+                sessionStorage.setItem("selectedMenuType", menuType);
+				if(menuType == "NOTICE" ){
+					window.location.href = "/notice_list";
+				}
+				if(menuType == "APPROVAL"){
+					window.location.href = "/approval_list";
+				}
+                fetchSidebarMenus(menuType);
+            });
+        });
+    }
 
-	// ── 사이드바 업데이트 함수 ── //
-	function updateSidebar(data) {
-		if (!sidebarNav) return;
-		sidebarNav.innerHTML = "";
-		data.forEach(item => {
-			const li = document.createElement("li");
-			li.className = "nav-item";
-			const a = document.createElement("a");
-			a.className = "nav-link collapsed";
-			a.href = item.link;
-			const icon = document.createElement("i");
-			icon.className = item.icon;
-			const span = document.createElement("span");
-			span.textContent = item.name;
-			a.appendChild(icon);
-			a.appendChild(span);
-			li.appendChild(a);
-			sidebarNav.appendChild(li);
-		});
-	}
+    function updateSidebar(menuItems) {
+        sidebarNav.innerHTML = "";
+        menuItems.forEach(item => {
+			if (item.link === "1") {
+	            let head = `<li class="nav-heading">${item.name}</li>`;
+	            sidebarNav.insertAdjacentHTML("beforeend", head); // ✅ sidebarNav에 직접 추가
+	            return; // 🔄 이후 코드 실행 방지 (li 생성 안 함)
+	        }
+            const li = document.createElement("li");
+            li.className = "nav-item";
+            const a = document.createElement("a");
+            a.className = "nav-link collapsed";
+            a.href = item.link;
+            const icon = document.createElement("i");
+            icon.className = "bi bi-dash";
+            const span = document.createElement("span");
+            span.textContent = item.name;
+            a.appendChild(icon);
+            a.appendChild(span);
+            li.appendChild(a);
+            sidebarNav.appendChild(li);
+        });
+    }
 
-	function loadSidebar() {
-		const savedState = localStorage.getItem("sidebarState");
-		if (savedState) {
-			savedState === "notice" ? updateSidebar(sidebarData.notice) : updateSidebar(sidebarData.generic[savedState] || sidebarData.default);
-		} else {
-			updateSidebar(sidebarData.default);
-		}
-	}
+    function fetchHeaderMenus() {
+        fetch("/api/user/header")
+            .then(response => response.json())
+            .then(data => {
+                updateHeader(data.headerMenus);
+            })
+            .catch(error => console.error("❌ 헤더 메뉴 로드 실패:", error));
+    }
 
-	// ── 페이지 로드 시 사이드바 업데이트 ── //
-	loadSidebar();
+    function fetchSidebarMenus(menuType = "default") {
+        fetch(`/api/user/sidebar?menuType=${menuType}`)
+            .then(response => response.json())
+            .then(data => {
+                updateSidebar(data.sidebarMenus);
+            })
+            .catch(error => console.error("❌ 사이드바 메뉴 로드 실패:", error));
+    }
 
-	// ── 드롭다운 메뉴 클릭 시 첫 번째 항목으로 이동 (페이지 이동 후 사이드바 적용) ── //
-	document.querySelectorAll(".dropdown-item[data-menu]").forEach(item => {
-		item.addEventListener("click", function (event) {
-			event.preventDefault();
-			const menuName = this.getAttribute("data-menu");
-
-			if (!menuName || !sidebarData.generic[menuName]?.length) {
-				console.error("❌ 유효한 data-menu 값이 없음");
-				return;
-			}
-
-			localStorage.setItem("sidebarState", menuName);
-			const firstItem = sidebarData.generic[menuName][0];
-
-			console.log(`🔗 ${menuName} 클릭 → ${firstItem.link}로 이동`);
-			window.location.href = firstItem.link; // 바로 이동
-		});
-	});
-
-	// ── 공지사항 클릭 시 notice_list로 이동 (페이지 이동 후 사이드바 적용) ── //
-	const noticeLink = document.querySelector("a[href='notice_list']");
-	if (noticeLink) {
-		noticeLink.addEventListener("click", function (event) {
-			event.preventDefault();
-			localStorage.setItem("sidebarState", "notice");
-			console.log("📢 공지사항 클릭됨 → notice_list 이동");
-			window.location.href = "notice_list"; // 바로 이동
-		});
-	}
-
-	// ── 메인 메뉴(홈 버튼, 로고) 클릭 시 기본 사이드바 로드 (페이지 이동 후 적용) ── //
-	document.querySelectorAll("a[href='/']").forEach(link => {
-		link.addEventListener("click", function () {
-			localStorage.removeItem("sidebarState");
-			console.log("🏠 메인 메뉴 클릭됨 → 기본 사이드바 로드");
-			window.location.href = "/"; // 바로 이동
-		});
-	});
-
-	// ── 로그아웃: 기본 동작 유지, LocalStorage 초기화 ── //
-	document.querySelectorAll("a[href='logout']").forEach(link => {
-		link.addEventListener("click", function () {
-			localStorage.removeItem("sidebarState");
-			console.log("🔓 로그아웃 클릭됨");
-			// 기본 페이지 이동 유지 (event.preventDefault() 안 함)
-		});
-	});
+    // ✅ 페이지 로드 시 헤더 & 기본 사이드바 불러오기
+    fetchHeaderMenus();
+    const savedMenuType = sessionStorage.getItem("selectedMenuType") || "MYMENU";
+    fetchSidebarMenus(savedMenuType);
 });
-
