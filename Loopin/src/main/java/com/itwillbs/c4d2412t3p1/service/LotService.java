@@ -65,7 +65,7 @@ public class LotService {
 	}
 
 
-	public Map<String, Object> select_LOT_json(Map<String, Object> params) {
+	public List<Map<String, Object>> select_LOT_json(Map<String, Object> params) {
 		return lotMapper.select_LOT_json(params);
 	}
 

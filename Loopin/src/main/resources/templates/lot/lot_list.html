@@ -204,10 +204,9 @@
 	        data: JSON.stringify(row),
 	        success: function(data) {
                 try {
-                    let jsonData = JSON.parse(data.data.JSON_DATA);
-                    make_chart(jsonData); // 변환된 JSON 객체 전달
+                    buildTree(data.data); // 변환된 JSON 객체 전달
                 } catch (error) {
-                    console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.JSON_DATA);
+                    console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.data);
                 }
 	        },
 	        error: function(error) {
@@ -215,8 +214,57 @@
 	        }
 	    });
 	}
-
 	
+	function buildTree(data) {
+	    if (!Array.isArray(data)) {
+	        console.error("buildTree 오류: 데이터가 배열이 아님", data);
+	        return;
+	    }
+	    
+	    console.log(data);
+
+	    let root = {
+	        name: "JORDAN003",
+	        title: "제품",
+	        process: "완료",
+	        children: []
+	    };
+
+	    let nodeMap = {};
+	    nodeMap[root.name] = root;
+
+	    data.forEach(item => {
+	        let pathArr = item.PATH ? item.PATH.split(" > ") : [];
+	        let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
+	        let currentName = pathArr[pathArr.length - 1];
+
+	        let isRaw = item.IS_RAW === 'Y'; // ✅ 원자재 여부 체크
+
+	        if (!nodeMap[currentName]) {
+	            nodeMap[currentName] = {
+	                name: currentName,
+	                title: isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재"),
+	                process: isRaw ? "N/A" : "완료",
+	                children: []
+	            };
+	        }
+
+	        if (!nodeMap[parentName]) {
+	            nodeMap[parentName] = {
+	                name: parentName,
+	                title: "반제품",
+	                process: "완료",
+	                children: []
+	            };
+	        }
+
+	        if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
+	            nodeMap[parentName].children.push(nodeMap[currentName]);
+	        }
+	    });
+
+	    make_chart(root);
+	}
 	
 	// 트리 생성 함수
 	function make_chart(data){
@@ -260,6 +308,7 @@
 		$('.node').on('dblclick', function() {
 			modal_detail(data);
 		});
+		
 
 	}
 	
