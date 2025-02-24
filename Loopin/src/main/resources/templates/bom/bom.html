@@ -172,6 +172,7 @@ const m_btndelpc = document.getElementById('m_btn_pcdel');
 const m_btnaddbom = document.getElementById('m_btn_matregi');
 const m_btndelbom = document.getElementById('m_btn_matdel');
 const btnmregi = document.getElementById('btn_modalregi');
+const btnmreset = document.getElementById('btn_modal_reset');
 let selop = [];
 let ckrowpds = [];
 let m_matStorage = {};
@@ -276,6 +277,12 @@ const filterConfig = [
 
 initializeFilterModule('filterModule', filterConfig, (filterValues) => {
 	 console.log('filtertest',filterValues);
+	 const filterdata = Object.keys(filterValues).reduce((acc, key) => {
+		  const newKey = key.replace('f_', '');
+		  acc[newKey] = filterValues[key];
+		  return acc;
+		}, {});
+	 fetchFilter(filterdata);
 });
 
 const fetchBOM = async () => {
@@ -308,6 +315,52 @@ const fetchBOM = async () => {
 };
  
 fetchBOM();
+
+const fetchBomlistForAdd = async (selpdcs) =>{
+	let matdata = [];
+	try{
+		const response = await fetch(`/selectbom?${selpdcs}`,{
+			method:"GET",
+			headers: {
+				"Content-Type":"application/json",
+			}
+		});
+		const data = await response.json();
+		console.log('BOM'+data);
+		console.log('BOM'+ JSON.stringify(data));
+		matdata = data;
+		openModalWithData('BOM 추가',matdata);
+	} catch(error) {
+		console.log('BOM 리스트 데이터 로드에 실패했습니다.'+error);
+	}
+};
+
+const fetchFilter = async (filterdata) =>{
+	console.log('필터가져왔냐? '+ JSON.stringify(filterdata));
+// 	const parseparam = new URLSearchParams(filterdata).toString();
+// 	console.log('정제햇어> '+parseparam);
+// 	const fildata = encodeURIComponent(JSON.stringify(filterdata));	
+	try{
+		const response = await fetch(`/selectfilter`,{
+			method:"POST",
+			headers:{
+				"Content-Type":"application/json",
+				[csrfHeader]: csrfToken,
+			},
+			body:JSON.stringify([filterdata])
+		});
+		const data = await response.json();
+		console.log('필터 데이터'+JSON.stringify(data));
+		pdgrid.resetData(data);
+	} catch(error) {
+		console.log('필터 검색에 실패했습니다.'+error);
+		swal.fire({
+			title:"검색에 실패했습니다.",
+			text:"관리자에게 문의해주세요.",
+			icon:"error"
+		})
+	}
+}
 
 /* ====================
   ||	그리드 생성   ||
@@ -521,15 +574,27 @@ document.querySelectorAll('#pills-tab button').forEach(tab => {
 
 btnregi.addEventListener('click', function(e){
 	console.log('등록버튼누름')
+	enableInput();
 	regimodal.show();
 });
 
 modalregi.addEventListener('shown.bs.modal',function(){
+	
+	if (modaltype === "modify") {
+		btnmregi.innerText = "수정";
+	    m_btnaddpc.style.visibility = 'hidden';
+	    m_btndelpc.style.visibility = 'hidden';
+	} else {
+		btnmregi.innerText = "등록";
+	    m_btnaddpc.style.visibility = 'visible';
+	    m_btndelpc.style.visibility = 'visible';
+	}
 	mgrid.refreshLayout();
 	m_bomgrid.refreshLayout();
 })
 
 modalregi.addEventListener('hidden.bs.modal',function(){
+	modaltype = null;
 	pdcinput.value = "";	
 	pdninput.value = ""	;
 	mgrid.resetData([]);
@@ -544,6 +609,7 @@ function disableInput() {
     pdninput.removeAttribute("readonly");
     pdcinput.setAttribute("disabled", "true");
     pdninput.setAttribute("disabled", "true");
+    btnmreset.style.visibility = 'hidden';
 }
 
 function enableInput() {
@@ -551,6 +617,7 @@ function enableInput() {
     pdninput.removeAttribute("disabled");
     pdcinput.setAttribute("readonly", "true");
     pdninput.setAttribute("readonly", "true");
+    btnmreset.style.visibility = 'visible';
 }
 
 async function clickppd(e) {
@@ -639,33 +706,32 @@ async function clickmbtndelbom (){
 	if(modaltype === 'modify'){
 		const pdcvalue = pdcinput.value
 		console.log('pdcvalue'+pdcvalue);
-		const deletedata = deldata.map(i => ({
+		const modify_deletedata = deldata.map(i => ({
 			BOMPRODUCT_CD : i.BOMPRODUCT_CD,
 			PRODUCT_CD : i.PRODUCT_CD,
 			BOM_CD : i.BOM_CD
 		}))
-		console.log('삭제할 데이터'+JSON.stringify(deletedata));
+		console.log('삭제할 데이터'+JSON.stringify(modify_deletedata));
 		
-		try{
-			const response = await fetch (`/deletebom`,{
-				method:"POST",
-				headers:{
-					"Content-Type" : "application/json",
-					[csrfHeader]: csrfToken,
-				},
-				body: JSON.stringify(deletedata)
-			});
-			const data = await response.json();
-			console.log('다시 그리드에 뿌려'+JSON.stringify(data))
+// 		try{
+// 			const response = await fetch (`/deletebom`,{
+// 				method:"POST",
+// 				headers:{
+// 					"Content-Type" : "application/json",
+// 					[csrfHeader]: csrfToken,
+// 				},
+// 				body: JSON.stringify(deletedata)
+// 			});
+// 			const data = await response.json();
+// 			console.log('다시 그리드에 뿌려'+JSON.stringify(data))
+// 			m_bomgrid.resetData(data);
+// 		}catch(error){
 			
-		}catch(error){
-			
-		}
-	}else{
-		const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
-		m_matStorage[currentClickRowkey] = deleteddata;
-		m_bomgrid.resetData(deleteddata);
+// 		}
 	}
+	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+	m_matStorage[currentClickRowkey] = deleteddata;
+	m_bomgrid.resetData(deleteddata);
 }
 
 async function clickmbtnaddmat () {
@@ -686,27 +752,21 @@ async function clickmbtnaddmat () {
 		})
 		return;
 	}
-	
-	modaltype = 'selectBOM';
-	let matdata = [];
-	const selpdcs= ckrowpds.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
-	try{
-		const response = await fetch(`/selectbom?${selpdcs}`,{
-			method:"GET",
-			headers: {
-				"Content-Type":"application/json",
-			}
-		});
-		const data = await response.json();
-		console.log('BOM'+data);
-		console.log('BOM'+ JSON.stringify(data));
-		matdata = data;
-		
-	} catch(error) {
-		console.log('BOM 리스트 데이터 로드에 실패했습니다.'+error);
+
+	if(modaltype ==='modify'){
+		console.log('수정모달의 bom추가버튼');
+		const rootdata = pcgrid.getData();
+		console.log('수정모달 행 데이터 가져와'+JSON.stringify(rootdata));
+		const selpdc = rootdata.map(i=>i.BOMPROCESS_CD);
+		console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdc));
+		const selpdcs= selpdc.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
+		console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdcs));
+		fetchBomlistForAdd(selpdcs);
+	}else{
+		modaltype = 'selectBOM';
+		const selpdcs= ckrowpds.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
+		fetchBomlistForAdd(selpdcs);
 	}
-	
-	openModalWithData('BOM 추가',matdata);
 }
 
 function openModalWithData(title, content) {
@@ -756,8 +816,19 @@ async function clickambtnadd (){
 			if(data === 1){
 				swal.fire({
 					title:"이미 BOM이 존재하는 품목입니다.",
-					icon:"warning"
-				})			
+					text:"그래도 선택하시겠습니까?",
+					icon:"question",
+					showCancelButton:true,
+					cancelButtonText:"취소",
+					confirmButtonColor:"",
+					confirmButtonText:"선택"
+				}).then((result) =>{
+					if(result.isConfirmed) {
+						pdcinput.value = checkpcd;
+						pdninput.value = checkpnm;
+						addmodal.hide()
+					}
+				})
 			}else{
 				pdcinput.value = checkpcd;
 				pdninput.value = checkpnm;
@@ -809,10 +880,8 @@ async function clickambtnadd (){
 			mgrid.refreshLayout();
 			addmodal.hide();
 		}
-	} else {
+	} else if (modaltype === 'selectBOM') {
 		console.log('원자재추가')
-// 	여기서 m_matStorage[rowKey].push(그리드데이터)이게 들어가야함. m_bomgrid에 넣어주고, 배열에 넣자! 그리고 그값들에 원자재 소요량 인풋받고 배열에 엎어씌워,,,ㅎ m_matStorage[rowKey]= 새데이터 이렇게.
-// 	mgrid에서 선택한 행이 없다면 행을 먼저 선택해달라 알람모달+return
 		if(checkrow.length <1){
 			swal.fire({
 				title:"품목을 선택해주세요.",
@@ -832,8 +901,41 @@ async function clickambtnadd (){
 			addmodal.hide();
 			
 		}
+	} else {
+		console.log('수정모달 원자재추가')
+		
+		if(checkrow.length <1){
+			swal.fire({
+				title:"품목을 선택해주세요.",
+				icon:"warning"
+			})
+		}else{
+			const existdata = m_bomgrid.getData();
+			checkrow.forEach(i => {
+	            const newRowKey = generateNewRowKey(existdata);
+
+	            const newData = { ...i, rowKey: newRowKey }; 
+
+	            const existindex = existdata.findIndex(it => it.BOM_CD === i.BOM_CD);
+	            if (existindex === -1) {
+	                existdata.push(newData);
+	            }
+	        })
+			m_bomgrid.resetData(existdata);
+			m_matStorage[currentClickRowkey] = existdata;
+			m_bomgrid.refreshLayout();
+			m_bomgrid.uncheckAll();
+			addmodal.hide();
+			
+		}
+		
 	}
 };
+
+function generateNewRowKey(existdata) {
+    const maxRowKey = Math.max(...existdata.map(item => item.rowKey || 0));
+    return maxRowKey + 1;
+}
 
 function handlemgridRowClick (rowkey){
 	console.log('선택했던 행이냐 아니냐.');
@@ -850,7 +952,6 @@ function updatem_bomgrid (rowkey, data) {
 	if(data.length === 0 || data === ""){
 		m_bomgrid.resetData(data);
 	}else{
-// 		m_bomgrid.resetData(data[0]);
 		m_bomgrid.resetData(data);
 	}
 	m_bomgrid.refreshLayout();
@@ -858,6 +959,8 @@ function updatem_bomgrid (rowkey, data) {
 
 async function clickbtnmregi(){
 	console.log('BOM등록할거야!!!');
+	mgrid.blur();
+	m_bomgrid.blur();
 	const mgriddata = mgrid.getData();
 	const pdcd = pdcinput.value
 	mgriddata.forEach(i =>{
@@ -910,11 +1013,19 @@ async function clickbtnmregi(){
 		console.log('등록했다!'+data);
 		if(data === 0){
 			fetchBOM();
+			bomgrid.resetData([]);
 			regimodal.hide();
-			swal.fire({
-				title:"BOM 등록에 성공했습니다.",
-				icon:"success"
-			})
+			if (modaltype === 'modify'){
+				swal.fire({
+					title:"BOM 수정에 성공했습니다.",
+					icon:"success"
+				})
+			} else {
+				swal.fire({
+					title:"BOM 등록에 성공했습니다.",
+					icon:"success"
+				})
+			}
 			return;
 		}else{
 			swal.fire({
@@ -940,9 +1051,20 @@ async function clickbtnmregi(){
 // 		BOM_AM: i.BOM_AM}));
 }
 
+function clickbtnmreset(){
+	pdcinput.value = "";	
+	pdninput.value = ""	;
+	mgrid.resetData([]);
+	m_bomgrid.resetData([]);
+	m_bomgrid.resetData([]);
+	m_matStorage = {};
+	currentClickRowkey = null;
+}
+
 pdcinput.addEventListener('click',clickppd);
 pdninput.addEventListener('click',clickppd);
 btnmregi.addEventListener('click',clickbtnmregi);
+btnmreset.addEventListener('click',clickbtnmreset);
 m_btnaddpc.addEventListener('click',clickmbtnaddpc);
 m_btndelpc.addEventListener('click',clickmbtndelpc);
 am_btnadd.addEventListener('click',clickambtnadd);
@@ -990,11 +1112,11 @@ pdgrid.on('click', async function(e) {
 		bomdata = data.bomgrid;
 		
 		if(pcdata.length === 0){
-			btntabpc.disabled = true;
+			btntabpc.style.visibility = 'hidden';
 			pcgrid.resetData(pcdata);
 			bomgrid.resetData(bomdata);
 		}else{
-			btntabpc.disabled = false;
+			btntabpc.style.visibility = 'visible';
 			pcgrid.resetData(pcdata);
 			bomgrid.resetData(bomdata);
 		}
@@ -1010,14 +1132,42 @@ pdgrid.on('click', async function(e) {
 })
 
 // 수정모달용
-pdgrid.on('dblclick', (e) => {
+pdgrid.on('dblclick', async function(e) {
 	modaltype = 'modify';
     console.log('체크된 행:', e.rowKey);
 
     const dblrow = pdgrid.getRow(e.rowKey);
     console.log('더블클릭한 행:', dblrow);
     console.log('더블클릭한 행:', typeof dblrow);
-	
+	const productcd = dblrow.PRODUCT_CD;
+    try{
+    	const response = await fetch(`/checkplanstate?pdcd=${productcd}`,{
+    		method:"GET",
+    		headers:{
+    			"Content-Type":"application/json",
+   			},
+    	});
+    	const data = await response.json();
+    	console.log('가져온 데이터 값'+ data);
+    	console.log('가져온 데이터 값'+ data.length);
+    	if(data.length > 0){
+    		swal.fire({
+    			title:"수정이 불가능합니다.",
+    			text:"작업계획에서 사용중인 bom은 수정이 불가능합니다.",
+    			icon:"warning"
+    		})
+    		return;
+    	}
+    }catch(error){
+    	console.log('작업계획 데이터 확인에 실패했습니다.'+error);
+    	swal.fire({
+    		title:"데이터 로드에 실패했습니다.",
+    		text:"관리자에게 문의해주세요.",
+    		icon:"error"
+    	})
+    	return;
+    }
+    
 	disableInput();
 	pdcinput.value = dblrow.PRODUCT_CD;
 	pdninput.value = dblrow.PRODUCT_NM;

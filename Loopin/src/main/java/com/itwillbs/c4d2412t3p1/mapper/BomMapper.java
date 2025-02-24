@@ -29,4 +29,8 @@ public interface BomMapper {
 
 	int deletebom(@Param("rowdata") List<BomallDTO> deletedata);
 
+	List<Map<String, Object>> selectfilter(@Param("value") List<BomallDTO> value);
+
+	List<Product> checkplanstate(String pdcd);
+
 }
