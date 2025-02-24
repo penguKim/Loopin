@@ -22,5 +22,6 @@ public class InoutPK implements Serializable {
 	private String inout_iw;
 	private String inout_ow;
 	private String item_cd;
+	private String inout_io;
 	
 }

@@ -153,6 +153,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
     	    LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN'
     	    LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE'
     	    LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'
+    	    ORDER BY employee_cd DESC
     	""", nativeQuery = true)
     List<Object[]> findAllWithDetails();
 
@@ -194,6 +195,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
     	    LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE'
     	    LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'
     		WHERE e.employee_cd = :currentCd
+    		ORDER BY employee_cd DESC
     	""", nativeQuery = true)
 	List<Object[]> findAllWithDetailsCd(@Param("currentCd") String currentCd);
 
@@ -234,6 +236,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
     	    LEFT JOIN common_code a ON e.employee_us = a.common_cc AND a.common_gc = 'USEYN'
     	    LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE'
     	    LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'
+    	    ORDER BY employee_cd DESC
     	""", nativeQuery = true)
 	List<Object[]> select_EMPLOYEE_ALL();
 
@@ -275,6 +278,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
     	    LEFT JOIN common_code q ON e.employee_mg = q.common_cc AND q.common_gc = 'DPTYPE'
     	    LEFT JOIN common_code m ON e.employee_rl = m.common_cc AND m.common_gc = 'PERMISSION'
     		WHERE (:currentCd IS NULL OR e.employee_cd = :currentCd)
+    		ORDER BY employee_cd DESC
     	""", nativeQuery = true)
 	List<Object[]> select_EMPLOYEE_ALL_CD(@Param("currentCd") String currentCd);
 	
@@ -321,6 +325,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
 		           OR e.employee_hd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) 
 		      AND (:#{#filterRequest.employeeNm} IS NULL OR e.employee_nm LIKE %:#{#filterRequest.employeeNm}%) 
 		      AND (:currentCd IS NULL OR e.employee_cd = :currentCd)
+		      ORDER BY employee_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_FILTERED_EMPLOYEE(@Param("filterRequest") EmployeeFilterRequest filterRequest, 
 											@Param("currentCd") String currentCd);
@@ -370,6 +375,7 @@ List<Map<String, Object>> getEmployeePosiStatsByDate();
 		           OR e.employee_hd BETWEEN :#{#filterRequest.startDate} AND :#{#filterRequest.endDate}) 
 		      AND (:#{#filterRequest.employeeNm} IS NULL OR e.employee_nm LIKE %:#{#filterRequest.employeeNm}%) 
 		      AND e.employee_cd = :currentCd
+		      ORDER BY employee_cd DESC
 		""", nativeQuery = true)
 	List<Object[]> select_FILTERED_EMPLOYEE_WITH_CD(@Param("filterRequest") EmployeeFilterRequest filterRequest, 
 	                                                 @Param("currentCd") String currentCd);

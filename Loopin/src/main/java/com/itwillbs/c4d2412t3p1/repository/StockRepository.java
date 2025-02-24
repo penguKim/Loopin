@@ -25,5 +25,13 @@ public interface StockRepository extends JpaRepository<Stock, StockPK> {
 	void deleteByCombinedIds(@Param("combinedList") List<String> combinedList,
 	                         @Param("warehouseCd") String warehouseCd,
 	                         @Param("wareareaCd") String wareareaCd);
+	
+	
+	@Query("SELECT s FROM Stock s " + 
+		       "WHERE s.item_cd = :itemCd " +
+		       "ORDER BY CASE WHEN s.warehouse_cd = :inoutIw AND s.warearea_cd = :inoutIa THEN 0 ELSE 1 END")
+		List<Stock> findStocksForDeduction(@Param("itemCd") String itemCd,
+		                                   @Param("inoutIw") String inoutIw,
+		                                   @Param("inoutIa") String inoutIa);
 
 }
