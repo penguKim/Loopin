@@ -1,22 +1,20 @@
 package com.itwillbs.c4d2412t3p1.domain;
 
-import java.math.BigDecimal;
 import java.sql.Timestamp;
 
-import groovy.transform.ToString;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
-@Getter @Setter
+@Getter 
+@Setter
 @ToString
 public class InoutDTO {
 
 	private String inout_dt; // 입출고일자
-	private String inout_iw; // 출발창고
-	private String inout_ow; // 도착창고
+	private String inout_wh; // 출발창고
 	private String item_cd; // 품목코드
-	private String inout_ia; // 출발구역
-	private String inout_oa; // 도착구역
+	private String inout_wa; // 출발구역
 	private String inout_co; // 수발주코드
 	private String inout_tp; // 수발주구분
 	private String lot_cd; // 로트번호
@@ -32,14 +30,14 @@ public class InoutDTO {
 	private Timestamp inout_ud;	
 	
 	
-	private String inout_iwnm; // 출발창고명
-	private String inout_ianm; // 출발구역명
-	private String inout_ownm; // 도착창고명
-	private String inout_oanm; // 도착구역명
+	private String inout_whnm; // 출발창고명
+	private String inout_wanm; // 출발구역명
 	private String inout_tpnm; // 수발주구분명
 	private String inout_ionm; // 출입고구분명
 	private String item_un; // 기준단위
 	private String item_nm; // 품목명
+	private String item_gc; // 품목대분류
+	private String item_cc; // 품목소분류
 	private String item_gn; // 품목대분류명
 	private String item_cn; // 품목소분류명
 	private String employee_nm; // 담당자명
@@ -47,6 +45,10 @@ public class InoutDTO {
 	private String account_nm; // 거래처명
 	private String item_sz; // 사이즈
 	private String item_cr; // 색상
+	private String process_nm; // 공정이름
+	private String product_cd; // 공정생산품목코드
+	private String product_nm; // 공정생산품목명
+	
 	
 	
 }
