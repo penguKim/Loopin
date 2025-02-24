@@ -64,7 +64,7 @@
 	            AND L.PROCESS_CD = #{process_cd}
 	        </if>
 	        <if test="workorder_st != null and workorder_st != '' and workorder_st != 'ALL'">
-	            AND L.WORKORDER_ST = #{workorder_st}
+	            AND WS.WORKORDER_ST = #{workorder_st}
 	        </if>
 	    </where>
 	    GROUP BY L.LOT_CD
@@ -86,9 +86,10 @@
 		    WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
 		),
 		WORKORDER_STATUS AS (  
-		    SELECT PROCESS_CD, LOT_CD, WORKORDER_ST AS process  
-		    FROM WORKORDER
-		    WHERE LOT_CD = #{LOT_CD}
+		    SELECT L.PROCESS_CD, L.LOT_CD, W.WORKORDER_ST AS process
+			FROM LOT L
+			LEFT JOIN WORKORDER w ON W.LOT_CD = L.LOT_CD AND L.PROCESS_CD = W.PROCESS_CD
+			WHERE L.LOT_CD = #{LOT_CD}
 		)
 		SELECT JSON_OBJECT(
 		    'name' VALUE #{PRODUCT_CD},
@@ -123,7 +124,7 @@
 		    )
 		) AS json_data
 		FROM BOM_HIERARCHY BH
-		LEFT JOIN WORKORDER_STATUS W ON BH.CURRENT_PROCESS = W.PROCESS_CD  -- 🚀 JSON_OBJECT를 만드는 쿼리에 JOIN 추가
+		LEFT JOIN WORKORDER_STATUS W ON BH.CURRENT_PROCESS = W.PROCESS_CD
 		WHERE BH.BOMPROCESS_AP = 'NONE'
 	</select>
 	
@@ -204,60 +205,67 @@
 	<select id="select_RESULT_detail" resultType="map">
 		WITH REQUIRED_PROCESS AS (
 		    -- 1️⃣ 해당 수주(CONTRACT_CD)에 필요한 공정 개수 조회
-		    SELECT CONTRACT_CD, COUNT(DISTINCT PROCESS_CD) AS TOTAL_PROCESS_COUNT
-		    FROM WORKORDER
-		    GROUP BY CONTRACT_CD
+		    SELECT L.CONTRACT_CD, L.LOT_CD, COUNT(DISTINCT W.PROCESS_CD) AS TOTAL_PROCESS_COUNT
+		    FROM WORKORDER W
+		    JOIN LOT L ON L.LOT_CD = W.LOT_CD 
+		    GROUP BY L.CONTRACT_CD, L.LOT_CD
 		),
 		COMPLETED_ORDERS AS (
 		    -- 2️⃣ 모든 공정을 완료한 LOT 찾기
-		    SELECT W.LOT_CD, W.CONTRACT_CD
+		    SELECT W.LOT_CD, R.CONTRACT_CD, W.PROCESS_CD
 		    FROM WORKORDER W
-		    JOIN REQUIRED_PROCESS R ON W.CONTRACT_CD = R.CONTRACT_CD
+		    JOIN REQUIRED_PROCESS R ON W.LOT_CD = R.LOT_CD
 		    WHERE W.WORKORDER_ST = '완료'
-		    GROUP BY W.LOT_CD, W.CONTRACT_CD, R.TOTAL_PROCESS_COUNT
+		    GROUP BY W.LOT_CD, R.CONTRACT_CD, W.PROCESS_CD, R.TOTAL_PROCESS_COUNT
 		    HAVING COUNT(DISTINCT W.PROCESS_CD) = R.TOTAL_PROCESS_COUNT  -- 모든 공정이 완료된 LOT만 포함
 		), 
 		FINAL_COMPLETION AS (
 		    -- 3️⃣ 해당 수주의 모든 LOT 중 마지막 공정이 완료된 상태인지 확인
-		    SELECT W.LOT_CD, W.CONTRACT_CD
+		    SELECT W.LOT_CD, C.CONTRACT_CD, W.PROCESS_CD 
 		    FROM WORKORDER W
 		    JOIN COMPLETED_ORDERS C 
 		      ON W.LOT_CD = C.LOT_CD 
-		     AND W.CONTRACT_CD = C.CONTRACT_CD
+		     AND W.PROCESS_CD = C.PROCESS_CD
 		    WHERE W.WORKORDER_ST = '완료'
 		),
 		WORKORDER_DURATION AS (
 		    -- 4️⃣ 각 수주의 작업 시작, 종료 시간 계산 (실소요시간)
 		    SELECT 
-		        W.CONTRACT_CD,
+		        FC.CONTRACT_CD,
+		        FC.LOT_CD,
 		        MIN(W.WORKORDER_SD) AS START_TIME,  -- 작업 시작 시간
-		        MAX(W.WORKORDER_EN) AS END_TIME,    -- 작업 종료 시간
-		        ROUND((MAX(W.WORKORDER_EN) - MIN(W.WORKORDER_SD)) * 24, 2) AS DURATION_HOURS -- 소요시간(시간)
+		        MAX(W.WORKORDER_ED) AS END_TIME,    -- 작업 종료 시간
+		        ROUND(
+				    (EXTRACT(DAY FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD)) * 24)
+				    + EXTRACT(HOUR FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD))
+				    + (EXTRACT(MINUTE FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD)) / 60), 2
+				) AS DURATION_HOURS
 		    FROM WORKORDER W
-		    JOIN FINAL_COMPLETION FC ON W.CONTRACT_CD = FC.CONTRACT_CD
-		    GROUP BY W.CONTRACT_CD
+		    JOIN FINAL_COMPLETION FC ON W.PROCESS_CD = FC.PROCESS_CD
+		    GROUP BY FC.CONTRACT_CD, FC.LOT_CD
 		)
 		-- 5️⃣ INOUT 테이블에서 소요량 계산 + WORKORDER_DURATION에서 실소요시간 추가
 		SELECT 
-		    I.CONTRACT_CD                                       AS "수주번호",
+		    FC.CONTRACT_CD                                       AS "수주번호",
 		    WOD.START_TIME                                      AS "작업시작시간",
 		    WOD.END_TIME                                        AS "작업종료시간",
 		    WOD.DURATION_HOURS                                  AS "소요시간",
 		    SUM(I.INOUT_NN)                                     AS "정상수량",
+		    SUM(I.INOUT_NN)                                     AS "INOUT_TOTAL",
 		    SUM(I.INOUT_FN)                                     AS "불량수량",
 		    (SUM(I.INOUT_NN) + SUM(I.INOUT_FN))                 AS "총소요량"
 		FROM INOUT I
 		JOIN FINAL_COMPLETION FC 
-		  ON I.CONTRACT_CD = FC.CONTRACT_CD
+		  ON I.LOT_CD  = FC.LOT_CD
 		JOIN WORKORDER_DURATION WOD 
-		  ON I.CONTRACT_CD = WOD.CONTRACT_CD
+		  ON I.LOT_CD = WOD.LOT_CD
 		WHERE I.INOUT_TP = 'O'        -- 원자재 입출고 데이터만 포함
 		GROUP BY 
-		    I.CONTRACT_CD, 
+		    FC.CONTRACT_CD, 
 		    WOD.START_TIME, 
 		    WOD.END_TIME, 
 		    WOD.DURATION_HOURS
-		ORDER BY I.CONTRACT_CD
+		ORDER BY FC.CONTRACT_CD
 	</select>
 	
 	
