@@ -64,11 +64,11 @@ public class Order {
 	
 	// 발주수량
 	@Column(name = "order_am")
-	private long order_am;
+	private Long order_am;
 
 	// 발주금액
 	@Column(name = "order_mn")
-	private BigDecimal order_mn;
+	private Long order_mn;
 	
 	// 발주상태
 	@Column(name = "order_st", length = 20)
@@ -105,8 +105,8 @@ public class Order {
 			String order_ps,
 			String order_sd,
 			String order_ed,
-			long order_am,
-			BigDecimal order_mn,
+			Long order_am,
+			Long order_mn,
 			String order_st,
 			String order_rm,
 			String order_wr,
