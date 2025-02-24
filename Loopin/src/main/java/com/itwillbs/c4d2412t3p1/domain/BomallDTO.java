@@ -15,8 +15,20 @@ public class BomallDTO {
 	    @JsonProperty("PRODUCT_CD")
 	    private String product_cd;
 
+	    @JsonProperty("PRODUCT_NM")
+	    private String product_nm;
+
+	    @JsonProperty("PRODUCT_GC")
+	    private String product_gc;
+	    
+	    @JsonProperty("PRODUCT_CC")
+	    private String product_cc;
+
 	    @JsonProperty("PROCESS_CD")
 	    private String process_cd;
+
+	    @JsonProperty("PROCESS_NM")
+	    private String process_nm;
 
 	    @JsonProperty("BOMPROCESS_CD")
 	    private String bomprocess_cd;

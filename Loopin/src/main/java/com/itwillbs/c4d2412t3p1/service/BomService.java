@@ -98,5 +98,31 @@ public class BomService {
 		return response;
 	}
 
+	public List<Map<String, Object>> deletebom(List<BomallDTO> deletedata) {
+		
+		bM.deletebom(deletedata);
+		String bpcd = deletedata.get(0).getBomproduct_cd();
+		String pdcd = deletedata.get(0).getProduct_cd();
+		List<Map<String, Object>>list = bM.selectbomsformpd(pdcd,bpcd);
+		
+		return list;
+	}
+
+	public List<Map<String, Object>> selectfilter(List<BomallDTO> value) {
+		
+		List<Map<String, Object>> list = bM.selectfilter(value);
+		
+		System.out.println("결과 가져와봐"+list);
+		
+		return list;
+	}
+
+	public List<Product> checkplanstate(String pdcd) {
+
+		List<Product> list = bM.checkplanstate(pdcd);
+		
+		return list;
+	}
+
 
 }
