@@ -78,6 +78,7 @@ public class FilterRequest {
 	// 공지사항 전용 필터 클래스
 	public static class NoticeFilterRequest extends FilterRequest {
 		
+		private String noticeCd;
 		private String employeeNm;
 		private String noticeTt;
 		private String employeeDp;
@@ -88,7 +89,8 @@ public class FilterRequest {
 		// 로그 필터 조건이 비어 있는지 확인
 		@Override
 		public boolean isEmpty() {
-			return super.isEmpty() && (employeeNm == null || employeeNm.isEmpty())
+			return super.isEmpty() 
+					&& (noticeCd == null || noticeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty()) 
 					&& (noticeTt == null || noticeTt.isEmpty()) && (employeeDp == null || employeeDp.isEmpty()) ;
 		}
 	}
