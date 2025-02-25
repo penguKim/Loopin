@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <appender name="STDOUT"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%boldMagenta(%d{MM-dd HH:mm:ss}) [%boldYellow(%-5level)] %cyan(%logger{5}.%M) - %msg %n</pattern>
+        </encoder>
+    </appender>
+    
+    <appender name="error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+<!--         <file>D:/error.log</file> -->
+        <file>/usr/local/logs/error.log</file>
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+<!-- 			<fileNamePattern>sD:/error%d{yyyy-MM-dd}.log.zip</fileNamePattern> -->
+			<fileNamePattern>/usr/local/logs/error%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+			<maxHistory>90</maxHistory>
+		</rollingPolicy>
+		<encoder>
+	       <pattern>%boldMagenta(%d{MM-dd HH:mm:ss}) [%boldYellow(%-5level)] %cyan(%logger{5}.%M) - %msg %n</pattern>
+	       <ImmediateFlush>true</ImmediateFlush>
+	    </encoder>
+	</appender>
+    
+    <logger name="jdbc" level="OFF" />
+    <logger name="jdbc.sqlonly" level="OFF" />
+    <logger name="jdbc.sqltiming" level="info" />
+    <logger name="jdbc.audit" level="OFF" />
+    <logger name="jdbc.resultset" level="OFF" />
+    <logger name="jdbc.resultsettable" level="info" />
+    <logger name="jdbc.connection" level="OFF" />
+    
+    <root level="DEBUG">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="error" />
+    </root>
+</configuration>
