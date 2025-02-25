@@ -100,7 +100,42 @@ public class BomController {
 		System.out.println("너 먼데"+pdcd);
 		System.out.println("너 먼데"+bpcd);
 		
-	        Map<String, Object> list = bS.selectbom(bpap, pdcd, bpcd, bppc); 
-	        return ResponseEntity.ok(list);
+        Map<String, Object> list = bS.selectbom(bpap, pdcd, bpcd, bppc); 
+        
+        return ResponseEntity.ok(list);
+	}
+	
+	@PostMapping("/deletebom")
+	public ResponseEntity<List<Map<String, Object>>> deletebom(@RequestBody List<BomallDTO> deletedata) {
+		
+		System.out.println("받아오니...?: "+deletedata.get(0).getBomproduct_cd());
+		
+		List<Map<String, Object>> list = bS.deletebom(deletedata);
+		
+		return ResponseEntity.ok(list);
+	}
+	
+	@PostMapping("/selectfilter")
+	public ResponseEntity<List<Map<String, Object>>> selectfilter(@RequestBody List<BomallDTO> value ) {
+		
+		System.out.println("돌아가고있냐고...."+value.get(0).getBomprocess_cd());
+		System.out.println("돌아가고있냐고...."+value.get(0).getProduct_nm());
+		System.out.println("돌아가고있냐고...."+value.get(0).getProcess_nm());
+		System.out.println("돌아가고있냐고...."+value.get(0).getProduct_gc());
+		System.out.println("돌아가고있냐고...."+value.get(0).getProduct_cc());
+		
+		List<Map<String, Object>> list = bS.selectfilter(value); 
+		
+		return ResponseEntity.ok(list);
+	}
+
+	@GetMapping("/checkplanstate")
+	public ResponseEntity<List<Product>> checkplanstate(@RequestParam("pdcd") String pdcd) {
+		
+		System.out.println("너 먼데"+pdcd);
+		
+		List<Product> list = bS.checkplanstate(pdcd); 
+		
+		return ResponseEntity.ok(list);
 	}
 }
