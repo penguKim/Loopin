@@ -215,21 +215,36 @@
 	    });
 	}
 	
+	/**
+	 * @param {Array} data - DB에서 가져온 배열 (각 요소는 { PATH, PRODUCT_CD, WORKORDER_ST, ... } 형태)
+	 */
 	function buildTree(data) {
 	    if (!Array.isArray(data)) {
-	        console.error("buildTree 오류: 데이터가 배열이 아님", data);
+	        console.error("buildTree 오류: data가 배열이 아님", data);
 	        return;
 	    }
-	    
-	    console.log(data);
 
+	    // 1) root 노드의 process 결정
+	    //    - 만약 하나라도 WORKORDER_ST === '진행중'이 있으면 root.process = '대기'
+	    //    - 전부 '완료'이면 root.process = '완료'
+	    let allComplete = true;
+	    for (let row of data) {
+	        if (row.WORKORDER_ST === '진행중') {
+	            allComplete = false;
+	            break;
+	        }
+	    }
+	    const rootProcess = allComplete ? '완료' : '대기';
+
+	    // 2) root 노드 생성
 	    let root = {
-	        name: "JORDAN003",
+	        name: data[0].PRODUCT_CD, 
 	        title: "제품",
-	        process: "완료",
+	        process: rootProcess,
 	        children: []
 	    };
 
+	    // 3) nodeMap을 사용하여 부모-자식 관계 구성
 	    let nodeMap = {};
 	    nodeMap[root.name] = root;
 
@@ -238,31 +253,39 @@
 	        let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
 	        let currentName = pathArr[pathArr.length - 1];
 
-	        let isRaw = item.IS_RAW === 'Y'; // ✅ 원자재 여부 체크
+	        // isRaw: BUBU로 시작하는지 체크할 수도 있고, DB 컬럼 IS_RAW 사용 가능
+	        let isRaw = (item.IS_RAW === 'Y'); 
+	        // 반제품 or 원자재 구분
+	        let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
+	        let nodeProcess = item.WORKORDER_ST || item.COMMON_NM || "N/A"; // process 값 결정
 
+	        // 현재 노드가 없으면 생성
 	        if (!nodeMap[currentName]) {
 	            nodeMap[currentName] = {
 	                name: currentName,
-	                title: isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재"),
-	                process: isRaw ? "N/A" : "완료",
+	                title: nodeTitle,
+	                process: item.WORKORDER_ST || item.COMMON_NM || "N/A",
 	                children: []
 	            };
 	        }
 
+	        // 부모 노드가 없으면 생성
 	        if (!nodeMap[parentName]) {
 	            nodeMap[parentName] = {
 	                name: parentName,
 	                title: "반제품",
-	                process: "완료",
+	                process: item.WORKORDER_ST || item.COMMON_NM || "N/A", // 디폴트
 	                children: []
 	            };
 	        }
 
+	        // 부모에 현재 노드를 자식으로 연결
 	        if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
 	            nodeMap[parentName].children.push(nodeMap[currentName]);
 	        }
 	    });
 
+	    // 4) orgchart 렌더링 함수 호출
 	    make_chart(root);
 	}
 	

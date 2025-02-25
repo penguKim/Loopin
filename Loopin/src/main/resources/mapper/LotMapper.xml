@@ -117,13 +117,16 @@
 		)
 		SELECT BH.*
 			 , BP.PROCESS_CD PROCESS_CD
+			 , w.workorder_st
+			 , c.common_nm
 		  FROM BH
 		  LEFT JOIN BOMPROCESS BP
 		    ON BH.BOM_CD = BP.BOMPROCESS_CD
 		   AND BH.PRODUCT_CD = BP.PRODUCT_CD 
 		   LEFT JOIN LOT l ON l.PROCESS_CD = bp.PROCESS_CD AND l.lot_cd = #{LOT_CD}
 		   LEFT JOIN WORKORDER w ON w.PROCESS_CD = bp.PROCESS_CD AND w.lot_cd = #{LOT_CD}
-		  LEFT JOIN INOUT i ON i.ITEM_CD = BH.PRODUCT_CD AND INOUT_IO = 'I'
+		   LEFT JOIN INOUT i ON i.ITEM_CD = BH.PRODUCT_CD AND CONTRACT_CD = #{CONTRACT_CD}
+		   LEFT JOIN COMMON_CODE c ON c.COMMON_CC = i.INOUT_IO AND c.COMMON_GC = 'IOTYPE'
 	</select>
 	
 	<select id="select_LOTHISTORY_list" resultType="map">
