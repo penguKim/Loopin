@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<style>
+	.orgchart{
+		background-image: none;
+		display: flex;
+		justify-content: space-evenly;
+		align-items: center;
+		overflow: auto; /* 필요하면 스크롤 가능하도록 설정 */
+	}
+	.orgchart .node .title{
+		background-color: none !important;
+	}
+	@keyframes blink {
+	    0% { opacity: 1;}
+	    35% { opacity: 0.2;}
+	    100% { opacity: 1;}
+	}
+	.blinking-node {
+	    animation: blink 3s infinite;
+	    color: red;
+	    background-color: white;
+	}
+	.wide-header {
+	    min-width: 200px !important;  /* ✅ 원하는 너비 지정 */
+	    white-space: normal !important;  /* ✅ 텍스트 줄 바꿈 */
+	    text-align: center;
+	}
+</style>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-6">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">로트 추적</h1>
+							<div class="mb-3 row d-flex align-items-center justify-content-end">
+								<div class="col-auto">
+									<div id="filterModule" class="mb-3"></div>
+								</div>
+							</div>
+							<div id="grid"></div>
+						</div>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">차트</h1>
+							<div id="chart"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>																																																																																																																																																																																																																											
+<script th:inline="javascript">
+	let grid, modal_grid;
+	let chart = $("#chart");
+	let useList = /*[[${commonList['USE']}]]*/[];
+	let productList = /*[[${commonList['PRDTYPE']}]]*/[];
+	let processList = /*[[${processList}]]*/ [];
+
+	let transformedProcessList = processList.map(item => {
+	    return {
+	        common_cc: item.COMMON_CC,
+	        common_nm: item.COMMON_NM
+	    };
+	});
+
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	const filterConfig = [
+		{ key: 'lot_cd', label: '로트번호', type: 'text', placeholder: '로트번호 입력', col: 'col-4' },
+		{ key: 'contract_cd', label: '수주번호', type: 'text', placeholder: '수주번호 입력', col: 'col-4' },
+		{ key: 'product_cd', label: '제품명', type: 'text', placeholder: '제품명 입력', col: 'col-4' },
+		{ key: 'process_cd', label: '공정명', type: 'select', list: setFilterList(transformedProcessList), col: 'col-4' },
+		{ key: 'workorder_st', label: '완료여부', type: 'radio', list: [ 
+				{ value: 'ALL', text: '전체', checked: true },
+				{ value: '대기', text: '대기' },
+				{ value: '진행중', text: '진행중' },
+				{ value: '완료', text: '완료' }
+			], col: 'col' },
+	];
+	
+	// 로딩
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		make_grid();
+		getGridList();
+		
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -430);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -430);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+            getGridList(filterValues);
+        });
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '로트추적');
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -460);
+		    } else {
+		        setGridHeight(grid, -430);
+		    }
+		});
+		
+		// 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		    getGridList(filterValues);
+		});
+	});
+	
+	// ------------함수------------
+	// 그리드 데이터 함수
+	async function getGridList(filter) {
+		let jsonData = JSON.stringify(filter);
+		let ajaxData = await callAjaxPost('/select_LOT_list', jsonData);
+		grid.resetData(ajaxData.data);
+	}
+	
+	// 그리드 생성 함수
+	function make_grid() {
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+			],
+			bodyHeight : 400,
+			columns : [
+				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text', width: 200,},
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
+				{header : '생성일자', name : 'LOT_CR', sortable : true, filter: 'text'}, 
+				{header : '완료여부', name : 'WORKORDER_ST', sortable : true, filter: 'text',}, 
+			],
+			summary: {
+				height: 40,
+				position: 'bottom', // or 'top'
+				columnContent: {
+					workorder_st: {
+						template: (valueMap) => {
+							return `총 ${valueMap.cnt} 건`
+						}
+					}
+				}
+			},
+
+		});
+		
+		
+		grid.on('dblclick', function(ev) {
+			chart.empty();
+			let row = grid.getRow(ev.rowKey);
+			if(row == null) {
+				return;
+			}
+		    fetchChartData(row);
+		});
+	}
+	
+	// 차트 JSON 가져오기
+	function fetchChartData(row) {
+	    $.ajax({
+	        type: "POST",
+	        url: "/select_LOT_json",
+	        contentType: 'application/json',
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+	        data: JSON.stringify(row),
+	        success: function(data) {
+                try {
+                    let jsonData = JSON.parse(data.data.JSON_DATA);
+                    make_chart(jsonData); // 변환된 JSON 객체 전달
+                } catch (error) {
+                    console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.JSON_DATA);
+                }
+	        },
+	        error: function(error) {
+	            console.error("Error fetching chart data:", error);
+	        }
+	    });
+	}
+
+	
+	
+	// 트리 생성 함수
+	function make_chart(data){
+		chart.orgchart({
+			'data': data, // 데이터 입력
+			'nodeContent': data.name, // 노드에 표시할 속성
+			//'pan': true, // 패닝 활성화
+			'direction': 't2b', // 방향 설정 (bottom to top)
+			'nodeTemplate': function(data) {
+				let background = '#997af3'; // 기본 배경색 (파란색)
+				let color = '#997af3'; // 기본 배경색 (파란색)
+				// 직급(title)에 따라 다른 배경색 적용
+				if (data.title === '제품') {
+					background = '#ff5733'; // 주황색
+				} else if (data.title === '반제품') {
+					background = '#997af3'; // 초록색
+				} else if (data.title === '원자재') {
+					background = '#17a2b8'; // 하늘색
+				}
+	
+				return `
+					<div class="node" style="background-color: ${background}; color: white;">
+						<div class="title" style="background-color: ${background};">${data.title}</div>
+						<div class="name">${data.name}</div>
+						<div class="process">${data.process}</div>
+					</div>
+				`;
+			}
+        });
+		
+		document.querySelectorAll('.orgchart .fa').forEach(el => {
+			el.style.pointerEvents = 'none'; // 클릭 이벤트 비활성화
+		});
+		
+		document.querySelectorAll('.process').forEach(node => {
+			if(node.textContent.includes("진행중")) {
+				node.classList.add('blinking-node');
+			}
+		});
+		
+		$('.node').on('dblclick', function() {
+			modal_detail(data);
+		});
+
+	}
+	
+	// 모달 생성
+	function modal_detail(data) {
+		
+	    const div_modal = "div_modal";
+	    let modalElement = document.getElementById(div_modal); // 기존 모달 확인
+
+	    // 기존 모달이 있으면 삭제 후 새로 생성
+	    if (modalElement) {
+	        modalElement.remove();
+	    }
+
+	    // 새로운 모달 HTML 추가
+	    let modalHtml = `
+	    <div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+	    	<div class="modal-dialog modal-dialog-centered modal-xl">
+	        	<div class="modal-content">
+	            	<div class="modal-header">
+	                    <h5 class="modal-title">로트 상세정보</h5>
+	                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	                </div>
+	                <div class="modal-body">
+	                    <div id="modal_grid"></div>
+	                </div>
+	                <div class="modal-footer">
+						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	    `;
+
+	    document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+	    modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+
+	    const modal = new bootstrap.Modal(modalElement); // 모달 초기화
+
+	    modalElement.addEventListener("shown.bs.modal", function () {
+	        make_modal_grid(data); // 모달 내부 그리드 생성
+	    });
+
+	    modal.show();
+
+	    modalElement.addEventListener("hidden.bs.modal", function () {
+	        modalElement.remove(); // 모달 삭제
+
+	        document.activeElement.blur();
+	        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+	        document.body.classList.remove("modal-open");
+	        document.body.style.overflow = "";
+	    });
+
+
+
+	    $(window).resize(function () {
+	        setGridHeight(modal_grid, -600);
+	    });
+	    
+	}
+
+	
+	// 모달 그리드 생성
+	function make_modal_grid(data) {
+		
+		
+		const dataSource = {
+		    api: {
+		        readData: {
+		            url: '/select_LOTHISTORY_list',
+		            method: 'GET',
+		            initParams: {
+						lot_cd: data.lot_cd
+					}
+		        }
+		    }
+		}
+		
+		modal_grid = new tui.Grid({
+			el : document.getElementById('modal_grid'),
+			data : {api: {readData: {url: '/select_LOTHISTORY_list', method: 'GET',initParams: {lot_cd: data.lot_cd}}}},
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+			],
+			bodyHeight : 200,
+			columns : [
+				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text', width: 200,},
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
+				{header : '색상', name : 'PRODUCT_CR', sortable : true, filter: 'text'}, 
+				{header : '사이즈', name : 'PRODUCT_SZ', sortable : true, filter: 'text'}, 
+				{header : '작업시작일', name : 'LOTHISTORY_ST', sortable : true, filter: 'text'}, 
+				{header : '작업종료일', name : 'LOTHISTORY_EN', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'LOTHISTORY_WQ', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'LOTHISTORY_BQ', sortable : true, filter: 'text'}, 
+			],
+			summary: {
+				height: 40,
+				position: 'bottom', // or 'top'
+				columnContent: {
+					LOTHISTORY_BQ: {
+						template: (valueMap) => {
+							return `총 ${valueMap.cnt} 건`
+						}
+					}
+				}
+			},
+		});
+		
+		console.log();
+	}
+	
+	
+	
+	
+	
+</script>
+</html>

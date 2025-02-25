@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card">
+						<div class="card-body">
+							<h1 class="card-title">설비 관리</h1>
+							<div id="filterModule" class="mb-3"></div>
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-3">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, modal_grid, modal;
+	let useList = /*[[${commonList['USE']}]]*/ [];
+	let productList = /*[[${commonList['productList']}]]*/ [];
+	let warehouseList = /*[[${commonList['WHTYPE']}]]*/ [];
+	let modal_equipment_cd, modal_model_cd,modal_equipment_nm, modal_warehouse_cd, modal_product_cd, modal_equipment_us;
+	let modalData = {}; // 모달 초기화 시 사용
+	const btn_insert = $('#btn_insert');
+	const btn_delete = $('#btn_delete');
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	const today = new Date();
+	const filterConfig = [
+	    { key: 'model_cd', label: '모델코드', type: 'text', placeholder: '모델코드 입력', col: 'col-2' },
+	    { key: 'equipment_nm', label: '설비명', type: 'text', placeholder: '설비명 입력', col: 'col-2' },
+	    { key: 'warehouse_cd', label: '창고명', type: 'select', list: setFilterList(warehouseList), col: 'col-2' },
+	    { key: 'product_cd', label: '품목명', type: 'select', list: setFilterList(productList), col: 'col-2' },
+	    { key: 'equipment_us', label: '사용여부', type: 'radio', list: setFilterList(useList), col: 'col-auto' },
+	];
+	
+
+	// ------------------------------
+	
+	$(function() {
+		tui.Grid.setLanguage('ko');
+		tui.Grid.applyTheme('striped');
+		
+		make_grid();
+		getGridList();
+
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -380);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -380);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+
+        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+        	console.log(filterValues)
+            getGridList(filterValues);
+        });
+		
+		// 엑셀 버튼 추가
+		addExcelButton(grid, '설비관리');
+		
+		$(document).on('filterToggled', function(e) {
+		    if(e.detail.isVisible) {
+		        setGridHeight(grid, -450);
+		    } else {
+		        setGridHeight(grid, -380);
+		    }
+		});
+		
+		// 필터 엔터키 검색 이벤트
+		$('#filterModule').on('keypress', function(e) {
+		    if (e.keyCode !== 13) return;
+		    
+		    const filterValues = {};
+		    
+		    for (const config of filterConfig) {
+		        const input = $(`#${config.key}`);
+		        const value = input.val();
+		        filterValues[config.key] = value;
+		    }
+		    getGridList(filterValues);
+		});
+		
+		
+		// 등록 모달 클릭
+		btn_insert.on('click', function() {
+			modalData = {};
+			make_modal_detail();
+		});
+
+		// 그룹코드 삭제
+		$(document).on('click', '#btn_area_remove', function() {
+			let checkedRows = modal_grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 항목을 체크해주세요.');
+			    return;
+			}
+	    	checkedRows.forEach(row => {
+	    		modal_grid.removeRow(row.rowKey);
+	    	});
+		});
+
+		
+		// 설비 등록
+		$(document).on('click', '#btn_modal_save', function() {
+			insert_EQUIPMENT();
+		});
+		
+		// 설비 초기화 버튼
+		$(document).on('click', '#btn_modal_reset', function() {
+			if(modalData) {
+				setModalValues(modalData);
+			} else {
+				const modal = $(this).closest('.modal');
+				modal.find('input').val('');
+				modal.find('select').val('');
+			}
+		});
+
+		// 설비 삭제
+		btn_delete.on('click', function() {
+			let checkedRows = grid.getCheckedRows();
+			console.log(checkedRows);
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 설비를 체크해주세요.');
+			    return;
+			}
+			delect_WAREHOUSE(checkedRows);				
+		});
+		
+		// 사진 컨테이너 클릭 이벤트
+		$(document).on('click', '.photoContainer', function () {
+		    $('#equipment_pc').click(); // 파일 선택창 열기
+		});
+		
+		// 사진 삭제 버튼 클릭 이벤트
+		$(document).on('click', '#btn_image_remove', async function () {
+			if(!await showConfirm(`사진 삭제`, `사진을 삭제하시겠습니까?`)){
+				return;
+			}
+		    $('.photoPreview').hide().attr('src', '');
+		    $('.uploadText').show();
+		    $('#btn_image_remove').addClass('d-none');
+		    $('#equipment_pc').val('');
+		});
+		
+		// 사진 변경
+		$(document).on('change', '#equipment_pc', function(e) {
+		    const file = e.target.files[0];
+		    const preview = $('.photoPreview');
+		    const uploadText = $('.uploadText');
+		    const removeBtn = $('#btn_image_remove');
+		    
+		    if (!file) {
+		        preview.hide();
+		        uploadText.show();
+		        removeBtn.addClass('d-none');
+		        return;
+		    }
+		    
+		    const reader = new FileReader();
+		    reader.onload = ({target}) => {
+		        preview.attr('src', target.result).show();
+		        uploadText.hide();
+		        removeBtn.removeClass('d-none');
+		    };
+		    reader.readAsDataURL(file);
+		});
+		
+	});
+	
+
+	// 그리드 생성
+	function make_grid() {
+		const dataSource = {
+		    api: {
+		        readData: {
+		            url: '/select_EQUIPMENT',
+		            method: 'POST',
+		            contentType: 'application/json',
+		            headers: {
+		                [header]: token
+		            }
+		        }
+		    }
+		}
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',},
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '설비코드', name : 'equipment_cd', sortable : true, filter: 'text'},
+				{header : '모델코드', name : 'model_cd', sortable : true, filter: 'text'},
+				{header : '설비명', name : 'equipment_nm', sortable : true, filter: 'text'},
+				{header : '창고명', name : 'warehouse_nm', align: 'center', filter: 'text'},
+				{header : '품목코드', name : 'product_nm', align: 'center', sortable : true, filter: 'text'}, 
+				{header : '사용여부', name : 'equipment_us', align: 'center', sortable : true, filter: 'select',
+					formatter: function({value}) {
+						return value == true ? '사용' : value == false ? '미사용' : '';
+					}
+				}, 
+				{header : '비고', name : 'equipment_rm', sortable : true, filter: 'text'}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	equipment_rm: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+
+		});
+		
+		grid.on('dblclick', function(ev) {
+			let row = grid.getRow(ev.rowKey);
+			if(row == null) {
+				return;
+			}
+			make_modal_detail('update');
+			setModalInput(row);
+		});
+	}
+	
+	// 그리드 데이터 조회
+	async function getGridList(filter, equipment_cd) {
+		let jsonData = JSON.stringify({equipmentFilter: filter, equipment_cd: equipment_cd});
+		let ajaxData = await callAjaxPost('/select_EQUIPMENT', jsonData);
+		grid.resetData(ajaxData.data.contents);
+	}
+	
+	// 상세 모달
+	function make_modal_detail(process) {
+		let text = !process ? '등록' : '수정';
+		let title = `설비 ${text}`;
+		const div_modal = 'div_EQUIPMENT_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+							    <label for="equipment_pc" class="col-2 col-form-label">사진 등록</label>
+								<div class="col-auto">
+									<div class="photoContainer position-relative">
+										<img class="photoPreview img-thumbnail" src="" alt="사진 미리보기">
+										<div class="uploadText">사진 등록</div>
+									</div>
+									<input type="file" id="equipment_pc" class="d-none" accept="image/*">
+							    </div>
+								<div class="col-auto align-items-bottom">
+									<button id="btn_image_remove" class="btn btn-danger d-none">삭제</button>
+							    </div>
+							</div>
+							<div class="row mb-3">
+								<input type="text" id="modal_equipment_cd" class="d-none">
+								<label for="modal_model_cd" class="col-2 col-form-label">모델코드<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_model_cd"></div>
+								<label for="modal_equipment_nm" class="col-2 col-form-label">설비명<span class="text-danger">*</span></label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_equipment_nm"></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_warehouse_cd" class="col-2 col-form-label">창고명<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_warehouse_cd" class="form-select"></select></div>
+								<label for="modal_product_cd" class="col-2 col-form-label">품목코드<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_product_cd" class="form-select"></select></div>
+							</div>
+							<div class="row mb-3">
+								<label for="modal_equipment_us" class="col-2 col-form-label">사용여부<span class="text-danger">*</span></label>
+								<div class="col-4"><select id="modal_equipment_us" class="form-select"></select></div>
+								<label for="modal_equipment_rm" class="col-2 col-form-label">비고</label>
+								<div class="col-4"><input type="text" class="form-control" id="modal_equipment_rm"></div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<div>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
+								<button type="submit" id="btn_modal" class="btn btn-primary">${text}</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	
+			createSelectBox($('#modal_equipment_us'), /*[[${commonList['USEYN']}]]*/ [], '선택하세요.');
+			createSelectBox($('#modal_product_cd'), /*[[${commonList['productList']}]]*/ [], '선택하세요.');
+			createSelectBox($('#modal_warehouse_cd'), /*[[${commonList['WHTYPE']}]]*/ [], '선택하세요.');
+			
+// 			$('#modal_equipment_cd').mask('Z'.repeat(10), {
+// 		        translation: {'Z': {pattern: /[A-Za-z0-9]/}},
+// 		    })
+// 		    .on('input', function() {
+// 		        $(this).val($(this).val().toUpperCase());
+// 		    });
+			
+			equipment_pc = $('#equipment_pc');
+			modal_model_cd = $('#modal_model_cd');
+			modal_equipment_nm = $('#modal_equipment_nm');
+			modal_warehouse_cd = $('#modal_warehouse_cd');
+			modal_product_cd = $('#modal_product_cd');
+			modal_equipment_us = $('#modal_equipment_us');
+			modal_equipment_rm = $('#modal_equipment_rm');
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	
+	// 모달 조회
+	async function setModalInput(row) {
+		let data = {
+			equipment_cd: row['equipment_cd']
+		}
+		let jsonData = JSON.stringify(data);
+		try {
+		    let ajaxData = await callAjaxPost('/select_EQUIPMENT', jsonData);
+			let equipment = ajaxData.data.contents;
+			let firstEquipment = equipment.length > 0 ? equipment[0] : {};
+			modalData = {
+			    equipment_cd: firstEquipment['equipment_cd'],
+			    equipment_pc: firstEquipment['equipment_pc'],
+			    model_cd: firstEquipment['model_cd'],
+			    equipment_nm: firstEquipment['equipment_nm'],
+			    warehouse_cd: firstEquipment['warehouse_cd'],
+			    product_cd: firstEquipment['product_cd'],
+			    equipment_us: firstEquipment['equipment_us'] == true ? 1 : 0,
+				equipment_rm: firstEquipment['equipment_rm'],
+			};
+			console.log(modalData);
+			setModalValues(modalData);
+		} catch (error) {
+			showAlert('', 'error', '조회 실패', error.msg);
+		}
+	}
+	/*
+	*/
+	
+	// 설비 등록
+	async function insert_EQUIPMENT() {
+		let text = Object.keys(modalData).length > 0 ? '수정' : '등록';
+		/*		*/
+		const validations = [
+		    { field: modal_model_cd, message: '모델코드를 입력해주세요.' },
+		    { field: modal_equipment_nm, message: '설비명을 입력해주세요.' },
+		    { field: modal_warehouse_cd, message: '창고명을 선택해주세요.' },
+		    { field: modal_product_cd, message: '품목유형을 선택해주세요.' },
+		    { field: modal_equipment_us, message: '사용여부를 선택해주세요.' }
+		];
+		const invalidField = validations.find(v => !v.field.val()?.trim());
+		if(invalidField) {
+		    showAlert(invalidField.field, 'warning', '', invalidField.message);
+		    return;
+		}
+
+		/**/
+		
+		if(!await showConfirm(`설비 ${text}`, `설비를 ${text}하시겠습니까?`)) {
+			return;
+		}
+		
+		const formData = new FormData();
+		
+		const requestData = {
+		    equipment: {
+		    	equipment_cd: $('#modal_equipment_cd').val(),
+		        model_cd: $('#modal_model_cd').val().trim(),
+		        equipment_nm: $('#modal_equipment_nm').val().trim(),
+		        warehouse_cd: $('#modal_warehouse_cd').val().trim(),
+		        product_cd: $('#modal_product_cd').val().trim(),
+		        equipment_us: $('#modal_equipment_us').val() == 1,
+		        equipment_rm: $('#modal_equipment_rm').val().trim(),
+		    }
+		};
+		
+		
+		const image = $('#equipment_pc')[0].files[0];
+		if (image) {
+	        formData.append('image', image);
+	    }
+		
+		formData.append('requestData', new Blob([JSON.stringify(requestData)], { type: 'application/json' }));
+		
+		try {
+		    let ajaxData = await callAjaxFileUpload('/insert_EQUIPMENT', formData);
+			showAlert('', 'success', `${text}` + ' 성공', '');
+			modal.hide();
+			grid.resetData(ajaxData['list']);
+			resetSearchInput();
+		} catch (error) {
+			console.log("오류 메시지:", JSON.stringify(error));
+		}
+	}
+	
+	// 설비 삭제
+	async function delect_WAREHOUSE(checkedRows) {
+		if (!await showConfirm(`설비 삭제`, '선택한 설비를 삭제하시겠습니까?')) { 
+			return;
+		}
+		
+		let jsonData = JSON.stringify({equipmentList: checkedRows});
+		let ajaxData = await callAjaxPost('/delete_EQUIPMENT', jsonData);
+		try {
+			grid.resetData(ajaxData['list']);
+			resetSearchInput();
+			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
+		} catch (error) {
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
+	}
+
+	// 인풋 입력
+	function setModalValues(data) {
+		$('#modal_equipment_cd').val(data.equipment_cd);
+		$('#modal_model_cd').val(data.model_cd);
+		$('#modal_equipment_nm').val(data.equipment_nm);
+		$('#modal_equipment_us').val(data.equipment_us);
+		$('#modal_equipment_rm').val(data.equipment_rm);
+		$('#modal_warehouse_cd').val(data.warehouse_cd);
+		$('#modal_product_cd').val(data.product_cd);
+		
+		if(data.equipment_pc != null){
+			$('.photoPreview').attr('src', data.equipment_pc).show();
+		}
+	}
+	
+	// 검색 인풋 초기화
+	function resetSearchInput(){
+		$('#equipment_cd').val('');
+		$('#equipment_nm').val('');
+		$('#warehouse_tp').val('');
+		setRadioValue('equipment_us', 'ALL');
+	}
+	
+</script>
+</html>

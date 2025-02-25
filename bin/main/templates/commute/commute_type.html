@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+				xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+				xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+				layout:decorate="~{layout}" 
+				layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}"/>
+<meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card" id="div_card">
+						<div class="card-body">
+							<div class="d-flex align-items-center justify-content-between">
+								<h5 class="card-title">근로관리</h5>
+								<div>
+									<input type="button" id="btn_employee_modal" class="btn btn-primary" value="사원지정">
+								</div>
+							</div>
+							<div id="grid"></div>
+							<div id="btn_area" class="mt-2">
+								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</section>
+	</main>
+</body>
+<style>
+	.tui-grid-cell-summary {
+	    background-color: #ddd;
+	    border-color: #fff;
+	    border-left-width: 1px;
+	    border-right-width: 1px;
+	    color: #333;
+	}
+</style>
+<script th:inline="javascript">
+	// 변수 지정
+	let grid, commute_grid_row; // 근로관리 그리드
+	let employee_grid, insert_grid; // 사원추가 그리드
+	let work_grid; // 근무코드 그리드
+	changeFlag = false;
+	// 모달 변수
+	let commute_modal, employee_modal;
+	let week = /*[[${WEEK}]]*/[];
+	let workinghour_id, workinghour_nm, workinghour_wt, workinghour_lt, workinghour_rm, workinghour_us;
+	let btn_workinghour_save;
+	// 화면 변수
+	let commonList = [];
+	let btn_employee_modal = $('#btn_employee_modal');
+	const token = $("meta[name='_csrf']").attr("content")
+	const header = $("meta[name='_csrf_header']").attr("content");
+	
+	
+	// ------------------------------
+	
+	$(function() {
+		setGridTheme();
+		make_grid();
+		getList();
+		
+		
+		// 창크기
+		setElementHeight('.card', -105);
+		setGridHeight(grid, -310);
+		
+		$(window).resize(function() {
+			setTimeout(() => {
+				setElementHeight('.card', -105);
+				setGridHeight(grid, -310);
+				setGridWidth(grid, 0);
+			}, 300);
+		});
+		
+		
+		
+		
+		// 신규등록 버튼
+		$('#btn_insert').on('click', function() {
+			modal_detail();
+		});
+		
+		// 삭제 버튼
+		$('#btn_delete').on('click', function() {
+			let checkedRows = grid.getCheckedRows();
+			if (!checkedRows.length) {
+				showAlert('', 'warning', '삭제 항목 체크', '삭제할 근무코드를 체크해주세요.');
+			    return;
+			}
+			delete_WORKINGHOUR(checkedRows);	
+		});
+		
+		// 근무코드 선택
+		$(document).on('click', '#workinghour_id, #workinghour_nm', function(){
+			make_work_modal();
+		});
+		
+		
+		
+		// 사원지정 버튼
+		btn_employee_modal.on('click', function (){
+			if(commute_grid_row['workinghour_us'] != 'false') {
+				make_employee_modal(commute_grid_row);				
+			} else {
+				showAlert('', 'warning', '사원 지정 불가', '미사용중인 근로 형태에는<br>적용이 불가능합니다.');
+			}
+		});
+		
+		
+	});
+	
+
+
+	// 인풋 항목 입력
+	function inputWork(data) {
+		workinghour_id.val(data['workinghour_id']);
+		workinghour_nm.val(data['workinghour_nm']);
+		workinghour_wt.val(data['workinghour_wt']);
+		workinghour_lt.val(data['workinghour_lt']);
+		workinghour_rm.val(data['workinghour_rm']);
+		workinghour_hs.val(data['workinghour_hs']);
+		setRadioValue('workinghour_us', data['workinghour_us']);
+	    $('input[name="workinghour_dw"]').prop('checked', false);
+	    
+	    if (data['workinghour_dw']) {
+	        const week = data['workinghour_dw'].split(',');
+	        week.forEach(day => {
+	            $(`input[name="workinghour_dw"][value="${day}"]`).prop('checked', true);
+	        });
+	    }
+	    
+	    $('#check_all').prop('checked', $('input[name="workinghour_dw"]:not(#check_all)').length ==
+	                        $('input[name="workinghour_dw"]:not(#check_all):checked').length);
+	}
+
+	
+	// 근로관리 그리드 생성
+	function make_grid() {
+		
+		const dataSource = {
+				  api: {
+					    readData: {url: '/select_WORKINGHOUR', method: 'GET' },
+				  	}
+				}
+		
+		grid = new tui.Grid({
+			el : document.getElementById('grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 600,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', sortable : true},
+				{header : '항목명', name : 'workinghour_nm', sortable : true}, 
+				{header : '사용여부', name : 'workinghour_us', sortable : true,
+					formatter: function({value}) {
+						return value == 'true' ? '사용' : value == 'false' ? '미사용' : '';
+					}
+				}, 
+				{header : '등록인원', name :'employee_cnt'}, 
+				{header : '비고', name : 'workinghour_rm', sortable : true}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	workinghour_rm: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+		});
+		
+		grid.on('click', function(ev) {
+			commute_grid_row = grid.getRow(ev.rowKey);
+		});
+		
+		grid.on('dblclick', function(ev) {
+			commute_grid_row = grid.getRow(ev.rowKey);
+			
+			modal_detail(commute_grid_row);
+		});
+		
+	}
+	
+	// 근로관리 모달 생성
+	function modal_detail(data) {
+		let text = data ? '수정' : '등록';
+		let week = /*[[${WEEK}]]*/[];
+		let title = `근무 ${text}`;
+
+		const div_modal = 'div_common_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="row mb-3">
+								<label for="workinghour_id" class="col-sm-2 col-form-label">근무코드<span class="text-danger">*</span></label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_id" readonly ${data ? 'disabled' : ''}>
+								</div>
+								<label for="workinghour_nm" class="col-sm-2 col-form-label">항목명</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_nm" readonly ${data ? 'disabled' : ''}>
+								</div>
+							</div>
+							<div class="row mb-3">
+								<legend class="col-form-label col-sm-2">기준시간<span class="text-danger">*</span></legend>
+								<div class="col-sm-4 d-flex justify-content-between">
+									<input type="text" id="workinghour_wt" class="form-control text-center" placeholder="00:00:00" style="width: 110px;"/>
+									<span class="fs-4 fw-light my-auto">~</span>
+									<input type="text" id="workinghour_lt" class="form-control text-center" placeholder="00:00:00" style="width: 110px;"/>
+								</div>
+						        <legend class="col-form-label col-sm-2">주휴요일<span class="text-danger">*</span></legend>
+						        <div class="col-sm-2">
+						       		<select id="workinghour_hs" class="form-select"></select>
+						        </div>
+							</div>
+					        <div class="row mb-3">
+					            <div class="col">
+					                <legend class="col-form-label col-sm-2 pt-0">근로요일<span class="text-danger">*</span></legend>
+					                <div class="form-check-inline ms-1 me-0">
+					                    <input class="form-check-input" type="checkbox" name="workinghour_dw" 
+					                           id="check_all" value="ALL">
+					                    <label class="form-check-label" for="check_all">전체</label>
+					                </div>
+					                <span>| </span>
+					                <div id="div_week" class="d-inline ms-1"></div>
+					            </div>
+					        </div>
+					        <div class="row mb-3">
+								<label for="workinghour_rm" class="col-sm-2 col-form-label">비고</label>
+								<div class="col-sm-4">
+									<input type="text" class="form-control" id="workinghour_rm">
+								</div>
+								<div class="col">
+									<legend class="col-form-label col-sm-3">사용여부<span class="text-danger">*</span></legend>
+				                    <div class="form-check-inline mt-2">
+				                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us1" value="true">
+				                    	<label class="form-check-label" for="radio_us1">사용</label>
+				                    </div>
+				                    <div class="form-check-inline">
+				                    	<input class="form-check-input" type="radio" name="workinghour_us" id="radio_us2" value="false">
+				                    	<label class="form-check-label" for="radio_us2">미사용</label>
+				                    </div>
+								</div>
+					        </div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							<button type="button" class="btn btn-primary" id="btn_workinghour_save">${text}</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		commute_modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+			
+        	workinghour_id = $('#workinghour_id');
+        	workinghour_nm = $('#workinghour_nm');
+        	workinghour_wt = $('#workinghour_wt');
+        	workinghour_lt = $('#workinghour_lt');
+        	workinghour_hs = $('#workinghour_hs');
+        	workinghour_rm = $('#workinghour_rm');
+        	workinghour_us = $('input:radio[name=workinghour_us]');
+			btn_workinghour_save = $('#btn_workinghour_save');
+			
+			setCheckBox(commonList['WEEK']);
+			createSelectBox(workinghour_hs, commonList['WEEK'], '미선택');
+			
+            $('#check_all').change(function() {
+                $('input[name="workinghour_dw"]:not(#check_all)').prop('checked', $(this).prop('checked'));
+            });
+            $('input[name="workinghour_dw"]:not(#check_all)').change(function() {
+                let allChecked = $('input[name="workinghour_dw"]:not(#check_all)').length === 
+                                $('input[name="workinghour_dw"]:not(#check_all):checked').length;
+                $('#check_all').prop('checked', allChecked);
+            });
+
+            $("#workinghour_wt").inputmask({
+                alias: "datetime",
+                inputFormat: "HH:MM:ss",
+                placeholder: "00:00:00",
+                insertMode: false,
+                showMaskOnHover: true
+            });
+
+            $("#workinghour_lt").inputmask({
+                alias: "datetime",
+                inputFormat: "HH:MM:ss",
+                placeholder: "00:00:00",
+                insertMode: false,
+                showMaskOnHover: true
+            });
+            
+            if(data) {
+	            workinghour_detail(data['workinghour_id']);
+            }
+            
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		commute_modal.show();
+		
+		btn_workinghour_save.on('click', async function() {
+			
+			let week = [];
+			$('input[name="workinghour_dw"]:not(#check_all):checked').each(function() {
+			    week.push($(this).val());
+			});
+			if(workinghour_id.val().trim() == '') {
+				showAlert(workinghour_id, 'warning', '', '근무코드를 선택해주세요.');
+				return;
+			}
+			if(workinghour_wt.val().trim() == '') {
+				showAlert(workinghour_wt, 'warning', '', '시작시간을 입력해주세요.');
+				return;
+			}
+			if(workinghour_lt.val().trim() == '') {
+				showAlert(workinghour_lt, 'warning', '', '종료시간을 입력해주세요.');
+				return;
+			}
+			if(workinghour_hs.val() == '') {
+				showAlert(workinghour_hs, 'warning', '', '주휴요일을 선택해주세요.');
+				return;
+			}
+			if(week.length == 0) {
+		        showAlert('', 'warning', '입력 오류', '근로요일을 선택해주세요.');
+		        return;
+			}
+			if(week.includes(workinghour_hs.val())) {
+		        showAlert('', 'warning', '입력 오류', '주휴요일은 근로요일과 중복될 수 없습니다.');
+		        return;
+			}
+			if(!workinghour_us.is(":checked")) {
+				showAlert(workinghour_us, 'warning', '', '사용여부를 선택해주세요.');
+				return;
+			}
+			const isConfirmed = await showConfirm(`근로 ${text}`, `근로 형태를 ${text}하시겠습니까?`);
+			if(!isConfirmed) {
+				return;
+			}
+			
+			let data = {
+				workinghour: {
+					workinghour_id: workinghour_id.val().trim(),
+					workinghour_nm: workinghour_nm.val().trim(),
+					workinghour_wt: workinghour_wt.val().trim(),
+					workinghour_lt: workinghour_lt.val().trim(),
+					workinghour_hs: workinghour_hs.val(),
+					workinghour_rm: workinghour_rm.val().trim(),
+					workinghour_us: getRadioValue(workinghour_us),
+					week: week
+				}
+			}
+			let jsonData = JSON.stringify(data);
+			
+		    try {
+		        const ajaxData = await callAjaxPost(`/insert_WORKINGHOUR`, jsonData);
+				grid.resetData(ajaxData['list']);
+				// inputWork(data['workinghour']);
+				showAlert('', 'success',`${text} 성공`, `${text}에 성공하였습니다.`);
+				commute_modal.hide();
+		    } catch (error) {
+		    	console.log(error);
+		        showAlert('', 'error', `${text} 실패`, error.msg);
+		    }
+
+		});
+	}
+	
+	// 근로관리 상세내역 조회
+	function workinghour_detail(id) {
+		$.ajax({
+			type: 'post',
+			url: '/select_WORKINGHOUR_detail',
+			data: { workinghour_id: id },
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				if(data['result']) {
+					week = data['WEEK'];
+					setCheckBox(week);
+					createSelectBox(workinghour_hs, week, '미선택');
+					inputWork(data['workinghour']);
+				} else {
+					Swal.fire({
+					    icon: 'error',
+					    title: '조회실패',
+					    html: '조회에 실패했습니다.'
+					}).then(() => {
+						commute_modal.hide();
+					});
+				}
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+
+	// 사원추가 모달
+	function make_employee_modal(row) {
+		if(!row) {
+			showAlert('', 'warning', '근로항목 선택' ,'근로항목을 선택해주세요.');
+			return;
+		}
+		let title = `${row['workinghour_nm']} 설정`;
+		let btn_employee_delete, btn_employee_insert;
+		const div_modal = 'div_common_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body px-0">
+						    <div class="row d-flex flex-row justify-content-center">
+						        <div class="col-5">
+						            <div class="card">
+						                <div class="card-body">
+						                	<h5 class="card-title">미지정 사원</h5>
+						                    <div id="employee_grid" class="mt-4"></div>
+						                </div>
+						            </div>
+						        </div>
+						        <div class="col-auto d-flex flex-column align-items-center justify-content-center">
+						            <button id="btn_employee_delete" class="btn btn-outline-danger mb-3">
+						            	<i class="bx bxs-left-arrow align-middle"></i> 삭제
+						            </button>
+						            <button id="btn_employee_insert" class="btn btn-outline-primary">
+						            	추가 <i class="bx bxs-right-arrow align-middle"></i>
+						            </button>
+						        </div>
+						        <div class="col-5">
+						            <div class="card">
+						                <div class="card-body">
+						                	<h5 class="card-title">등록 사원</h5>
+						                    <div id="insert_grid" class="mt-4"></div>
+						                </div>
+						            </div>
+						        </div>
+						    </div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			
+			modalElement = document.getElementById(div_modal);
+		}
+		employee_modal = new bootstrap.Modal(modalElement);
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	make_employee_grid();
+        	make_insert_grid();
+        	select_EMPLOYEE_WORKINGHOUR(row['workinghour_id']);
+            
+        	btn_employee_delete = $('#btn_employee_delete');
+        	btn_employee_insert = $('#btn_employee_insert');
+        	
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+/* 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            }); */
+			modalElement.remove();
+		});
+		
+		employee_modal.show();
+		
+		$(window).resize(function() {
+			setGridHeight(employee_grid, -400);
+			setGridHeight(insert_grid, -400);
+		});
+		
+		// 추가 버튼 이벤트
+		btn_employee_insert.on('click', function() {
+		    const checkedRow = employee_grid.getCheckedRows();
+		    update_EMPLOYEE_WK(employee_grid, checkedRow, row['workinghour_id'], '미지정 사원');
+		});
+
+		// 삭제 버튼 이벤트
+		btn_employee_delete.on('click', function() {
+		    const checkedRow = insert_grid.getCheckedRows();
+		    // 컨펌 추가
+		    update_EMPLOYEE_WK(insert_grid, checkedRow, row['workinghour_id'], '등록 사원');
+		});
+		
+	}
+	
+	
+	async function getList() {
+		commonList = await getCommonList("WEEK");
+	}
+	
+	
+	
+	// 사원추가 모달의 미지정 그리드
+	function make_employee_grid() {
+		employee_grid = new tui.Grid({
+			el : document.getElementById('employee_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 500,
+			columns : [
+				{header : '근로번호', name : 'workinghour_id', hidden : true},
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'},
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	employee_gd: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+		});
+		
+		employee_grid.on('click', function(ev) {
+	        let row = employee_grid.getRow(ev.rowKey);
+		    if(ev.columnName != '_checked' && ev.rowKey !== null) {
+	            employee_grid[row._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
+		    }
+		});
+	}
+	
+	// 사원추가 모달의 지정 그리드
+	function make_insert_grid() {
+		insert_grid = new tui.Grid({
+			el : document.getElementById('insert_grid'),
+			data : [],
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+				{type : 'checkbox',}, 
+			],
+			bodyHeight : 500,
+			columns : [
+				{header : '근로번호', name : 'workinghour_id', hidden : true},
+				{header : '사원번호', name : 'employee_cd', width: '120', sortable : true, filter: 'text'},
+				{header : '사원명', name : 'employee_nm', width: '120', sortable : true, filter: 'text'}, 
+				{header : '부서명', name : 'employee_dp', width: '120', sortable : true, filter: 'select'}, 
+				{header : '직위명', name : 'employee_gd', width: '120', sortable : true, filter: 'select'}, 
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	employee_gd: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+		});
+		
+		insert_grid.on('click', function(ev) {
+			let row = insert_grid.getRow(ev.rowKey);
+			if(ev.columnName != '_checked' && ev.rowKey !== null) {
+				insert_grid[insert_grid.getRow(ev.rowKey)._attributes.checked ? 'uncheck' : 'check'](ev.rowKey);
+			}
+		});
+		
+	}
+
+	// 사원추가 모달의 데이터 조회
+	function select_EMPLOYEE_WORKINGHOUR(id) {
+		console.log(id);
+		$.ajax({
+			type: 'post',
+			url: '/select_EMPLOYEE_WORKINGHOUR',
+			data: {workinghour_id: id},
+			beforeSend : function(xhr) {
+			    xhr.setRequestHeader(header, token);
+			},
+			success: function(data) {
+				employee_grid.resetData(data['EMPLOYEE_LIST']);
+				insert_grid.resetData(data['CHK_LSIT']);
+			},
+			error : function(xhr, textStatus, errorThrown) {
+				console.log('조회 실패');
+			}
+		});
+	}
+	
+	// 사원추가 모달의 업데이트
+	async function update_EMPLOYEE_WK(grid, checkedRow, workinghour_id, warningTitle) {
+		const isConfirmed = await showConfirm(`사원 지정`, `선택한 사원을<br>등록하시겠습니까?`);
+		if (!isConfirmed) {
+			return;
+		}
+	    if(checkedRow.length == 0) {
+	        showAlert('' ,'warning', warningTitle,  warningTitle + '을 선택해주세요.');
+	        return;
+	    }
+	    
+	    let data = {
+	        workinghourList: checkedRow,
+	        workinghour_id: workinghour_id
+	    };
+	    
+	    $.ajax({
+	        type: 'post',
+	        url: '/update_EMPLOYEE_WK',
+	        contentType: 'application/json',
+	        data: JSON.stringify(data),
+	        beforeSend: function(xhr) {
+	            xhr.setRequestHeader(header, token);
+	        },
+	        success: function(data) {
+	            let icon = 'success';
+	            let title = '등록 성공';
+	            let msg = '등록에 성공했습니다.';
+	            
+	            if(data['result']) {
+	                employee_grid.resetData(data['EMPLOYEE_LIST']);
+	                insert_grid.resetData(data['CHK_LSIT']);
+	            } else {
+	                icon = 'error';
+	                title = '등록 실패';
+	                msg = '등록에 실패했습니다.';
+	            }
+	            getGridList();
+	            showAlert('', icon, title, msg);
+	        },
+	        error: function(xhr, textStatus, errorThrown) {
+	            console.log('조회 실패');
+	        }
+	    });
+	}
+	
+	async function getGridList() {
+	    try {
+	        
+	        const ajaxData = await callAjaxGet(`/select_WORKINGHOUR`);
+	        grid.resetData(ajaxData.data.contents);
+
+	    } catch (error) {
+	        console.log(error);
+	        showAlert('', 'error', '조회 실패', error.msg);
+	    }
+	}
+	
+	
+	
+	// 근로관리 모달 생성
+	function make_work_modal() {
+		let title = '근무코드 조회';
+		const div_modal = 'div_WKTYPE_modal';
+		let modalElement = document.getElementById('#${div_modal}');
+		
+		if(!modalElement) {
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+		            <div class="modal-content">
+						<div class="modal-header">
+		            		<h5 class="modal-title">${title}</h5>
+		                	<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div id="work_grid"></div>
+						</div>
+						<div class="modal-footer">
+							<div>
+								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			`;
+			
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+		}
+		const modal = new bootstrap.Modal(modalElement);  // 모달 초기화
+		
+        modalElement.addEventListener('shown.bs.modal', function () {
+        	make_work_grid();
+        });
+		
+		modalElement.addEventListener('hidden.bs.modal', function () {
+ 			$('button, input, select, textarea').each(function () {
+                $(this).blur();
+            });
+			modalElement.remove();
+		});
+		
+		modal.show();
+		
+	}
+	
+	// 근무코드 그리드
+	function make_work_grid() {
+		const dataSource = {
+			    api: {
+			        readData: {
+			            url: '/select_WORKINGHOUR_CD',
+			            method: 'POST',
+			            contentType: 'application/json',
+			            headers: {
+			                [header]: token
+			            },
+			            initParams: {
+			            	product_gc: 'PRDTYPE'
+			            	}
+			        }
+			    }
+			}
+		
+		work_grid = new tui.Grid({
+			el : document.getElementById('work_grid'),
+			data : dataSource,
+			scrollX : false,
+			scrollY : true,
+			rowHeaders : [
+				{type : 'rowNum',}, 
+			],
+			bodyHeight : 300,
+			columns : [
+				{header : '근무코드', name : 'workinghour_id', sortable : true},
+				{header : '항목명', name : 'workinghour_nm', sortable : true}, 
+				{header : '비고', name : 'workinghour_rm', sortable : true}, 
+				{header: '선택', name: 'choice', align: 'center',
+					formatter: () => `<button type="button" class="btn btn-primary btn-sm" data-bs-dismiss="modal">선택</button>`
+				}
+			],
+			summary: {
+			    height: 40,
+			    position: 'bottom', // or 'top'
+			    columnContent: {
+			    	choice: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 건`
+			            }
+			        }
+			    }
+			},
+		});
+		
+		work_grid.on('click', function(ev) {
+			if (ev.columnName == 'choice') {
+				let row = work_grid.getRow(ev.rowKey);
+				$('#workinghour_id').val(row['workinghour_id']);	
+				$('#workinghour_nm').val(row['workinghour_nm']);	
+
+			}
+		});
+		
+	}
+	
+	// 근무 삭제
+	async function delete_WORKINGHOUR(checkedRows) {
+		if (!await showConfirm(`근무코드 삭제`, '선택한 근무코드를 삭제하시겠습니까?')) { 
+			return;
+		}
+		try {
+			let data = {
+				workinghourList: checkedRows,
+			}
+		
+			let ajaxData = await callAjaxPost(`/delete_WORKINGHOUR`, JSON.stringify(data));
+			grid.resetData(ajaxData['list']);
+			showAlert('', 'success', '삭제 성공', '삭제에 성공했습니다.');
+		} catch (error) {
+			showAlert('', 'error', '삭제 실패', error['msg']);
+		}
+	}
+	
+	
+	
+	
+	
+	
+
+	// 체크박스 생성
+	function setCheckBox(week) {
+	    let weekHtml = '';
+	    for (const day of week) {
+	        weekHtml += `
+	            <div class="form-check-inline">
+	                <input class="form-check-input" type="checkbox" name="workinghour_dw" id="check_${day.common_cc}" value="${day.common_cc}">
+	                <label class="form-check-label" for="check_${day.common_cc}">${day.common_nm}</label>
+	            </div>
+	        `;
+	    }
+	    $('#div_week').html(weekHtml);
+	}
+
+</script>
+</html>

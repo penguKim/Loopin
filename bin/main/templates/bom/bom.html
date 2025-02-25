@@ -1,0 +1,962 @@
+<html lang="ko" xmln	s:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security" layout:decorate="~{layout}" layout:fragment="content">
+<meta name="_csrf" th:content="${_csrf.token}" />
+<meta name="_csrf_header" th:content="${_csrf.headerName}" />
+<!-- Toast UI grid CSS File-->
+<link rel="stylesheet" href="https://uicdn.toast.com/grid/latest/tui-grid.css" />
+<body data-page="bom">
+<span id="employee_cd" sec:authentication="principal.employee_cd" style="display: none;"></span>
+<span id="employee_nm" sec:authentication="principal.employee_nm" style="display: none;"></span>
+	<main id="main" class="main">
+		<div class="pagetitle"></div>
+		<div id="loadingSpinner" class="loading-overlay" style="display: none;">
+		    <div class="spinner-border text-primary" style="width: 60px; height: 60px;" role="status">
+		        <span class="visually-hidden">Loading...</span>
+		    </div>
+		</div>
+		<div class="col-lg-12">
+			<div class="card">
+				<div class="card" id="div_card">
+					<div class="card-body">
+						<div class="card-title d-flex">
+							<h5>BOM</h5>
+						</div>
+						<div id="filterModule" class="mb-3"></div>
+						<div class="mb-2">
+							<h6 style="color:#012970">품목 목록</h6>
+							<div id="pdgrid" class="p-1"></div>
+						</div>
+						<ul class="nav nav-pills mb-2 d-flex" id="pills-tab" role="tablist">
+<!-- 							<div class="d-flex"> -->
+				                <li class="nav-item" role="presentation">
+				                  <button class="nav-link active" id="pills-process-tab" data-bs-toggle="pill" data-bs-target="#pills-process" type="button" role="tab" aria-controls="pills-process" aria-selected="true">공정</button>
+				                </li>
+				                <li class="nav-item" role="presentation">
+				                  <button class="nav-link" id="pills-bom-tab" data-bs-toggle="pill" data-bs-target="#pills-bom" type="button" role="tab" aria-controls="pills-bom" aria-selected="false">BOM</button>
+				                </li>
+<!-- 							</div> -->
+<!-- 			                <li class="nav-item ms-auto"> -->
+<!-- 						   	  <button class="btn btn-primary" id="testButton" >test</button> -->
+<!-- 						    </li> -->
+		                </ul>
+		                <div class="tab-content pt-2" id="myTabContent">
+			                <div class="tab-pane show active" id="pills-process" role="tabpanel" aria-labelledby="process-tab">
+							<div id="pcgrid" class="p-1"></div>
+			                </div>
+			                <div class="tab-pane" id="pills-bom" role="tabpanel" aria-labelledby="bom-tab">
+							<div id="bomgrid" class="p-1"></div>
+			                </div>
+		                </div>
+						<div class="d-flex justify-content-start align-items-center p-2">
+							<input type="button" id="btn_delete" class="btn btn-primary ml-3 me-2" value="삭제">
+							<input type="button" id="btn_register" class="btn btn-primary ml-3" value="등록">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="modal" id="registermodal" tabindex="-1" data-bs-backdrop="static">
+	        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+	           <div class="modal-content">
+	             <div class="modal-header">
+	               <h5 class="modal-title">BOM 등록</h5>
+	               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	             </div>
+	             <div class="modal-body">
+	             <!-- 모달 내용  -->
+	             	<div class="row g-3 mb-4" id="selppd"> <!-- 부모품목 인풋박스 -->
+	             		<div class="col-md-6">
+		             		<div class="input-group">
+			             		<label for="" class="col-sm-3 col-from-label">품목코드<span class="text-danger">*</span></label>
+		                    	<input type="text" class="col-sm-9 form-control" id="PRODUCT_CD" style="background-color: white;" readonly>
+		             		</div>
+	             		</div>
+	             		<div class="col-md-6">
+		             		<div class="input-group">
+			             		<label for="" class="col-sm-3 col-from-label">품목명<span class="text-danger">*</span></label>
+		                    	<input type="text" class="col-sm-9 form-control" id="PRODUCT_NM" style="background-color: white;" readonly>
+		             		</div>
+	             		</div>
+	             	</div>
+	             	<div class="mb-4">
+	             		<div class="d-flex">
+							<h6 style="color:#012970">공정</h6>
+							<div class="d-flex ms-auto">
+								<button class="btn btn-primary m-1" id="m_btn_pcdel" >삭제</button>
+						   	    <button class="btn btn-primary m-1" id="m_btn_pcregi" >추가</button>
+							</div>
+	             		</div>
+						<div id="mgrid" class="p-1"></div>
+					</div>
+	             	<div class="mb-4">
+	             		<div class="d-flex">
+							<h6 style="color:#012970">BOM</h6>
+							<div class="d-flex ms-auto">
+								<button class="btn btn-primary m-1" id="m_btn_matdel" >삭제</button>
+						   	    <button class="btn btn-primary m-1" id="m_btn_matregi" >추가</button>
+							</div>
+	             		</div>
+						<div id="m_bomgrid" class="p-1"></div>
+					</div>
+<!-- 					<ul class="nav nav-pills mb-3 d-flex" id="pills-tab" role="tablist"> -->
+<!-- 			                <li class="nav-item" role="presentation"> -->
+<!-- 			                  <button class="nav-link active" id="pills-mbom-tab" data-bs-toggle="pill" data-bs-target="#pills-mbom" type="button" role="tab" aria-controls="pills-mbom" aria-selected="true">BOM</button> -->
+<!-- 			                </li> -->
+<!-- 			                <li class="nav-item" role="presentation"> -->
+<!-- 			                  <button class="nav-link" id="pills-mat-tab" data-bs-toggle="pill" data-bs-target="#pills-mat" type="button" role="tab" aria-controls="pills-mat" aria-selected="false">원자재</button> -->
+<!-- 			                </li> -->
+<!-- 		                <li class="nav-item d-flex ms-auto"> -->
+<!-- 					   	  <button class="btn btn-primary m-1" id="m_btn_matdel" style="display: none;" >삭제</button> -->
+<!-- 					   	  <button class="btn btn-primary m-1" id="m_btn_matregi" style="display: none;" >추가</button> -->
+<!-- 					    </li> -->
+<!-- 	                </ul> -->
+<!-- 	                <div class="tab-content pt-2" id="myTabContent"> -->
+<!-- 		                <div class="tab-pane active" id="pills-mbom" role="tabpanel" aria-labelledby="mbom-tab"> -->
+<!-- 							<div id="m_bomgrid" class="p-1"></div> -->
+<!-- 		                </div> -->
+<!-- 		                <div class="tab-pane show" id="pills-mat" role="tabpanel" aria-labelledby="mat-tab"> -->
+<!-- 							<div id="m_bomgrid" class="p-1"></div> -->
+<!-- 		                </div> -->
+<!-- 	                </div> -->
+	             </div>
+		         <div class="modal-footer d-flex justify-content-between">
+		         	<button type="button" class="btn btn-danger" id="btn_modal_reset">초기화</button>
+		            <div>
+		              <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		              <button type="button" class="btn btn-primary" id="btn_modalregi">등록</button>
+		            </div>
+	             </div>
+	           </div>
+	        </div>
+        </div>
+        
+		<div class="modal" id="addmodal" tabindex="-1" data-bs-backdrop="static">
+	        <div class="modal-dialog modal-dialog-centered modal-lg">
+	           <div class="modal-content">
+	             <div class="modal-header">
+	               <h5 class="modal-title" id="addmodaltitle"></h5><!-- 품목지정, 원자재지정, 공정지정(?) -->
+	               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	             </div>
+	             <div class="modal-body" id="addmodal-body">
+	             	<div id="am_modalgrid" class="p-1"></div>
+	             </div>
+		         <div class="modal-footer d-flex">
+		             <button class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+		             <button type="button" class="btn btn-primary" id="btn_addmodal">추가</button>
+	             </div>
+	           </div>
+	        </div>
+        </div>
+	</main>
+</body>
+<script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
+<script type="text/javascript">
+const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+var empcd = document.getElementById('employee_cd').textContent;
+let pcdata = [];
+let bomdata = [];
+const btnregi = document.getElementById('btn_register');
+let modaltype = '';
+const modalregi = document.getElementById('registermodal');
+const modaladd = document.getElementById('addmodal');
+const regimodal = new bootstrap.Modal(modalregi);
+const addmodal = new bootstrap.Modal(modaladd);
+const pdcinput = document.getElementById('PRODUCT_CD');
+const pdninput = document.getElementById('PRODUCT_NM');
+const am_btnadd = document.getElementById('btn_addmodal');
+const m_btnaddpc = document.getElementById('m_btn_pcregi');
+const m_btndelpc = document.getElementById('m_btn_pcdel');
+const m_btnaddbom = document.getElementById('m_btn_matregi');
+const m_btndelbom = document.getElementById('m_btn_matdel');
+const btnmregi = document.getElementById('btn_modalregi');
+let selop = [];
+let ckrowpds = [];
+let m_matStorage = {};
+let currentClickRowkey = null;
+let test = null;
+
+//////////////////
+// 카드 크기 설정 //
+//////////////////
+
+setElementHeight('#div_card', -110);
+window.onload = function(){
+	setGridHeight(pdgrid,-790)
+	setGridHeight(pcgrid, -790);
+}
+$(window).resize(function() {
+	setElementHeight('#div_card', -110);
+	if(pdgrid != null) {
+		setGridHeight(pdgrid, -790);
+	}
+	if(pcgrid != null) {
+		setGridHeight(pcgrid, -790);
+	}
+});
+
+setGridTheme();
+
+document.querySelector('.toggle-sidebar-btn').addEventListener('click', function() {
+    const sidebar = document.querySelector('.sidebar'); // 사이드바 DOM을 정확하게 선택
+
+    // 사이드바의 전환이 끝날 때 이벤트 리스너를 추가
+    sidebar.addEventListener('transitionend', function() {
+        // 사이드바가 전환된 후 그리드 리프레시
+        if (pdgrid) {
+            pdgrid.refreshLayout();
+            console.log('pdgrid 리프레시 완료');
+        }
+        if (pcgrid) {
+            pcgrid.refreshLayout();
+            console.log('pcgrid 리프레시 완료');
+        }
+        if (bomgrid) {
+            bomgrid.refreshLayout();
+            console.log('bomgrid 리프레시 완료');
+        }
+        if (m_bomgrid) {
+            m_bomgrid.refreshLayout();
+            console.log('m_bomgrid 리프레시 완료');
+        }
+        if (am_modalgrid) {
+            am_modalgrid.refreshLayout();
+            console.log('am_modalgrid 리프레시 완료');
+        }
+        console.log('모든 그리드 리프레시 완료');
+    }, { once: true }); // 한 번만 실행하도록 설정
+});
+
+// document.querySelector('.toggle-sidebar-btn').addEventListener('click', function() {
+//     // 사이드바 요소를 선택합니다.
+//     const sidebar = document.querySelector('.sidebar'); 
+
+//     // 사이드바의 전환(transition)이 끝날 때 이벤트 리스너를 추가합니다.
+//     sidebar.addEventListener('transitionend', function() {
+//         console.log('토글 끝났어요! 이제 그리드 리프레시합니다.');
+        
+//         // 그리드 리프레시
+//         if (pdgrid) {
+//             pdgrid.refreshLayout();
+//             console.log('pdgrid 리프레시');
+//         }
+//         if (pcgrid) {
+//             pcgrid.refreshLayout();
+//             console.log('pcgrid 리프레시');
+//         }
+//         if (bomgrid) {
+//             bomgrid.refreshLayout();
+//             console.log('bomgrid 리프레시');
+//         }
+//         if (m_bomgrid) {
+//             m_bomgrid.refreshLayout();
+//             console.log('m_bomgrid 리프레시');
+//         }
+//         if (am_modalgrid) {
+//             am_modalgrid.refreshLayout();
+//             console.log('am_modalgrid 리프레시');
+//         }
+//     });
+// });
+
+
+  //////////
+ // 필터 //
+//////////
+
+const filterConfig = [
+	{key: 'f_BOMPROCESS_CD', label: '품목코드', type:'text', placeholder:'품목코드 입력', col:'col-2'},
+	{key: 'f_PRODUCT_NM', label: '품목명', type:'text', placeholder:'품목명 입력', col:'col-2'},
+	{key: 'f_PROCESS_NM', label: '공정명', type:'text', placeholder:'공정명 입력', col:'col-2'},
+	{key: 'f_PRODUCT_GC', label: '품목대분류', type:'text', placeholder:'품목대분류 입력', col:'col-2'},
+	{key: 'f_PRODUCT_CC', label: '품목소분류', type:'text', placeholder:'품목소분류 입력', col:'col-2'},
+]
+
+initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+	 console.log('filtertest',filterValues);
+});
+
+const fetchBOM = async () => {
+	try{
+		const response = await fetch('/selectBomAll',{
+			method:"GET",
+			headers:{
+				"Content-Type": "application/json",
+			}
+		});
+		const data = await response.json();
+		console.log('초기 데이터'+data);
+// 		data.map(i => ({
+// 			return{
+// 			...i,
+// 			if(i.BOMPROCESS_AP === "NONE"){
+				
+// 			}
+// 			}
+// 		}));
+		pdgrid.resetData(data);
+	} catch(error){
+		console.log('BOM데이터를 로드하는데 실패했습니다.'+error);
+		swal.fire({
+			title: "데이터를 로드하는데 실패했습니다.",
+			text:"관리자에게 연락요망",
+			icon:"error"
+		})
+	}
+};
+ 
+fetchBOM();
+
+/* ====================
+  ||	그리드 생성   ||
+  ====================*/
+
+const pdgrid = new tui.Grid({
+	  el: document.getElementById('pdgrid'),
+	  rowHeaders: ['checkbox'],
+	  scrollX: false,
+	  scrollY: true,
+	  columns: [    
+		  {header:'제품', name:'PRODUCT_NM', align:'center', rowSpan:true},
+		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
+		  {header:'품목명', name:'BOMPROCESS_NM', align:'center'},
+		  {header:'공정명', name:'PROCESS_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'소요시간', name:'BOMPROCESS_RT', align:'center'},
+		  {header:'후공정', name:'BOMPROCESS_AN', align:'center'},
+		  {header:'하위공정수', name:'PC_CHILD', align:'center'},
+		  {header:'BOM수', name:'BM_COUNT', align:'center'},
+		  {header:'비고', name:'BOMPROCESS_BG', align:'center'},
+	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOMPROCESS_BG: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
+});
+
+const pcgrid = new tui.Grid({   
+	  el: document.getElementById('pcgrid'),
+	  scrollX: true,
+	  scrollY: true,
+	  columns: [
+		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
+		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'공정명', name:'PROCESS_NM', align:'center'}, // PROCESS_CD는 가지고 있어야함
+		  {header:'소요시간', name:'BOMPROCESS_RT', align:'center'},
+		  {header:'하위공정수', name:'PC_CHILD', align:'center'},
+		  {header:'BOM수', name:'BM_COUNT', align:'center'},
+		  {header:'불량률', name:'BOMPROCESS_ER', align:'center'},
+	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOMPROCESS_APNM: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
+// 	  data:[{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},{BOMPROCESS_CD:1},],
+});
+
+const bomgrid = new tui.Grid({
+	  el: document.getElementById('bomgrid'),
+	  bodyHeight: 190,
+	  scrollX: true,
+	  scrollY: true,
+	  columns: [
+		  {header:'품목코드', name:'BOM_CD', align:'center'},
+		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
+		  {header:'소요량', name:'BOM_AM', align:'center'},
+	  ],
+});
+
+const mgrid = new tui.Grid({
+	  el: document.getElementById('mgrid'),
+	  scrollX: true,
+	  scrollY: true,
+	  rowHeaders: ['checkbox','rowNum'],
+	  columns: [
+		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
+		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'공정명', name:'PROCESS_NM', align:'center'}, // PROCESS_CD는 가지고 있어야함
+		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
+		  {header:'소요시간', name:'BOMPROCESS_RT', align:'center', editor:'text'},
+		  {header:'불량률', name:'BOMPROCESS_ER', align:'center', editor:'text'},
+		  {header:'후공정', name:'BOMPROCESS_AP', align:'center', editor:{ type:'select', options: []}}, //BOMPROCESS_AP는 가지고 있어야함(가능하다면 셀렉트로 가져가도 괜찮을듯.)
+		  {header:'비고', name:'BOMPROCESS_BG', align:'center', editor:'text'},
+	  ],
+	  selectionUnit:'row',
+});
+
+const m_bomgrid = new tui.Grid({
+	  el: document.getElementById('m_bomgrid'),
+	  scrollX: true,
+	  scrollY: true,
+	  rowHeaders: ['checkbox'],
+	  columns: [
+		  {header:'품목코드', name:'BOM_CD', align:'center'}, // 위의 mgrid의 행에 해당하는 bomprocess_cd의 값을 product_cd값으로 가지고 있어야함.
+		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
+		  {header:'소요량', name:'BOM_AM', align:'center', editor:'text'},
+	  ],
+});
+
+const am_modalgrid = new tui.Grid({
+	  el: document.getElementById('am_modalgrid'),
+	  rowHeaders: ['checkbox'],
+	  scrollX: true,
+	  scrollY: true,
+	  columns: [
+		  {header:'품목코드', name:'BOM_CD', align:'center'},
+		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
+		  {header:'품목코드', name:'PRODUCT_CD', align:'center'},
+		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'공정코드', name:'PROCESS_CD', align:'center'},
+		  {header:'공정명', name:'PROCESS_NM', align:'center'},
+		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
+		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
+		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
+// 		  {header:'소요량', name:'BOM_AM', align:'center'}, // 이거 여기 필요없는것같지
+// 		  {header:'비고', name:'PROCESS_BG', align:'center'},
+	  ],
+});
+
+function updateSelectOption(selopdata) {
+	console.log('공정들'+selopdata);
+	console.log('공정들'+ typeof selopdata);
+	console.log('공정들'+ typeof [selopdata]);
+	console.log('공정들'+JSON.stringify(selop));
+	const updatedColumns = mgrid.getColumns().map(col => {
+	    if (col.name === 'BOMPROCESS_AP') {
+	      return {
+	        ...col,
+	        editor: {
+	          type: 'select',
+	          options: {listItems:selopdata}
+	        },
+	        formatter :{
+	        	
+	        }
+	      };
+	    }
+	    return col;
+	  });
+	console.log('왜 안되냐1'+ JSON.stringify(mgrid.getColumn('BOMPROCESS_AP')))
+// 	console.log('왜 안되냐1'+ JSON.stringify(updatedColumns))
+	  // 그리드의 컬럼을 새롭게 설정
+	  mgrid.setColumns(updatedColumns);
+	console.log('왜 안되냐2222'+ JSON.stringify(mgrid.getColumn('BOMPROCESS_AP')))
+}
+
+
+function hideColumn() {
+    const data = am_modalgrid.getData();
+    am_modalgrid.getColumns().forEach((column) => {
+    	let isColumnEmpty = true; // 해당 컬럼이 모든 row에서 값이 없으면 true
+
+        // 각 row의 해당 컬럼 값이 있는지 확인
+        data.forEach((row) => {
+            const value = row[column.name];
+            // 값이 존재하고, null값이 아닌지 확인
+            if (value && value != null) {
+                isColumnEmpty = false;
+            }
+        });
+
+        if (isColumnEmpty) {
+            am_modalgrid.hideColumn(column.name);
+        } else {
+            am_modalgrid.showColumn(column.name);
+        }
+    });
+}
+    
+//탭 전환 시 그리드를 새로 로드하도록 설정
+document.querySelectorAll('#pills-tab button').forEach(tab => {
+  tab.addEventListener('click', function(event) {
+    const targetTab = event.target.getAttribute('data-bs-target');
+    
+    // 활성화된 탭에 따라서 그리드를 초기화
+    if (targetTab === '#pills-process') {
+    	console.log('pc활성화')
+      pcgrid.refreshLayout();
+    } else if (targetTab === '#pills-bom') {
+    	console.log('bom활성화')
+      bomgrid.refreshLayout();
+    } else if (targetTab === '#pills-mbom') {
+    	console.log('mbom활성화')
+	  m_bomgrid.refreshLayout();
+	  document.getElementById('m_btn_matdel').style.display = 'none'; // 다른 탭에서는 숨기기
+	  document.getElementById('m_btn_matregi').style.display = 'none'; // 다른 탭에서는 숨기기
+    } else if(targetTab === '#pills-mat') {
+    	console.log('mat활성화')
+      m_bomgrid.refreshLayout();
+	  document.getElementById('m_btn_matdel').style.display = 'inline-block'; 
+	  document.getElementById('m_btn_matregi').style.display = 'inline-block'; 
+   }
+  });
+});
+
+btnregi.addEventListener('click', function(e){
+	console.log('등록버튼누름')
+	regimodal.show();
+});
+
+modalregi.addEventListener('shown.bs.modal',function(){
+	mgrid.refreshLayout();
+	m_bomgrid.refreshLayout();
+})
+
+modalregi.addEventListener('hidden.bs.modal',function(){
+	pdcinput.value = "";	
+	pdninput.value = ""	;
+	mgrid.resetData([]);
+	m_bomgrid.resetData([]);
+	m_bomgrid.resetData([]);
+	m_matStorage = {};
+	currentClickRowkey = null;
+})
+
+async function clickppd(e) {
+
+	modaltype = 'selectPD'	
+	console.log('부모품목 정하기');
+// 	const data = [{BOM_CD:1,PRODUCT_NM:"dd",PRODUCT_GC:"대분류",PRODUCT_UN:"1"},{BOM_CD:"test",PRODUCT_UN:1},]
+	let pddata = [];
+	try{
+		const response = await fetch('/selpd',{
+			method:"GET",
+			headers: {
+				'Content-Type': 'application/json',
+			}
+			});
+		const data = await response.json();
+		console.log('부모품목선택리스트'+ JSON.stringify(data));
+		pddata = data;
+	} catch(error){
+		console.log('부모 품목리스트 데이터 로드에 실패했습니다.'+error);
+	}
+	
+	openModalWithData('품목선택',pddata);
+}
+
+async function clickmbtnaddpc(){
+	
+	console.log('왜안되는거임'+pdcinput)
+	console.log('왜안되는거임'+pdcinput.value==="")
+	if(pdcinput.value === null || pdcinput.value === ""){
+		swal.fire({
+			title:"품목을 먼저 선택해주세요.",
+			icon:"warning"
+		})
+		return;
+	}
+	modaltype = 'selectPC'
+	console.log('공정 추가할거야')
+	let pcdata = [];
+	try{
+		const response = await fetch('/selectPCs',{
+			method:"GET",
+			headers: {
+				"Content-Type":"application/json",
+			}
+		});
+		const data = await response.json();
+		console.log('공정데이터'+data);
+		console.log('공정데이터'+JSON.stringify(data));
+		
+		pcdata = data;
+	} catch(error) {
+		console.log('공정리스트 데이터 로드에 실패했습니다.'+error);
+	}
+	
+	openModalWithData('공정선택',pcdata);
+}
+
+function clickmbtndelpc (){
+	console.log('선택한 공정 삭제할거야')
+	const deldata = mgrid.getCheckedRows();
+	const data = mgrid.getData();
+	console.log('삭제할 행 rowkey'+deldata);
+	console.log('삭제할 행 rowkey'+deldata.map(i=> i.rowKey));
+	const selRowKey = deldata.map(i=> i.rowKey);
+	console.log('삭제할 행 rowkey'+ typeof selRowKey);
+	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+		selRowKey.forEach(i => {delete m_matStorage[i]});
+// 	if(selRowKey.length > 1){
+// 	}else {
+// 		delete m_matStorage[selRowKey];
+// 	}
+	mgrid.resetData(deleteddata);
+	m_bomgrid.resetData([]);
+}
+
+function clickmbtndelbom (){
+	console.log('선택한 bom 삭제할거야')
+	const deldata = m_bomgrid.getCheckedRows();
+	const data = m_bomgrid.getData();
+	console.log('삭제할 행 rowkey'+deldata);
+	console.log('삭제할 행 rowkey'+deldata.map(i=> i.rowKey));
+	const selRowKey = deldata.map(i=> i.rowKey);
+	console.log('삭제할 행 rowkey'+ typeof selRowKey);
+	const deleteddata = data.filter(i => !selRowKey.includes(i.rowKey));
+	m_matStorage[currentClickRowkey] = deleteddata;
+	m_bomgrid.resetData(deleteddata);
+}
+
+async function clickmbtnaddmat () {
+	console.log('BOM 추가버튼누름');
+
+	if(mgrid.getData().length === 0){
+		swal.fire({
+			title:"공정을 먼저 추가해주세요.",
+			icon:"warning"
+		})
+		return;
+	}
+	
+	if(currentClickRowkey === undefined || currentClickRowkey === null){
+		swal.fire({
+			title:"공정을 먼저 선택해주세요.",
+			icon:"info"
+		})
+		return;
+	}
+	
+	modaltype = 'selectBOM';
+	let matdata = [];
+	const selpdcs= ckrowpds.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
+	try{
+		const response = await fetch(`/selectbom?${selpdcs}`,{
+			method:"GET",
+			headers: {
+				"Content-Type":"application/json",
+			}
+		});
+		const data = await response.json();
+		console.log('BOM'+data);
+		console.log('BOM'+ JSON.stringify(data));
+		matdata = data;
+		
+	} catch(error) {
+		console.log('BOM 리스트 데이터 로드에 실패했습니다.'+error);
+	}
+	
+	openModalWithData('BOM 추가',matdata);
+}
+
+function openModalWithData(title, content) {
+  // 모달 제목 변경
+  const modalTitle = document.getElementById('addmodaltitle');
+  modalTitle.textContent = title;
+  
+  // 모달 내용 변경
+  am_modalgrid.resetData(content);
+  hideColumn();
+
+  addmodal.show();
+}
+
+modaladd.addEventListener('shown.bs.modal',function(){
+	am_modalgrid.refreshLayout();
+})
+
+modaladd.addEventListener('hidden.bs.modal',function(){
+	// 닫기면 el 지워야하나,,? 고민해보자
+})
+
+async function clickambtnadd (){
+	
+	console.log('작은모달 추가버튼누름')
+	const checkrow = am_modalgrid.getCheckedRows();
+	console.log('선택행 확인' + checkrow);
+	console.log('선택행 확인' + JSON.stringify(checkrow));
+	
+	if(modaltype === 'selectPD'){
+		const checkpcd = checkrow.map(i =>(i.PRODUCT_CD));
+		const checkpnm = checkrow.map(i =>(i.PRODUCT_NM));
+	// 	debugger
+		console.log('부모품목 추가 확인' + checkrow.map(i =>(i.PRODUCT_CD)));
+		console.log('부모품목 추가 확인' + checkrow[0].PRODUCT_CD);
+		console.log('부모품목 추가 확인' + checkrow.length);
+		
+		if(checkrow.length === 1){
+			const response = await fetch(`/checkpcd?pcd=${checkpcd}`,{
+				method:"GET",
+				headers: {
+					'Content-Type': 'application/json',
+				}
+			});
+			const data = await response.json();
+			console.log('중복확인',data)
+			if(data === 1){
+				swal.fire({
+					title:"이미 BOM이 존재하는 품목입니다.",
+					icon:"warning"
+				})			
+			}else{
+				pdcinput.value = checkpcd;
+				pdninput.value = checkpnm;
+				addmodal.hide()
+			}
+		} else if(checkrow.length > 1) {
+			swal.fire({
+				title:"품목을 하나만 선택해주세요",
+				icon:"warning"
+			})
+		} else {
+			swal.fire({
+				title:"품목을 선택해주세요",
+				icon:"warning"
+			})
+		}
+	} else if(modaltype === 'selectPC') {
+		console.log('공정추가')
+		if(checkrow.length <1){
+			swal.fire({
+				title:"공정을 선택해주세요.",
+				icon:"warning"
+			})
+		}else{
+			
+			const existdata = mgrid.getData();
+			// 업데이트할때 체크된거 해제되게 햇으면,,,!
+			const updatedData = existdata.map(i=>({
+				...i,
+				BOMPROCESS_CD: pdcinput.value
+			}))
+			checkrow.forEach(i => {
+				const existindex = updatedData.findIndex(it => it.BOMPROCESS_CD === i.BOMPROCESS_CD);
+				
+				if(existindex === -1){updatedData.push(i)}
+			})
+			
+			const nonedata = {text : "-", value:"NONE"}
+			const selopdata = updatedData.filter(i => i.PROCESS_CD && i.PROCESS_NM)
+										.map(it => ({text: it.PROCESS_NM, value: it.PROCESS_CD}));
+			selopdata.push(nonedata);
+			ckrowpds = updatedData.map(i => i.BOMPROCESS_CD);
+			console.log('selop'+selopdata);
+			selop = selopdata;
+			updateSelectOption(selopdata);
+			console.log('그리드 데이터 확인'+ JSON.stringify( mgrid.getColumn('BOMPROCESS_AP')));
+			mgrid.resetData(updatedData);
+			mgrid.uncheckAll();
+			mgrid.refreshLayout();
+			addmodal.hide();
+		}
+	} else {
+		console.log('원자재추가')
+// 	여기서 m_matStorage[rowKey].push(그리드데이터)이게 들어가야함. m_bomgrid에 넣어주고, 배열에 넣자! 그리고 그값들에 원자재 소요량 인풋받고 배열에 엎어씌워,,,ㅎ m_matStorage[rowKey]= 새데이터 이렇게.
+// 	mgrid에서 선택한 행이 없다면 행을 먼저 선택해달라 알람모달+return
+		if(checkrow.length <1){
+			swal.fire({
+				title:"품목을 선택해주세요.",
+				icon:"warning"
+			})
+		}else{
+			const existdata = m_bomgrid.getData();
+			checkrow.forEach(i=>{
+				const existindex = existdata.findIndex(it => it.BOM_CD === i.BOM_CD);
+				
+				if(existindex === -1){existdata.push(i)};
+			})
+			m_bomgrid.resetData(existdata);
+			m_matStorage[currentClickRowkey] = existdata;
+			m_bomgrid.refreshLayout();
+			m_bomgrid.uncheckAll();
+			addmodal.hide();
+			
+		}
+	}
+};
+
+function handlemgridRowClick (rowkey){
+	console.log('선택했던 행이냐 아니냐.');
+	if(!m_matStorage[rowkey]){
+		m_matStorage[rowkey] = [];
+	}
+	console.log('저장된 행값'+JSON.stringify(m_matStorage[rowkey]));
+	updatem_bomgrid(rowkey,m_matStorage[rowkey]);
+}
+
+function updatem_bomgrid (rowkey, data) {
+	
+	console.log(`${rowkey}행의 데이터 m_bomgrid에 반영`+data);
+	if(data.length === 0 || data === ""){
+		m_bomgrid.resetData(data);
+	}else{
+// 		m_bomgrid.resetData(data[0]);
+		m_bomgrid.resetData(data);
+	}
+	m_bomgrid.refreshLayout();
+}
+
+async function clickbtnmregi(){
+	console.log('BOM등록할거야!!!');
+	const mgriddata = mgrid.getData();
+	const pdcd = pdcinput.value
+	mgriddata.forEach(i =>{
+		delete i.BOM_AM;
+		delete i.BOM_CD;
+	})
+	const bomprocessdata = mgriddata.map(i =>({
+		...i,
+		PRODUCT_CD: pdcd,
+		BOMPROCESS_WR: empcd,
+		BOMPROCESS_WD: new Date()
+	}));
+	console.log('mgrid 전처리'+JSON.stringify(bomprocessdata));
+// 	셀 유효성검사하기
+	delete m_matStorage['undefined'];
+	
+	const bomdata = [];
+	
+	Object.entries(m_matStorage).forEach(([key,value])=>{
+		const bpcd = bomprocessdata.find(i => i.rowKey === Number(key));
+		console.log('bpcd'+JSON.stringify(bpcd));
+		
+		value.forEach(i => {
+			bomdata.push({
+				BOM_CD: i.BOM_CD,
+				BOM_AM: Number(i.BOM_AM),
+				PRODUCT_CD: bpcd ? bpcd.BOMPROCESS_CD : null,
+				BOMPRODUCT_CD: pdcd
+			})
+		});
+	});
+	
+	console.log('bomdata'+JSON.stringify(bomdata));
+	
+	try{
+		document.getElementById('loadingSpinner').style.display = 'flex';
+		
+		const response = await fetch(`/insertbom`,{
+			method:"POST",
+			headers:{
+				"Content-Type":"application/json",
+				[csrfHeader]: csrfToken,
+			},
+			body:JSON.stringify({bom: bomdata, bompro: bomprocessdata})
+		});
+		const data = await response.json();
+		
+		document.getElementById('loadingSpinner').style.display = 'none';
+		
+		console.log('등록했다!'+data);
+		if(data === 0){
+			fetchBOM();
+			regimodal.hide();
+			swal.fire({
+				title:"BOM 등록에 성공했습니다.",
+				icon:"success"
+			})
+			return;
+		}else{
+			swal.fire({
+				title:"BOM 등록에 실패했습니다.",
+				text:"관리자에게 연락주세요.",
+				icon:"error"
+			})
+		}
+	}catch(error){
+		document.getElementById('loadingSpinner').style.display = 'none';
+		console.log('BOM 등록에 실패했습니다.'+error);
+		swal.fire({
+			title:"BOM 등록에 실패했습니다.",
+			text:"관리자에게 연락주세요.",
+			icon:"error"
+		})
+	}
+	
+// 	const flatStorage = Object.keys(m_matStorage).map(i => m_matStorage[i]).flat();
+// 	console.log('확인'+JSON.stringify(flatStorage));
+// 	const values = flatStorage.map(i => ({
+// 		BOM_CD: i.BOM_CD,
+// 		BOM_AM: i.BOM_AM}));
+}
+
+pdcinput.addEventListener('click',clickppd);
+pdninput.addEventListener('click',clickppd);
+btnmregi.addEventListener('click',clickbtnmregi);
+m_btnaddpc.addEventListener('click',clickmbtnaddpc);
+m_btndelpc.addEventListener('click',clickmbtndelpc);
+am_btnadd.addEventListener('click',clickambtnadd);
+m_btnaddbom.addEventListener('click',clickmbtnaddmat);
+m_btndelbom.addEventListener('click',clickmbtndelbom);
+
+mgrid.on('click',function(e){
+	console.log('행선택했다.');
+	console.log('행값'+ e.rowKey);
+	console.log('행값'+ mgrid.getRow(e.rowKey));
+	currentClickRowkey = e.rowKey; 
+	handlemgridRowClick(currentClickRowkey);
+});
+
+m_bomgrid.on('editingFinish', function (e) {
+	console.log('소요량 입력');
+	console.log('소요량 입력' + e.rowKey);
+	console.log('소요량 입력' + JSON.stringify(m_bomgrid.getRow(e.rowKey)));
+	const editdata = m_bomgrid.getData();
+	m_matStorage[currentClickRowkey] = editdata;
+});
+
+pdgrid.on('click', async function(e) {
+	console.log('행키'+e.rowKey);
+	currentClickRowkey = e.rowKey;
+	const pdgridata = pdgrid.getRow(currentClickRowkey);
+	console.log('pddata'+JSON.stringify(pdgridata));
+	
+	const bpap = pdgridata.BOMPROCESS_AP;
+	const pdcd = pdgridata.PRODUCT_CD;
+	const bpcd = pdgridata.BOMPROCESS_CD;
+	const bppc = pdgridata.PROCESS_CD;
+	
+	try {
+		const response = await fetch(`/selectpcbom?bpap=${bpap}&pdcd=${pdcd}&bpcd=${bpcd}&bppc=${bppc}`,{
+			method:"GET",
+			headers:{
+				"Content-Type":"application/json",
+			},
+		});
+		const data = await response.json();
+		console.log('조회했다!'+JSON.stringify(data));
+		
+		let pcdata = data.pcgrid;
+		let bomdata = data.bomgrid;
+		
+		pcgrid.resetData(pcdata);
+		bomgrid.resetData(bomdata);
+		
+	}catch(error){
+		console.log('BOM 데이터 로드에 실패했습니다.'+error)
+		swal.fire({
+			title:"BOM데이터로드에 실패했습니다.",
+			text:"관리자에게 문의해주세요.",
+			icon:"error"
+		})
+	}
+})
+
+</script>

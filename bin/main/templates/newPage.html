@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+
+<body>
+	<main id="main" class="main">
+		<div class="card">
+			<div class="card" id="div_card" style="min-height: 400px;">
+				<div class="card-body">
+					<div class="card-title"> TITLE</div>
+
+				</div>
+			</div>
+		</div>
+
+	</main>
+</body>
+<script type="text/javascript">
+	setElementHeight('#div_card', -105);
+
+	$(window).resize(function () {
+		setElementHeight('#div_card', -105);
+		setElementHeight('#div_calendar', -320);
+		if (grid != null) {
+			setGridHeight(grid, -430);
+		}
+	});
+</script>
+
+</html>

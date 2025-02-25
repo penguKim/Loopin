@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.itwillbs.c4d2412t3p1.mapper.PRMapper">
+
+	<select id="selectpr" resultType="map">
+		SELECT 
+			   pr.pr_gm,
+			   pr.pr_wm, 
+			   Pd.prdetail_rs, 
+			   pr.pr_id
+		FROM PR pr
+		JOIN PRDETAIL pd ON pr.pr_id = Pd.pr_id
+		WHERE Pd.employee_cd = #{employee_cd}
+		ORDER BY pr.pr_gm desc
+	</select>
+
+	<select id="checkprmodal" resultType="map">
+		SELECT 
+			Pd.prdetail_rs, 
+			Pd.prdetail_ta, 
+			Pd.prdetail_bs, 
+			Pd.prdetail_mt, 
+			Pd.prdetail_ot, 
+			Pd.prdetail_na, 
+			Pd.prdetail_wa, 
+			Pd.prdetail_ha, 
+			Pd.prdetail_rl,
+			Pd.prdetail_bn, 
+			Pd.prdetail_td, 
+			Pd.prdetail_gm, 
+			Pd.prdetail_gy, 
+			Pd.prdetail_gg , 
+			Pd.prdetail_lg
+		FROM PRDETAIL pd
+		WHERE pd.pr_id = #{pr_id} AND pd.employee_cd = #{employee_cd}
+	</select>
+
+	<select id="selectpradmin" resultType="map">
+		SELECT 
+			pr.pr_id, 
+			pr.pr_gm,
+			pr.pr_wm, 
+			pr.pr_td, 
+			pr.pr_ta
+		FROM PR pr
+		ORDER BY pr.pr_gm desc
+	</select>
+
+	<select id="selectpradminfirstmodal" resultType="map">
+		SELECT
+			Pd.employee_cd, 
+			Pd.employee_nm, 
+			Pd.prdetail_bs, 
+			Pd.prdetail_ta,
+			Pd.prdetail_td, 
+			Pd.prdetail_rs, 
+			Pd.prdetail_id,
+			Pd.pr_id
+		FROM PRDETAIL pd
+		WHERE Pd.pr_id = #{pr_id}
+	</select>
+
+	<select id="selectpradminfirstmodal2" resultType="map">
+		SELECT 
+			pd.employee_nm,
+			pd.prdetail_rs, 
+			pd.prdetail_ta, 
+			pd.prdetail_bs, 
+			pd.prdetail_mt, 
+			pd.prdetail_ot, 
+			pd.prdetail_na,
+			pd.prdetail_wa, 
+			pd.prdetail_ha, 
+			pd.prdetail_rl,
+			pd.prdetail_bn, 
+			pd.prdetail_td, 
+			pd.prdetail_gm, 
+			pd.prdetail_gy, 
+			pd.prdetail_gg , 
+			pd.prdetail_lg, 
+			pd.employee_cd
+		FROM PRDETAIL pd
+		WHERE pd.prdetail_id = #{prdetail_id}
+	</select>
+	
+    <select id="select_empworklastmth" resultType="map">
+        <![CDATA[
+	        SELECT DISTINCT
+	        	ep.EMPLOYEE_CD,
+	        	ep.EMPLOYEE_NM, 
+	        	ep.EMPLOYEE_BS as BS
+	        FROM EMPLOYEE ep
+	        JOIN COMMUTE cm ON ep.EMPLOYEE_CD = cm.EMPLOYEE_CD
+	        WHERE(
+			        ep.EMPLOYEE_US = 1 AND 
+			        ep.EMPLOYEE_RD IS NULL AND
+			        TO_DATE(cm.COMMUTE_WD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+			    )
+			    OR 
+			    (
+			        ep.EMPLOYEE_US = 0 AND
+			        TO_DATE(ep.EMPLOYEE_RD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1)) AND
+			        TO_DATE(cm.COMMUTE_WD, 'YYYY-MM-DD') BETWEEN 
+			            TO_DATE(TO_CHAR(ADD_MONTHS(SYSDATE, -1), 'YYYY-MM') || '-01', 'YYYY-MM-DD') 
+			            AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+			    )
+			ORDER BY ep.EMPLOYEE_NM
+        ]]>
+    </select>
+
+	<select id="isCal" resultType="String">
+		SELECT pr_wm
+		FROM PR
+		WHERE pr_wm = #{premth}
+	</select>
+	
+	<select id="select_spes" resultType="map">
+		SELECT pd.* 
+		FROM PRDETAIL pd 
+		JOIN PR pr ON pd.pr_id = pr.pr_id 
+		WHERE pr.pr_wm LIKE #{premth}
+		ORDER BY pd.EMPLOYEE_NM
+	</select>
+	
+	<select id="select_wokringtimeformth" parameterType="map" resultType="map">
+	    SELECT 
+	        cm.employee_cd,
+	        ep.employee_nm,
+	        TO_CHAR(MIN(TO_DATE(cm.commute_wd, 'YYYY-MM-DD')), 'YYYY-MM') AS pr_wm, 
+	        SUM(NVL(cm.commute_ig, 0)) AS workingtime,
+	        SUM(NVL(cm.commute_eg, 0)) AS overworkingtime, 
+	        SUM(NVL(cm.commute_yg, 0)) AS nightworkingtime, 
+	        SUM(NVL(cm.commute_jg, 0)) AS weekendworkingtime, 
+	        SUM(NVL(cm.commute_hg, 0)) AS holydayworkingtime
+	    FROM COMMUTE cm
+	    JOIN EMPLOYEE ep ON cm.employee_cd = ep.employee_cd
+	    WHERE TO_DATE(cm.commute_wd, 'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE, -1), 'MM')
+	                                              AND LAST_DAY(ADD_MONTHS(SYSDATE, -1))
+	      AND cm.EMPLOYEE_CD IN 
+	      <foreach item="employee_cd" collection="employee_cdList" open="(" separator="," close=")">
+	          #{employee_cd}
+	      </foreach>
+	    GROUP BY cm.EMPLOYEE_CD, ep.employee_nm
+	</select>
+
+	<select id="select_remainleave" parameterType="map" resultType="map">
+        SELECT 
+            employee_cd, 
+            annual_ra
+        FROM ANNUAL
+        WHERE annual_yr = #{year}
+          AND EMPLOYEE_CD IN 
+          <foreach item="employee_cd" collection="employee_cdList" open="(" separator="," close=")">
+              #{employee_cd}
+          </foreach>
+	</select>
+	
+	<update id="update_commutepr">
+		UPDATE COMMUTE cm
+		SET cm.COMMUTE_PR = 1
+		WHERE TO_DATE(cm.COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
+							AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
+	</update>
+	
+	<select id="getwt" parameterType="map" resultType="map">
+	    SELECT 
+	        cm.employee_cd,
+	        ep.employee_nm,
+	        TO_CHAR(MIN(TO_DATE(cm.commute_wd, 'YYYY-MM-DD')),'YYYY-MM') AS pr_wm, 
+	        SUM(NVL(cm.commute_ig,0)) AS workingtime, 
+	        SUM(NVL(cm.commute_eg,0)) AS overworkingtime, 
+	        SUM(NVL(cm.commute_yg,0)) AS nightworkingtime, 
+	        SUM(NVL(cm.commute_jg,0)) AS weekendworkingtime, 
+	        SUM(NVL(cm.commute_hg,0)) AS holydayworkingtime,
+	        <choose>
+	            <!-- prwm이 12일 경우에만 연차 정보를 가져옴 -->
+	            <when test="prwm != '12'">
+	                NULL AS ANNUAL_RA
+	            </when>
+	            <otherwise>
+	                an.ANNUAL_RA
+	            </otherwise>
+	        </choose>
+	    FROM COMMUTE cm
+	    JOIN EMPLOYEE ep ON cm.EMPLOYEE_CD = ep.EMPLOYEE_CD 
+	    <choose>
+	        <!-- prwm이 12일 경우에만 ANNUAL 테이블과 조인 -->
+	        <when test="prwm == '12'">
+	            LEFT JOIN ANNUAL an ON cm.EMPLOYEE_CD = an.EMPLOYEE_CD 
+	            AND an.ANNUAL_YR = #{prwmyear}
+	        </when>
+	    </choose>
+	    WHERE TO_DATE(cm.COMMUTE_WD,'YYYY-MM-DD') BETWEEN TRUNC(ADD_MONTHS(SYSDATE,-1),'MM')
+	                        AND LAST_DAY(ADD_MONTHS(SYSDATE,-1))
+	                        AND cm.EMPLOYEE_CD IN
+	                        <foreach item="employee_cd" collection="employee_cdList" open="(" separator="," close=")">
+	                            #{employee_cd}
+	                        </foreach>
+	    GROUP BY cm.EMPLOYEE_CD, ep.EMPLOYEE_NM
+	</select>
+
+	<select id="select_prmodaldata" resultType="map">
+		SELECT 
+			ep.EMPLOYEE_DT,
+			ep.EMPLOYEE_BK,
+			ep.EMPLOYEE_AN,
+			pd.*
+		FROM EMPLOYEE ep
+		JOIN PRDETAIL pd ON ep.EMPLOYEE_CD = pd.EMPLOYEE_CD 
+		WHERE pd.PR_ID = #{prid}
+			AND ep.EMPLOYEE_CD = #{empcd}
+	</select>	
+	
+	<update id="update_prch">
+		UPDATE PRDETAIL pd
+		SET pd.prdetail_ch = 1
+		WHERE pd.pr_id = #{prid}
+	</update>
+	
+</mapper>
+    
