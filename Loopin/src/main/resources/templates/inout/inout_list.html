@@ -30,8 +30,6 @@
 							<div id="filterModule" class="mb-3"></div>
 							<div id="grid"></div>
 							<div id="btn_area" class="mt-2">
-								<button type="button" class="btn btn-primary" id="btn_order_insert">발주입고건 등록</button>
-								<button type="button" class="btn btn-primary" id="btn_contract_insert">수주건 등록</button>
 								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
 								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
 							</div>
@@ -39,46 +37,6 @@
 					</div>
 				</div>
 			</div>
-<!-- 			<div class="row">
-				<div class="col-lg-12">
-					<div class="card">
-						<div class="card-body">
-							<h1 class="card-title">재고관리</h1>
-							탭 헤드
-							<div class="d-flex justify-content-between">
-								<div class="">
-									<ul class="nav nav-pills mb-3" id="commute-tab" role="tablist">
-										<li class="nav-item" role="presentation">
-											<button class="nav-link active" id="btn_grid_tab" data-bs-toggle="pill" data-bs-target="#tab_grid" 
-											type="button" role="tab" aria-controls="tab_grid" aria-selected="false">그리드</button>
-										</li>
-										<li class="nav-item" role="presentation">
-											<button class="nav-link" id="btn_tree_tab" data-bs-toggle="pill" data-bs-target="#tab_tree" 
-											type="button" role="tab" aria-controls="tab_tree" aria-selected="true">트리</button>
-										</li>
-									</ul>
-								</div>
-							</div>
-							<div id="filterModule" class="mb-3"></div>
-							탭 바디
-							<div class="tab-content pt-2" id="myTabContent">
-								그리드 탭
-								<div class="tab-pane fade show active" id="tab_grid" role="tabpanel" aria-labelledby="grid-tab">
-									<div id="grid"></div>
-									<div id="btn_area" class="mt-2">
-										<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
-										<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
-									</div>
-								</div>
-								트리 탭
-								<div class="tab-pane fade d-flex justify-content-center" id="tab_tree" role="tabpanel" aria-labelledby="tree-tab">
-								 	<div id="orgChart"></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div> -->
 		</section>
 	</main>
 </body>
@@ -217,6 +175,12 @@
 		});
 
 		// 수발주구분 선택
+		$(document).on('click', '#modal_inout_tp', function() {
+			if(!$('#modal_inout_io').val()) {
+				showAlert($('#modal_inout_io'), 'warning', '입출고구분 선택', '입출고구분을 선택해주세요.');
+				return;
+			}
+		});
 		$(document).on('change', '#modal_inout_tp', function() {
 			$('#modal_inout_co').val(''); // 수발주코드
 			$('#modal_inout_ec').val(''); // 담당자코드
@@ -418,12 +382,38 @@
 	//  함수 --------------------------------
 	
 	// 검색 인풋 초기화
-	function resetSearchInput(filter){
-		$('#warehouse_cd').val('');
-		$('#warearea_cd').val('');
-		$('#item_gc').val('');
-		$('#item_cc').val('');
-		$('#item_nm').val('');
+	function inoutClear(gubun){
+		$('#modal_inout_io').val(''); // 입출고구분
+		$('#modal_inout_dt').val(''); // 입출고일자
+		
+		$('#modal_inout_ln').val(''); // 로트번호
+		$('#modal_inout_pc').val(''); // 공정명			
+		$('#modal_process_cd').val(''); // 공정코드		
+		
+		$('#modal_inout_ec').val(''); // 담당자코드
+		$('#modal_inout_en').val(''); // 담당자명
+		
+		$('#modal_inout_tp').val(''); // 수발주구분
+		$('#modal_inout_co').val(''); // 수발주코드
+		
+		$('#modal_inout_ic').val(''); // 품목코드
+		$('#modal_inout_in').val(''); // 품목명
+		$('#modal_product_gc').val(''); // 품목대분류
+		$('#modal_product_cd').val(''); // 품목코드
+		$('#modal_item_cd').val(''); // 완제품코드
+		$('#modal_item_sz').val(''); // 사이즈
+		$('#modal_item_cr').val(''); // 색상
+		$('#modal_inout_nn').val(''); // 지시수량
+		$('#modal_inout_un').val(''); // 기준단위
+		
+		iw_grid.resetData([]); // 창고그리드
+		
+	}
+	
+	function resetSearchInput(gubun){
+
+		// 검색인풋 초기화하기
+		
 		if(!$('#additionalFilters').hasClass('d-none')) {
 			$('#toggleFilters').click();
 		}
@@ -436,40 +426,6 @@
 	    return flag ? 'contract' : 'order';
 	}
 	
-	// 숫자 콤마 함수
-	function commaFormatter(value) {
-		  if (value != null && !isNaN(value)) {
-		    return value.toLocaleString();
-		  }
-		  return value;
-		}
-	
-	// 인풋 입력
-	function setModalValues(data, prefix) {
-		console.log('입력할 데이터',data);
-		createSelectBox($('#modal_product_cc'), data['ccList'], '선택하세요.');
-		modal_product_cd.val(data[`${prefix}_cd`]);
-		modal_product_nm.val(data[`${prefix}_nm`]);
-		modal_product_gc.val(data[`${prefix}_gc`]);
-		$('.div_select')[['HALFPRO', 'PRODUCT'].includes(data[`${prefix}_gc`]) ? 'show' : 'hide']();
-		modal_product_cc.val(data[`${prefix}_cc`]);
-		modal_product_gd.val(data[`${prefix}_gd`]);
-		modal_product_un.val(data[`${prefix}_un`]);
-		modal_product_pr.val(data[`${prefix}_pr`]);
-		modal_product_wh.val(data[`${prefix}_wh`]);
-		modal_product_us.val(data[`${prefix}_us`]);
-		modal_product_rm.val(data[`${prefix}_rm`]);
-	    if ($('.div_select').is(':visible')) {
-	        $('#modal_product_sz').val(data['product_sz'].split(', ')).trigger('change');
-	        $('#modal_product_cr').val(data['product_cr'].split(', ')).trigger('change');
-	    }
-	    if(data[`${prefix}_pc`]) {
-			const imagePath = `/upload/${data[`${prefix}_pc`]}`;
-	        $('.uploadText').hide();
-	        $('.photoPreview').attr('src', imagePath).show();
-	        $('#btn_image_remove').removeClass('d-none');
-	    }
-	}
 	
 	// 그리드, 모달 -----------------------
 	
@@ -490,17 +446,24 @@
 				{header: '입출고구분', name: 'inout_ionm', sortable: true, filter: 'select'},
 				{header: '수발주구분', name: 'inout_tpnm', sortable: true, filter: 'select'},
 				{header: '수발주코드', name: 'inout_co', sortable: true, filter: 'text'},
-				{header: '출발창고', name: 'inout_iwnm', sortable: true, filter: 'select'},
-				{header: '출발구역', name: 'inout_ianm', sortable: true, filter: 'select'},
-				{header: '도착창고', name: 'inout_ownm', sortable: true, filter: 'select'},
-				{header: '도착구역', name: 'inout_oanm', sortable: true, filter: 'select'},
+				{header: '창고명', name: 'inout_whnm', sortable: true, filter: 'select'},
+				{header: '구역명', name: 'inout_wanm', sortable: true, filter: 'select'},
 			    {header: '품목대분류', name: 'item_gn', sortable: true, filter: 'select'},
 			    {header: '품목소분류', name: 'item_cn', sortable: true, filter: 'select'},
 			    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
 			    // {header: '품목분류코드', name: 'stock_cd', hidden: true},
 	   		    // {header: '품목코드', name: 'item_cd', sortable: true, filter: 'text'},
 			    {header: '품목명', name: 'item_nm', sortable: true, filter: 'text'},
-			    {header: '수량', name: 'inout_nn', align: 'right', sortable: true, formatter: (cell) => commaFormatter(cell.value)},
+			    {header: '입출고수량', name: 'inout_nn', align: 'right', sortable: true, 
+					formatter: ({value}) => {
+						return `${Number(value)?.toLocaleString()}`	
+					},
+		    	},
+			    {header: '불량수량', name: 'inout_fn', align: 'right', sortable: true, 
+					formatter: ({value}) => {
+						return `${Number(value)?.toLocaleString()}`	
+					},
+		    	},
 			    {header: '단위', name: 'item_un', align: 'center'},
 			    {header: '담당자코드', name: 'employee_cd', sortable: true, filter: 'text'},
 			    {header: '담당자명', name: 'employee_nm', sortable: true, filter: 'text'},
@@ -543,66 +506,71 @@
 						</div>
 						<div class="modal-body">
 							<div class="row mb-3">
-								<div class="col-3">
-									<label for="modal_inout_io" class="form-label">입출고구분<span class="text-danger">*</span></label>
-									<select class="form-select" id="modal_inout_io"></select>
+								<!-- 좌측 -->
+								<div class="col-6">
+									<div class="row">
+										<div class="col-6 mb-3">
+											<label for="modal_inout_io" class="form-label">입출고구분<span class="text-danger">*</span></label>
+											<select class="form-select" id="modal_inout_io"></select>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_dt" class="form-label">입출고일자<span class="text-danger">*</span></label>
+											<input type="text" class="form-control" id="modal_inout_dt" readonly>
+											<div id="wrapper" style="margin-left: -1px;"></div>
+										</div>
+										<div class="col-6 mb-3 div_contract" style="display: none;">
+											<label for="modal_inout_ln" class="form-label ">로트번호<span class="text-danger">*</span></label>
+											<input type="text" id="modal_inout_ln" class="form-control " readonly>
+										</div>
+										<div class="col-6 mb-3 div_contract" style="display: none;">
+											<label for="modal_inout_pc" class="form-label">공정명<span class="text-danger">*</span></label>
+											<input type="text" id="modal_inout_pc" class="form-control" readonly>
+											<input type="hidden" id="modal_process_cd">
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_ec" class="form-label">담당자코드<span class="text-danger">*</span></label>
+											<input type="text" id="modal_inout_ec" class="form-control" disabled>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_en" class="form-label">담당자명<span class="text-danger">*</span></label>
+											<input type="text" id="modal_inout_en" class="form-control" disabled>
+										</div>
+									</div>
 								</div>
-								<div class="col-3">
-									<label for="modal_inout_dt" class="form-label">입출고일자<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_dt" readonly>
-									<div id="wrapper" style="margin-left: -1px;"></div>
+								<!-- 우측 -->
+								<div class="col-6">
+									<div class="row">
+										<div class="col-6 mb-3">
+											<label for="modal_inout_tp" class="form-label">수발주구분<span class="text-danger">*</span></label>
+											<select id="modal_inout_tp" class="form-select"></select>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_co" class="form-label">수발주코드<span class="text-danger">*</span></label>
+											<input type="text" id="modal_inout_co" class="form-control" readonly>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_ic" class="form-label">품목코드<span class="text-danger">*</span></label>
+											<input type="text" class="form-control" id="modal_inout_ic" readonly>
+											<input type="hidden" id="modal_product_gc">
+											<input type="hidden" id="modal_product_cd">
+											<input type="hidden" id="modal_item_cd">
+											<input type="hidden" id="modal_item_sz">
+											<input type="hidden" id="modal_item_cr">
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_in" class="form-label">품목명<span class="text-danger">*</span></label>
+											<input type="text" class="form-control" id="modal_inout_in" readonly>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_nn" class="form-label">지시수량<span class="text-danger">*</span></label>
+											<input type="text" class="form-control" id="modal_inout_nn" disabled>
+										</div>
+										<div class="col-6 mb-3">
+											<label for="modal_inout_un" class="form-label">기준단위<span class="text-danger">*</span></label>
+											<input type="text" class="form-control" id="modal_inout_un" disabled>
+										</div>
+									</div>
 								</div>
-								<div class="col-3">
-									<label for="modal_inout_tp" class="form-label">수발주구분<span class="text-danger">*</span></label>
-									<select id="modal_inout_tp" class="form-select"></select>
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_co" class="form-label">수발주코드<span class="text-danger">*</span></label>
-									<input type="text" id="modal_inout_co" class="form-control" readonly>
-								</div>
-							</div>
-							<div class="row mb-3">
-								<div class="col-3">
-									<label for="modal_inout_ln" class="form-label div_contract" style="display: none;">로트번호<span class="text-danger">*</span></label>
-									<input type="text" id="modal_inout_ln" class="form-control div_contract" style="display: none;" readonly>
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_pc" class="form-label div_contract" style="display: none;">공정명<span class="text-danger">*</span></label>
-									<input type="text" id="modal_inout_pc" class="form-control div_contract" style="display: none;" readonly>
-									<input type="hidden" id="modal_process_cd">
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_ec" class="form-label">담당자코드<span class="text-danger">*</span></label>
-									<input type="text" id="modal_inout_ec" class="form-control" disabled>
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_en" class="form-label">담당자명<span class="text-danger">*</span></label>
-									<input type="text" id="modal_inout_en" class="form-control" disabled>
-								</div>
-							</div>
-							<div class="row mb-3">
-								<div class="col-3">
-									<label for="modal_inout_ic" class="form-label">품목코드<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_ic" readonly>
-									<input type="hidden" id="modal_product_gc">
-									<input type="hidden" id="modal_product_cd">
-									<input type="hidden" id="modal_item_cd">
-									<input type="hidden" id="modal_item_sz">
-									<input type="hidden" id="modal_item_cr">
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_in" class="form-label">품목명<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_in" readonly>
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_nn" class="form-label">지시수량<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_nn" disabled>
-								</div>
-								<div class="col-3">
-									<label for="modal_inout_un" class="form-label">기준단위<span class="text-danger">*</span></label>
-									<input type="text" class="form-control" id="modal_inout_un" disabled>
-								</div>
-
 							</div>
 							<div class="row mb-3">
 								<div class="col-12 d-flex justify-content-between">
@@ -802,127 +770,6 @@
 			}
 		});
 	}
-	/*
-	function make_iw_grid() {
-		iw_grid = new tui.Grid({
-			el : document.getElementById('iw_grid'),
-			data: [],
-			scrollX : false,
-			scrollY : true,
-			rowHeaders : [
-				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
-			],
-			bodyHeight : 100,
-			columns : [
-			    {header: '출발창고코드', name: 'iw_warehouse_cd', hidden: true},
-			    {header: '출발구역코드', name: 'iw_warearea_cd', hidden: true},
-			    {header: '출발창고명', name: 'iw_warehouse_nm', width: '120', sortable: true, validation: {required: true,},},				
-			    {header: '출발구역명', name: 'iw_warearea_nm', sortable: true,},
-			    {header: '최대적재량', name: 'iw_warearea_cp', align: 'right', 
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-			    {header: '품목적재량', name: 'iw_stock_aq', align: 'right', sortable: true, 
-					formatter: ({value}) => {
-						if (value == null || value == 0 || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-			    {header: '출고수량', name: 'iw_inout_nn', align: 'right', editor: 'text', validation: {required: true,}, 
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-			    {header: '출고불량수', name: 'iw_inout_fn', align: 'right', editor: 'text',
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '0';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-				{header: '도착창고코드', name: 'ow_warehouse_cd', hidden: true},
-				{header: '도착구역코드', name: 'ow_warearea_cd', hidden: true},
-				{header: '도착창고명', name: 'ow_warehouse_nm', width: '120', sortable: true, validation: {required: true,},},
-				{header: '도착구역명', name: 'ow_warearea_nm', sortable: true,},
-				{header: '최대적재량', name: 'ow_warearea_cp', align: 'right', 
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-				{header: '창고여유량', name: 'ow_warearea_lp', align: 'right', sortable: true,
-					formatter: ({value}) => {
-						if (value == null || value == 0 || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-			 	},
-				{header: '입고수량', name: 'ow_inout_nn', align: 'right', editor: 'text', validation: {required: true,},
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-				{header: '입고불량수', name: 'ow_inout_fn', align: 'right', editor: 'text',
-					formatter: ({value}) => {
-						if (value == null || isNaN(value)) return '0';
-						return `${Number(value)?.toLocaleString()}`	
-					},
-				},
-			],
-			summary: {
-			    height: 40,
-			    position: 'bottom', // or 'top'
-			    columnContent: {
-			    	iw_inout_nn: {
-			            template: (valueMap) => {
-			                return `<div style="text-align: right;">${valueMap.sum.toLocaleString()}</div>`
-			            }
-			        },
-			    	ow_inout_nn: {
-			            template: (valueMap) => {
-			                return `<div style="text-align: right;">${valueMap.sum.toLocaleString()}</div>`
-			            }
-			        },
-			    	iw_inout_fn: {
-			            template: (valueMap) => {
-			                return `<div style="text-align: right;">${valueMap.sum.toLocaleString()}</div>`
-			            }
-			        },
-			    	ow_inout_fn: {
-			            template: (valueMap) => {
-			                return `<div style="text-align: right;">${valueMap.sum.toLocaleString()}</div>`
-			            }
-			        }
-				},
-			},
-		});
-		
-		
-		iw_grid.on('dblclick', function(ev) {
-			clickRow = ev.rowKey;
-			if (ev.columnName == 'iw_warehouse_nm' || ev.columnName == 'iw_warearea_nm') {
-				// 출발 창고
-				let itemVal = $('#modal_inout_ic').val();
-				if (!itemVal) {
-					showAlert($('#modal_inout_ic'), 'warning', '품목 선택', '품목을 선택해주세요.');
-					return;
-				}
-				add_iwow_list(itemVal, 'iw');
-			} else if(ev.columnName == 'ow_warehouse_nm' || ev.columnName == 'ow_warearea_nm') {
-				// 출발 창고
-				let itemVal = $('#modal_inout_ic').val();
-				if (!itemVal) {
-					showAlert($('#modal_inout_ic'), 'warning', '품목 선택', '품목을 선택해주세요.');
-					return;
-				}
-				add_iwow_list(itemVal, 'ow');
-			}
-		});
-	}
-	*/
 	
 	// 수발주 리스트 모달
 	function make_order_modal(flag) {
@@ -1289,9 +1136,6 @@
 	
 	
 	
-	
-	
-	
 
 	// ajax 함수 --------------------
 	// 공통코드 조회
@@ -1333,16 +1177,9 @@
 	
 	// 출발창고 조회
 	async function add_iwow_list(item, prefix) {
-		/*
-		const list = ioGridList[prefix].getData().map(row => ({
-		  warehouse_cd: row.warehouse_cd,
-		  warearea_cd: row.warearea_cd
-		}));
-		*/
 		try {
 			let data = {
 				item_cd: item,
-				// wareareaList: list,
 			}
 			
 		    let ajaxData = await callAjaxPost(`select_INOUT_${prefix.toUpperCase()}`, JSON.stringify(data));
@@ -1589,8 +1426,7 @@
 		try {
 		    let ajaxData = await callAjaxPost('/insert_INOUT', JSON.stringify(data));
 		    
-			// grid.resetData(ajaxData['list']);
-			//setGridClass();
+			grid.resetData(ajaxData['list']);
 			// resetSearchInput();
 			modal.hide();
 			showAlert('', 'success', `등록 성공`, `등록에 성공하였습니다.`);

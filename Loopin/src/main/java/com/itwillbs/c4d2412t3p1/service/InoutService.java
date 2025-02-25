@@ -213,6 +213,7 @@ public class InoutService {
                 newStock.setWarearea_cd(warehouse.getIw_warearea_cd());
                 newStock.setStock_aq(0);
                 String itemGc = inoutDTO.getItem_gc();
+                System.out.println("item_gc");
                 String stockTp = ("PRODUCT".equals(itemGc) || "HALFPRO".equals(itemGc)) ? "Y" : "N";
                 newStock.setStock_tp(stockTp);
                 newStock.setStock_ru(regUser);

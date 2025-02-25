@@ -30,8 +30,8 @@ public class InoutDTO {
 	private Timestamp inout_ud;	
 	
 	
-	private String inout_whnm; // 출발창고명
-	private String inout_wanm; // 출발구역명
+	private String inout_whnm; // 창고명
+	private String inout_wanm; // 구역명
 	private String inout_tpnm; // 수발주구분명
 	private String inout_ionm; // 출입고구분명
 	private String item_un; // 기준단위

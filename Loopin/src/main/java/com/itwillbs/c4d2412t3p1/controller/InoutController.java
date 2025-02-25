@@ -162,7 +162,7 @@ public class InoutController {
 	
 	
 	// 입출고 등록
-	// @LogActivity(value = "등록", action = "입출고등록")
+	@LogActivity(value = "등록", action = "입출고등록")
 	@ResponseBody
 	@PostMapping("/insert_INOUT")
 	public ResponseEntity<Map<String, Object>> insert_INOUT(@RequestBody InoutRequestDTO inoutRequest) {
@@ -179,8 +179,8 @@ public class InoutController {
 	    		inoutService.insert_INOUT_CONTRACT4(inout, iwList);
 	    	}
 	    	
-	    	// List<InoutDTO> list = inoutService.select_INOUT_list();
-	    	// response.put("list", list);
+	    	List<InoutDTO> list = inoutService.select_INOUT_list();
+	    	response.put("list", list);
 	    	
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
