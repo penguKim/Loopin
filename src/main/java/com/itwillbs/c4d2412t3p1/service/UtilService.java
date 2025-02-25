@@ -26,10 +26,11 @@ import com.itwillbs.c4d2412t3p1.util.ExcelDownloader;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.java.Log;
+import lombok.extern.log4j.Log4j2;
 
 @RequiredArgsConstructor
 @Service
-@Log
+@Log4j2
 public class UtilService {
 	
     @Value("${file.upload-dir}")
@@ -79,6 +80,9 @@ public class UtilService {
             if (!Files.exists(uploadPath.getParent())) {
                 Files.createDirectories(uploadPath.getParent());
             }
+            log.info(">>>>>>>> 파일 경로 : " + Files.exists(uploadPath.getParent()));
+            
+            
             
             Files.copy(file.getInputStream(), uploadPath, StandardCopyOption.REPLACE_EXISTING);
             setter.accept(Paths.get(tableName, dateDir, uniqueFileName).toString().replace(File.separator, "/"));
