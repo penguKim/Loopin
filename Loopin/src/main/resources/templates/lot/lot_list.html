@@ -215,36 +215,47 @@
 	    });
 	}
 	
-	/**
-	 * @param {Array} data - DB에서 가져온 배열 (각 요소는 { PATH, PRODUCT_CD, WORKORDER_ST, ... } 형태)
-	 */
+	function mergeProcess(oldProc, newProc) {
+	  // 우선순위: "진행중" > "완료" > "N/A"
+	  
+	  if (oldProc === "진행중") {
+	    // 이미 "진행중"이면 그대로
+	    return "진행중";
+	  }
+	  if (oldProc === "완료") {
+	    // 기존이 "완료"인데 새 값이 "진행중"이면 "진행중"으로
+	    if (newProc === "진행중") return "진행중";
+	    // 새 값이 "완료" or "N/A"면 그대로 "완료"
+	    return "완료";
+	  }
+	  // oldProc === "N/A"인 경우
+	  // 새 값이 "진행중"이면 "진행중", "완료"면 "완료", "N/A"면 "N/A"
+	  return newProc;
+	}
 	function buildTree(data) {
 	    if (!Array.isArray(data)) {
-	        console.error("buildTree 오류: data가 배열이 아님", data);
+	        console.error("buildTree 오류: 데이터가 배열이 아님", data);
 	        return;
 	    }
 
-	    // 1) root 노드의 process 결정
-	    //    - 만약 하나라도 WORKORDER_ST === '진행중'이 있으면 root.process = '대기'
-	    //    - 전부 '완료'이면 root.process = '완료'
+	    // 1) 루트 노드 process 결정
 	    let allComplete = true;
 	    for (let row of data) {
-	        if (row.WORKORDER_ST === '진행중') {
+	        if (row.WORKORDER_ST === "진행중") {
 	            allComplete = false;
 	            break;
 	        }
 	    }
-	    const rootProcess = allComplete ? '완료' : '대기';
+	    const rootProcess = allComplete ? "완료" : "대기";
 
-	    // 2) root 노드 생성
+	    // 2) 루트 노드
 	    let root = {
-	        name: data[0].PRODUCT_CD, 
+	        name: data[0].PRODUCT_CD,
 	        title: "제품",
 	        process: rootProcess,
 	        children: []
 	    };
 
-	    // 3) nodeMap을 사용하여 부모-자식 관계 구성
 	    let nodeMap = {};
 	    nodeMap[root.name] = root;
 
@@ -253,41 +264,51 @@
 	        let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
 	        let currentName = pathArr[pathArr.length - 1];
 
-	        // isRaw: BUBU로 시작하는지 체크할 수도 있고, DB 컬럼 IS_RAW 사용 가능
-	        let isRaw = (item.IS_RAW === 'Y'); 
-	        // 반제품 or 원자재 구분
+	        // 원자재 여부
+	        let isRaw = (item.IS_RAW === 'Y');
+	        // title 결정
 	        let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
-	        let nodeProcess = item.WORKORDER_ST || item.COMMON_NM || "N/A"; // process 값 결정
 
-	        // 현재 노드가 없으면 생성
+	        // process 우선 값
+	        let rowProc = item.WORKORDER_ST || item.COMMON_NM || "N/A";
+
+	        // 현재 노드 생성/병합
 	        if (!nodeMap[currentName]) {
 	            nodeMap[currentName] = {
 	                name: currentName,
 	                title: nodeTitle,
-	                process: item.WORKORDER_ST || item.COMMON_NM || "N/A",
+	                process: rowProc,
 	                children: []
 	            };
+	        } else {
+	            // 이미 존재하면 우선순위 병합
+	            nodeMap[currentName].process = mergeProcess(nodeMap[currentName].process, rowProc);
 	        }
 
-	        // 부모 노드가 없으면 생성
+	        // 부모 노드 생성/병합
 	        if (!nodeMap[parentName]) {
 	            nodeMap[parentName] = {
 	                name: parentName,
 	                title: "반제품",
-	                process: item.WORKORDER_ST || item.COMMON_NM || "N/A", // 디폴트
+	                process: rowProc, 
 	                children: []
 	            };
+	        } else {
+	            nodeMap[parentName].process = mergeProcess(nodeMap[parentName].process, rowProc);
 	        }
 
-	        // 부모에 현재 노드를 자식으로 연결
+	        // 부모에 현재 노드 연결
 	        if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
 	            nodeMap[parentName].children.push(nodeMap[currentName]);
 	        }
 	    });
 
-	    // 4) orgchart 렌더링 함수 호출
 	    make_chart(root);
 	}
+
+
+	
+	
 	
 	// 트리 생성 함수
 	function make_chart(data){
