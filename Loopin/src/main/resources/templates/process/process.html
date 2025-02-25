@@ -47,7 +47,7 @@
 	             <div class="modal-dialog modal-dialog-centered modal-lg">
 	               <div class="modal-content">
 	                 <div class="modal-header">
-	                   <h5 class="modal-title">공정 등록</h5>
+	                   <h5 class="modal-title" id="modaltitle"></h5>
 	                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 	                 </div>
 	                 <div class="modal-body">
@@ -133,10 +133,10 @@
     let selcc = null;
     let selpd = null;
     let seleq = null;
-    let selus = null;
+    let selus = 1;
     let pccd = null;
     let pcnm = null;
-    let pcbg = null;
+    let pcbg = "";
     let modaltype = 'create';
 	
 	/* FETCH */
@@ -253,7 +253,7 @@
 	
 	modal.addEventListener('hide.bs.modal',function(){
 		console.log('모달이닫힘')
-		
+		modaltype = null;
 		document.getElementById('PROCESS_CD').value = "";
 		document.getElementById('PROCESS_NM').value = "";
 		document.querySelector('#PROCESS_GC').selectedIndex = 0;
@@ -302,8 +302,8 @@
 	    selcc = null;
 	    selpd = null;
 	    seleq = null;
-	    selus = null;
-	    pcbg = null;
+	    selus = 1;
+	    pcbg = "";
 	    
 		console.log("닫아서 초기화완료");
 	})
@@ -557,6 +557,7 @@
 		console.log('pccd등록',pccd);
 		console.log('pcnm등록',pcnm);
 		console.log('pcbg등록',pcbg);
+
 		if(pccd === null){
 			swal.fire({
 				title:"공정코드를 입력해주세요.",
@@ -694,8 +695,8 @@
 	    selcc = null;
 	    selpd = null;
 	    seleq = null;
-	    selus = null;
-	    pcbg = null;
+	    selus = 1;
+	    pcbg = "";
 	    
 		console.log("초기화완료");
 	});
@@ -775,12 +776,10 @@
 		    });
 		    console.log(setdata);
 		    modaltype='edit';
-		    // 모달에 값 채우기
+		    
 	       if (setdata.length > 0) {
-		      const item = setdata[0]; // 첫 번째 데이터
+		      const item = setdata[0];
 		      regimodal.show();
-// 		      $('#PROCESS_PD').select2();
-// 		      $('#PROCESS_EQ').select2();
 		
 		      // 모달 값 채우기
 		      const processGcElem = document.getElementById('PROCESS_GC');
@@ -791,6 +790,8 @@
 		      const processCcValue = item.PROCESS_CC; 
 		      const processPdValue = item.PROCESS_PD ? item.PROCESS_PD.split(',') : []; 
 		      const processEqValue = item.PROCESS_EQ ? item.PROCESS_EQ.split(',') : [];
+		      
+		      console.log('>>>>>>>>>>>>> 이건 테스트야 '+ processPdValue)
 		      
 		      processGcElem.value = processGcValue;
 		      selgc = processGcValue;
