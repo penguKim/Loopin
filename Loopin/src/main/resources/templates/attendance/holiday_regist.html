@@ -84,9 +84,7 @@
 		
 	// 로딩 데이터
 	$(function() {
-		
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		$("#current_year").text(`${year}년 휴일 등록`);
 		
 		make_grid();

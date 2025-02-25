@@ -100,8 +100,7 @@
 	
 	// 로딩
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		make_grid();
 		getGridList();
 		setElementHeight('.card', -105);

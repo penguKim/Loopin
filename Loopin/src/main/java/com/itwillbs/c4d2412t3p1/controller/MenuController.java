@@ -89,21 +89,22 @@ public class MenuController {
         		sidebarMenu.add(Map.of("name", "급여이체", "link", "/prsend" ));
         		sidebarMenu.add(Map.of("name", "급여코드", "link", "/prcode" ));
         	}
-        }
-        if ("MES".equals(menuType)) {
-        	if(isSysAdmin) {
-        		sidebarMenu.add(Map.of("name", "기준정보", "link", "1"));
-        		sidebarMenu.add(Map.of("name", "품목관리", "link", "/product_list" ));
-        		sidebarMenu.add(Map.of("name", "창고관리", "link", "/warehouse_list" ));
-        		sidebarMenu.add(Map.of("name", "설비관리", "link", "/equipment_list" ));
-        		sidebarMenu.add(Map.of("name", "공정관리", "link", "/process" ));
-        	}
         	if(isBnAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "영업", "link", "1"));
         		sidebarMenu.add(Map.of("name", "수주관리", "link", "/contract_list" ));
         		sidebarMenu.add(Map.of("name", "발주관리", "link", "/order_list" ));
         		sidebarMenu.add(Map.of("name", "출하관리", "link", "/shipment_list" ));
         		sidebarMenu.add(Map.of("name", "영업현황", "link", "/business_state" ));
+        	}
+        }
+        if ("MES".equals(menuType)) {
+        	if(isSysAdmin) {
+        		sidebarMenu.add(Map.of("name", "기준정보", "link", "1"));
+        		sidebarMenu.add(Map.of("name", "품목관리", "link", "/product_list" ));
+        		sidebarMenu.add(Map.of("name", "거래처관리", "link", "/account_list" ));
+        		sidebarMenu.add(Map.of("name", "창고관리", "link", "/warehouse_list" ));
+        		sidebarMenu.add(Map.of("name", "설비관리", "link", "/equipment_list" ));
+        		sidebarMenu.add(Map.of("name", "공정관리", "link", "/process" ));
         	}
         	if(isMfAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "자재", "link", "1"));

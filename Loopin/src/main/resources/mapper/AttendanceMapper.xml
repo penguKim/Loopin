@@ -18,22 +18,30 @@
 	        END AS SERVICE_YEARS,
 	        c.COMMON_NM AS DEPARTMENT_NAME,
 	        CASE 
-		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
-		            THEN TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd'))) + NVL(a.ANNUAL_RA, 0)
-		        WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 3 
-		            THEN 15 + NVL(a.ANNUAL_RA, 0)
-		        ELSE 
-		            LEAST(15 + FLOOR((FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) - 3) / 2), 25) + NVL(a.ANNUAL_RA, 0)
-		    END AS EXPECT_ANNUAL
+	            WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 1 
+	                THEN TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd'))) + NVL(a.ANNUAL_RA, 0)
+	            WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) &lt; 3 
+	                THEN 15 + NVL(a.ANNUAL_RA, 0)
+	            ELSE 
+	                LEAST(15 + FLOOR((FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) - 3) / 2), 25) + NVL(a.ANNUAL_RA, 0)
+	        END AS EXPECT_ANNUAL,
+	        CASE 
+	            WHEN a.ANNUAL_UA &lt; 1 AND a.ANNUAL_UA &gt; 0 THEN '0' || TO_CHAR(a.ANNUAL_UA) 
+	            ELSE TO_CHAR(a.ANNUAL_UA) 
+	        END AS ANNUAL_UA_FORMATTED,
+	        CASE 
+	            WHEN a.ANNUAL_RA &lt; 1 AND a.ANNUAL_RA &gt; 0 THEN '0' || TO_CHAR(a.ANNUAL_RA) 
+	            ELSE TO_CHAR(a.ANNUAL_RA) 
+	        END AS ANNUAL_RA_FORMATTED
 	    FROM ANNUAL a
-		LEFT JOIN EMPLOYEE e 
-	       	   ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
+	    LEFT JOIN EMPLOYEE e 
+	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
 	    LEFT JOIN COMMON_CODE c
-	       	   ON e.EMPLOYEE_DP = c.COMMON_CC
-	   WHERE 1=1
-	   		 AND c.COMMON_GC = 'DEPARTMENT'
-			 AND EMPLOYEE_US = '1'
-	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
+	        ON e.EMPLOYEE_DP = c.COMMON_CC
+	    WHERE 1=1
+	        AND c.COMMON_GC = 'DEPARTMENT'
+	        AND EMPLOYEE_US = '1'
+	    ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC
 	</select>
     
     <select id="select_EMPLOYEE_ANNUAL" resultType="map">

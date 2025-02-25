@@ -18,19 +18,19 @@
 		background-color: none !important;
 	}
 	@keyframes blink {
-	    0% { opacity: 1;}
-	    35% { opacity: 0.2;}
-	    100% { opacity: 1;}
+			0% { opacity: 1;}
+			35% { opacity: 0.2;}
+			100% { opacity: 1;}
 	}
 	.blinking-node {
-	    animation: blink 3s infinite;
-	    color: red;
-	    background-color: white;
+			animation: blink 3s infinite;
+			color: red;
+			background-color: white;
 	}
 	.wide-header {
-	    min-width: 200px !important;  /* ✅ 원하는 너비 지정 */
-	    white-space: normal !important;  /* ✅ 텍스트 줄 바꿈 */
-	    text-align: center;
+			min-width: 200px !important;	/* ✅ 원하는 너비 지정 */
+			white-space: normal !important;	/* ✅ 텍스트 줄 바꿈 */
+			text-align: center;
 	}
 </style>
 <body>
@@ -70,10 +70,10 @@
 	let processList = /*[[${processList}]]*/ [];
 
 	let transformedProcessList = processList.map(item => {
-	    return {
-	        common_cc: item.COMMON_CC,
-	        common_nm: item.COMMON_NM
-	    };
+			return {
+					common_cc: item.COMMON_CC,
+					common_nm: item.COMMON_NM
+			};
 	});
 
 	const token = $("meta[name='_csrf']").attr("content")
@@ -93,8 +93,7 @@
 	
 	// 로딩
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		make_grid();
 		getGridList();
 		
@@ -110,33 +109,33 @@
 			}, 300);
 		});
 
-        initializeFilterModule('filterModule', filterConfig, (filterValues) => {
-            getGridList(filterValues);
-        });
+				initializeFilterModule('filterModule', filterConfig, (filterValues) => {
+						getGridList(filterValues);
+				});
 		
 		// 엑셀 버튼 추가
 		addExcelButton(grid, '로트추적');
 		
 		$(document).on('filterToggled', function(e) {
-		    if(e.detail.isVisible) {
-		        setGridHeight(grid, -460);
-		    } else {
-		        setGridHeight(grid, -430);
-		    }
+				if(e.detail.isVisible) {
+						setGridHeight(grid, -460);
+				} else {
+						setGridHeight(grid, -430);
+				}
 		});
 		
 		// 필터 엔터키 검색 이벤트
 		$('#filterModule').on('keypress', function(e) {
-		    if (e.keyCode !== 13) return;
-		    
-		    const filterValues = {};
-		    
-		    for (const config of filterConfig) {
-		        const input = $(`#${config.key}`);
-		        const value = input.val();
-		        filterValues[config.key] = value;
-		    }
-		    getGridList(filterValues);
+				if (e.keyCode !== 13) return;
+				
+				const filterValues = {};
+				
+				for (const config of filterConfig) {
+						const input = $(`#${config.key}`);
+						const value = input.val();
+						filterValues[config.key] = value;
+				}
+				getGridList(filterValues);
 		});
 	});
 	
@@ -188,122 +187,122 @@
 			if(row == null) {
 				return;
 			}
-		    fetchChartData(row);
+				fetchChartData(row);
 		});
 	}
 	
 	// 차트 JSON 가져오기
 	function fetchChartData(row) {
-	    $.ajax({
-	        type: "POST",
-	        url: "/select_LOT_json",
-	        contentType: 'application/json',
+			$.ajax({
+					type: "POST",
+					url: "/select_LOT_json",
+					contentType: 'application/json',
 			beforeSend : function(xhr) {
-			    xhr.setRequestHeader(header, token);
+					xhr.setRequestHeader(header, token);
 			},
-	        data: JSON.stringify(row),
-	        success: function(data) {
-                try {
-                    buildTree(data.data); // 변환된 JSON 객체 전달
-                } catch (error) {
-                    console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.data);
-                }
-	        },
-	        error: function(error) {
-	            console.error("Error fetching chart data:", error);
-	        }
-	    });
+					data: JSON.stringify(row),
+					success: function(data) {
+								try {
+										buildTree(data.data); // 변환된 JSON 객체 전달
+								} catch (error) {
+										console.error("JSON 파싱 오류:", error, "JSON_DATA 값:", data.data);
+								}
+					},
+					error: function(error) {
+							console.error("Error fetching chart data:", error);
+					}
+			});
 	}
 	
 	function mergeProcess(oldProc, newProc) {
-	  // 우선순위: "진행중" > "완료" > "N/A"
-	  
-	  if (oldProc === "진행중") {
-	    // 이미 "진행중"이면 그대로
-	    return "진행중";
-	  }
-	  if (oldProc === "완료") {
-	    // 기존이 "완료"인데 새 값이 "진행중"이면 "진행중"으로
-	    if (newProc === "진행중") return "진행중";
-	    // 새 값이 "완료" or "N/A"면 그대로 "완료"
-	    return "완료";
-	  }
-	  // oldProc === "N/A"인 경우
-	  // 새 값이 "진행중"이면 "진행중", "완료"면 "완료", "N/A"면 "N/A"
-	  return newProc;
+		// 우선순위: "진행중" > "완료" > "N/A"
+		
+		if (oldProc === "진행중") {
+			// 이미 "진행중"이면 그대로
+			return "진행중";
+		}
+		if (oldProc === "완료") {
+			// 기존이 "완료"인데 새 값이 "진행중"이면 "진행중"으로
+			if (newProc === "진행중") return "진행중";
+			// 새 값이 "완료" or "N/A"면 그대로 "완료"
+			return "완료";
+		}
+		// oldProc === "N/A"인 경우
+		// 새 값이 "진행중"이면 "진행중", "완료"면 "완료", "N/A"면 "N/A"
+		return newProc;
 	}
 	function buildTree(data) {
-	    if (!Array.isArray(data)) {
-	        console.error("buildTree 오류: 데이터가 배열이 아님", data);
-	        return;
-	    }
+			if (!Array.isArray(data)) {
+					console.error("buildTree 오류: 데이터가 배열이 아님", data);
+					return;
+			}
 
-	    // 1) 루트 노드 process 결정
-	    let allComplete = true;
-	    for (let row of data) {
-	        if (row.WORKORDER_ST === "진행중") {
-	            allComplete = false;
-	            break;
-	        }
-	    }
-	    const rootProcess = allComplete ? "완료" : "대기";
+			// 1) 루트 노드 process 결정
+			let allComplete = true;
+			for (let row of data) {
+					if (row.WORKORDER_ST === "진행중") {
+							allComplete = false;
+							break;
+					}
+			}
+			const rootProcess = allComplete ? "완료" : "대기";
 
-	    // 2) 루트 노드
-	    let root = {
-	        name: data[0].PRODUCT_CD,
-	        title: "제품",
-	        process: rootProcess,
-	        children: []
-	    };
+			// 2) 루트 노드
+			let root = {
+					name: data[0].PRODUCT_CD,
+					title: "제품",
+					process: rootProcess,
+					children: []
+			};
 
-	    let nodeMap = {};
-	    nodeMap[root.name] = root;
+			let nodeMap = {};
+			nodeMap[root.name] = root;
 
-	    data.forEach(item => {
-	        let pathArr = item.PATH ? item.PATH.split(" > ") : [];
-	        let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
-	        let currentName = pathArr[pathArr.length - 1];
+			data.forEach(item => {
+					let pathArr = item.PATH ? item.PATH.split(" > ") : [];
+					let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
+					let currentName = pathArr[pathArr.length - 1];
 
-	        // 원자재 여부
-	        let isRaw = (item.IS_RAW === 'Y');
-	        // title 결정
-	        let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
+					// 원자재 여부
+					let isRaw = (item.IS_RAW === 'Y');
+					// title 결정
+					let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
 
-	        // process 우선 값
-	        let rowProc = item.WORKORDER_ST || item.COMMON_NM || "N/A";
+					// process 우선 값
+					let rowProc = item.WORKORDER_ST || item.COMMON_NM || "N/A";
 
-	        // 현재 노드 생성/병합
-	        if (!nodeMap[currentName]) {
-	            nodeMap[currentName] = {
-	                name: currentName,
-	                title: nodeTitle,
-	                process: rowProc,
-	                children: []
-	            };
-	        } else {
-	            // 이미 존재하면 우선순위 병합
-	            nodeMap[currentName].process = mergeProcess(nodeMap[currentName].process, rowProc);
-	        }
+					// 현재 노드 생성/병합
+					if (!nodeMap[currentName]) {
+							nodeMap[currentName] = {
+									name: currentName,
+									title: nodeTitle,
+									process: rowProc,
+									children: []
+							};
+					} else {
+							// 이미 존재하면 우선순위 병합
+							nodeMap[currentName].process = mergeProcess(nodeMap[currentName].process, rowProc);
+					}
 
-	        // 부모 노드 생성/병합
-	        if (!nodeMap[parentName]) {
-	            nodeMap[parentName] = {
-	                name: parentName,
-	                title: "반제품",
-	                process: rowProc, 
-	                children: []
-	            };
-	        } else {
-	            nodeMap[parentName].process = mergeProcess(nodeMap[parentName].process, rowProc);
-	        }
+					// 부모 노드 생성/병합
+					if (!nodeMap[parentName]) {
+							nodeMap[parentName] = {
+									name: parentName,
+									title: "반제품",
+									process: rowProc, 
+									children: []
+							};
+					} else {
+							nodeMap[parentName].process = mergeProcess(nodeMap[parentName].process, rowProc);
+					}
 
-	        // 부모에 현재 노드 연결
-	        if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
-	            nodeMap[parentName].children.push(nodeMap[currentName]);
-	        }
-	    });
+					// 부모에 현재 노드 연결
+					if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
+							nodeMap[parentName].children.push(nodeMap[currentName]);
+					}
+			});
 
-	    make_chart(root);
+			make_chart(root);
 	}
 
 
@@ -337,7 +336,7 @@
 					</div>
 				`;
 			}
-        });
+				});
 		
 		document.querySelectorAll('.orgchart .fa').forEach(el => {
 			el.style.pointerEvents = 'none'; // 클릭 이벤트 비활성화
@@ -359,60 +358,60 @@
 	// 모달 생성
 	function modal_detail(data) {
 		
-	    const div_modal = "div_modal";
-	    let modalElement = document.getElementById(div_modal); // 기존 모달 확인
+			const div_modal = "div_modal";
+			let modalElement = document.getElementById(div_modal); // 기존 모달 확인
 
-	    // 기존 모달이 있으면 삭제 후 새로 생성
-	    if (modalElement) {
-	        modalElement.remove();
-	    }
+			// 기존 모달이 있으면 삭제 후 새로 생성
+			if (modalElement) {
+					modalElement.remove();
+			}
 
-	    // 새로운 모달 HTML 추가
-	    let modalHtml = `
-	    <div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-	    	<div class="modal-dialog modal-dialog-centered modal-xl">
-	        	<div class="modal-content">
-	            	<div class="modal-header">
-	                    <h5 class="modal-title">로트 상세정보</h5>
-	                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-	                </div>
-	                <div class="modal-body">
-	                    <div id="modal_grid"></div>
-	                </div>
-	                <div class="modal-footer">
+			// 새로운 모달 HTML 추가
+			let modalHtml = `
+			<div class="modal" id="${div_modal}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+				<div class="modal-dialog modal-dialog-centered modal-xl">
+						<div class="modal-content">
+								<div class="modal-header">
+											<h5 class="modal-title">로트 상세정보</h5>
+											<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+									</div>
+									<div class="modal-body">
+											<div id="modal_grid"></div>
+									</div>
+									<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
-	                </div>
-	            </div>
-	        </div>
-	    </div>
-	    `;
+									</div>
+							</div>
+					</div>
+			</div>
+			`;
 
-	    document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
-	    modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
+			document.body.insertAdjacentHTML('beforeend', modalHtml); // Modal 동적 추가
+			modalElement = document.getElementById(div_modal); // 새로 추가된 모달 참조
 
-	    const modal = new bootstrap.Modal(modalElement); // 모달 초기화
+			const modal = new bootstrap.Modal(modalElement); // 모달 초기화
 
-	    modalElement.addEventListener("shown.bs.modal", function () {
-	        make_modal_grid(data); // 모달 내부 그리드 생성
-	    });
+			modalElement.addEventListener("shown.bs.modal", function () {
+					make_modal_grid(data); // 모달 내부 그리드 생성
+			});
 
-	    modal.show();
+			modal.show();
 
-	    modalElement.addEventListener("hidden.bs.modal", function () {
-	        modalElement.remove(); // 모달 삭제
+			modalElement.addEventListener("hidden.bs.modal", function () {
+					modalElement.remove(); // 모달 삭제
 
-	        document.activeElement.blur();
-	        document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
-	        document.body.classList.remove("modal-open");
-	        document.body.style.overflow = "";
-	    });
+					document.activeElement.blur();
+					document.querySelectorAll(".modal-backdrop").forEach(el => el.remove());
+					document.body.classList.remove("modal-open");
+					document.body.style.overflow = "";
+			});
 
 
 
-	    $(window).resize(function () {
-	        setGridHeight(modal_grid, -600);
-	    });
-	    
+			$(window).resize(function () {
+					setGridHeight(modal_grid, -600);
+			});
+			
 	}
 
 	
@@ -421,15 +420,15 @@
 		
 		
 		const dataSource = {
-		    api: {
-		        readData: {
-		            url: '/select_LOTHISTORY_list',
-		            method: 'GET',
-		            initParams: {
-						lot_cd: data.lot_cd
+			api: {
+					readData: {
+							url: '/select_LOTHISTORY_list',
+							method: 'GET',
+							initParams: {
+					lot_cd: data.lot_cd
 					}
-		        }
-		    }
+				}
+			}
 		}
 		
 		modal_grid = new tui.Grid({
