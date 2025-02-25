@@ -20,6 +20,7 @@ import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailProductInfoDTO;
+import com.itwillbs.c4d2412t3p1.domain.DailyProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
@@ -29,6 +30,8 @@ import com.itwillbs.c4d2412t3p1.domain.WarehouseListDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkableEmployeeProjection;
 import com.itwillbs.c4d2412t3p1.entity.Bom;
 import com.itwillbs.c4d2412t3p1.entity.ContractDetail;
+import com.itwillbs.c4d2412t3p1.entity.Dailyproductplan;
+import com.itwillbs.c4d2412t3p1.entity.DailyproductplanPK;
 import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Material;
 import com.itwillbs.c4d2412t3p1.entity.Productplan;
@@ -40,6 +43,7 @@ import com.itwillbs.c4d2412t3p1.repository.BomProcessRepository;
 import com.itwillbs.c4d2412t3p1.repository.BomRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.ContractDetailRepository;
+import com.itwillbs.c4d2412t3p1.repository.DailyproductplanRepository;
 import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.MaterialRepository;
 import com.itwillbs.c4d2412t3p1.repository.ProductplanRepository;
@@ -56,6 +60,8 @@ import lombok.extern.java.Log;
 public class ProductplanService {
 
 	private final ProductplanRepository productplanRepository;
+	
+	private final DailyproductplanRepository dailyproductplanRepository;
 
 	private final ProductplanprocessRepository productplanprocessRepository;
 
@@ -425,9 +431,64 @@ public class ProductplanService {
 				.map(d -> new ContractDetailProductInfoDTO(d.getProduct_cr(), d.getProduct_sz(), d.getProduct_am()))
 				.collect(Collectors.toList());
 	}
-	
-	public List<WorkableEmployeeProjection> select_WORKABLE_EMPLOYEE_list(String workDate, String productCd, String processCd) {
-        return productplanRepository.findWorkableEmployees(workDate, productCd, processCd);
-    }
-	
+
+	public List<WorkableEmployeeProjection> select_WORKABLE_EMPLOYEE_list(String workDate, String productCd,
+			String processCd) {
+		return productplanRepository.findWorkableEmployees(workDate, productCd, processCd);
+	}
+
+	@Transactional
+	public void saveDailyPlan(DailyProductPlanDTO dto) {
+		// 1) 복합키 생성
+		DailyproductplanPK pk = new DailyproductplanPK();
+
+		// 날짜 변환: "YYYY-MM-DD" → "YYYY-MM-DD 00:00:00" Timestamp
+		if (dto.getDailyproductplan_sd() != null && !dto.getDailyproductplan_sd().isEmpty()) {
+			pk.setDailyproductplan_sd(Timestamp.valueOf(dto.getDailyproductplan_sd() + " 00:00:00"));
+		}
+
+		pk.setContract_cd(dto.getContract_cd());
+		pk.setProduct_cd(dto.getProduct_cd());
+		pk.setProcess_cd(dto.getProcess_cd());
+		pk.setProduct_cr(dto.getProduct_cr());
+		pk.setProduct_sz(dto.getProduct_sz());
+
+		// 2) 엔티티 생성
+		Dailyproductplan entity = new Dailyproductplan();
+		entity.setId(pk);
+		entity.setDailyproductplan_js(dto.getDailyproductplan_js());
+		entity.setProcess_se(dto.getProcess_se());
+
+		// 3) DB 저장
+		dailyproductplanRepository.save(entity);
+	}
+
+	/**
+	 * 특정 (contract_cd, product_cd)의 일일생산계획 목록 조회
+	 */
+	public List<DailyProductPlanDTO> findDailyPlanList(String contractCd, String productCd) {
+		// 1) 엔티티 목록 조회
+		List<Dailyproductplan> entityList = dailyproductplanRepository.findAllByContractAndProduct(contractCd,
+				productCd);
+
+		// 2) Entity → DTO 변환
+		return entityList.stream().map(e -> {
+			DailyProductPlanDTO dto = new DailyProductPlanDTO();
+			if (e.getId().getDailyproductplan_sd() != null) {
+				dto.setDailyproductplan_sd(
+						e.getId().getDailyproductplan_sd().toLocalDateTime().toLocalDate().toString());
+			}
+			dto.setContract_cd(e.getId().getContract_cd());
+			dto.setProduct_cd(e.getId().getProduct_cd());
+			dto.setProcess_cd(e.getId().getProcess_cd());
+			dto.setProduct_cr(e.getId().getProduct_cr());
+			dto.setProduct_sz(e.getId().getProduct_sz());
+
+			dto.setDailyproductplan_js(e.getDailyproductplan_js());
+			dto.setProcess_se(e.getProcess_se());
+
+			return dto;
+		}).collect(Collectors.toList());
+	}
+
 }
