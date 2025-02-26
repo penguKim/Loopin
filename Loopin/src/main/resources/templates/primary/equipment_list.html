@@ -52,9 +52,7 @@
 	// ------------------------------
 	
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
-		
+		setGridTheme();
 		make_grid();
 		getGridList();
 
@@ -310,7 +308,7 @@
 						<div class="modal-footer">
 							<div>
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >닫기</button>
-								<button type="submit" id="btn_modal" class="btn btn-primary">${text}</button>
+								<button type="submit" id="btn_modal_save" class="btn btn-primary">${text}</button>
 							</div>
 						</div>
 					</div>

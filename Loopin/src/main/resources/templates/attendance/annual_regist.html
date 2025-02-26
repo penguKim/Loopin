@@ -117,10 +117,8 @@
 	const { year, month, day, hours, minutes, seconds } = formatDate(); // 함수가 반환한 값 사용
 	
 	$(function () {
-
+		setGridTheme();
 		grid_function();
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
 		$("#current_year").text(`${year}년 연차 등록`);
 		
 	});

@@ -100,8 +100,7 @@
 	
 	// 로딩
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		make_grid();
 		getGridList();
 		setElementHeight('.card', -105);
@@ -191,7 +190,7 @@
 				{header : '수주일', name : 'CONTRACT_SD', sortable : true, filter: 'text', align: 'center'}, 
 				{header : '출하일', name : 'CONTRACT_ED', sortable : true, filter: 'text', align: 'center'}, 
 				{header : '지시수량', name : 'CONTRACT_AM', sortable : true, filter: 'text', align: 'right'}, 
-				{header : '판매단가', name : 'PRODUCT_PR', sortable : true, filter: 'text', align: 'right'}, 
+				{header : '판매단가', name : 'CONTRACT_CT', sortable : true, filter: 'text', align: 'right'}, 
 				{header : '실적금액', name : 'CONTRACT_MN', sortable : true, filter: 'text', align: 'right'}, 
 			],
 			summary: {
@@ -254,7 +253,6 @@
 
 		
         modalElement.addEventListener('shown.bs.modal', function () {
-			console.log(data);
         	make_modal_grid(data);
 			
         });
@@ -274,8 +272,7 @@
 	function make_modal_grid(data) {
 		modal_grid = new tui.Grid({
 			el : document.getElementById('modal_grid'),
-			data : [
-			  ],
+			data : {api: {readData: {url: '/select_RESULT_detail', method: 'GET',initParams: {contract_cd: data.contract_cd}}}},
 			scrollX : false,
 			scrollY : true,
 			rowHeaders : [
@@ -283,27 +280,29 @@
 			],
 			bodyHeight : 200,
 			columns : [
-				{header : '수주번호', name : 'contract_cd', sortable : true, filter: 'text'},
-				{header : '제품명', name : 'product_cd', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'process_cd', sortable : true, filter: 'text'},
-				{header : '소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
-				{header : '소요기간', name : 'lothistory_st', sortable : true, filter: 'text'}, 
-				{header : '작업수량', name : 'lothistory_wq', sortable : true, filter: 'text'}, 
+				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
+				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
+				{header : '실소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
+				{header : '실소요시간', name : 'LOTHISTORY_ST', sortable : true, filter: 'text'}, 
+				{header : '작업수량', name : 'LOTHISTORY_WQ', sortable : true, filter: 'text'}, 
 				{header : '양품수량', name : 'INOUT_NN', sortable : true, filter: 'text'}, 
-				{header : '불량수량', name : 'lothistory_bq', sortable : true, filter: 'text'}, 
+				{header : '불량수량', name : 'LOTHISTORY_BQ', sortable : true, filter: 'text'}, 
 			],
 			summary: {
-				height: 40,
-				position: 'bottom', // or 'top'
-				columnContent: {
-					lothistory_bq: {
-						template: (valueMap) => {
-							return `총 ${valueMap.cnt} 건`
-						}
-					}
-				}
+			    height: 40,
+			    position: 'bottom',
+			    columnContent: {
+			    	INOUT_NN: {
+			            template: (valueMap) => `총 수량: ${valueMap.cnt}건`
+			        },
+			        LOTHISTORY_BQ: {
+			            template: (valueMap) => `합계: ${valueMap.sum.toLocaleString()}`
+			        },
+			        LOTHISTORY_ST: {
+			            template: (valueMap) => `총 시간: ${valueMap.avg.toFixed(2)}`
+			        }
+			    }
 			},
-
 		});
 		
 	}

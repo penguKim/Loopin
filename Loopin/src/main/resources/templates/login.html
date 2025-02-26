@@ -21,8 +21,8 @@
 									<div class="pt-4 pb-2">
 										<div class="d-flex justify-content-center py-4">
 											<a th:href="@{/main}" class="logo d-flex align-items-center w-auto">
-												<img src="assets/img/logo.png" alt="">
-												<span class="d-none d-lg-block">Loopin</span>
+												<img src="assets/img/logo3.png" alt="">
+<!--												<span class="d-none d-lg-block">Loopin</span>-->
 											</a>
 										</div><!-- End Logo -->
 <!--										<p class="text-center small">Enter your username & password to login</p>-->
@@ -62,6 +62,7 @@
 <script th:replace="~{fragments/script::script}"></script>
 <script th:inline="javascript">
 $(function() {
+	sessionStorage.clear();
     const errorMessage = /*[[${errorMessage}]]*/ null;
     if (errorMessage) {
 	    Swal.fire({

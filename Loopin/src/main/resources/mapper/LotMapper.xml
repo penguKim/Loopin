@@ -19,171 +19,255 @@
 	</select>
 	
 	<select id="select_LOT_list" resultType="map">
-	    SELECT L.LOT_CD
-	    	   , CONTRACT_CD
-	    	   , PRODUCT_CD
-	    	   , L.PROCESS_CD
-	    	   , TO_CHAR(LOT_CR, 'YYYY-MM-DD') AS LOT_CR
-	    	   , NVL(W.WORKORDER_ST, '계획중') AS WORKORDER_ST
-		  FROM LOT L
-	 LEFT JOIN WORKORDER W ON W.LOT_CD = L. LOT_CD AND L.PROCESS_CD = W.PROCESS_CD
-		 WHERE 1=1
+	    WITH WORKORDER_STATUS AS (
+	        SELECT 
+	            LOT_CD, 
+	            PROCESS_CD, 
+	            WORKORDER_ST,
+	            ROW_NUMBER() OVER (
+	                PARTITION BY LOT_CD 
+	                ORDER BY 
+	                    CASE 
+	                        WHEN WORKORDER_ST = '진행중' THEN 1  -- 진행중이면 우선 선택
+	                        WHEN PROCESS_CD = 'ASSEMBLY' THEN 2  -- 없으면 ASSEMBLY 공정 선택
+	                        ELSE 3 
+	                    END, WORKORDER_SD DESC
+	            ) AS RN
+	        FROM WORKORDER
+	    )
+	    SELECT 
+	        L.LOT_CD,
+	        MIN(L.CONTRACT_CD) AS CONTRACT_CD,
+	        MIN(L.PRODUCT_CD) AS PRODUCT_CD,
+	        MIN(L.PRODUCT_SZ) AS PRODUCT_SZ,
+	        MIN(L.PRODUCT_CR) AS PRODUCT_CR,
+	        NVL(MIN(WS.PROCESS_CD), 'UPPER') AS PROCESS_CD,
+	        TO_CHAR(MIN(L.LOT_CR), 'YYYY-MM-DD') AS LOT_CR,
+	        NVL(MIN(WS.WORKORDER_ST), '대기') AS WORKORDER_ST
+	    FROM LOT L
+	    LEFT JOIN (
+	        SELECT LOT_CD, PROCESS_CD, WORKORDER_ST 
+	        FROM WORKORDER_STATUS 
+	        WHERE RN = 1
+	    ) WS ON WS.LOT_CD = L.LOT_CD
+	    <where>
 	        <if test="lot_cd != null and lot_cd != ''">
-	            AND L.LOT_CD = #{lot_cd}
+	            AND INSTR(L.LOT_CD, #{lot_cd}) > 0
 	        </if>
 	        <if test="contract_cd != null and contract_cd != ''">
-	            AND CONTRACT_CD = #{contract_cd}
+	            AND INSTR(L.CONTRACT_CD, #{contract_cd}) > 0
 	        </if>
 	        <if test="product_cd != null and product_cd != ''">
-	            AND PRODUCT_CD = #{product_cd}
+	            AND INSTR(L.PRODUCT_CD, #{product_cd}) > 0
 	        </if>
 	        <if test="process_cd != null and process_cd != ''">
 	            AND L.PROCESS_CD = #{process_cd}
 	        </if>
-	        <if test="workorder_st != null and workorder_st != '' or workorder_st != ALL">
-	            AND W.WORKORDER_ST = #{workorder_st}
+	        <if test="workorder_st != null and workorder_st != '' and workorder_st != 'ALL'">
+	            AND WS.WORKORDER_ST = #{workorder_st}
 	        </if>
-	  ORDER BY L.LOT_CD DESC
-<!-- 	    <where> 1=1 -->
-<!-- 	    		AND c.COMMON_GC = 'DEPARTMENT' -->
-<!-- 	        <if test="employee_nm != null and employee_nm != ''"> -->
-<!-- 	            AND e.EMPLOYEE_NM = #{employee_nm} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="employee_dp != null and employee_dp != ''"> -->
-<!-- 	            AND e.EMPLOYEE_DP = #{employee_dp} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="employee_hd1 != null and employee_hd1 != '' and employee_hd2 != null and employee_hd2 != ''"> -->
-<!-- 	            AND #{employee_hd1} &lt;= e.EMPLOYEE_HD AND e.EMPLOYEE_HD &lt;= #{employee_hd2} -->
-<!-- 	        </if> -->
-<!-- 	        <if test="annual_ra != null and annual_ra != ''"> -->
-<!-- 	            AND a.ANNUAL_RA = #{annual_ra} -->
-<!-- 	        </if> -->
-<!-- 	    </where> -->
-<!-- 	   ORDER BY a.ANNUAL_YR DESC, a.EMPLOYEE_CD DESC -->
+	    </where>
+	    GROUP BY L.LOT_CD
+	    ORDER BY MIN(L.LOT_CR) DESC
+	</select>
+
+	<select id="select_LOT_json" resultType="map">
+		WITH BOM_HIERARCHY (BOM_CD, PRODUCT_CD, BOM_AM, step, path, IS_RAW) AS (
+		    -- 🔥 최하위 원자재부터 시작 (BOM 테이블에서 직접 추출)
+		    SELECT 
+		        B.BOM_CD,         
+		        B.PRODUCT_CD,      
+		        B.BOM_AM,        
+		        1 AS step,                
+		        B.BOM_CD AS path,
+		        CASE 
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            ELSE 'N'
+		        END AS IS_RAW
+		    FROM BOM B
+		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
+		    UNION ALL
+		    SELECT 
+		        B.BOM_CD, 
+		        BP.PRODUCT_CD, 
+		        B.BOM_AM * NVL(PARENT_BOM.BOM_AM, 1),  -- 🚀 누적 소요량 계산
+		        BH.step + 1,
+		        BH.path || ' > ' || B.BOM_CD,
+		        CASE 
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            ELSE 'N'
+		        END AS IS_RAW
+		    FROM BOM B
+		    JOIN BOM_HIERARCHY BH ON B.PRODUCT_CD = BH.BOM_CD -- 🔥 부모 반제품과 연결
+		    JOIN BOMPROCESS BP ON BH.BOM_CD = BP.BOMPROCESS_CD -- 🔥 BOMPROCESS를 활용하여 반제품 연결
+		    LEFT JOIN BOM PARENT_BOM ON BP.BOMPROCESS_CD = PARENT_BOM.BOM_CD -- 🚀 BOM_AM 값을 조인하여 가져옴
+		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
+		), BH AS (
+			   SELECT 
+				    BOM_CD, 
+				    PRODUCT_CD,
+				    SUM(BOM_AM) AS BOM_AM,  -- 🔥 중복된 원자재를 합산하여 소요량 계산
+				    step,
+				    path,
+				    IS_RAW  -- 🚀 원자재 여부 포함
+				FROM BOM_HIERARCHY
+				WHERE product_cd = #{PRODUCT_CD}
+				GROUP BY BOM_CD, PRODUCT_CD, step, path, IS_RAW
+				ORDER BY step DESC, BOM_AM DESC
+		)
+		SELECT BH.*
+			 , BP.PROCESS_CD PROCESS_CD
+			 , w.workorder_st
+			 , c.common_nm
+		  FROM BH
+		  LEFT JOIN BOMPROCESS BP
+		    ON BH.BOM_CD = BP.BOMPROCESS_CD
+		   AND BH.PRODUCT_CD = BP.PRODUCT_CD 
+		   LEFT JOIN LOT l ON l.PROCESS_CD = bp.PROCESS_CD AND l.lot_cd = #{LOT_CD}
+		   LEFT JOIN WORKORDER w ON w.PROCESS_CD = bp.PROCESS_CD AND w.lot_cd = #{LOT_CD}
+		   LEFT JOIN INOUT i ON i.ITEM_CD = BH.PRODUCT_CD AND CONTRACT_CD = #{CONTRACT_CD}
+		   LEFT JOIN COMMON_CODE c ON c.COMMON_CC = i.INOUT_IO AND c.COMMON_GC = 'IOTYPE'
 	</select>
 	
-	
-	<select id="select_LOT_json" resultType="map">
-		WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
-		    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
-		      FROM BOMPROCESS
-		     WHERE BOMPROCESS_AP = 'NONE'
-		       AND PRODUCT_CD = #{PRODUCT_CD}
-		     UNION ALL
-		    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 LVL
-		      FROM BOMPROCESS BP
-		      JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
-		     WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
-		),
-		WORKORDER_STATUS AS (
-		    -- LOT별 최신 작업 상태 가져오기
-		    SELECT LOT_CD, NVL(WORKORDER_ST, '계획중') AS PROCESS_CD, WORKORDER_ST
-		    FROM WORKORDER
-		    WHERE LOT_CD IN (SELECT BOMPROCESS_CD FROM BOM_HIERARCHY)
-		)
-		SELECT JSON_OBJECT(
-		    'name' VALUE #{PRODUCT_CD},
-		    'title' VALUE '제품',
-		    'lot_st' VALUE #{PRODUCT_CD},
-		    'process' VALUE '대기',
-		    'children' VALUE (
-		        SELECT JSON_ARRAYAGG(
-		            JSON_OBJECT(
-		                'name' VALUE A.CURRENT_PROCESS,
-		                'title' VALUE '반제품',
-		                'lot_st' VALUE A.CURRENT_PROCESS,
-		                'process' VALUE (
-		                    SELECT CASE WHEN W.workorder_st = '진행중' THEN '진행중'
-	                        	   ELSE '완료'
-		                    		END
-		                      FROM WORKORDER W
-		                    WHERE W.LOT_CD = A.CURRENT_PROCESS
-		                    FETCH FIRST 1 ROWS ONLY
-		                ),
-		                'children' VALUE (
-		                    SELECT JSON_ARRAYAGG(
-		                        JSON_OBJECT(
-		                            'name' VALUE B.CURRENT_PROCESS,
-		                            'title' VALUE '반제품',
-		                            'lot_st' VALUE B.CURRENT_PROCESS,
-		                            'process' VALUE (
-		                                SELECT CASE 
-		                                    WHEN W.workorder_st = '진행중' THEN '진행중'
-		                                    ELSE '완료'
-		                                END
-		                                FROM WORKORDER W
-		                                WHERE W.LOT_CD = B.CURRENT_PROCESS
-		                                FETCH FIRST 1 ROWS ONLY
-		                            )
-		                        )
-		                    ) 
-		                    FROM BOM_HIERARCHY B 
-		                    WHERE B.BOMPROCESS_AP = A.CURRENT_PROCESS
-		                )
-		            ) RETURNING CLOB
-		        ) 
-		        FROM BOM_HIERARCHY A 
-		        WHERE A.BOMPROCESS_AP = 'ASSEMBLY'
-		    )
-		) AS json_data
-		FROM DUAL
+	<select id="select_LOTHISTORY_list" resultType="map">
+		SELECT LH.CONTRACT_CD
+			   , LH.LOT_CD
+			   , LH.PROCESS_CD
+			   , L.PRODUCT_CR 
+			   , L.PRODUCT_SZ 
+			   , TO_CHAR(LOTHISTORY_BQ) AS LOTHISTORY_BQ
+			   , TO_CHAR(LOTHISTORY_EN, 'YYYY-MM-DD') AS LOTHISTORY_EN
+			   , TO_CHAR(LOTHISTORY_ST, 'YYYY-MM-DD') AS LOTHISTORY_ST
+			   , TO_CHAR(LOTHISTORY_WQ) AS LOTHISTORY_WQ
+    	  FROM LOTHISTORY LH
+	 LEFT JOIN LOT L ON L.LOT_CD = LH.LOT_CD AND LH.PROCESS_CD = L.PROCESS_CD
+		 WHERE 1=1
+ 			   AND LH.LOT_CD = #{lot_cd}
 	</select>
 	
 	<select id="select_RESULT_list" resultType="map">
 	    SELECT 
 		    CD.CONTRACT_CD,
 		    P.PRODUCT_NM PRODUCT_CD,
-		    TO_CHAR(P.PRODUCT_PR, 'FM999,999,999,999') || '원' AS PRODUCT_PR,
-		    TO_CHAR(SUM(C.CONTRACT_AM), 'FM999,999,999,999') || '개' AS CONTRACT_AM, 
-		    TO_CHAR(SUM(C.CONTRACT_MN), 'FM999,999,999,999') || '원' AS CONTRACT_MN, -- 실적 비교한 다음 다시 넣어야함
+		    TO_CHAR(CD.CONTRACT_CT, 'FM999,999,999,999') || '원' AS CONTRACT_CT,
+		    TO_CHAR(C.CONTRACT_AM, 'FM999,999,999,999') || '개' AS CONTRACT_AM, 
+		    TO_CHAR((C.CONTRACT_AM * CD.CONTRACT_CT), 'FM999,999,999,999') || '원' AS CONTRACT_MN, -- 실적 비교한 다음 다시 넣어야함
 		    C.CONTRACT_ED,
 		    C.CONTRACT_SD,
 		    A.ACCOUNT_NM ACCOUNT_CD
-		FROM CONTRACTDETAIL CD
-	LEFT JOIN PRODUCT P ON CD.PRODUCT_CD = P.PRODUCT_CD
-		 JOIN CONTRACT c ON CD.CONTRACT_CD = C.CONTRACT_CD AND C.CONTRACT_ST = '완료'
+		 FROM CONTRACTDETAIL CD
+	LEFT JOIN PRODUCT P ON P.PRODUCT_CD = CD.PRODUCT_CD
+		 JOIN CONTRACT c ON C.CONTRACT_CD = CD.CONTRACT_CD 
+		 JOIN LOTHISTORY LH ON LH.CONTRACT_CD = CD.CONTRACT_CD 
 	LEFT JOIN ACCOUNT A ON A.ACCOUNT_CD = C.ACCOUNT_CD
-	<where> 1=1
-	    <if test="contract_cd != null and contract_cd != ''">
-	        AND CD.CONTRACT_CD = #{contract_cd}
+		<where> 1=1
+				AND C.CONTRACT_ST = '완료'
+		    <if test="contract_cd != null and contract_cd != ''">
+		        AND CD.CONTRACT_CD = #{contract_cd}
+		    </if>
+		    <if test="account_cd != null and account_cd != ''">
+		        AND A.ACCOUNT_CD = #{account_cd}
+		    </if>
+		    <if test="product_cd != null and product_cd != ''">
+		        AND P.PRODUCT_NM LIKE '%' || #{product_cd} || '%'
+		    </if>
+		    <if test="startDate != null and startDate != ''">
+			    AND TO_TIMESTAMP(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') &lt;= C.CONTRACT_SD
+			</if>
+			<if test="endDate != null and endDate != ''">
+			    AND TO_TIMESTAMP(#{endDate}, 'YYYY-MM-DD HH24:MI:SS') &gt;= C.CONTRACT_ED
+			</if>
+		</where>
+	 GROUP BY CD.CONTRACT_CD, P.PRODUCT_NM, CD.CONTRACT_CT, C.CONTRACT_AM, C.CONTRACT_ED, A.ACCOUNT_NM, C.CONTRACT_SD
+		<if test="contract_am != null and contract_am != '' or product_pr != null and product_pr != ''">
+			HAVING 
+			<trim prefixOverrides="AND">
+	            <if test="contract_am != null and contract_am != ''">
+	                AND SUM(C.CONTRACT_AM) &gt;= TO_NUMBER(#{contract_am})
+	            </if>
+	            <if test="product_pr != null and product_pr != ''">
+	                AND P.PRODUCT_PR &gt;= TO_NUMBER(#{product_pr})
+	            </if>
+	        </trim>
 	    </if>
-	    <if test="account_cd != null and account_cd != ''">
-	        AND A.ACCOUNT_CD = #{account_cd}
-	    </if>
-	    <if test="product_cd != null and product_cd != ''">
-	        AND P.PRODUCT_NM LIKE '%' || #{product_cd} || '%'
-	    </if>
-	    <if test="startDate != null and startDate != ''">
-		    AND TO_TIMESTAMP(#{startDate}, 'YYYY-MM-DD HH24:MI:SS') &lt;= C.CONTRACT_SD
-		</if>
-		<if test="endDate != null and endDate != ''">
-		    AND TO_TIMESTAMP(#{endDate}, 'YYYY-MM-DD HH24:MI:SS') &gt;= C.CONTRACT_ED
-		</if>
-	</where>
-	GROUP BY CD.CONTRACT_CD, P.PRODUCT_NM, P.PRODUCT_PR, C.CONTRACT_ED, A.ACCOUNT_NM, C.CONTRACT_SD
-	<if test="contract_am != null and contract_am != '' or product_pr != null and product_pr != ''">
-		HAVING 
-		<trim prefixOverrides="AND">
-            <if test="contract_am != null and contract_am != ''">
-                AND SUM(C.CONTRACT_AM) &gt;= TO_NUMBER(#{contract_am})
-            </if>
-            <if test="product_pr != null and product_pr != ''">
-                AND P.PRODUCT_PR &gt;= TO_NUMBER(#{product_pr})
-            </if>
-        </trim>
-    </if>
-	<choose>
-	    <when test="contract_mn == 'HIGH'">
-	        ORDER BY SUM(C.CONTRACT_MN) DESC
-	    </when>
-	    <when test="contract_mn == 'LOW'">
-	        ORDER BY SUM(C.CONTRACT_MN) ASC
-	    </when>
-	    <otherwise>
-	        ORDER BY CD.CONTRACT_CD DESC  <!-- 기본 정렬 조건 -->
-	    </otherwise>
-	</choose>
-
+		<choose>
+		    <when test="contract_mn == 'HIGH'">
+		        ORDER BY SUM(C.CONTRACT_MN) DESC
+		    </when>
+		    <when test="contract_mn == 'LOW'">
+		        ORDER BY SUM(C.CONTRACT_MN) ASC
+		    </when>
+		    <otherwise>
+		        ORDER BY CD.CONTRACT_CD DESC  <!-- 기본 정렬 조건 -->
+		    </otherwise>
+		</choose>
     </select>
-		
+	
+	<select id="select_RESULT_detail" resultType="map">
+		WITH REQUIRED_PROCESS AS (
+		    -- 1️⃣ 해당 수주(CONTRACT_CD)에 필요한 공정 개수 조회
+		    SELECT L.CONTRACT_CD, L.LOT_CD, COUNT(DISTINCT W.PROCESS_CD) AS TOTAL_PROCESS_COUNT
+		    FROM WORKORDER W
+		    JOIN LOT L ON L.LOT_CD = W.LOT_CD 
+		    GROUP BY L.CONTRACT_CD, L.LOT_CD
+		),
+		COMPLETED_ORDERS AS (
+		    -- 2️⃣ 모든 공정을 완료한 LOT 찾기
+		    SELECT W.LOT_CD, R.CONTRACT_CD, W.PROCESS_CD
+		    FROM WORKORDER W
+		    JOIN REQUIRED_PROCESS R ON W.LOT_CD = R.LOT_CD
+		    WHERE W.WORKORDER_ST = '완료'
+		    GROUP BY W.LOT_CD, R.CONTRACT_CD, W.PROCESS_CD, R.TOTAL_PROCESS_COUNT
+		    HAVING COUNT(DISTINCT W.PROCESS_CD) = R.TOTAL_PROCESS_COUNT  -- 모든 공정이 완료된 LOT만 포함
+		), 
+		FINAL_COMPLETION AS (
+		    -- 3️⃣ 해당 수주의 모든 LOT 중 마지막 공정이 완료된 상태인지 확인
+		    SELECT W.LOT_CD, C.CONTRACT_CD, W.PROCESS_CD 
+		    FROM WORKORDER W
+		    JOIN COMPLETED_ORDERS C 
+		      ON W.LOT_CD = C.LOT_CD 
+		     AND W.PROCESS_CD = C.PROCESS_CD
+		    WHERE W.WORKORDER_ST = '완료'
+		),
+		WORKORDER_DURATION AS (
+		    -- 4️⃣ 각 수주의 작업 시작, 종료 시간 계산 (실소요시간)
+		    SELECT 
+		        FC.CONTRACT_CD,
+		        FC.LOT_CD,
+		        MIN(W.WORKORDER_SD) AS START_TIME,  -- 작업 시작 시간
+		        MAX(W.WORKORDER_ED) AS END_TIME,    -- 작업 종료 시간
+		        ROUND(
+				    (EXTRACT(DAY FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD)) * 24)
+				    + EXTRACT(HOUR FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD))
+				    + (EXTRACT(MINUTE FROM MAX(W.WORKORDER_ED) - MIN(W.WORKORDER_SD)) / 60), 2
+				) AS DURATION_HOURS
+		    FROM WORKORDER W
+		    JOIN FINAL_COMPLETION FC ON W.PROCESS_CD = FC.PROCESS_CD
+		    GROUP BY FC.CONTRACT_CD, FC.LOT_CD
+		)
+		-- 5️⃣ INOUT 테이블에서 소요량 계산 + WORKORDER_DURATION에서 실소요시간 추가
+		SELECT 
+		    FC.CONTRACT_CD                                       AS "수주번호",
+		    WOD.START_TIME                                      AS "작업시작시간",
+		    WOD.END_TIME                                        AS "작업종료시간",
+		    WOD.DURATION_HOURS                                  AS "소요시간",
+		    SUM(I.INOUT_NN)                                     AS "정상수량",
+		    SUM(I.INOUT_NN)                                     AS "INOUT_TOTAL",
+		    SUM(I.INOUT_FN)                                     AS "불량수량",
+		    (SUM(I.INOUT_NN) + SUM(I.INOUT_FN))                 AS "총소요량"
+		FROM INOUT I
+		JOIN FINAL_COMPLETION FC 
+		  ON I.LOT_CD  = FC.LOT_CD
+		JOIN WORKORDER_DURATION WOD 
+		  ON I.LOT_CD = WOD.LOT_CD
+		WHERE I.INOUT_TP = 'O'        -- 원자재 입출고 데이터만 포함
+		GROUP BY 
+		    FC.CONTRACT_CD, 
+		    WOD.START_TIME, 
+		    WOD.END_TIME, 
+		    WOD.DURATION_HOURS
+		ORDER BY FC.CONTRACT_CD
+	</select>
+	
+	
 </mapper>
