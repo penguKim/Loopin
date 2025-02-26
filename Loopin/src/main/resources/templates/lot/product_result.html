@@ -100,8 +100,7 @@
 	
 	// 로딩
 	$(function() {
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		make_grid();
 		getGridList();
 		setElementHeight('.card', -105);
@@ -283,7 +282,6 @@
 			columns : [
 				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
 				{header : '제품명', name : 'PRODUCT_CD', sortable : true, filter: 'text'},
-				{header : '공정명', name : 'PROCESS_CD', sortable : true, filter: 'text'},
 				{header : '실소요량', name : 'LOT_ST', sortable : true, filter: 'text'}, 
 				{header : '실소요시간', name : 'LOTHISTORY_ST', sortable : true, filter: 'text'}, 
 				{header : '작업수량', name : 'LOTHISTORY_WQ', sortable : true, filter: 'text'}, 

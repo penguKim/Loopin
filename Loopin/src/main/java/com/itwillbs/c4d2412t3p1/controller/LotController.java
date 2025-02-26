@@ -88,11 +88,13 @@ public class LotController {
 	@PostMapping("/select_LOT_json")
 	public ResponseEntity<Map<String, Object>> select_LOT_json(@RequestBody Map<String, Object> params) {
 		
+		log.info("params" + params);
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			
-			Map<String, Object> JSON_DATA = lotService.select_LOT_json(params);
-			response.put("data", JSON_DATA);
+			List<Map<String, Object>> list = lotService.select_LOT_json(params);
+			response.put("data", list);
+			log.info("response" + response);
 			
 			return ResponseEntity.ok(response);
 		} catch (Exception e) {
