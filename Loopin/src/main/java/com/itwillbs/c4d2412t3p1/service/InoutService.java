@@ -176,6 +176,13 @@ public class InoutService {
 	            ", 수량=" + withdrawalQty);
 
 	    // 출고 내역 등록
+	    String currentDt = inoutDTO.getInout_dt();
+	    if (!currentDt.matches(".*:\\d{2}\\.\\d{3}$")) {
+	    	LocalDateTime now = LocalDateTime.now();
+	    	String appendPart = String.format(":%02d.%03d", now.getSecond(), now.getNano() / 1_000_000);
+	    	inoutDTO.setInout_dt(currentDt + appendPart);
+	    }
+		
 	    Inout outRecord = Inout.createOutRecord(
 	            inoutDTO,
 	            warehouse.getOw_warehouse_cd(), // 출발창고
@@ -192,10 +199,11 @@ public class InoutService {
 	// 입고 처리 로직
 	private void setInboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
 	    int additionQty = warehouse.getIw_inout_nn();  // 도착창고에서 추가할 수량
-		System.out.println("입고 저장: 입고창고=" + warehouse.getIw_warehouse_cd() + ", 입고구역=" + warehouse.getIw_warearea_cd() + 
+	    String inboundWareareaCd = (warehouse.getIw_warearea_cd() == null) ? "NONE" : warehouse.getIw_warearea_cd();
+		System.out.println("입고 저장: 입고창고=" + warehouse.getIw_warehouse_cd() + ", 입고구역=" + inboundWareareaCd + 
 				", 수량=" + additionQty);
 	    Stock destStock = stockRepository.findById(
-            new StockPK(inoutDTO.getItem_cd(), warehouse.getIw_warehouse_cd(), warehouse.getIw_warearea_cd()))
+            new StockPK(inoutDTO.getItem_cd(), warehouse.getIw_warehouse_cd(), inboundWareareaCd))
             .map(existing -> {
                 existing.setStock_uu(regUser);
                 existing.setStock_ud(time);
@@ -205,7 +213,7 @@ public class InoutService {
                 Stock newStock = new Stock();
                 newStock.setItem_cd(inoutDTO.getItem_cd());
                 newStock.setWarehouse_cd(warehouse.getIw_warehouse_cd());
-                newStock.setWarearea_cd(warehouse.getIw_warearea_cd());
+                newStock.setWarearea_cd(inboundWareareaCd);
                 newStock.setStock_aq(0);
                 String itemGc = inoutDTO.getItem_gc();
                 System.out.println("item_gc");
@@ -220,24 +228,13 @@ public class InoutService {
 	    stockRepository.save(destStock);
 
 	    // 입고 내역 등록
-	    LocalDateTime now = LocalDateTime.now();
-
-		 // 초와 나노 초(밀리초 단위로 변환)
-		 int seconds = now.getSecond();
-		 int milliseconds = now.getNano() / 1_000_000;  // 1_000_000으로 나눠서 밀리초 구함
-	
-		 // 포맷 지정: 초는 두 자리, 밀리초는 세 자리
-		 String appendPart = String.format(":%02d.%03d", seconds, milliseconds);
-	
-		 // 기존 inout_dt 값 (예: "2025-02-25 13:29")
-		 String baseDateTime = inoutDTO.getInout_dt();
-	
-		 // 초와 밀리초를 붙인 최종 문자열 생성
-		 String updatedDateTime = baseDateTime + appendPart;
-	
-		 System.out.println("업데이트된 날짜와 시간: " + updatedDateTime);
-		 inoutDTO.setInout_dt(updatedDateTime);
-	    
+	    String currentDt = inoutDTO.getInout_dt();
+	    if (!currentDt.matches(".*:\\d{2}\\.\\d{3}$")) {
+	    	LocalDateTime now = LocalDateTime.now();
+	    	String appendPart = String.format(":%02d.%03d", now.getSecond(), now.getNano() / 1_000_000);
+	    	inoutDTO.setInout_dt(currentDt + appendPart);
+	    }
+			    
 	    Inout inRecord = Inout.createInRecord(
 	            inoutDTO,
 	            warehouse.getIw_warehouse_cd(), // 도착창고
