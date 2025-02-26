@@ -511,6 +511,9 @@
 <!-- 필터 모듈 JS File -->
 <script th:inline="javascript">
 	$(document).ready(function () {
+		
+		setGridTheme();
+		
 	    const urlParams = new URLSearchParams(window.location.search);
 	    const type = urlParams.get("type");
 
