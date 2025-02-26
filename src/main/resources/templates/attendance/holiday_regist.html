@@ -85,7 +85,7 @@
 	// 로딩 데이터
 	$(function() {
 		setGridTheme();
-		$("#current_year").text(`${year}년 휴일 등록`);
+		$("#current_year").text(`${year}년 휴일등록`);
 		
 		make_grid();
 		
@@ -182,8 +182,6 @@
 			});
 			return; // 요청 중단
 	    }
-		console.log(holiday_dt1);
-		console.log(holiday_dt2);
 
 	    // Ajax 요청
 	    $.ajax({
@@ -540,29 +538,42 @@
 	                    holiday_wr: holiday_wr  // 작성자 (예: "admin"으로 하드코딩)
 	                });
 	            });
+				debugger;
+				fetch('/insert_HOLIDAY', {
+				    method: 'POST',
+				    headers: {
+				        'Content-Type': 'application/json',
+				        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content') // CSRF 토큰
+				    },
+				    body: JSON.stringify(list)
+				})
+				.then(response => response.json()) // JSON 응답 파싱
+				.then(data => {
+				    console.log("Received data:", data);
+				    console.log("Type of data:", typeof data);
+				    console.log("Is data an array?", Array.isArray(data));
 
-	            // Fetch를 사용한 서버 요청
-	            fetch('/insert_HOLIDAY', {
-	                method: 'POST',
-	                headers: {
-	                    'Content-Type': 'application/json',
-	                    'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').getAttribute('content') // CSRF 토큰
-	                },
-	                body: JSON.stringify(list)
-	            })
-	                .then(response => response.text())
-	                .then(data => {
-	                    console.log(data);
-						grid.resetData(data);
-	                })
-	                .catch(error => {
-	                    console.error('Error:', error);
-						Swal.fire({
-							icon: "warning",
-						    title: "등록 실패",
-						    text: "이미 등록된 공휴일입니다.",
+				    // data가 객체이고 data.data가 배열인지 확인
+				    if (data && typeof data === 'object' && Array.isArray(data.data)) {
+				        grid.resetData(data.data); // 올바르게 data.data를 전달
+				        Swal.fire({
+						    icon: "success",
+						    title: "휴일 등록 성공",
+						    html: "휴일 등록에 성공하였습니다.",
 						});
-	                });
+				    } else {
+				        console.error("Error: Expected an array but received", data);
+				        grid.resetData([]); // 배열이 아닐 경우 빈 배열을 전달하여 오류 방지
+				    }
+				})
+				.catch(error => {
+				    console.error('Error:', error);
+				    Swal.fire({
+				        icon: "warning",
+				        title: "등록 실패",
+				        text: "이미 등록된 공휴일입니다.",
+				    });
+				});
 	        } else if (this.readyState == 4) {
 	            console.error('오류 발생');
 				Swal.fire({

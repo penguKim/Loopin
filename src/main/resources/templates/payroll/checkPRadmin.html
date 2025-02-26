@@ -8,7 +8,7 @@
 	<div class="card">
 		<div class="card" id="div_card">
 			<div class="card-body">
-				<div class="card-title"> 급여 이력 조회</div>
+				<div class="card-title"> 급여이력조회</div>
 				<div id="gridbase"></div>
 			</div>
 		</div>
@@ -17,8 +17,7 @@
 <!-- Toast UI grid JS File -->
 <script src="https://uicdn.toast.com/grid/latest/tui-grid.js"></script>
 <script type="text/javascript">
-	tui.Grid.setLanguage('ko');
-	tui.Grid.applyTheme('striped');
+	setGridTheme();
 	
 	function formatCurrency(value) {
 		if (typeof value === 'number') {
@@ -58,7 +57,7 @@
 	const gridbase = new tui.Grid({
 		el: document.getElementById('gridbase'),
 		responsive: true,
-		scrollX: true,
+		scrollX: false,
 		scrollY: true,
 		//bodyHeight : 665,
 		columns: [
@@ -74,11 +73,22 @@
 				formatter: function () {
 					return `
 					<button type="button" class="btn btn-link btn_detail" data-bs-toggle="modal" data-bs-target="#firstmodal">조회</button>
-					<button type="button" class="btn btn-link btn_email">이메일</button>
+					<button type="button" class="btn btn-link btn_email" style="display:none;">이메일</button>
 				`;
 				}
 			}
 		],
+		summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	details: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
 	});
 	  
 	/* 세번째 그리드 함수 */
@@ -239,7 +249,7 @@
 							</div>
 							<div class="modal-footer">
 								<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
-								<button type="button" class="btn btn-primary">메일보내기</button>
+								<button type="button" class="btn btn-primary" style="display:none;">메일보내기</button>
 							</div>
 						</div>
 					</div>
@@ -296,7 +306,18 @@
 		                        {header: '총지급액', name: 'PRDETAIL_TA', align: 'right'},
 		                        {header: '총공제액', name: 'PRDETAIL_TD', align: 'right'},
 		                        {header: '실지급액', name: 'PRDETAIL_RS', align: 'right'},
-		                    ]
+		                    ],
+		                    summary: {
+		            		    height: 30,
+		            		    position: 'bottom',
+		            		    columnContent: {
+		            		    	PRDETAIL_RS: {
+		            		            template: (valueMap) => {
+		            		                return `총  ${valueMap.cnt} 개`
+		            		            }
+		            		        },
+		            		    }
+		            		},
 		                });
 						
 						gridspes.resetData(spesdata); // 사원명 join할건지 테이블에 포함시킬건지 정해야함.
@@ -416,6 +437,7 @@
 		console.log('이벤트 타겟', event.target); 
 	});
 	
+			setGridHeight(gridbase, -330);
 	  
 	setElementHeight('#div_card', -105);
 	
@@ -423,7 +445,7 @@
 		setElementHeight('#div_card', -105);
 		setElementHeight('#div_calendar', -320);
 		if(grid != null) {
-			setGridHeight(grid, -430);
+			setGridHeight(gridbase, -200);
 		}
 	});
 	
