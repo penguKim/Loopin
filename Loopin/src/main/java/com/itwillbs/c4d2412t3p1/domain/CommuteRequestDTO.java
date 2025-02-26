@@ -16,6 +16,7 @@ import lombok.ToString;
 public class CommuteRequestDTO {
 	CommuteFilterRequest commuteFilter;
 	
+	WorkinghourDTO workinghour;
 	List<WorkinghourDTO> workinghourList;
 	CommuteDTO commute;
 	

@@ -45,7 +45,7 @@ public class Notice {
 	    if (this.notice_cd == null && this.sequenceValue != null) {
 	        String currentYear = LocalDate.now().format(DateTimeFormatter.ofPattern("yy"));
 	        String formattedSequence = String.format("%04d", this.sequenceValue);
-	        this.notice_cd = "nt" + currentYear + "-" + formattedSequence;
+	        this.notice_cd = "NT" + currentYear + "-" + formattedSequence;
 	    }
 	}
 

@@ -21,7 +21,7 @@ public interface MaterialRepository extends JpaRepository<Material, MaterialPK> 
 	@Query("DELETE FROM Material m WHERE m.material_cd IN :materialCodes")
 	void deleteByMaterialCd(@Param("materialCodes") List<String> materialCodes);
 
-	@Query("SELECT m.material_cd FROM Material m WHERE m.material_cd = :materialCd")
+	@Query("SELECT m FROM Material m WHERE m.material_cd = :materialCd")
 	List<Material> findByMaterialCd(@Param("materialCd") String material_cd);
 
 //     자재코드로 자재 정보 조회 (엔티티 전체 반환)

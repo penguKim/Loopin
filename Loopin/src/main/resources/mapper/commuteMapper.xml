@@ -131,6 +131,23 @@
 		WHERE EMPLOYEE_CD = #{workinghour.employee_cd}
 	</update>
 	
+	<!-- // 근로코드 조회 -->
+	<select id="select_WORKINGHOUR_CD" resultType="Workinghour">
+		SELECT CC.COMMON_CC workinghour_id, CC.COMMON_NM workinghour_nm, CC.COMMON_CT workinghour_rm
+		  FROM COMMON_CODE CC
+		  LEFT OUTER JOIN WORKINGHOUR WH ON CC.COMMON_CC = WH.WORKINGHOUR_ID
+		 WHERE CC.COMMON_GC = 'WKTYPE'
+		   AND WH.WORKINGHOUR_ID IS NULL
+	</select>
+	
+	<!-- 등록된 사원 카운트 -->
+	<select id="countEmployeeWorkinghour">
+		SELECT COUNT(*)
+		  FROM WORKINGHOUR WH
+		  LEFT OUTER JOIN EMPLOYEE EM ON EM.WORKINGHOUR_ID = WH.WORKINGHOUR_ID 
+		 WHERE EM.WORKINGHOUR_ID = #{work}
+	</select>
+	
 <!-- //////////////////////////////////////////////////////////// 출퇴근 현황 //////////////////////////////////////////////////////////// -->
 	
 	<select id="select_COMMUTE_timeList" resultType="Commute">

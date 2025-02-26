@@ -41,8 +41,8 @@ public class Warearea {
 	private String warearea_cd;
 	@Column(name = "warearea_nm", length = 255)
 	private String warearea_nm;
-	@Column(name = "warearea_cp", length = 10)
-	private String warearea_cp;
+	@Column(name = "warearea_cp")
+	private Integer warearea_cp;
 	@Column(name = "warearea_in", length = 5)
 	private String warearea_in;
 	@Column(name = "warearea_us")

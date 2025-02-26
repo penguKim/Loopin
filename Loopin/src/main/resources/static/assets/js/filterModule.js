@@ -14,6 +14,7 @@ function createDateRangePicker(elementId, format, start, end) {
 
     // Startpicker 초기화
     const startPicker = new tui.DatePicker(`#${elementId}StartContainer`, {
+		language: 'ko',
         date: startDate,
         input: {
             element: `#${elementId}StartInput`,
@@ -24,6 +25,7 @@ function createDateRangePicker(elementId, format, start, end) {
 
     // Endpicker 초기화
     const endPicker = new tui.DatePicker(`#${elementId}EndContainer`, {
+		language: 'ko',
         date: endDate,
         input: {
             element: `#${elementId}EndInput`,

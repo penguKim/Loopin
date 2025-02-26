@@ -29,4 +29,5 @@ public class OrderDTO {
 	
 	
 	private Long sequenceValue;
+	private String account_nm;
 }
