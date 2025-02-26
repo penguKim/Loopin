@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" 
+			xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+			xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+
+<body>
+	<header id="header" class="header fixed-top d-flex align-items-center" layout:fragment="header">
+		<div class="d-flex align-items-center justify-content-between">
+			<a th:href="@{/}" class="logo d-flex align-items-center">
+				<img src="assets/img/logo.png" alt="">
+				<span class="d-none d-lg-block">Loopin</span>
+			</a>
+			<i class="bi bi-list toggle-sidebar-btn" style="margin-right: 40px;"></i>
+		</div>
+		<nav class="header-nav">
+			<ul class="d-flex align-items-center gap-4 justify-content-start" id="header-nav">
+			</ul>
+		</nav>
+	
+		<nav class="header-nav ms-auto">
+			<ul class="d-flex align-items-center">
+				<li class="nav-item dropdown pe-3">
+					<a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" id="profileDropdown"
+						data-bs-toggle="dropdown" aria-expanded="false">
+						<img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+						<span class="d-none d-md-block dropdown-toggle ps-2" sec:authentication="name"></span>
+					</a>
+					<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile" aria-labelledby="profileDropdown">
+						<li class="dropdown-header">
+							<h6 sec:authentication="name"></h6>
+							<span sec:authentication="principal.employee_rl"></span>
+						</li>
+						<li>
+							<a class="dropdown-item d-flex align-items-center" href="logout">
+								<i class="bi bi-box-arrow-right"></i>
+								<span>로그아웃</span>
+							</a>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</nav>
+	</header>
+</body>
+</html>
