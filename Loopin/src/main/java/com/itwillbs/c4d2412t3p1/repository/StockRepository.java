@@ -34,4 +34,8 @@ public interface StockRepository extends JpaRepository<Stock, StockPK> {
 		                                   @Param("inoutIw") String inoutIw,
 		                                   @Param("inoutIa") String inoutIa);
 
+
+	@Query("SELECT s FROM Stock s WHERE s.item_cd = :item_cd")
+    List<Stock> findByItem_cd(@Param("item_cd") String item_cd);
+
 }
