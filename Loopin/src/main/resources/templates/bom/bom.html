@@ -442,6 +442,17 @@ const bomgrid = new tui.Grid({
 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
 		  {header:'소요량', name:'BOM_AM', align:'center'},
 	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOM_AM: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
 });
 
 const mgrid = new tui.Grid({

@@ -32,7 +32,7 @@
 							<h5 id="premth"></h5>
 							<h5>공정관리</h5>
 						</div>
-						<div id="filterModule"></div>
+						<div id="filterModule" class="mb-2"></div>
 						<div id="grid" class="p-1"></div>
 						<!-- <div class="card-footer d-flex justify-content-start align-items-center p-2"> -->
 						<div class="d-flex justify-content-start align-items-center p-2">
@@ -706,7 +706,8 @@
 	//////////////////
 	
 	setElementHeight('#div_card', -110);
-	
+	setGridTheme();
+      
 	$(window).resize(function() {
 		setElementHeight('#div_card', -110);
 		if(grid != null) {
@@ -742,13 +743,14 @@
 	  const grid = new tui.Grid({
 		  el: document.getElementById('grid'),
 		  rowHeaders: ['checkbox'],
-		  scrollX: true,
+		  bodyHeight: 510,
+		  scrollX: false,
 		  scrollY: true,
 		  columns: [
 			  {header:'공정코드', name:'PROCESS_CD', align:'center'},
 			  {header:'공정명', name:'PROCESS_NM', align:'center'},
-			  {header:'공정품목', name:'PROCESS_PD', align:'center'},
-			  {header:'설비', name:'PROCESS_EQ', align:'center'},
+			  {header:'공정품목', name:'PROCESS_PN', align:'center'},
+			  {header:'설비', name:'EQUIPMENT_NM', align:'center'},
 			  {header:'사용여부', name:'PROCESS_US', align:'center'},
 			  {header:'비고', name:'PROCESS_BG', align:'center'},
 		  ],
