@@ -70,8 +70,8 @@ public class MenuController {
         if ("ERP".equals(menuType)) {
         	if(isHrAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "인사관리", "link", "1"));
-        		sidebarMenu.add(Map.of("name", "인사관리", "link", "/employee_list"));
-        		sidebarMenu.add(Map.of("name", "인사통계", "link", "/employee_chart" ));
+        		sidebarMenu.add(Map.of("name", "인사카드", "link", "/employee_list"));
+        		sidebarMenu.add(Map.of("name", "인사현황", "link", "/employee_chart" ));
         		sidebarMenu.add(Map.of("name", "인사발령", "link", "/transfer_list" ));
         	}
         	if(isAtAdmin || isSysAdmin) {
@@ -85,7 +85,7 @@ public class MenuController {
         	}
         	if(isPrAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "급여", "link", "1"));
-        		sidebarMenu.add(Map.of("name", "급여조회", "link", "/check_pradmin" ));
+        		sidebarMenu.add(Map.of("name", "급여이력조회", "link", "/check_pradmin" ));
         		sidebarMenu.add(Map.of("name", "급여이체", "link", "/prsend" ));
         		sidebarMenu.add(Map.of("name", "급여코드", "link", "/prcode" ));
         	}
