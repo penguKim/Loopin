@@ -26,4 +26,18 @@ public interface DailyproductplanRepository extends JpaRepository<Dailyproductpl
 			""", nativeQuery = true)
 	List<Dailyproductplan> findAllByContractAndBaseProduct(@Param("contractCd") String contractCd,
 			@Param("baseProductCd") String baseProductCd);
+
+	@Query(value = """
+			SELECT TO_CHAR(d.dailyproductplan_sd, 'YYYY-MM-DD') AS dailyDate
+			  FROM DAILYPRODUCTPLAN d
+			 WHERE SUBSTR(d.product_cd,1,INSTR(d.product_cd,'-',1,1)-1) = :baseProductCd
+			   AND d.contract_cd = :contractCd
+			   AND d.process_cd  = :processCd
+			   AND d.product_cr  = :productCr
+			   AND d.product_sz  = :productSz
+			 FETCH FIRST 1 ROWS ONLY
+			""", nativeQuery = true)
+	String findDailyPlanDate(@Param("baseProductCd") String baseProductCd, @Param("contractCd") String contractCd,
+			@Param("processCd") String processCd, @Param("productCr") String productCr,
+			@Param("productSz") String productSz);
 }

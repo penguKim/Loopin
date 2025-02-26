@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.itwillbs.c4d2412t3p1.entity.Workorder;
 import com.itwillbs.c4d2412t3p1.repository.WorkorderRepository;
+import com.itwillbs.c4d2412t3p1.service.WorkOrderService;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.java.Log;
@@ -20,6 +21,8 @@ import lombok.extern.java.Log;
 public class WorkOrderController {
 	
 	private final WorkorderRepository workorderRepository;
+	
+	private final WorkOrderService workorderService;
 
     // 페이지 이동
     @GetMapping("/workorder_list")
@@ -38,8 +41,10 @@ public class WorkOrderController {
     // 작업지시 저장
     @PostMapping("/save_WORKORDER")
     public ResponseEntity<String> saveWorkOrder(@RequestBody Workorder req) {
-        // req.getWorkorder_cd() ...
-        workorderRepository.save(req);
+        log.info("workorder savecontroller => " + req.toString());
+
+        workorderService.saveWorkorder(req);
+
         return ResponseEntity.ok("SUCCESS");
     }
 	

@@ -60,8 +60,8 @@
 													</div>
 													<!-- 작업자(dailyproductplan_jb) : 필드 클릭 → 검색 모달 -->
 													<div class="col-md-4">
-														<label for="workorder_jb" class="form-label">작업자</label> <input
-															type="text" class="form-control" id="workorder_jb"
+														<label for="workorder_jb" class="form-label">작업자번호</label>
+														<input type="text" class="form-control" id="workorder_jb"
 															readonly>
 													</div>
 												</div>
@@ -84,8 +84,10 @@
 													</div>
 												</div>
 												<div class="row mb-3"></div>
-												<!-- 작업지시상태 (기본 "10"=대기) : hidden -->
-												<input type="hidden" id="workorder_st" value="10">
+												<!-- 작업지시상태  : hidden -->
+												<input type="hidden" id="workorder_st" value="대기"> <input
+													type="hidden" id="product_cd" /> <input type="hidden"
+													id="new_process_time" value="0">
 											</form>
 										</div>
 										<div class="modal-footer">
@@ -140,6 +142,9 @@
 
 	<script th:inline="javascript">
 document.addEventListener("DOMContentLoaded", function() {
+    
+    const csrfToken  = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
   // ---------------------------
   // 1) 작업지시 목록 그리드
   // ---------------------------
@@ -150,9 +155,17 @@ document.addEventListener("DOMContentLoaded", function() {
       { header: '작업지시번호', name: 'workorder_cd' },
       { header: 'LOT 번호',    name: 'lot_cd' },
       { header: '공정코드',    name: 'process_cd' },
-      { header: '작업일자',    name: 'dailyproductplan_sd' }, // DB 저장 시 dailyproductplan_sd
-      { header: '작업시작시간',name: 'workorder_sd' },
-      { header: '작업종료시간',name: 'workorder_ed' },
+      { header: '작업일자',    name: 'dailyproductplan_sd', formatter: (cellInfo) => {
+          return getDateStr(cellInfo.value); // → "2024-02-19"
+        } }, 
+      { header: '작업시작시간',name: 'workorder_sd',
+            formatter: (cellInfo) => {
+                return getTimeMS(cellInfo.value); // → "13:00"
+              } },
+      { header: '작업종료시간',name: 'workorder_ed',
+                  formatter: (cellInfo) => {
+                      return getTimeMS(cellInfo.value); // → "16:00"
+                    }},
       { header: '작업자',      name: 'dailyproductplan_jb' },
       { header: '상태',       name: 'workorder_st' }
     ],
@@ -180,7 +193,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const workorderSdInput   = document.getElementById("workorder_sd"); // 작업시작시간
   const workorderEdInput   = document.getElementById("workorder_ed"); // 작업종료시간
   const workorderJbInput   = document.getElementById("workorder_jb"); // 작업자
-  const workorderStInput   = document.getElementById("workorder_st"); // hidden, default=10
+  const workorderStInput   = document.getElementById("workorder_st");
+  const newProcTimeHidden = document.getElementById("new_process_time"); // 공정소요시간(정수)
 
   function openWorkOrderModal(mode, rowData=null) {
     if (mode === "insert") {
@@ -192,7 +206,8 @@ document.addEventListener("DOMContentLoaded", function() {
       workorderSdInput.value = "";
       workorderEdInput.value = "";
       workorderJbInput.value = "";
-      workorderStInput.value = "10"; // 대기
+      workorderStInput.value = "대기"; // 대기
+      newProcTimeHidden.value = "0";
     } else if (mode === "update" && rowData) {
       document.getElementById("workorderModalTitle").textContent = "작업지시 수정";
       lotCdInput.value       = rowData.lot_cd || "";
@@ -208,19 +223,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // 저장
   document.getElementById("btnSaveWorkOrder").addEventListener("click", () => {
+      
+    const datePart = dailyplanSdInput.value;  // "2025-02-27"
+    const timePart = workorderSdInput.value;  // "13:00"
+    // 종료시간도 마찬가지:
+    const endTimePart = workorderEdInput.value; // "16:00" etc.
+
+    // 1) 시작시간을 "YYYY-MM-DDTHH:mm:ss" 형태로 만들기
+    //    "2025-02-27T13:00:00"
+    const combinedStart = datePart + "T" + timePart + ":00";
+    // 2) 종료시간도 동일
+    const combinedEnd = datePart + "T" + endTimePart + ":00";
+    
+    console.log(datePart);
+    console.log(timePart);
+    console.log(endTimePart);
+    console.log(combinedStart);
+    console.log(combinedEnd);
+    
     const reqBody = {
       lot_cd            : lotCdInput.value,
       process_cd        : processCdInput.value,
       dailyproductplan_sd: dailyplanSdInput.value,  // 작업일자
-      workorder_sd      : workorderSdInput.value,   // 시작시간
-      workorder_ed      : workorderEdInput.value,   // 종료시간
+      workorder_sd      : combinedStart,   // 시작시간
+      workorder_ed      : combinedEnd,   // 종료시간
       dailyproductplan_jb: workorderJbInput.value,  // 작업자
-      workorder_st      : workorderStInput.value    // "10"
+      workorder_st      : workorderStInput.value    // "대기"
     };
 
     fetch("/save_WORKORDER", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json",
+          		 [csrfHeader]: csrfToken
+      },
       body: JSON.stringify(reqBody)
     })
     .then(res => {
@@ -298,55 +333,79 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // 모드별 컬럼 & 데이터
-    if (mode === "lot") {
-      console.log(mode);
-      searchGrid.setColumns([
-        { header: "LOT번호",        name: "lot_cd",  align: "center" },
-        { header: "공정코드",      name: "process_cd", align: "center" },
-        { header: "생성일시",      name: "lot_cr", align: "center" },
-        { header: "품목코드",    name: "product_cd", align: "center" },
-        { header: "색상",          name: "product_cr", align: "center" },
-        { header: "사이즈",         name: "product_sz", align: "center" },
-        { header: "수량",          name: "lot_am", align: "center" }
-      ]);
-      fetchSearchList("/select_LOT_list", searchGrid);
+if (mode === "lot") {
+  console.log(mode);
+  searchGrid.setColumns([
+    { header: "LOT번호",         name: "lot_cd",  align: "center", width: 220 },
+    { header: "공정코드",        name: "process_cd", align: "center" },
+    { header: "생성일시",        name: "lot_cr", align: "center" },
+    { header: "수주번호",        name: "contract_cd", align: "center" },
+    { header: "품목코드",        name: "product_cd", align: "center" }, 
+    { header: "색상",           name: "product_cr", align: "center" },
+    { header: "사이즈",          name: "product_sz", align: "center" },
+    { header: "수량",           name: "dailyproductplan_js", align: "center" }
+  ]);
+  fetchSearchList("/select_LOT_list_for_workorder", searchGrid);
 
-      // 더블클릭 시 → LOT정보 & 작업일자(dailyproductplan_sd)
-      searchGrid.on("dblclick", (ev) => {
-        const rowData = searchGrid.getRow(ev.rowKey);
-        if (!rowData) return;
+  // 더블클릭 시 → LOT정보 & 작업일자(dailyproductplan_sd)
+  searchGrid.on("dblclick", (ev) => {
+    const rowData = searchGrid.getRow(ev.rowKey);
+    if (!rowData) return;
 
-        // LOT번호, 공정코드
-        lotCdInput.value      = rowData.lot_cd || "";
-        processCdInput.value  = rowData.process_cd || "";
+    // LOT번호, 공정코드
+    lotCdInput.value      = rowData.lot_cd     || "";
+    processCdInput.value  = rowData.process_cd || "";
+	
+    document.getElementById("product_cd").value = rowData.product_cd || "";
+    
+    // (1) baseProductCd 추출
+    // product_cd 예: "JORDAN001-220-BLACK"
+    // SUBSTR + INSTR 인덱스 쓰려면 baseProductCd = "JORDAN001"
+    let baseProductCd = rowData.product_cd; 
+    if (baseProductCd) {
+      const idx = baseProductCd.indexOf("-");
+      if (idx > 0) {
+        baseProductCd = baseProductCd.substring(0, idx);
+      }
+    } else {
+      baseProductCd = "";
+    }
 
-        // LOT에서 dailyproductplan_sd를 직접 주지 않는다면,
-        // base_product_cd + product_sz + product_cr => product_cd
-        // 그 외 contract_cd 등 조건 → 일일생산계획 조회
-        const combinedProductCd = rowData.base_product_cd + "-" +
-                                  rowData.product_sz + "-" +
-                                  rowData.product_cr;
+    // (2) 개별 파라미터 준비
+    const contractCd = rowData.contract_cd   || "";
+    const productCr  = rowData.product_cr    || "";
+    const productSz  = rowData.product_sz    || "";
+    const processCd  = rowData.process_cd    || "";
 
-        // 예: /select_DAILYPLAN_one?product_cd=xxx
-        fetch(`/select_DAILYPLAN_one?product_cd=${encodeURIComponent(combinedProductCd)}`)
-          .then(res => res.json())
-          .then(planData => {
-            // planData.dailyproductplan_sd = "2025-02-26"
-            dailyplanSdInput.value = planData.dailyproductplan_sd || "";
-          })
-          .catch(err => console.error("일일생산계획 조회 오류:", err));
+    // (3) 일일생산계획(dailyproductplan) 조회
+    // ex) /select_DAILYPLAN_one?baseProductCd=xxx&contractCd=yyy&processCd=zzz&productCr=aaa&productSz=bbb
+    const url = `/select_DAILYPLAN_one?baseProductCd=${encodeURIComponent(baseProductCd)}
+      &contractCd=${encodeURIComponent(contractCd)}
+      &processCd=${encodeURIComponent(processCd)}
+      &productCr=${encodeURIComponent(productCr)}
+      &productSz=${encodeURIComponent(productSz)}`.replace(/\s+/g, "");
 
-        // 검색 모달 닫기 + 작업지시 모달
-        bootstrap.Modal.getInstance(searchModalEl).hide();
-        workorderModal.show();
-      });
-    } else if (mode === "worker") {
+    fetch(url)
+      .then(res => res.json())
+      .then(planData => {
+        // planData.dailyproductplan_sd = "2025-02-26"
+        dailyplanSdInput.value = planData.dailyproductplan_sd || "";
+      })
+      .catch(err => console.error("일일생산계획 조회 오류:", err));
+
+    // 검색 모달 닫기 + 작업지시 모달
+    bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+    workorderModal.show();
+  });
+}
+ else if (mode === "worker") {
       // 작업자 검색
       searchGrid.setColumns([
         { header: "사원번호",   name: "employee_cd",    align: "center" },
         { header: "작업자명",   name: "employee_nm",    align: "center" },
-        { header: "부서",       name: "departmentName", align: "center" },
-        { header: "직급",       name: "positionName",   align: "center" }
+        { header: "총 근무 시간",       name: "total_hours", align: "center" },
+        { header: "근무 가능 시간",       name: "remaining_hours",   align: "center" },
+        { header: "공정소요시간",       name: "new_process_time",   align: "center" }
       ]);
       fetchSearchList("/select_WORKABLE_EMPLOYEE_list", searchGrid);
 
@@ -357,7 +416,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
         // 작업자
         workorderJbInput.value = rowData.employee_cd || "";
-
+		
+     	// 공정 소요시간 (정수)
+        const newProcessTime = rowData.new_process_time || 0;
+        // 1) 숨김 필드에 저장
+        document.getElementById("new_process_time").value = newProcessTime;
+        
         // 검색 모달 닫기 + 작업지시 모달
         bootstrap.Modal.getInstance(searchModalEl).hide();
         workorderModal.show();
@@ -368,20 +432,109 @@ document.addEventListener("DOMContentLoaded", function() {
     searchModal.show();
   }
 
-  // 실제 검색 (ex: /select_LOT_list?searchValue=xxx)
-  function fetchSearchList(apiUrl, grid) {
-    // 만약 검색어 사용 시:
-    // const val = searchInput.value.trim();
-    // if (val) apiUrl += "?searchValue=" + encodeURIComponent(val);
+  // 실제 검색 (ex: /select_LOT_list_for_workorder?searchValue=xxx)
+function fetchSearchList(apiUrl, grid) {
+  // 만약 URL에 "select_WORKABLE_EMPLOYEE_list"가 포함되어 있다면
+  if (apiUrl.includes("select_WORKABLE_EMPLOYEE_list")) {
+    // 1) 현재 화면(모달 등)에서 필요한 필드값 가져오기
+    //    - "작업일자" 필드 (dailyplanSdInput 등)
+    //    - "productCd" (lot 검색 후 저장된 필드)
+    //    - "processCd" (공정코드 필드)
+    
+    const workDateVal  = dailyplanSdInput.value;    // 예: "2025-02-27"
+    const productCdVal = document.getElementById("product_cd").value;      // LOT 검색 시 품목코드
+    const processCdVal = processCdInput.value;      // "OUTSOLE" 등
 
-    fetch(apiUrl)
-      .then(res => res.json())
-      .then(data => {
-        grid.resetData(data);
-      })
-      .catch(err => console.error("검색 오류:", err));
+    // 2) 쿼리 파라미터 붙이기
+    //    /select_WORKABLE_EMPLOYEE_list?workDate=...&productCd=...&processCd=...
+    apiUrl += `?workDate=${encodeURIComponent(workDateVal)}`
+           + `&productCd=${encodeURIComponent(productCdVal)}`
+           + `&processCd=${encodeURIComponent(processCdVal)}`;
   }
 
+  // 공통 fetch 로직
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(data => {
+      grid.resetData(data);
+    })
+    .catch(err => console.error("검색 오류:", err));
+}
+
+workorderSdInput.addEventListener("change", () => {
+    // 1) 사용자가 입력한 값 ex) "830", "1310"
+    const typedValue = workorderSdInput.value.trim();
+
+    // 2) parseTimeInput -> "HH:MM"
+    const startHHMM = parseTimeInput(typedValue);
+    // 필드에 "HH:MM"로 표시
+    workorderSdInput.value = startHHMM;
+
+    // 3) 공정소요시간 hidden 필드 값
+    //    (작업자 모달에서 new_process_time을 가져옴)
+    const newProcessTime = parseInt(newProcTimeHidden.value, 10) || 0;
+
+    // 4) 종료시간 계산
+    const endHHMM = addHoursToTime(startHHMM, newProcessTime);
+    workorderEdInput.value = endHHMM;
+  });
+  
+	
+/* =============================
+ * 1) 시간 파싱 / 포맷 함수
+ * ============================= */
+/**
+ * 사용자가 숫자로 입력한 시간을 "HH:MM" 문자열로 변환
+ * 예) "1310" -> "13:10", "830" -> "08:30", "5" -> "00:05"
+ */
+function parseTimeInput(value) {
+  // 숫자 이외 문자 제거
+  value = value.replace(/\D/g, '');
+  if (!value) return "00:00";
+
+  let hour = 0, min = 0;
+
+  if (value.length <= 2) {
+    // ex) "5" -> hour=0, min=5 => "00:05"
+    min = parseInt(value, 10);
+  } else if (value.length === 3) {
+    // ex) "830" -> hour=8, min=30 => "08:30"
+    hour = parseInt(value.slice(0, 1), 10);
+    min  = parseInt(value.slice(1), 10);
+  } else {
+    // ex) "1310" -> hour=13, min=10 => "13:10"
+    hour = parseInt(value.slice(0, 2), 10);
+    min  = parseInt(value.slice(2), 10);
+  }
+
+  // 범위 보정
+  if (hour < 0) hour = 0;
+  if (hour > 23) hour = 23;
+  if (min < 0)  min = 0;
+  if (min > 59) min = 59;
+
+  // "HH:MM" 형식
+  return String(hour).padStart(2, '0') + ":" + String(min).padStart(2, '0');
+}
+
+/**
+ * "HH:MM" 형태의 startHHMM + addHours(정수) => 종료 "HH:MM"
+ * 예) start="13:10", addHours=3 -> "16:10"
+ */
+function addHoursToTime(startHHMM, addHours) {
+  const [sh, sm] = startHHMM.split(":").map(Number);
+  let totalMin   = (sh * 60) + sm + (addHours * 60);
+
+  // 하루 24시간 넘어가면 %24 처리 (원하는 로직에 따라)
+  let newHour = Math.floor(totalMin / 60) % 24;
+  let newMin  = totalMin % 60;
+
+  return String(newHour).padStart(2, '0') + ":" + String(newMin).padStart(2, '0');
+}
+  
+  
+  
+  
   // -----------------------------------------
   // 초기 조회
   fetchWorkOrderList();

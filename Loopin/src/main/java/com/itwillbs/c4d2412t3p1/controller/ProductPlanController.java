@@ -20,6 +20,7 @@ import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailProductInfoDTO;
 import com.itwillbs.c4d2412t3p1.domain.DailyProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
+import com.itwillbs.c4d2412t3p1.domain.LotResponse;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanSaveRequest;
@@ -143,7 +144,6 @@ public class ProductPlanController {
 	@ResponseBody // JSON 응답
 	public ResponseEntity<List<ContractDetailProductInfoDTO>> selectContractDetailColorSizes(
 			@RequestParam("contract_cd") String contractCd, @RequestParam("product_cd") String productCd) {
-		log.info("색상·사이즈 조회 요청: contractCd=" + contractCd + ", productCd=" + productCd);
 
 		// 1) Service 호출 -> DTO 목록
 		List<ContractDetailProductInfoDTO> list = productplanService.findColorSizeList(contractCd, productCd);
@@ -153,18 +153,18 @@ public class ProductPlanController {
 		return ResponseEntity.ok(list);
 	}
 
-	/**
-	 * 일일생산계획 모달에서 "작업자" 검색 시 → 근무 가능 사원 목록 ex)
-	 */
-	@GetMapping("/select_WORKABLE_EMPLOYEE_list")
-	@ResponseBody
-	public ResponseEntity<List<WorkableEmployeeProjection>> select_WORKABLE_EMPLOYEE_list(
-			@RequestParam("workDate") String workDate, @RequestParam("productCd") String productCd,
-			@RequestParam("processCd") String processCd) {
-		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
-				processCd);
-		return ResponseEntity.ok(list);
-	}
+//	/**
+//	 * 일일생산계획 모달에서 "작업자" 검색 시 → 근무 가능 사원 목록 ex)
+//	 */
+//	@GetMapping("/select_WORKABLE_EMPLOYEE_list")
+//	@ResponseBody
+//	public ResponseEntity<List<WorkableEmployeeProjection>> select_WORKABLE_EMPLOYEE_list(
+//			@RequestParam("workDate") String workDate, @RequestParam("productCd") String productCd,
+//			@RequestParam("processCd") String processCd) {
+//		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
+//				processCd);
+//		return ResponseEntity.ok(list);
+//	}
 
 	@PostMapping("/save_DAILYPRODUCTPLAN")
 	public ResponseEntity<Map<String, String>> saveDailyPlan(@RequestBody DailyProductPlanDTO dto) {
@@ -183,5 +183,48 @@ public class ProductPlanController {
 		log.info("###" + list.toString());
 		return ResponseEntity.ok(list);
 	}
+
+	// 작업지시
+
+	@GetMapping("/select_LOT_list_for_workorder")
+	public ResponseEntity<List<LotResponse>> selectLotList() {
+		// Service -> DTO List
+		List<LotResponse> list = productplanService.getLotList();
+
+		return ResponseEntity.ok(list);
+	}
+
+	// 작업자 조회
+	@GetMapping("/select_WORKABLE_EMPLOYEE_list")
+	public ResponseEntity<List<WorkableEmployeeProjection>> selectWorkableEmployeeList(
+			@RequestParam("workDate") String workDate, @RequestParam("productCd") String productCd,
+			@RequestParam("processCd") String processCd) {
+		log.info("사원정보~~ " + workDate + productCd + processCd);
+		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
+				processCd);
+
+		return ResponseEntity.ok(list);
+	}
+	
+	// 
+    @GetMapping("/select_DAILYPLAN_one")
+    public ResponseEntity<Map<String, String>> selectDailyPlanOne(
+        @RequestParam("baseProductCd") String baseProductCd,
+        @RequestParam("contractCd")    String contractCd,
+        @RequestParam("processCd")     String processCd,
+        @RequestParam("productCr")     String productCr,
+        @RequestParam("productSz")     String productSz
+    ) {
+        // 1) Service 호출
+        String dailyDate = productplanService.findDailyPlanDate(
+            baseProductCd, contractCd, processCd, productCr, productSz
+        );
+
+        // 2) JSON 응답: {"dailyproductplan_sd":"YYYY-MM-DD"}
+        Map<String, String> result = new HashMap<>();
+        result.put("dailyproductplan_sd", (dailyDate != null) ? dailyDate : "");
+
+        return ResponseEntity.ok(result);
+    }
 
 }
