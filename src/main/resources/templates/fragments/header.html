@@ -7,9 +7,9 @@
 <body>
 	<header id="header" class="header fixed-top d-flex align-items-center" layout:fragment="header">
 		<div class="d-flex align-items-center justify-content-between">
-			<a th:href="@{/}" class="logo d-flex align-items-center">
-				<img src="assets/img/logo.png" alt="">
-				<span class="d-none d-lg-block">Loopin</span>
+			<a th:href="@{/}" class="logo d-flex align-items-center" style="margin-left: 20px;">
+				<img src="assets/img/logo3.png" alt="">
+<!--				<span class="d-none d-lg-block">Loopin</span>-->
 			</a>
 			<i class="bi bi-list toggle-sidebar-btn" style="margin-right: 40px;"></i>
 		</div>
@@ -23,11 +23,12 @@
 				<li class="nav-item dropdown pe-3">
 					<a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" id="profileDropdown"
 						data-bs-toggle="dropdown" aria-expanded="false">
-						<img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+						<i class="bi bi-person-circle"></i>
 						<span class="d-none d-md-block dropdown-toggle ps-2" sec:authentication="name"></span>
 					</a>
 					<ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile" aria-labelledby="profileDropdown">
 						<li class="dropdown-header">
+							<i class="bi bi-person-circle"></i>
 							<h6 sec:authentication="name"></h6>
 							<span sec:authentication="principal.employee_rl"></span>
 						</li>

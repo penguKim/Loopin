@@ -72,60 +72,61 @@
 	</select>
 
 	<select id="select_LOT_json" resultType="map">
-		WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
-		    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
-		    FROM BOMPROCESS
-		    WHERE BOMPROCESS_AP = 'NONE'
-		      AND PRODUCT_CD = #{PRODUCT_CD}
+		WITH BOM_HIERARCHY (BOM_CD, PRODUCT_CD, BOM_AM, step, path, IS_RAW) AS (
+		    -- 🔥 최하위 원자재부터 시작 (BOM 테이블에서 직접 추출)
+		    SELECT 
+		        B.BOM_CD,         
+		        B.PRODUCT_CD,      
+		        B.BOM_AM,        
+		        1 AS step,                
+		        B.BOM_CD AS path,
+		        CASE 
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            ELSE 'N'
+		        END AS IS_RAW
+		    FROM BOM B
+		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
 		    UNION ALL
-		    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 LVL
-		    FROM BOMPROCESS BP
-		    JOIN BOM_HIERARCHY BH 
-		        ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS 
-		       AND BP.PRODUCT_CD = BH.PRODUCT_CD
-		    WHERE BP.PRODUCT_CD = #{PRODUCT_CD}
-		),
-		WORKORDER_STATUS AS (  
-		    SELECT L.PROCESS_CD, L.LOT_CD, W.WORKORDER_ST AS process
-			FROM LOT L
-			LEFT JOIN WORKORDER w ON W.LOT_CD = L.LOT_CD AND L.PROCESS_CD = W.PROCESS_CD
-			WHERE L.LOT_CD = #{LOT_CD}
+		    SELECT 
+		        B.BOM_CD, 
+		        BP.PRODUCT_CD, 
+		        B.BOM_AM * NVL(PARENT_BOM.BOM_AM, 1),  -- 🚀 누적 소요량 계산
+		        BH.step + 1,
+		        BH.path || ' > ' || B.BOM_CD,
+		        CASE 
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            ELSE 'N'
+		        END AS IS_RAW
+		    FROM BOM B
+		    JOIN BOM_HIERARCHY BH ON B.PRODUCT_CD = BH.BOM_CD -- 🔥 부모 반제품과 연결
+		    JOIN BOMPROCESS BP ON BH.BOM_CD = BP.BOMPROCESS_CD -- 🔥 BOMPROCESS를 활용하여 반제품 연결
+		    LEFT JOIN BOM PARENT_BOM ON BP.BOMPROCESS_CD = PARENT_BOM.BOM_CD -- 🚀 BOM_AM 값을 조인하여 가져옴
+		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
+		), BH AS (
+			   SELECT 
+				    BOM_CD, 
+				    PRODUCT_CD,
+				    SUM(BOM_AM) AS BOM_AM,  -- 🔥 중복된 원자재를 합산하여 소요량 계산
+				    step,
+				    path,
+				    IS_RAW  -- 🚀 원자재 여부 포함
+				FROM BOM_HIERARCHY
+				WHERE product_cd = #{PRODUCT_CD}
+				GROUP BY BOM_CD, PRODUCT_CD, step, path, IS_RAW
+				ORDER BY step DESC, BOM_AM DESC
 		)
-		SELECT JSON_OBJECT(
-		    'name' VALUE #{PRODUCT_CD},
-		    'title' VALUE '제품',
-		    'process' VALUE NVL(W.process, '대기'),  -- 🚀 W.process를 참조할 수 있도록 JOIN
-		    'lot_cd' VALUE #{LOT_CD},
-		    'children' VALUE (
-		        SELECT JSON_ARRAYAGG(
-		            JSON_OBJECT(
-		                'name' VALUE A.CURRENT_PROCESS,
-		                'title' VALUE '반제품',
-		                'process' VALUE NVL(W.process, '대기'),
-		                'lot_cd' VALUE #{LOT_CD},
-		                'children' VALUE (
-		                    SELECT JSON_ARRAYAGG(
-		                        JSON_OBJECT(
-		                            'name' VALUE B.CURRENT_PROCESS,
-		                            'title' VALUE '반제품',
-		                            'process' VALUE NVL(W2.process, '대기'), 
-					                'lot_cd' VALUE #{LOT_CD}
-		                        )
-		                    ) 
-		                    FROM BOM_HIERARCHY B
-		                    LEFT JOIN WORKORDER_STATUS W2 ON B.CURRENT_PROCESS = W2.PROCESS_CD 
-		                    WHERE B.BOMPROCESS_AP = A.CURRENT_PROCESS
-		                )
-		            ) RETURNING CLOB
-		        ) 
-		        FROM BOM_HIERARCHY A
-		        LEFT JOIN WORKORDER_STATUS W ON A.CURRENT_PROCESS = W.PROCESS_CD  
-		        WHERE A.BOMPROCESS_AP = 'ASSEMBLY'
-		    )
-		) AS json_data
-		FROM BOM_HIERARCHY BH
-		LEFT JOIN WORKORDER_STATUS W ON BH.CURRENT_PROCESS = W.PROCESS_CD
-		WHERE BH.BOMPROCESS_AP = 'NONE'
+		SELECT BH.*
+			 , BP.PROCESS_CD PROCESS_CD
+			 , w.workorder_st
+			 , c.common_nm
+		  FROM BH
+		  LEFT JOIN BOMPROCESS BP
+		    ON BH.BOM_CD = BP.BOMPROCESS_CD
+		   AND BH.PRODUCT_CD = BP.PRODUCT_CD 
+		   LEFT JOIN LOT l ON l.PROCESS_CD = bp.PROCESS_CD AND l.lot_cd = #{LOT_CD}
+		   LEFT JOIN WORKORDER w ON w.PROCESS_CD = bp.PROCESS_CD AND w.lot_cd = #{LOT_CD}
+		   LEFT JOIN INOUT i ON i.ITEM_CD = BH.BOM_CD AND i.INOUT_CO = #{CONTRACT_CD} AND i.inout_io = 'O' AND i.lot_cd = #{LOT_CD}
+		   LEFT JOIN COMMON_CODE c ON c.COMMON_CC = i.INOUT_IO AND c.COMMON_GC = 'IOTYPE'
 	</select>
 	
 	<select id="select_LOTHISTORY_list" resultType="map">
