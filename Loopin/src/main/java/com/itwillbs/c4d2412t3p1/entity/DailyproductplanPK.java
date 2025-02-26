@@ -36,4 +36,5 @@ public class DailyproductplanPK implements Serializable {
 
     @Column(name = "PRODUCT_SZ", length = 255)
     private String product_sz;
+    
 }
