@@ -206,10 +206,10 @@ public class BusinessController {
 	@LogActivity(value = "등록", action = "발주등록")
 	@ResponseBody
 	@PostMapping("/insert_ORDER")
-	public ResponseEntity<Map<String, String>> insert_ORDER(
+	public ResponseEntity<Map<String, Object>> insert_ORDER(
 			@RequestBody OrderRequestDTO orderRequestDTO
 	) {
-	    Map<String, String> response = new HashMap<>();
+	    Map<String, Object> response = new HashMap<>();
 	    
 	    
 	    // 시큐리티 세션 값 가져오기
@@ -225,7 +225,8 @@ public class BusinessController {
 
 	        businessService.insert_ORDER(orderDto, details);
 
-	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
+	        response.put("details", details);
+	        
 	        return ResponseEntity.ok(response); // JSON 형식으로 반환
 	    } catch (Exception e) {
 	        log.severe("데이터 저장 실패: " + e.getMessage()); // 오류 로그 추가
@@ -504,10 +505,10 @@ public class BusinessController {
 	@LogActivity(value = "등록", action = "수주등록")
 	@ResponseBody
 	@PostMapping("/insert_CONTRACT")
-	public ResponseEntity<Map<String, String>> insert_CONTRACT(
+	public ResponseEntity<Map<String, Object>> insert_CONTRACT(
 			@RequestBody ContractRequestDTO contractRequestDTO
 	) {
-	    Map<String, String> response = new HashMap<>();
+	    Map<String, Object> response = new HashMap<>();
 	    
 	    
 	    // 시큐리티 세션 값 가져오기
@@ -523,7 +524,8 @@ public class BusinessController {
 
 	        businessService.insert_CONTRACT(contractDto, details);
 
-	        response.put("message", "데이터가 성공적으로 저장되었습니다.");
+	        response.put("details", details);
+	        
 	        return ResponseEntity.ok(response); // JSON 형식으로 반환
 	    } catch (Exception e) {
 	        log.severe("데이터 저장 실패: " + e.getMessage()); // 오류 로그 추가
