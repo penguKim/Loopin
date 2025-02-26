@@ -36,12 +36,12 @@
 
 
 
-		<!-- 인사카드 등록 모달 -->
+		<!-- 인사카드 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
+						<h5 class="modal-title" id="modalTitle">인사카드</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
@@ -1326,7 +1326,7 @@
 		
 		function refreshGridData() {
 		    $.ajax({
-		        url: '/select_EMPLOYEE',
+		        url: requestUrl,
 		        method: 'GET',
 		        success: function (response) {
 		            grid.resetData(response);

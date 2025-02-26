@@ -78,6 +78,7 @@ public class FilterRequest {
 	// 공지사항 전용 필터 클래스
 	public static class NoticeFilterRequest extends FilterRequest {
 		
+		private String noticeCd;
 		private String employeeNm;
 		private String noticeTt;
 		private String employeeDp;
@@ -88,7 +89,8 @@ public class FilterRequest {
 		// 로그 필터 조건이 비어 있는지 확인
 		@Override
 		public boolean isEmpty() {
-			return super.isEmpty() && (employeeNm == null || employeeNm.isEmpty())
+			return super.isEmpty() 
+					&& (noticeCd == null || noticeCd.isEmpty()) && (employeeNm == null || employeeNm.isEmpty()) 
 					&& (noticeTt == null || noticeTt.isEmpty()) && (employeeDp == null || employeeDp.isEmpty()) ;
 		}
 	}
@@ -294,11 +296,16 @@ public class FilterRequest {
 	@ToString
 	public static class InoutFilterRequest extends FilterRequest {
 		
-		private String warehouse_cd;
-		private String warearea_cd;
+		private String inout_io;
+		private String inout_tp;
+		private String inout_co;
+		private String inout_wh;
+		private String inout_wa;
 		private String item_gc;
 		private String item_cc;
 		private String item_nm;
+		private String employee_cd;
+		private String employee_nm;
 		
 		public InoutFilterRequest() {
 			super();
@@ -306,9 +313,12 @@ public class FilterRequest {
 		// 로그 필터 조건이 비어 있는지 확인
 		@Override
 		public boolean isEmpty() {
-			return super.isEmpty() && (warehouse_cd == null || warehouse_cd.isEmpty())
-					&& (warearea_cd == null || warearea_cd.isEmpty()) && (item_gc == null || item_gc.isEmpty())
-					&& (item_cc == null || item_cc.isEmpty()) && (item_nm == null || item_nm.isEmpty());
+			return super.isEmpty() && (inout_io == null || inout_io.isEmpty())
+					&& (inout_tp == null || inout_tp.isEmpty()) && (inout_co == null || inout_co.isEmpty())
+					&& (inout_wh == null || inout_wh.isEmpty()) && (inout_wa == null || inout_wa.isEmpty())
+					&& (item_gc == null || item_gc.isEmpty()) && (item_cc == null || item_cc.isEmpty())
+					&& (item_nm == null || item_nm.isEmpty()) && (employee_cd == null || employee_cd.isEmpty())
+					&& (employee_nm == null || employee_nm.isEmpty());
 		}
 	}
 

@@ -7,6 +7,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
+import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
 import com.itwillbs.c4d2412t3p1.domain.WarehouseDTO;
 
 import groovy.transform.ToString;
@@ -41,21 +42,16 @@ public class Inout {
 	@Column(name = "inout_dt", length = 30)
 	private String inout_dt;
 	@Id
-	@Column(name="inout_iw", length = 30)
-	private String inout_iw;
-	@Id
-	@Column(name="inout_ow", length = 30)
-	private String inout_ow;
+	@Column(name="inout_wh", length = 30)
+	private String inout_wh;
 	@Id
 	@Column(name="item_cd", length = 30)
 	private String item_cd;
 	@Id
 	@Column(name="inout_io", length = 1)
 	private String inout_io;
-	@Column(name="inout_ia", length = 30)
-	private String inout_ia;
-	@Column(name="inout_oa", length = 30)
-	private String inout_oa;
+	@Column(name="inout_wa", length = 30)
+	private String inout_wa;
 	@Column(name="inout_co", length = 30)
 	private String inout_co;
 	@Column(name="inout_tp", length = 1)
@@ -85,11 +81,9 @@ public class Inout {
 	public static Inout setInout(InoutDTO inout) {
 	    return Inout.builder()
 	    		.inout_dt(inout.getInout_dt())
-	    		.inout_iw(inout.getInout_iw())
-	    		.inout_ow(inout.getInout_ow())
+	    		.inout_wh(inout.getInout_wh())
 	    		.item_cd(inout.getItem_cd())
-	    		.inout_ia(inout.getInout_ia())
-	    		.inout_oa(inout.getInout_oa())
+	    		.inout_wa(inout.getInout_wa())
 	    		.inout_co(inout.getInout_co())
 	    		.inout_tp(inout.getInout_tp())
 	    		.lot_cd(inout.getLot_cd())
@@ -104,6 +98,64 @@ public class Inout {
 	    		.inout_uu(inout.getInout_uu())
 	    		.inout_ud(inout.getInout_ud())
 	            .build();
+	}
+	
+	public static Inout createInRecord(InoutDTO template,
+									String inoutWh,
+									String inoutWa,
+									Integer inoutNn,
+									Integer inoutIn,
+									Integer inoutFn,
+									String regUser,
+									Timestamp time) {
+			return Inout.builder()
+			.inout_dt(template.getInout_dt())
+			.inout_wh(inoutWh)
+			.inout_wa(inoutWa)
+			.item_cd(template.getItem_cd())
+			.inout_co(template.getInout_co())
+			.inout_tp(template.getInout_tp())
+			.lot_cd(template.getLot_cd())
+			.process_cd(template.getProcess_cd())
+			.inout_nn(inoutNn)
+			.inout_in(inoutIn)
+			.inout_fn(inoutFn != null ? inoutFn : 0)
+			.inout_io("I")
+			.employee_cd(template.getEmployee_cd())
+			.inout_ru(regUser)
+			.inout_rd(time)
+			.inout_uu(template.getInout_uu())
+			.inout_ud(template.getInout_ud())
+			.build();
+			}
+	
+	public static Inout createOutRecord(InoutDTO template,
+									String inoutWh,
+									String inoutWa,
+									Integer inoutNn,
+									Integer inoutIn,									
+									Integer inoutFn,
+									String regUser,
+									Timestamp time) {
+		return Inout.builder()
+		.inout_dt(template.getInout_dt())
+		.inout_wh(inoutWh)
+		.inout_wa(inoutWa)
+		.item_cd(template.getItem_cd())
+		.inout_co(template.getInout_co())
+		.inout_tp(template.getInout_tp())
+		.lot_cd(template.getLot_cd())
+		.process_cd(template.getProcess_cd())
+		.inout_nn(inoutNn)
+		.inout_in(inoutIn)
+		.inout_fn(inoutFn != null ? inoutFn : 0)
+		.inout_io("O")
+		.employee_cd(template.getEmployee_cd())
+		.inout_ru(regUser)
+		.inout_rd(time)
+		.inout_uu(template.getInout_uu())
+		.inout_ud(template.getInout_ud())
+		.build();
 	}
 	
 }
