@@ -17,13 +17,13 @@ public interface DailyproductplanRepository extends JpaRepository<Dailyproductpl
 	@Query(value = "SELECT * FROM DAILYPRODUCTPLAN WHERE TO_CHAR(DAILYPRODUCTPLAN_SD, 'YYYY-MM-DD') = TO_CHAR(:productionDate, 'YYYY-MM-DD')", nativeQuery = true)
 	List<Dailyproductplan> findByProductionDate(@Param("productionDate") Timestamp productionDate);
 
-	@Query("""
-			    SELECT d
-			    FROM Dailyproductplan d
-			    WHERE d.id.contract_cd = :contractCd
-			      AND d.id.product_cd = :productCd
-			    ORDER BY d.id.dailyproductplan_sd, d.id.process_cd, d.id.product_cr, d.id.product_sz
-			""")
-	List<Dailyproductplan> findAllByContractAndProduct(@Param("contractCd") String contractCd,
-			@Param("productCd") String productCd);
+	@Query(value = """
+			    SELECT *
+			    FROM DAILYPRODUCTPLAN d
+			    WHERE d.CONTRACT_CD = :contractCd
+			      AND SUBSTR(d.PRODUCT_CD, 1, INSTR(d.PRODUCT_CD, '-', 1, 1) - 1) = :baseProductCd
+			    ORDER BY d.DAILYPRODUCTPLAN_SD, d.PROCESS_CD, d.PRODUCT_CR, d.PRODUCT_SZ
+			""", nativeQuery = true)
+	List<Dailyproductplan> findAllByContractAndBaseProduct(@Param("contractCd") String contractCd,
+			@Param("baseProductCd") String baseProductCd);
 }

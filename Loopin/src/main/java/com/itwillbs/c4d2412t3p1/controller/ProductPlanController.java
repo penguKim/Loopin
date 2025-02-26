@@ -18,6 +18,7 @@ import com.itwillbs.c4d2412t3p1.domain.BomMaterialDTO;
 import com.itwillbs.c4d2412t3p1.domain.BomProcessDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailDTO;
 import com.itwillbs.c4d2412t3p1.domain.ContractDetailProductInfoDTO;
+import com.itwillbs.c4d2412t3p1.domain.DailyProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeListDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanDTO;
 import com.itwillbs.c4d2412t3p1.domain.ProductPlanProcessDTO;
@@ -162,6 +163,24 @@ public class ProductPlanController {
 			@RequestParam("processCd") String processCd) {
 		List<WorkableEmployeeProjection> list = productplanService.select_WORKABLE_EMPLOYEE_list(workDate, productCd,
 				processCd);
+		return ResponseEntity.ok(list);
+	}
+
+	@PostMapping("/save_DAILYPRODUCTPLAN")
+	public ResponseEntity<Map<String, String>> saveDailyPlan(@RequestBody DailyProductPlanDTO dto) {
+		productplanService.saveDailyPlan(dto);
+
+		Map<String, String> response = new HashMap<>();
+		response.put("status", "SUCCESS");
+		return ResponseEntity.ok(response);
+	}
+
+	// 2) 조회
+	@GetMapping("/select_DAILYPRODUCTPLAN_list")
+	public ResponseEntity<List<DailyProductPlanDTO>> selectDailyPlanList(@RequestParam("contract_cd") String contractCd,
+			@RequestParam("base_product_cd") String baseProductCd) {
+		List<DailyProductPlanDTO> list = productplanService.findDailyPlanList(contractCd, baseProductCd);
+		log.info("###" + list.toString());
 		return ResponseEntity.ok(list);
 	}
 

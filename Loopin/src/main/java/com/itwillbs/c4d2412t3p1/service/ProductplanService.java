@@ -437,58 +437,81 @@ public class ProductplanService {
 		return productplanRepository.findWorkableEmployees(workDate, productCd, processCd);
 	}
 
-	@Transactional
-	public void saveDailyPlan(DailyProductPlanDTO dto) {
-		// 1) 복합키 생성
-		DailyproductplanPK pk = new DailyproductplanPK();
+    @Transactional
+    public void saveDailyPlan(DailyProductPlanDTO dto) {
+        // 1) 복합키 생성
+        DailyproductplanPK pk = new DailyproductplanPK();
 
-		// 날짜 변환: "YYYY-MM-DD" → "YYYY-MM-DD 00:00:00" Timestamp
-		if (dto.getDailyproductplan_sd() != null && !dto.getDailyproductplan_sd().isEmpty()) {
-			pk.setDailyproductplan_sd(Timestamp.valueOf(dto.getDailyproductplan_sd() + " 00:00:00"));
-		}
+        // 날짜 변환
+        if (dto.getDailyproductplan_sd() != null && !dto.getDailyproductplan_sd().isEmpty()) {
+            pk.setDailyproductplan_sd(
+                Timestamp.valueOf(dto.getDailyproductplan_sd() + " 00:00:00")
+            );
+        }
 
-		pk.setContract_cd(dto.getContract_cd());
-		pk.setProduct_cd(dto.getProduct_cd());
-		pk.setProcess_cd(dto.getProcess_cd());
-		pk.setProduct_cr(dto.getProduct_cr());
-		pk.setProduct_sz(dto.getProduct_sz());
+        pk.setContract_cd(dto.getContract_cd());
 
-		// 2) 엔티티 생성
-		Dailyproductplan entity = new Dailyproductplan();
-		entity.setId(pk);
-		entity.setDailyproductplan_js(dto.getDailyproductplan_js());
-		entity.setProcess_se(dto.getProcess_se());
+        // 🔹 (중요) product_cd 컬럼에 “base_product_cd + '-' + size + '-' + color” 형식으로 합성
+        String combinedCd = dto.getBase_product_cd() 
+                          + "-" + dto.getProduct_sz() 
+                          + "-" + dto.getProduct_cr();
+        pk.setProduct_cd(combinedCd);
 
-		// 3) DB 저장
-		dailyproductplanRepository.save(entity);
-	}
+        pk.setProcess_cd(dto.getProcess_cd());
+        pk.setProduct_cr(dto.getProduct_cr());
+        pk.setProduct_sz(dto.getProduct_sz());
+
+        // 2) 엔티티 생성
+        Dailyproductplan entity = new Dailyproductplan();
+        entity.setId(pk);
+        entity.setDailyproductplan_js(dto.getDailyproductplan_js());
+        entity.setProcess_se(dto.getProcess_se());
+
+        // 3) DB 저장
+        dailyproductplanRepository.save(entity);
+    }
 
 	/**
 	 * 특정 (contract_cd, product_cd)의 일일생산계획 목록 조회
 	 */
-	public List<DailyProductPlanDTO> findDailyPlanList(String contractCd, String productCd) {
-		// 1) 엔티티 목록 조회
-		List<Dailyproductplan> entityList = dailyproductplanRepository.findAllByContractAndProduct(contractCd,
-				productCd);
+    public List<DailyProductPlanDTO> findDailyPlanList(String contractCd, String baseProductCd) {
+        // 1) 엔티티 목록 조회
+        List<Dailyproductplan> entityList =
+            dailyproductplanRepository.findAllByContractAndBaseProduct(contractCd, baseProductCd);
 
-		// 2) Entity → DTO 변환
-		return entityList.stream().map(e -> {
-			DailyProductPlanDTO dto = new DailyProductPlanDTO();
-			if (e.getId().getDailyproductplan_sd() != null) {
-				dto.setDailyproductplan_sd(
-						e.getId().getDailyproductplan_sd().toLocalDateTime().toLocalDate().toString());
-			}
-			dto.setContract_cd(e.getId().getContract_cd());
-			dto.setProduct_cd(e.getId().getProduct_cd());
-			dto.setProcess_cd(e.getId().getProcess_cd());
-			dto.setProduct_cr(e.getId().getProduct_cr());
-			dto.setProduct_sz(e.getId().getProduct_sz());
+        // 2) Entity → DTO 변환
+        return entityList.stream()
+            .map(e -> {
+                DailyProductPlanDTO dto = new DailyProductPlanDTO();
+                // 날짜
+                if (e.getId().getDailyproductplan_sd() != null) {
+                    dto.setDailyproductplan_sd(
+                        e.getId().getDailyproductplan_sd().toLocalDateTime().toLocalDate().toString()
+                    );
+                }
+                dto.setContract_cd(e.getId().getContract_cd());
 
-			dto.setDailyproductplan_js(e.getDailyproductplan_js());
-			dto.setProcess_se(e.getProcess_se());
+                // DB에는 "JORDAN001-220-BLACK" 형태가 들어 있음
+                // 하지만 DTO에는 base_product_cd, product_cr, product_sz로 분리
+                String fullCd = e.getId().getProduct_cd(); // ex) "JORDAN001-220-BLACK"
+                // 첫 '-' 직전까지 = base_product_cd
+                int idx = fullCd.indexOf('-');
+                if (idx > 0) {
+                    dto.setBase_product_cd(fullCd.substring(0, idx));
+                }
+                // 이미 e.getId().getProduct_cr() / e.getId().getProduct_sz()에 값이 있으므로,
+                // dto.setProduct_cr(e.getId().getProduct_cr());
+                // dto.setProduct_sz(e.getId().getProduct_sz());
+                // 혹은 fullCd를 further split해서 사이즈/색상 추출 가능 (업무 로직에 따라)
 
-			return dto;
-		}).collect(Collectors.toList());
-	}
+                dto.setProcess_cd(e.getId().getProcess_cd());
+                dto.setProduct_cr(e.getId().getProduct_cr());
+                dto.setProduct_sz(e.getId().getProduct_sz());
+                dto.setDailyproductplan_js(e.getDailyproductplan_js());
+                dto.setProcess_se(e.getProcess_se());
+                return dto;
+            })
+            .collect(Collectors.toList());
+    }
 
 }

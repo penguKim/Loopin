@@ -41,5 +41,8 @@ public class Workorder {
 
     @Column(name = "WORKORDER_ST", length = 2)
     private String workorder_st;
+    
+    @Column(name = "PROCESS_CD")
+    private String process_cd;
 
 }

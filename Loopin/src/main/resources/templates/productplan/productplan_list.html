@@ -171,12 +171,8 @@
 														<label for="process_cd" class="form-label">공정코드</label> <select
 															class="form-select" id="process_cd"></select>
 													</div>
-													<!-- 작업자번호 -->
-													<div class="col-md-3">
-														<label for="dailyproductplan_jb" class="form-label">작업자번호</label>
-														<input type="text" class="form-control"
-															id="dailyproductplan_jb">
-													</div>
+													<!-- ★ 작업자번호 필드 삭제 ★ -->
+
 													<!-- 품목코드 -->
 													<div class="col-md-3">
 														<label for="dailyproductplan_product_cd"
@@ -207,7 +203,7 @@
 												</div>
 											</form>
 											<hr>
-											<h5>작업 현황</h5>
+											<h5>일일생산계획 조회</h5>
 											<div id="dailyGrid"></div>
 										</div>
 										<div class="modal-footer">
@@ -303,8 +299,7 @@
 	      columns: [
 	        { header: '작업일자',       name: 'dailyproductplan_sd' },
 	        { header: '공정코드',       name: 'process_cd' },
-	        { header: '작업자번호',     name: 'dailyproductplan_jb' },
-	        { header: '품목코드',       name: 'product_cd' },
+	        { header: '품목코드',       name: 'base_product_cd' },
 	        { header: '색상',          name: 'product_cr' },
 	        { header: '사이즈',         name: 'product_sz' },
 	        { header: '작업수량',       name: 'dailyproductplan_js' }
@@ -339,7 +334,6 @@
 	    document.getElementById("contract_cd").addEventListener("click", () => { openSearchModal("contract"); });
 	    document.getElementById("productplan_dd").addEventListener("click", () => { openSearchModal("employee"); });
 	    document.getElementById("warehouse_cd").addEventListener("click", () => { openSearchModal("warehouse"); });
-	    document.getElementById("dailyproductplan_jb").addEventListener("click", () => { openSearchModal("worker"); });
 	  
 	    let searchGrid;
 	    let targetInputId = "";
@@ -468,19 +462,6 @@
 	          { header: "창고유형", name: "warehouseName", align: "center" },
 	          { header: "비고", name: "warehouse_rm", align: "center" }
 	        ];
-	      } else if (mode === "worker") {
-	        modalTitleEl.textContent = "작업자 검색";
-	        apiUrl = "/select_WORKABLE_EMPLOYEE_list";
-	        targetInputId = "dailyproductplan_jb";
-	        gridColumns = [
-	            { header: "작업자번호", name: "employee_cd", align: "center" },  // 사원번호
-	            { header: "작업자명", name: "employee_nm", align: "center" },  // 사원명
-	            { header: "총 근무 시간", name: "total_hours", align: "center" },  // 총 근무 가능 시간 (예: 8시간)
-	            { header: "투입된 시간", name: "total_hours_used", align: "center" },  // 현재까지 배정된 시간
-	            { header: "공정 소요시간", name: "new_process_time", align: "center" },  // 추가할 공정 소요시간
-	            { header: "근무 가능시간", name: "final_remaining_hours", align: "center" },  // 최종 남은 근무 가능 시간
-	          ];
-
 	      }
 	      
 	  
@@ -672,9 +653,44 @@
 	      ],
 	      data: [],
 	      scrollX: false,
-	      scrollY: false
+	      scrollY: false,
+          summary: {
+              height: 40,
+              position: 'bottom',
+              columnContent: {
+                  productplan_bg: {
+                      template: (valueMap) => {
+                          return `총 ${valueMap.cnt} 건`;
+                      },
+                  },
+              },
+          }
 	    });
-	  
+	    
+	    $(window).resize(function() {
+	        setElementHeight('#div_card', -105);
+	        if (grid != null) {
+	            setGridHeight(grid, -480);
+	        }
+	    });
+	    
+		 $(document).on('filterToggled', function(e) {
+			 console.log(grid);
+			    if(e.detail.isVisible) {
+			        setGridHeight(grid, -480);
+			    } else {
+			        setGridHeight(grid, -410);
+			    }
+			});
+	    
+	    if (grid) {
+                setElementHeight('#div_card', -105);
+                setGridHeight(grid, -410);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
+		
+	    
 	    // ---------------------------
 	    // 생산계획 목록 조회
 	    // ---------------------------
@@ -811,7 +827,6 @@
 	      // 1) 날짜 초기화 (오늘)
 	      dailyPicker.setDate(new Date());
 	      document.getElementById("dailyproductplan_sd").value = getDate(today);
-	      document.getElementById("dailyproductplan_jb").value = "";
 	      document.getElementById("dailyproductplan_js").value = "";
 	  
 	      // 2) 품목코드 select
@@ -909,74 +924,87 @@
 	  
 	    document.getElementById("btn_insert_daily").addEventListener("click", () => { openDailyProductPlanModal(); });
 	  
-	    function fetchDailyPlanList(contractCd, productCd) {
-	      fetch(`/select_DAILYPLAN_list?contract_cd=${contractCd}&product_cd=${productCd}`)
-	        .then(res => {
-	          if (!res.ok) throw new Error("일일생산계획 조회 실패");
-	          return res.json();
-	        })
-	        .then(data => {
-	          const formatted = data.map(d => ({
-	            ...d,
-	            dailyproductplan_sd: d.dailyproductplan_sd ? getDate(new Date(d.dailyproductplan_sd)) : ""
-	          }));
-	          dailyGrid.resetData(formatted);
-	        })
-	        .catch(err => {
-	          console.error("일일생산계획 조회 오류:", err);
-	          alert("일일생산계획 조회 중 오류 발생");
-	        });
-	    }
-	  
-	    // 일일생산계획 저장
-	    document.getElementById("btnSaveDailyPlan").addEventListener("click", () => {
-	      const dailyDate   = document.getElementById("dailyproductplan_sd").value;
-	      const processCd   = document.getElementById("process_cd").value;
-	      const workerCd    = document.getElementById("dailyproductplan_jb").value;
-	      const productCdDD = document.getElementById("dailyproductplan_product_cd").value;
-	      const colorVal    = document.getElementById("dailyproductplan_cr").value;
-	      const sizeVal     = document.getElementById("dailyproductplan_sz").value;
-	      const dailyJs     = document.getElementById("dailyproductplan_js").value;
-	  
-	      const checkedRows = grid.getCheckedRows();
-	      if (checkedRows.length !== 1) {
-	        alert("선택된 생산계획이 없습니다.");
-	        return;
+	    function fetchDailyPlanList(contractCd, baseProductCd) {
+	        // Service의 findDailyPlanList(contractCd, baseProductCd)를 호출
+	        // => Repository의 SUBSTR(product_cd,1,...) = :baseProductCd 매칭
+	        const url = `/select_DAILYPRODUCTPLAN_list?contract_cd=${encodeURIComponent(contractCd)}&base_product_cd=${encodeURIComponent(baseProductCd)}`;
+
+	        fetch(url, { method: "GET" })
+	          .then(response => {
+	            if (!response.ok) throw new Error("일일생산계획 조회 실패");
+	            return response.json();
+	          })
+	          .then(data => {
+	            console.log("조회 결과:", data);
+	            dailyGrid.resetData(data);
+	            dailyGrid.refreshLayout();
+	          })
+	          .catch(err => {
+	            console.error("일일생산계획 조회 오류:", err);
+	            alert("일일생산계획 조회 중 오류 발생");
+	          });
 	      }
-	      const plan = checkedRows[0];
+
 	  
-	      const reqBody = {
-	        dailyproductplan_sd: dailyDate,
-	        contract_cd: plan.contract_cd,
-	        product_cd: productCdDD,
-	        process_cd: processCd,
-	        product_cr: colorVal,
-	        product_sz: sizeVal,
-	        dailyproductplan_jb: workerCd,
-	        dailyproductplan_js: dailyJs
-	      };
-	  
-	      fetch("/save_DAILYPLAN", {
-	        method: "POST",
-	        headers: {
-	          "Content-Type": "application/json",
-	          [csrfHeader]: csrfToken
-	        },
-	        body: JSON.stringify(reqBody)
-	      })
-	      .then(res => {
-	        if (!res.ok) throw new Error("일일생산계획 저장 실패");
-	        return res.json();
-	      })
-	      .then(data => {
-	        alert("일일생산계획 저장 완료");
-	        fetchDailyPlanList(plan.contract_cd, productCdDD);
-	      })
-	      .catch(err => {
-	        console.error("일일생산계획 저장 오류:", err);
-	        alert("일일생산계획 저장 중 오류 발생");
-	      });
-	    });
+			    // 일일생산계획 저장
+		document.getElementById("btnSaveDailyPlan").addEventListener("click", () => {
+		  // 1) 폼 값 가져오기
+		  const dailyDate   = document.getElementById("dailyproductplan_sd").value;      // "YYYY-MM-DD"
+		  const processCd   = document.getElementById("process_cd").value;              // 공정코드
+		  const baseProductCd = document.getElementById("dailyproductplan_product_cd").value; 
+		    // 여기서 "dailyproductplan_product_cd"는 "JORDAN001" 같은 베이스코드라고 가정
+		
+		  const colorVal    = document.getElementById("dailyproductplan_cr").value;      // "BLACK"
+		  const sizeVal     = document.getElementById("dailyproductplan_sz").value;      // "220"
+		  const dailyJs     = document.getElementById("dailyproductplan_js").value;      // 작업수량
+		
+		  // 2) 선택된 생산계획(수주번호 등) 확인
+		  const checkedRows = grid.getCheckedRows();
+		  if (checkedRows.length !== 1) {
+		    alert("선택된 생산계획이 없습니다.");
+		    return;
+		  }
+		  const plan = checkedRows[0];   // { contract_cd, product_cd, ... }
+		
+		  // 3) Request Body 구성
+		  // Service에서는 "base_product_cd"를 받아서 product_cd를 합성해 저장함
+		  const reqBody = {
+		    dailyproductplan_sd: dailyDate,
+		    contract_cd: plan.contract_cd,      // ex) "C2025-0001"
+		    base_product_cd: baseProductCd,      // ex) "JORDAN001"
+		    process_cd: processCd,
+		    product_cr: colorVal,
+		    product_sz: sizeVal,
+		    dailyproductplan_js: dailyJs,
+		  };
+		
+		  // 4) AJAX 요청
+		  fetch("/save_DAILYPRODUCTPLAN", {
+		    method: "POST",
+		    headers: {
+		      "Content-Type": "application/json",
+		      [csrfHeader]: csrfToken
+		    },
+		    body: JSON.stringify(reqBody)
+		  })
+		  .then(res => {
+		    if (!res.ok) throw new Error("일일생산계획 저장 실패");
+		    return res.json();
+		  })
+		  .then(data => {
+		    alert("일일생산계획 저장 완료");
+		
+		    // 5) 저장 후 재조회
+		    //   - Service의 조회 메서드는 (contractCd, baseProductCd)로 검색
+		    //   - 두 번째 파라미터는 "JORDAN001"처럼 베이스코드만 넘겨줘야
+		    fetchDailyPlanList(plan.contract_cd, baseProductCd);
+		  })
+		  .catch(err => {
+		    console.error("일일생산계획 저장 오류:", err);
+		    alert("일일생산계획 저장 중 오류 발생");
+		  });
+		});
+
 	  
 	    // 필터 모듈 초기화
 	    const filterConfig = [

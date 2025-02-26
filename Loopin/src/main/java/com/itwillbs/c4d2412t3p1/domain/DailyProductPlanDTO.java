@@ -10,7 +10,7 @@ import lombok.ToString;
 public class DailyProductPlanDTO {
 	private String dailyproductplan_sd; // 날짜 (문자열 "YYYY-MM-DD")
 	private String contract_cd;
-	private String product_cd;
+	private String base_product_cd;
 	private String process_cd;
 	private String product_cr;
 	private String product_sz;
