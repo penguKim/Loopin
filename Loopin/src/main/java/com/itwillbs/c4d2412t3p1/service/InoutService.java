@@ -2,6 +2,7 @@ package com.itwillbs.c4d2412t3p1.service;
 
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import com.itwillbs.c4d2412t3p1.repository.InoutRepository;
 import com.itwillbs.c4d2412t3p1.repository.InoutRepository;
 import com.itwillbs.c4d2412t3p1.repository.OrderRepository;
 import com.itwillbs.c4d2412t3p1.repository.StockRepository;
+import com.itwillbs.c4d2412t3p1.util.FilterRequest.InoutFilterRequest;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -50,8 +52,11 @@ public class InoutService {
 	private final ObjectMapper mapper;
 
 	// 입출고 조회
-	public List<InoutDTO> select_INOUT_list() {
-		return inoutMapper.select_INOUT_list();
+	public List<InoutDTO> select_INOUT_list(InoutFilterRequest filter) {
+		System.out.println("필터는>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		System.out.println("시작일 : " + filter.getStartDate());
+		System.out.println("종료일 : " + filter.getEndDate());
+		return inoutMapper.select_INOUT_list(filter);
 	}
 
 	// 발주 조회
@@ -82,27 +87,22 @@ public class InoutService {
 		return inoutMapper.select_INOUT_CONTRACTDETAIL(contractCd, productCd, processCd, itemfullCd, itemCd, itemSz, itemCr);
 	}
 	
-
-
+	// 수주건 로트 조회
+	public List<InoutDTO> select_INOUT_LOT(String contract_cd) {
+		return inoutMapper.select_INOUT_LOT(contract_cd);
+	}
 
 	// 출발창고 조회
 	public List<WareareaDTO> select_INOUT_OW(String item_cd) {
 		return inoutMapper.select_INOUT_OW(item_cd);
 	}
-//	public List<WareareaDTO> select_INOUT_IW(String item_cd, List<WareareaDTO> list) {
-//		return inoutMapper.select_INOUT_IW(item_cd, list);
-//	}
 
 	// 도착창고 조회
 	public List<WareareaDTO> select_INOUT_IW(String item_cd) {
 		return inoutMapper.select_INOUT_IW(item_cd);
 	}
 
-	
-	
-	
-	
-	
+	// 입출고 발주건 등록
 	@Transactional
 	public void insert_INOUT_ORDER(InoutDTO inoutDTO, List<InoutWarehouseDTO> iwList) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -110,7 +110,7 @@ public class InoutService {
 
 	    // 1. 도착창고 재고 추가 처리
 	    for (InoutWarehouseDTO warehouse : iwList) {
-            handleInbound(inoutDTO, warehouse, regUser, time);
+	    	setInboundStock(inoutDTO, warehouse, regUser, time);
 	    }
 	    
 	    // 2. 발주내역 업데이트 (수주건의 경우에도 발주 상태를 업데이트해야 할 경우)
@@ -133,30 +133,27 @@ public class InoutService {
 	    orderRepository.save(order);
 	}
 	
+	// 입출고 수주건 등록
 	@Transactional
-	public void insert_INOUT_CONTRACT4(InoutDTO inoutDTO, List<InoutWarehouseDTO> iwList) {
+	public void insert_INOUT_CONTRACT(InoutDTO inoutDTO, List<InoutWarehouseDTO> iwList) {
 	    String regUser = SecurityContextHolder.getContext().getAuthentication().getName();
 	    Timestamp time = new Timestamp(System.currentTimeMillis());
 	    String gubun = inoutDTO.getInout_io();
-	    System.out.println("입출고 데이터 : " + inoutDTO.toString());
 
 	    for (InoutWarehouseDTO warehouse : iwList) {
-			System.out.println("창고 : " + warehouse.toString());
 	        // 출고 처리
 	        if ("A".equals(gubun) || "O".equals(gubun)) {
-	            handleOutbound(inoutDTO, warehouse, regUser, time);
+	        	setOutboundStock(inoutDTO, warehouse, regUser, time);
 	        }
 	        // 입고 처리
 	        if ("A".equals(gubun) || "I".equals(gubun)) {
-	            handleInbound(inoutDTO, warehouse, regUser, time);
+	        	setInboundStock(inoutDTO, warehouse, regUser, time);
 	        }
 	    }
 	}
 
 	// 출고 처리 로직
-	private void handleOutbound(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
-	    System.out.println("출고할거야!!!!!!!!!!!!!!!!!!!");
-
+	private void setOutboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
 	    int withdrawalQty = warehouse.getOw_inout_nn(); // 출발창고에서 차감할 수량
 	    Stock sourceStock = stockRepository.findById(
 	            new StockPK(inoutDTO.getItem_cd(), warehouse.getOw_warehouse_cd(), warehouse.getOw_warearea_cd()))
@@ -193,9 +190,7 @@ public class InoutService {
 	}
 
 	// 입고 처리 로직
-	private void handleInbound(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
-		System.out.println("입고할거야!!!!!!!!!!!!!!!!!!!");
-		
+	private void setInboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
 	    int additionQty = warehouse.getIw_inout_nn();  // 도착창고에서 추가할 수량
 		System.out.println("입고 저장: 입고창고=" + warehouse.getIw_warehouse_cd() + ", 입고구역=" + warehouse.getIw_warearea_cd() + 
 				", 수량=" + additionQty);
@@ -225,6 +220,24 @@ public class InoutService {
 	    stockRepository.save(destStock);
 
 	    // 입고 내역 등록
+	    LocalDateTime now = LocalDateTime.now();
+
+		 // 초와 나노 초(밀리초 단위로 변환)
+		 int seconds = now.getSecond();
+		 int milliseconds = now.getNano() / 1_000_000;  // 1_000_000으로 나눠서 밀리초 구함
+	
+		 // 포맷 지정: 초는 두 자리, 밀리초는 세 자리
+		 String appendPart = String.format(":%02d.%03d", seconds, milliseconds);
+	
+		 // 기존 inout_dt 값 (예: "2025-02-25 13:29")
+		 String baseDateTime = inoutDTO.getInout_dt();
+	
+		 // 초와 밀리초를 붙인 최종 문자열 생성
+		 String updatedDateTime = baseDateTime + appendPart;
+	
+		 System.out.println("업데이트된 날짜와 시간: " + updatedDateTime);
+		 inoutDTO.setInout_dt(updatedDateTime);
+	    
 	    Inout inRecord = Inout.createInRecord(
 	            inoutDTO,
 	            warehouse.getIw_warehouse_cd(), // 도착창고
@@ -238,19 +251,4 @@ public class InoutService {
 	    inoutRepository.save(inRecord);
 	}
 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	// 수주건 로트 조회
-	public List<InoutDTO> select_INOUT_LOT(String contract_cd) {
-		return inoutMapper.select_INOUT_LOT(contract_cd);
-	}
-	
 }

@@ -13,7 +13,7 @@ import lombok.ToString;
 @ToString
 public class InoutRequestDTO {
 	
-	InoutFilterRequest inoutfilter;
+	InoutFilterRequest inoutFilter;
 	InoutDTO inout;
 	List<WareareaDTO> wareareaList;
 	List<InoutWarehouseDTO> iwList; // 입출고창고 리스트

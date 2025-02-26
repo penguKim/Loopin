@@ -31,7 +31,7 @@
 							<div id="grid"></div>
 							<div id="btn_area" class="mt-2">
 								<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
-								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+<!-- 								<button type="button" class="btn btn-primary" id="btn_delete">삭제</button> -->
 							</div>
 						</div>
 					</div>
@@ -54,13 +54,13 @@
 	    { key: 'inout_io', label: '입출고구분', type: 'select', list: [], col: 'col-2' },
 	    { key: 'inout_tp', label: '수발주구분', type: 'select', list: [], col: 'col-2' },
 	    { key: 'inout_co', label: '수발주코드', type: 'text', list: [], col: 'col-2' },
-	    { key: 'inout_iw', label: '출발창고', type: 'select', list: [], col: 'col-2' },
-	    { key: 'inout_ow', label: '도착창고', type: 'select', list: [], col: 'col-2' },
+	    { key: 'inout_wh', label: '창고', type: 'select', list: [], col: 'col-2' },
+	    { key: 'inout_wa', label: '창고구역', type: 'select', list: [], col: 'col-2' },
 	    { key: 'item_gc', label: '품목대분류', type: 'select', list: [], col: 'col-2' },
 	    { key: 'item_cc', label: '품목소분류', type: 'select', list: [], col: 'col-2' },
 	    { key: 'item_nm', label: '품목명', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
 	    { key: 'employee_cd', label: '담당자코드', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
-	    { key: 'employee_cd', label: '담당자명', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
+	    { key: 'employee_nm', label: '담당자명', type: 'text', placeholder: '품목명 입력', col: 'col-2' },
 	];
 	let commonList = [];
 	let warehouseList = /*[[${warehouseList}]]*/[];
@@ -133,16 +133,18 @@
 		    }
 		    getGridList(filterValues);
 		});
+		
+		console.log('mainDateRangeStartInput', mainDateRangeStartInput);
 
 		// 보관창고 선택
-		$(document).on('change', '#warehouse_cd', function() {
-			changeSelectBox('#warehouse_cd', '#warearea_cd', '/select_WAREAREA_CC', 'warehouse_cd');
+		$(document).on('change', '#inout_wh', function() {
+			changeSelectBox('#inout_wh', '#inout_wa', '/select_WAREAREA_CC', 'warehouse_cd');
 		});
 		
 		// 보관구역 선택
-		$(document).on('click', '#warearea_cd', function(ev) {
-			if(!$('#warehouse_cd').val()) {
-				showAlert($('#warehouse_cd'), 'info', '보관창고 선택', '보관창고를 먼저 선택해주세요.');
+		$(document).on('click', '#inout_wa', function(ev) {
+			if(!$('#inout_wh').val()) {
+				showAlert($('#inout_wh'), 'info', '보관창고 선택', '보관창고를 먼저 선택해주세요.');
 				return;
 			}
 		});
@@ -168,6 +170,8 @@
 		
 		// 입출고구분 선택
 		$(document).on('change', '#modal_inout_io', function() {
+			inputClear('io');
+			
 			const value = $(this).val();
 			if(iw_grid != null) iw_grid.destroy();
 			make_iw_grid(value);
@@ -182,17 +186,7 @@
 			}
 		});
 		$(document).on('change', '#modal_inout_tp', function() {
-			$('#modal_inout_co').val(''); // 수발주코드
-			$('#modal_inout_ec').val(''); // 담당자코드
-			$('#modal_inout_en').val(''); // 담당자명
-			$('#modal_inout_ln').val(''); // 로트번호
-			$('#modal_inout_pc').val(''); // 공정명			
-			$('#modal_process_cd').val(''); // 공정코드		
-			$('#modal_inout_ic').val(''); // 품목코드
-			$('#modal_inout_in').val(''); // 품목명
-			$('#modal_inout_nn').val(''); // 지시수량
-			$('#modal_inout_un').val(''); // 기준단위
-			iw_grid.resetData([]); // 창고그리드
+			inputClear('tp');
 			
 			conFlag = $(this).val() == 'C';
 			$('.div_contract')[conFlag ? 'show' : 'hide']();
@@ -229,100 +223,7 @@
 			}
 			make_item_modal(conFlag, $('#modal_inout_co').val());				
 		});
-		
-		
-		// 창고 선택
-		$(document).on('change', '#modal_inout_iw, #modal_inout_ow', function() {
-			const sourceId = $(this).attr('id');
-			const targetId = (sourceId == 'modal_inout_iw') ? 'ia' : 'oa';
-			changeSelectBox(`#${sourceId}`, `#modal_inout_${targetId}`, '/select_WAREAREA_CC', 'warehouse_cd');
-		});
-		$(document).on('click', '#modal_inout_ia, #modal_inout_oa', function(ev) {
-			const targetId = $(this).attr('id');
-			const sourceId = (targetId == 'modal_inout_ia') ? 'iw' : 'ow';
-			if (!$(`#modal_inout_${sourceId}`).val()) {
-				const text = (sourceId === 'iw') ? '출발' : '도착';
-				showAlert($(`#modal_inout_${sourceId}`), 'info', `${text}창고 선택`, `${text}창고를 먼저 선택해주세요.`);
-				return;
-			}
-		});
-		/*
-		// 창고 추가
-		$(document).on('click', '#btn_iw_add, #btn_ow_add', function() {
-			let itemVal = $('#modal_inout_ic').val();
-			if (!itemVal) {
-				showAlert($('#modal_inout_ic'), 'warning', '품목 선택', '품목을 선택해주세요.');
-				return;
-			}
-			let prefix = $(this).attr("id").substring(4,6);
-			add_iwow_list(itemVal, prefix);
-		});
-		
-		// 창고 삭제
-		$(document).on('click', '#btn_iw_remove, #btn_ow_remove', function() {
-			let prefix = $(this).attr("id").substring(4,6);
-			let checkedRows = ioGridList[prefix].getCheckedRows();
-			if (!checkedRows.length) {
-				showAlert('', 'warning', '삭제 항목 체크', '삭제할 창고를 체크해주세요.');
-			    return;
-			}
-			checkedRows.forEach(row => {
-				ioGridList[prefix].removeRow(row.rowKey);
-			});
-
-		});
-		
-		// 창고리스트 이벤트
-
-		$(document).on('click', '#btn_iwList_add, #btn_owList_add', function() {
-			let prefix = $(this).attr("id").substring(4,6);
-			let rowList = ioGridList[prefix].getData();
-			let checkedList = ioListGridList[prefix].getCheckedRows();
-			checkedList.forEach(item => {
-			  if (item._attributes) {
-			    item._attributes.checked = false;
-				item._attributes.rowNum = rowList.length + 1;
-			  }
-			});
-			console.log(checkedList);
-			let finalList = [
-				...rowList,
-				...checkedList
-			];
-
-			ioGridList[prefix].resetData(finalList);
-		});
-		$(document).on('click', '#btn_iwList_add, #btn_owList_add', function() {
-		    let prefix = $(this).attr("id").substring(4, 6); // 'iw' 또는 'ow' 추출
-		    let checkedList = ioListGridList[prefix].getCheckedRows(); // 선택된 행 가져오기
-
-		    // 선택된 행의 체크 상태 초기화
-		    checkedList.forEach(item => {
-		        if (item._attributes) {
-		            item._attributes.checked = false;
-		        }
-		    });
-
-		    // 새로운 행 추가
-		    ioGridList[prefix].appendRows(checkedList);
-
-		    // summary 값 수동 업데이트
-		    updateSummary(prefix);
-		});
-		// summary 업데이트 함수 정의
-		function updateSummary(prefix) {
-		    const gridData = ioGridList[prefix].getData(); // 현재 그리드 데이터 가져오기
-
-		    // 예: 입고 수량(inout_nn)의 합계를 계산하여 summary에 반영
-		    const totalInoutQty = gridData.length;
-
-		    // summary 값을 동적으로 업데이트
-		    ioGridList[prefix].setSummaryColumnContent('inout_nn', `총 ${totalInoutQty} 건`);
-		}
-		*/
-
-
-		
+				
 		// --------------------입출고창고--------------------
 		$(document).on('click', '#btn_iow_add', function() {
 			if(!$('#modal_inout_ic').val()) {
@@ -355,6 +256,10 @@
 
 		});
 		
+		//모달 초기화
+		$(document).on('click', '#btn_modal_reset' ,function() {
+			inputClear('all');
+		});
 		
 		// 모달 등록 버튼
 		$(document).on('click', '#btn_modal_save', function (){
@@ -381,34 +286,51 @@
 	
 	//  함수 --------------------------------
 	
-	// 검색 인풋 초기화
-	function inoutClear(gubun){
-		$('#modal_inout_io').val(''); // 입출고구분
-		$('#modal_inout_dt').val(''); // 입출고일자
-		
-		$('#modal_inout_ln').val(''); // 로트번호
-		$('#modal_inout_pc').val(''); // 공정명			
-		$('#modal_process_cd').val(''); // 공정코드		
-		
-		$('#modal_inout_ec').val(''); // 담당자코드
-		$('#modal_inout_en').val(''); // 담당자명
-		
-		$('#modal_inout_tp').val(''); // 수발주구분
-		$('#modal_inout_co').val(''); // 수발주코드
-		
-		$('#modal_inout_ic').val(''); // 품목코드
-		$('#modal_inout_in').val(''); // 품목명
-		$('#modal_product_gc').val(''); // 품목대분류
-		$('#modal_product_cd').val(''); // 품목코드
-		$('#modal_item_cd').val(''); // 완제품코드
-		$('#modal_item_sz').val(''); // 사이즈
-		$('#modal_item_cr').val(''); // 색상
-		$('#modal_inout_nn').val(''); // 지시수량
-		$('#modal_inout_un').val(''); // 기준단위
-		
-		iw_grid.resetData([]); // 창고그리드
-		
-	}
+	// 인풋 초기화
+function inputClear(gubun) {
+    const fieldGroups = {
+        io: [
+            '#modal_inout_tp', '#modal_inout_co', '#modal_inout_ec', '#modal_inout_en',
+            '#modal_inout_ln', '#modal_inout_pc', '#modal_process_cd',
+            '#modal_inout_ic', '#modal_inout_in', '#modal_inout_nn', '#modal_inout_un'
+        ],
+        tp: [
+            '#modal_inout_co', '#modal_inout_ec', '#modal_inout_en',
+            '#modal_inout_ln', '#modal_inout_pc', '#modal_process_cd',
+            '#modal_inout_ic', '#modal_inout_in', '#modal_inout_nn', '#modal_inout_un'
+        ],
+        co: [
+            '#modal_inout_ec', '#modal_inout_en',
+            '#modal_inout_ln', '#modal_inout_pc', '#modal_process_cd',
+            '#modal_inout_ic', '#modal_inout_in', '#modal_inout_nn', '#modal_inout_un'
+        ],
+        ln: [
+            '#modal_inout_ic', '#modal_inout_in', 
+            '#modal_inout_nn', '#modal_inout_un'
+        ]
+    };
+
+    let fieldsToClear;
+    if (gubun === 'all') {
+        // 모든 그룹의 값을 합치고 중복을 제거
+        fieldsToClear = Object.values(fieldGroups).reduce((acc, arr) => acc.concat(arr), []);
+        fieldsToClear = [...new Set(fieldsToClear)];
+        fieldsToClear.push('#modal_inout_io');
+        fieldsToClear.push('#modal_inout_dt');
+    } else {
+        fieldsToClear = fieldGroups[gubun] || [];
+    }
+
+    fieldsToClear.forEach(selector => $(selector).val(''));
+
+    iw_grid.resetData([]);
+
+    if (gubun === 'io' || gubun === 'all') {
+        $('.div_contract').hide();
+    }
+}
+
+
 	
 	function resetSearchInput(gubun){
 
@@ -438,11 +360,11 @@
 			scrollY : true,
 			rowHeaders : [
 				{type : 'rowNum',}, 
-				{type : 'checkbox',}, 
+// 				{type : 'checkbox',}, 
 			],
 			bodyHeight : 600,
 			columns : [
-				{header: '입출고일자', name: 'inout_dt', width: '150', align: 'center', sortable: true, filter: 'select'},
+				{header: '입출고일자', name: 'inout_dt', width: '160', align: 'center', sortable: true, filter: 'select'},
 				{header: '입출고구분', name: 'inout_ionm', sortable: true, filter: 'select'},
 				{header: '수발주구분', name: 'inout_tpnm', sortable: true, filter: 'select'},
 				{header: '수발주코드', name: 'inout_co', sortable: true, filter: 'text'},
@@ -606,10 +528,6 @@
         modalElement.addEventListener('shown.bs.modal', function () {
 			createSelectBox($('#modal_inout_tp'), commonList['COTYPE'], '선택하세요.');
 			createSelectBox($('#modal_inout_io'), commonList['IOTYPE'], '선택하세요.');
-			createSelectBox($('#modal_inout_iw'), warehouseList, '선택하세요.');
-			createSelectBox($('#modal_inout_ow'), warehouseList, '선택하세요.');
-			createSelectBox($('#modal_inout_oa'), [], '선택하세요.');
-			createSelectBox($('#modal_inout_ia'), [], '선택하세요.');
 			
 			let datepicker = new tui.DatePicker('#wrapper', {
 				language: 'ko',
@@ -874,6 +792,7 @@
 		order_grid.on('click', function(ev) {
 			if (ev.columnName == 'choice') {
 				let row = order_grid.getRow(ev.rowKey);
+				inputClear('co');
 				$('#modal_inout_co').val(row['inout_co']);	
 				if(!conFlag) {
 					$('#modal_inout_ec').val(row['employee_cd']);	
@@ -987,11 +906,8 @@
 
 		lot_grid.on('click', function(ev) {
 			if (ev.columnName == 'choice') {
-				$('#modal_inout_ic').val(''); // 품목코드
-				$('#modal_inout_in').val(''); // 품목명
-				$('#modal_inout_nn').val(''); // 지시수량
-				$('#modal_inout_un').val(''); // 기준단위
-
+				inputClear('ln');
+				
 				let row = lot_grid.getRow(ev.rowKey);
 				$('#modal_inout_ln').val(row['lot_cd']);	
 				$('#modal_inout_pc').val(row['process_nm']);	
@@ -1140,7 +1056,12 @@
 	// ajax 함수 --------------------
 	// 공통코드 조회
 	async function getList() {
-		commonList = await getCommonList("COTYPE", "IOTYPE");
+		commonList = await getCommonList("COTYPE", "IOTYPE", "PRDTYPE");
+		console.log(commonList['IOTYPE']);
+		createSelectBox($('#inout_io'), commonList['IOTYPE'].reverse());
+		createSelectBox($('#inout_tp'), commonList['COTYPE'], '선택하세요.');
+		createSelectBox($('#inout_wh'), warehouseList, '선택하세요.');
+		createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
 	}
 	
 	// 그리드 조회
@@ -1149,6 +1070,8 @@
 	        const jsonData = {
 	            inoutFilter: {
 					...filter,
+		        	startDate: getPrevDate(7), 
+	        	 	endDate: getDate(today),
 				}
 	        };
 	        
@@ -1421,6 +1344,10 @@
 					} : {})
     		},
 			iwList: iw_grid.getData(),
+			inoutFilter: {
+	        	startDate: getPrevDate(7), 
+        	 	endDate: getDate(today),
+			}
 	    }
 	    
 		try {

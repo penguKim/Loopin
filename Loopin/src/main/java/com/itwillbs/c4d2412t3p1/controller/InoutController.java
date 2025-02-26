@@ -20,19 +20,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
-import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
 import com.itwillbs.c4d2412t3p1.domain.InoutRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.InoutWarehouseDTO;
-import com.itwillbs.c4d2412t3p1.domain.StockDTO;
-import com.itwillbs.c4d2412t3p1.domain.StockRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.WareareaDTO;
-import com.itwillbs.c4d2412t3p1.entity.Inout;
 import com.itwillbs.c4d2412t3p1.logging.LogActivity;
 import com.itwillbs.c4d2412t3p1.service.CommonService;
 import com.itwillbs.c4d2412t3p1.service.InoutService;
 import com.itwillbs.c4d2412t3p1.service.PrimaryService;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.InoutFilterRequest;
-import com.itwillbs.c4d2412t3p1.util.FilterRequest.StockFilterRequest;
 
 
 @RequiredArgsConstructor
@@ -47,12 +42,7 @@ public class InoutController {
 	@PreAuthorize("hasAnyRole('ROLE_SYS_ADMIN', 'ROLE_MF_ADMIN')")
 	@GetMapping("/inout_list")
 	public String inout_list(Model model) {
-		
-		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list("SIZE");
-		
-		model.addAttribute("commonList", commonList);
 		List<Map<String, String>> warehouseList = primaryService.select_WAREHOUSE_code();
-		
 		model.addAttribute("warehouseList", warehouseList);
 		
 		return "/inout/inout_list";
@@ -63,10 +53,9 @@ public class InoutController {
 	@PostMapping("/select_INOUT_list")
 	public Map<String, Object> select_INOUT_list(@RequestBody InoutRequestDTO inoutRequest) {
 		Map<String, Object> response = new HashMap<>(); 
-		List<InoutDTO> list = inoutService.select_INOUT_list();
+		InoutFilterRequest filter = inoutRequest.getInoutFilter();
+		List<InoutDTO> list = inoutService.select_INOUT_list(filter);
 
-		System.out.println(list.toString());
-		
 		response.put("result", true);
 		Map<String, Object> data = new HashMap<>();
 		data.put("contents", list);
@@ -167,7 +156,7 @@ public class InoutController {
 	@PostMapping("/insert_INOUT")
 	public ResponseEntity<Map<String, Object>> insert_INOUT(@RequestBody InoutRequestDTO inoutRequest) {
 		Map<String , Object> response = new HashMap<>();
-		InoutFilterRequest filter = inoutRequest.getInoutfilter();
+		InoutFilterRequest filter = inoutRequest.getInoutFilter();
 		InoutDTO inout = inoutRequest.getInout();
 		List<InoutWarehouseDTO> iwList = inoutRequest.getIwList();
 	    try {
@@ -176,10 +165,10 @@ public class InoutController {
 	    		 inoutService.insert_INOUT_ORDER(inout, iwList);
 	    	} else if(inout.getInout_tp().equals("C")) {
 	    		// 수주건 인서트
-	    		inoutService.insert_INOUT_CONTRACT4(inout, iwList);
+	    		inoutService.insert_INOUT_CONTRACT(inout, iwList);
 	    	}
 	    	
-	    	List<InoutDTO> list = inoutService.select_INOUT_list();
+	    	List<InoutDTO> list = inoutService.select_INOUT_list(filter);
 	    	response.put("list", list);
 	    	
 			return ResponseEntity.ok(response);
@@ -189,32 +178,6 @@ public class InoutController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
-//	@ResponseBody
-//	@PostMapping("/insert_INOUT")
-//	public ResponseEntity<Map<String, Object>> insert_INOUT(@RequestBody InoutRequestDTO inoutRequest) {
-//		Map<String , Object> response = new HashMap<>();
-//		InoutFilterRequest filter = inoutRequest.getInoutfilter();
-//		InoutDTO inout = inoutRequest.getInout();
-//		List<InoutWarehouseDTO> iwList = inoutRequest.getIwList();
-//		System.out.println(iwList.toString());
-//		try {
-//			if(inout.getInout_tp().equals("O")) {
-//				// 발주건 인서트
-//				inoutService.insert_INOUT_ORDER(inout, iwList);
-//			} else if(inout.getInout_tp().equals("C")) {
-//				// 수주건 인서트
-//				inoutService.insert_INOUT_CONTRACT3(inout, iwList);
-//			}
-//			
-//			List<InoutDTO> list = inoutService.select_INOUT_list();
-//			response.put("list", list);
-//			
-//			return ResponseEntity.ok(response);
-//		} catch (Exception e) {
-//			e.printStackTrace();
-//			response.put("msg", e.getMessage());
-//			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-//		}
-//	}
+
 
 }

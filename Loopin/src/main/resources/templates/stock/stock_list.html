@@ -888,7 +888,7 @@
 				colorNode.sizesSummary[SIZE] += STOCK_AQ;
 				// 집계한 사이즈 정보를 줄바꿈으로 구분한 문자열로 생성
 				const sizesStr = Object.entries(colorNode.sizesSummary)
-					.map(([sz, qty]) => `${sz}: ${qty}개`)
+					.map(([sz, qty]) => `${sz}: ${qty.toLocaleString()}개`)
 					.join("\n");
 				colorNode.contentSummary = `<div class="text-start fs-6 fw-bolder ps-3 pb-1">${sizesStr}</div>`;
 				// 색상 노드 높이를, 집계된 사이즈 행의 수 * 20px 로 지정
@@ -908,7 +908,7 @@
 	// ajax 함수 --------------------
 	// 공통코드 조회
 	async function getList() {
-		commonList = await getCommonList("PRDTYPE", "SIZE", "COLOR");
+		commonList = await getCommonList("PRDTYPE");
 		createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
 		createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
 	}

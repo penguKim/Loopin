@@ -110,7 +110,6 @@ public class CommonController {
 	@ResponseBody
 	@PostMapping("/select_COMMON_list")
 	public ResponseEntity<Map<String, Object>> select_COMMON_list(@RequestBody Common_code_listDTO commonDTO) {
-		System.out.println("코드들은 : " + commonDTO.getList());
 		Map<String, Object> response = new HashMap<>(); 
 		Map<String, List<Common_codeDTO>> commonList =  commonService.select_COMMON_list(commonDTO.getList());
 		log.info(commonList.toString());
