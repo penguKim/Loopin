@@ -319,6 +319,9 @@ fetchBOM();
 const fetchBomlistForAdd = async (selpdcs) =>{
 	let matdata = [];
 	try{
+		 if (!selpdcs) {
+	            selpdcs = "pdc=";  // 기본값으로 pdc= 빈 값 보내기
+	        }
 		const response = await fetch(`/selectbom?${selpdcs}`,{
 			method:"GET",
 			headers: {
@@ -439,6 +442,17 @@ const bomgrid = new tui.Grid({
 		  {header:'기준단위', name:'PRODUCT_UN', align:'center'},
 		  {header:'소요량', name:'BOM_AM', align:'center'},
 	  ],
+	  summary: {
+		    height: 30,
+		    position: 'bottom',
+		    columnContent: {
+		    	BOM_AM: {
+		            template: (valueMap) => {
+		                return `총  ${valueMap.cnt} 개`
+		            }
+		        },
+		    }
+		},
 });
 
 const mgrid = new tui.Grid({
@@ -756,12 +770,18 @@ async function clickmbtnaddmat () {
 	if(modaltype ==='modify'){
 		console.log('수정모달의 bom추가버튼');
 		const rootdata = pcgrid.getData();
-		console.log('수정모달 행 데이터 가져와'+JSON.stringify(rootdata));
-		const selpdc = rootdata.map(i=>i.BOMPROCESS_CD);
-		console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdc));
-		const selpdcs= selpdc.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
-		console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdcs));
-		fetchBomlistForAdd(selpdcs);
+// 		console.log('수정모달 행 데이터 가져와'+JSON.stringify(rootdata));
+		if(rootdata.length === 0){
+			const nopdc = [''];
+			const selpdcs= nopdc.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
+			fetchBomlistForAdd(selpdcs);
+		}else{
+			const selpdc = rootdata.map(i=>i.BOMPROCESS_CD);
+			console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdc));
+			const selpdcs= selpdc.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
+			console.log('수정모달 행 데이터 가져와'+JSON.stringify(selpdcs));
+			fetchBomlistForAdd(selpdcs);
+		}
 	}else{
 		modaltype = 'selectBOM';
 		const selpdcs= ckrowpds.map(i => `pdc=${encodeURIComponent(i)}`).join('&');
@@ -855,7 +875,6 @@ async function clickambtnadd (){
 		}else{
 			
 			const existdata = mgrid.getData();
-			// 업데이트할때 체크된거 해제되게 햇으면,,,!
 			const updatedData = existdata.map(i=>({
 				...i,
 				BOMPROCESS_CD: pdcinput.value
