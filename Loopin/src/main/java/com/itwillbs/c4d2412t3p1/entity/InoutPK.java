@@ -19,8 +19,7 @@ import lombok.Setter;
 public class InoutPK implements Serializable {
 	
 	private String inout_dt;
-	private String inout_iw;
-	private String inout_ow;
+	private String inout_wh;
 	private String item_cd;
 	private String inout_io;
 	

@@ -95,7 +95,9 @@ public class Product {
 	private String product_uu;
 	@Column(name = "product_ud")
 	private Timestamp product_ud;
-
+	@Column(name = "product_fd", length = 50)
+	private String product_fd;
+	
 
 	
 	public static Product setProduct(ProductDTO product) {

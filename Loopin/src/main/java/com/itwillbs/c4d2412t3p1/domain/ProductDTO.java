@@ -32,6 +32,7 @@ public class ProductDTO {
 	private Timestamp product_rd;
 	private String product_uu;
 	private Timestamp product_ud;
+	private String product_fd;
 	
 	private String product_crnm;
 	private String product_gn;

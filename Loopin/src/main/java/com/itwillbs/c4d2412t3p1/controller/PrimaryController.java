@@ -295,6 +295,7 @@ public class PrimaryController {
 				response.put("msg", "이미 사용중인 코드입니다.");
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			response.put("msg", "체크에 실패했습니다.");
 		}
 		return response;

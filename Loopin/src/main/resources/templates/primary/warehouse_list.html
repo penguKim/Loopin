@@ -377,6 +377,7 @@
 					},
 				},
 				{header : '최대적재량', name : 'warearea_cp', sortable : true, filter: 'text', editor: 'text',
+					formatter: (cell) => `${Number(cell.value)?.toLocaleString()}`,
 					validation: {
 						required: true,
 						dataType: 'number',
