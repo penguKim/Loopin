@@ -32,7 +32,7 @@
 							<h5 id="premth"></h5>
 							<h5>공정관리</h5>
 						</div>
-						<div id="filterModule"></div>
+						<div id="filterModule" class="mb-2"></div>
 						<div id="grid" class="p-1"></div>
 						<!-- <div class="card-footer d-flex justify-content-start align-items-center p-2"> -->
 						<div class="d-flex justify-content-start align-items-center p-2">
@@ -47,7 +47,7 @@
 	             <div class="modal-dialog modal-dialog-centered modal-lg">
 	               <div class="modal-content">
 	                 <div class="modal-header">
-	                   <h5 class="modal-title">공정 등록</h5>
+	                   <h5 class="modal-title" id="modaltitle"></h5>
 	                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 	                 </div>
 	                 <div class="modal-body">
@@ -133,10 +133,10 @@
     let selcc = null;
     let selpd = null;
     let seleq = null;
-    let selus = null;
+    let selus = 1;
     let pccd = null;
     let pcnm = null;
-    let pcbg = null;
+    let pcbg = "";
     let modaltype = 'create';
 	
 	/* FETCH */
@@ -253,7 +253,7 @@
 	
 	modal.addEventListener('hide.bs.modal',function(){
 		console.log('모달이닫힘')
-		
+		modaltype = null;
 		document.getElementById('PROCESS_CD').value = "";
 		document.getElementById('PROCESS_NM').value = "";
 		document.querySelector('#PROCESS_GC').selectedIndex = 0;
@@ -302,8 +302,8 @@
 	    selcc = null;
 	    selpd = null;
 	    seleq = null;
-	    selus = null;
-	    pcbg = null;
+	    selus = 1;
+	    pcbg = "";
 	    
 		console.log("닫아서 초기화완료");
 	})
@@ -557,6 +557,7 @@
 		console.log('pccd등록',pccd);
 		console.log('pcnm등록',pcnm);
 		console.log('pcbg등록',pcbg);
+
 		if(pccd === null){
 			swal.fire({
 				title:"공정코드를 입력해주세요.",
@@ -694,8 +695,8 @@
 	    selcc = null;
 	    selpd = null;
 	    seleq = null;
-	    selus = null;
-	    pcbg = null;
+	    selus = 1;
+	    pcbg = "";
 	    
 		console.log("초기화완료");
 	});
@@ -705,7 +706,8 @@
 	//////////////////
 	
 	setElementHeight('#div_card', -110);
-	
+	setGridTheme();
+      
 	$(window).resize(function() {
 		setElementHeight('#div_card', -110);
 		if(grid != null) {
@@ -741,13 +743,14 @@
 	  const grid = new tui.Grid({
 		  el: document.getElementById('grid'),
 		  rowHeaders: ['checkbox'],
-		  scrollX: true,
+		  bodyHeight: 510,
+		  scrollX: false,
 		  scrollY: true,
 		  columns: [
 			  {header:'공정코드', name:'PROCESS_CD', align:'center'},
 			  {header:'공정명', name:'PROCESS_NM', align:'center'},
-			  {header:'공정품목', name:'PROCESS_PD', align:'center'},
-			  {header:'설비', name:'PROCESS_EQ', align:'center'},
+			  {header:'공정품목', name:'PROCESS_PN', align:'center'},
+			  {header:'설비', name:'EQUIPMENT_NM', align:'center'},
 			  {header:'사용여부', name:'PROCESS_US', align:'center'},
 			  {header:'비고', name:'PROCESS_BG', align:'center'},
 		  ],
@@ -775,12 +778,10 @@
 		    });
 		    console.log(setdata);
 		    modaltype='edit';
-		    // 모달에 값 채우기
+		    
 	       if (setdata.length > 0) {
-		      const item = setdata[0]; // 첫 번째 데이터
+		      const item = setdata[0];
 		      regimodal.show();
-// 		      $('#PROCESS_PD').select2();
-// 		      $('#PROCESS_EQ').select2();
 		
 		      // 모달 값 채우기
 		      const processGcElem = document.getElementById('PROCESS_GC');
@@ -791,6 +792,8 @@
 		      const processCcValue = item.PROCESS_CC; 
 		      const processPdValue = item.PROCESS_PD ? item.PROCESS_PD.split(',') : []; 
 		      const processEqValue = item.PROCESS_EQ ? item.PROCESS_EQ.split(',') : [];
+		      
+		      console.log('>>>>>>>>>>>>> 이건 테스트야 '+ processPdValue)
 		      
 		      processGcElem.value = processGcValue;
 		      selgc = processGcValue;

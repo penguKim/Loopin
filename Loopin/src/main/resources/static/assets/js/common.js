@@ -613,35 +613,45 @@ function gridValidationCheck(grid) {
 function setGridTheme() {
 	tui.Grid.setLanguage('ko');
 	tui.Grid.applyTheme('striped', {
+	    outline: {
+	        border: '#e0e0e0',
+	        showVerticalBorder: true,
+	        showHorizontalBorder: true
+	    },
+		row: {
+			even: {
+				background: '#FFFFFF',
+			},
+		},
 			outline: {
 					border: '#e0e0e0',
 					showVerticalBorder: true,
 					showHorizontalBorder: true
 			},
 		cell: {
-					normal: {
-							border: '#e0e0e0',
-							showVerticalBorder: true,
-							showHorizontalBorder: true
-					},
-					header: {
-						border: '#e0e0e0',
-							showVerticalBorder: true,
-							showHorizontalBorder: true
-					},
-					rowHeader: {
-						background: '#eee',
-						border: '#e0e0e0',
-							showVerticalBorder: true,
-							showHorizontalBorder: true
-					},
-					summary: {
-						background: '#ddd',
-						border: '#fff',
-							showVerticalBorder: true,
-							showHorizontalBorder: true
-					},
-			},
+	        normal: {
+	            border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        header: {
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        rowHeader: {
+	        	background: '#eee',
+	        	border: '#e0e0e0',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	        summary: {
+	        	background: '#e0e0e0',
+	        	border: '#fff',
+	            showVerticalBorder: true,
+	            showHorizontalBorder: true
+	        },
+	    },
 	});
 }
 

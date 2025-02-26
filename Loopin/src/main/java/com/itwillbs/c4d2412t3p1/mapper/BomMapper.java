@@ -1,10 +1,12 @@
 package com.itwillbs.c4d2412t3p1.mapper;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
 import com.itwillbs.c4d2412t3p1.entity.BomProcess;
 import com.itwillbs.c4d2412t3p1.entity.Product;
 
@@ -21,5 +23,14 @@ public interface BomMapper {
 
 	List<Product> selectbom(@Param("ckrowpds") List<String> ckrowpds);
 
+	List<Map<String, Object>> selectpcsfrompd(@Param("bpap") String bpap, @Param("pdcd") String pdcd, @Param("bppc") String bppc);
+
+	List<Map<String, Object>> selectbomsformpd(@Param("pdcd") String pdcd, @Param("bpcd") String bpcd);
+
+	int deletebom(@Param("rowdata") List<BomallDTO> deletedata);
+
+	List<Map<String, Object>> selectfilter(@Param("value") List<BomallDTO> value);
+
+	List<Product> checkplanstate(String pdcd);
 
 }

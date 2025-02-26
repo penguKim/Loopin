@@ -18,7 +18,7 @@ import jakarta.transaction.Transactional;
 public interface AccountRepository  extends JpaRepository<Account, String> {
 	
 	// 시퀀스 조회
-	@Query(value = "SELECT NT_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
+	@Query(value = "SELECT AC_SEQUENCE.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
 	
 	

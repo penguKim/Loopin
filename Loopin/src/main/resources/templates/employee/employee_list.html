@@ -36,12 +36,12 @@
 
 
 
-		<!-- 인사카드 등록 모달 -->
+		<!-- 인사카드 모달 -->
 		<div class="modal" id="modal_appointment_save" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 			<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="modalTitle">인사카드 등록</h5>
+						<h5 class="modal-title" id="modalTitle">인사카드</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
@@ -340,7 +340,7 @@
 	});
 	
 
- 	$(function() {
+ 	function initializeDatePickers() {
  	    var today = new Date();
 
  	    // 입사일 DatePicker 설정
@@ -352,7 +352,7 @@
  	            container: '#startpicker-container',
  	        },
  	        endpicker: {
- 	            date: today, // 오늘 날짜로 초기화
+ 	            date: null, // 오늘 날짜로 초기화
  	            input: '#employee_rd',
  	            container: '#endpicker-container',
  	            disabled: true // 퇴사일 기본 비활성화
@@ -362,50 +362,41 @@
  	    });
 
  	 	// 초기 상태에서 퇴사일 비활성화
- 	    $('#employee_rd').prop('disabled', true);
+ 	    $('#contract_ed').val('').prop('disabled', true);
 	    
- 	    // start 날짜 선택 시 퇴사일을 입사일 이후로 설정하고 퇴사일 활성화
- 	    startPicker.on('change:start', function(event) {
- 	        // start 날짜 선택 후 event.date를 제대로 가져오는지 확인
- 	        if (event && event.date) {
- 	            console.log("Start Date selected: ", event.date);
+		// 올바른 시작일 변경 이벤트
+		startPicker.getStartpicker().on('change', function () {
+		    const startDate = startPicker.getStartpicker().getDate(); // 시작일 가져오기
+		    console.log('선택된 시작일:', startDate);
 
- 	            // 입사일이 선택되면 퇴사일 최소 날짜를 설정하고 퇴사일 활성화
- 	            var minEndDate = new Date(event.date); // 입사일을 기준으로 설정
- 	            minEndDate.setDate(minEndDate.getDate() + 1); // 퇴사일은 입사일 이후로 설정
+		    if (!startDate) {
+		        console.error('시작 날짜를 가져오지 못했습니다!');
+		        return;
+		    }
 
- 	            // 퇴사일 DatePicker 설정
- 	            var endPicker = tui.DatePicker.createRangePicker({
- 	                startpicker: {
- 	                    date: event.date, // 입사일 이후 날짜부터 설정
- 	                    input: '#employee_hd',
- 	                    container: '#startpicker-container',
- 	                },
- 	                endpicker: {
- 	                    date: minEndDate, // 입사일 이후 날짜로 설정
- 	                    input: '#employee_rd',
- 	                    container: '#endpicker-container',
- 	                    disabled: false // 퇴사일 활성화
- 	                },
- 	                format: 'YYYY-MM-dd',
- 	                timePicker: false
- 	            });
+		    const minEndDate = new Date(startDate);
+		    minEndDate.setDate(minEndDate.getDate() + 1);
 
- 	            // 퇴사일 선택 후 캘린더 닫기
- 	            endPicker.on('change:end', function(event) {
- 	                console.log("End Date selected: ", event.date);
- 	                endPicker.close();
- 	            });
+		    startPicker.getEndpicker().setDate({
+		        date: minEndDate,
+		        disabled: false,
+		    });
 
- 	            // 입사일 선택 후 캘린더 닫기
- 	            startPicker.close();
- 	        } else {
- 	            console.error("Start date is not available in the event");
- 	        }
- 	    });
- 	});
+		});
 
+		// 올바른 종료일 변경 이벤트
+		startPicker.getEndpicker().on('change', function () {
+		    const endDate = startPicker.getEndpicker().getDate(); // 종료일 가져오기
+		    console.log('선택된 종료일:', endDate);
 
+		    if (!endDate) {
+		        console.error('종료 날짜를 가져오지 못했습니다!');
+		        return;
+		    }
+
+		});
+	}
+	
     function validateDate() {
         const dateInput = document.getElementById("employee_bd").value;
 
@@ -520,6 +511,9 @@
 <!-- 필터 모듈 JS File -->
 <script th:inline="javascript">
 	$(document).ready(function () {
+		
+		setGridTheme();
+		
 	    const urlParams = new URLSearchParams(window.location.search);
 	    const type = urlParams.get("type");
 
@@ -897,6 +891,7 @@
 		    // 모달 열기
 		    const modalInstance = new bootstrap.Modal($('#modal_appointment_save')[0]);
 		    modalInstance.show();
+			initializeDatePickers();
 		}
 
 		// 모달 초기화 함수
@@ -1334,7 +1329,7 @@
 		
 		function refreshGridData() {
 		    $.ajax({
-		        url: '/select_EMPLOYEE',
+		        url: requestUrl,
 		        method: 'GET',
 		        success: function (response) {
 		            grid.resetData(response);

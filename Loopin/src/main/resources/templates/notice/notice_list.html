@@ -129,6 +129,9 @@
 	
 <script th:inline="javascript">
 	$(document).ready(function () {
+		
+		setGridTheme();
+		
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
 
@@ -139,9 +142,10 @@
 		const filterConfig = [
 			{ key: 'startDate', label: '조회기간 시작일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2024-01-01'},
 			{ key: 'endDate', label: '조회기간 종료일', type: 'daterangepicker', format: 'YYYY-MM-dd', value: '2025-12-31'},
-            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서 입력',  col: 'col-4' },
-            { key: 'employeeNm', label: '작성자', type: 'text', placeholder: '작성자 입력',  col: 'col-4' },
-            { key: 'noticeTt', label: '제목', type: 'text', placeholder: '부서명 입력',  col: 'col-4' }
+            { key: 'noticeCd', label: '공지사항코드', type: 'text', placeholder: '공지사항코드 입력',  col: 'col-3' },
+            { key: 'employeeDp', label: '부서', type: 'text', placeholder: '부서 입력',  col: 'col-3' },
+            { key: 'employeeNm', label: '작성자', type: 'text', placeholder: '작성자 입력',  col: 'col-3' },
+            { key: 'noticeTt', label: '제목', type: 'text', placeholder: '부서명 입력',  col: 'col-3' }
         ];
 		
 	    
@@ -234,7 +238,7 @@
 	                el: document.getElementById('grid'),
 					data: noticeList.map(row => ({
 						notice_cd: row.notice_cd,
-						notice_tt: row.notice_ct,
+						notice_tt: row.notice_tt,
 						notice_ct: row.notice_ct,
 						notice_wr: row.notice_wr,
 						notice_wd: row.notice_wd,
@@ -262,6 +266,7 @@
         			    }
         			},
 					columns: [
+						{ header: '공지사항코드', name: 'notice_cd', align: 'center', sortable: true, width: 200 },
 						{ header: '부서', name: 'employee_dp', align: 'center', sortable: true, width: 200 },
 						{ header: '제목', name: 'notice_tt', align: 'center', sortable: true },
 						{ header: '작성자', name: 'employee_nm', align: 'center', sortable: true, width: 200 },
@@ -312,7 +317,7 @@
 					}
 					
 					
-	                if (columnName === 'employee_nm' || columnName === 'notice_wr' || columnName === 'notice_tt' ||  columnName === 'employee_dp') {
+	                if (columnName === 'notice_cd' || columnName === 'employee_nm' || columnName === 'notice_wr' || columnName === 'notice_tt' ||  columnName === 'employee_dp') {
 	                    openEditModal(rowData); // 수정 모드로 모달 열기
 	                }
 	            });
