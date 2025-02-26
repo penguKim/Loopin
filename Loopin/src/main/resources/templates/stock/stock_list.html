@@ -908,7 +908,7 @@
 	// ajax 함수 --------------------
 	// 공통코드 조회
 	async function getList() {
-		commonList = await getCommonList("PRDTYPE");
+		commonList = await getCommonList("PRDTYPE", "SIZE", "COLOR");
 		createSelectBox($('#warehouse_cd'), warehouseList, '선택하세요.');
 		createSelectBox($('#item_gc'), commonList['PRDTYPE'], '선택하세요.');
 	}
