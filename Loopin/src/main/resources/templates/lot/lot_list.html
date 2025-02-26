@@ -9,11 +9,13 @@
 <style>
 	.orgchart{
 		background-image: none;
-		display: flex;
 		justify-content: space-evenly;
 		align-items: center;
-		overflow: auto; /* 필요하면 스크롤 가능하도록 설정 */
+	    transform-origin: top center;
+	    transform: scale(0.7); /* 초기 줌아웃 (70%) */
+	    transition: transform 0.2s ease-in-out;
 	}
+
 	.orgchart .node .title{
 		background-color: none !important;
 	}
@@ -26,11 +28,6 @@
 			animation: blink 3s infinite;
 			color: red;
 			background-color: white;
-	}
-	.wide-header {
-			min-width: 200px !important;	/* ✅ 원하는 너비 지정 */
-			white-space: normal !important;	/* ✅ 텍스트 줄 바꿈 */
-			text-align: center;
 	}
 </style>
 <body>
@@ -54,7 +51,9 @@
 					<div class="card">
 						<div class="card-body">
 							<h1 class="card-title">차트</h1>
-							<div id="chart"></div>
+							<div class="mb-3 row d-flex align-items-center justify-content-center">
+								<div id="chart"></div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -96,15 +95,18 @@
 		setGridTheme();
 		make_grid();
 		getGridList();
-		
+	    if ($("#chart").is(":empty")) {
+	        $("#chart").html('<div style="display:flex;justify-content:center;align-items:center;height:100%;font-size:18px;color:#666;">로트번호를 클릭해주세요</div>');
+	    }
+
 		// 창크기
 		setElementHeight('.card', -105);
-		setGridHeight(grid, -430);
+		setGridHeight(grid, -396);
 		
 		$(window).resize(function() {
 			setTimeout(() => {
 				setElementHeight('.card', -105);
-				setGridHeight(grid, -430);
+				setGridHeight(grid, -400);
 				setGridWidth(grid, 0);
 			}, 300);
 		});
@@ -118,9 +120,9 @@
 		
 		$(document).on('filterToggled', function(e) {
 			if(e.detail.isVisible) {
-				setGridHeight(grid, -460);
+				setGridHeight(grid, -536);
 			} else {
-				setGridHeight(grid, -430);
+				setGridHeight(grid, -396);
 			}
 		});
 		
@@ -213,7 +215,7 @@
 			}
 		});
 	}
-	
+	/*
 	function mergeProcess(oldProc, newProc) {
 		// 우선순위: "진행중" > "완료" > "대기" > "N/A"
 		
@@ -232,87 +234,87 @@
 		// oldProc === "N/A" or 기타
 		return newProc;
 	}
+	*/
 
-	
-	//트리 데이터 함수
+	// 트리 데이터 함수
 	function buildTree(data) {
-		if (!Array.isArray(data)) {
-			console.error("buildTree 오류: 데이터가 배열이 아님", data);
-			return;
-		}
+	    if (!Array.isArray(data)) {
+	        console.error("buildTree 오류: 데이터가 배열이 아님", data);
+	        return;
+	    }
 
-		// 1) 루트 노드 process 결정
-		let allComplete = true;
-		for (let row of data) {
-			if (row.WORKORDER_ST === "진행중") {
-				allComplete = false;
-				break;
-			}
-		}
-		
-		console.log(allComplete);
-		
-		const rootProcess = allComplete ? "완료" : "대기";
+	    // 1) 루트 노드 process 결정
+	    let allComplete = true;
+			console.log(data);
+	    for (let row of data) {
+	        if (!row.WORKORDER_ST || row.WORKORDER_ST === "진행중") {  // ✅ NULL 값도 "진행중"으로 간주
+	            allComplete = false;
+	            break;
+	        }
+	    }
 
-		console.log(rootProcess);
-		// 2) 루트 노드
-		let root = {
-			name: data[0].PRODUCT_CD,
-			title: "제품",
-			process: rootProcess,
-			children: []
-		};
 
-		let nodeMap = {};
-		nodeMap[root.name] = root;
+	    const rootProcess = allComplete ? "완료" : "대기";  // ✅ NULL 값이 있으면 "대기"
 
-		data.forEach(item => {
-			let pathArr = item.PATH ? item.PATH.split(" > ") : [];
-			let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
-			let currentName = pathArr[pathArr.length - 1];
 
-			// 원자재 여부
-			let isRaw = (item.IS_RAW === 'Y');
-			// title 결정
-			let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
+	    // 2) 루트 노드
+	    let root = {
+	        name: data[0].PRODUCT_CD,
+	        title: "제품",
+	        process: rootProcess,
+			lot_cd: data[0].LOT_CD,
+	        children: []
+	    };
 
-			// process 우선 값
-			let rowProc = item.WORKORDER_ST || item.COMMON_NM || "N/A";
+	    let nodeMap = {};
+	    nodeMap[root.name] = root;
 
-			// 현재 노드 생성/병합
-			if (!nodeMap[currentName]) {
-				nodeMap[currentName] = {
-					name: currentName,
-					title: nodeTitle,
-					process: rowProc,
-					children: []
-				};
-			} else {
-				// 이미 존재하면 우선순위 병합
-				nodeMap[currentName].process = mergeProcess(nodeMap[currentName].process, rowProc);
-			}
+	    data.forEach(item => {
+	        let pathArr = item.PATH ? item.PATH.split(" > ") : [];
+	        let parentName = pathArr.length > 1 ? pathArr[pathArr.length - 2] : root.name;
+	        let currentName = pathArr[pathArr.length - 1];
 
-			// 부모 노드 생성/병합
-			if (!nodeMap[parentName]) {
-				nodeMap[parentName] = {
-					name: parentName,
-					title: "반제품",
-					process: rowProc, 
-					children: []
-				};
-			} else {
-				nodeMap[parentName].process = mergeProcess(nodeMap[parentName].process, rowProc);
-			}
+	        // 원자재 여부
+	        let isRaw = (item.IS_RAW === 'Y');
+	        // title 결정
+	        let nodeTitle = isRaw ? "원자재" : (item.STEP === 1 ? "반제품" : "원자재");
 
-			// 부모에 현재 노드 연결
-			if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
-				nodeMap[parentName].children.push(nodeMap[currentName]);
-			}
-		});
+	        // process 우선 값
+	        let rowProc = item.WORKORDER_ST || item.COMMON_NM || "대기";  // ✅ NULL이면 "대기"
 
-		make_chart(root);
+	        // 현재 노드 생성/병합
+	        if (!nodeMap[currentName]) {
+	            nodeMap[currentName] = {
+	                name: currentName,
+	                title: nodeTitle,
+	                process: rowProc,
+	                children: []
+	            };
+	        } else {
+	            // 이미 존재하면 우선순위 병합
+	            nodeMap[currentName].process = mergeProcess(nodeMap[currentName].process, rowProc);
+	        }
+
+	        // 부모 노드 생성/병합
+	        if (!nodeMap[parentName]) {
+	            nodeMap[parentName] = {
+	                name: parentName,
+	                title: "반제품",
+	                process: rowProc,
+	                children: []
+	            };
+	        } else {
+	            nodeMap[parentName].process = mergeProcess(nodeMap[parentName].process, rowProc);
+	        }
+
+	        // 부모에 현재 노드 연결
+	        if (!nodeMap[parentName].children.some(child => child.name === currentName)) {
+	            nodeMap[parentName].children.push(nodeMap[currentName]);
+	        }
+	    });
+
+	    make_chart(root);
 	}
-
 
 	
 	
@@ -322,7 +324,8 @@
 		chart.orgchart({
 			'data': data,
 			'nodeContent': data.name, // 노드에 표시할 속성
-			//'pan': true, // 패닝 활성화
+			'pan': true, // 패닝 활성화
+			'zoom': true,
 			'direction': 't2b', // 방향 설정 (bottom to top)
 			'nodeTemplate': function(data) {
 				let background = '#997af3'; // 기본 배경색 (파란색)
@@ -344,7 +347,7 @@
 					</div>
 				`;
 			}
-				});
+		});
 		
 		document.querySelectorAll('.orgchart .fa').forEach(el => {
 			el.style.pointerEvents = 'none'; // 클릭 이벤트 비활성화
@@ -426,7 +429,7 @@
 	// 모달 그리드 생성
 	function make_modal_grid(data) {
 		
-		
+		console.log(data);
 		const dataSource = {
 			api: {readData: {url: '/select_LOTHISTORY_list', method: 'GET', initParams: { lot_cd: data.lot_cd}}}
 		}

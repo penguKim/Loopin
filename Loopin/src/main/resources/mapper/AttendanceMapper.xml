@@ -154,11 +154,11 @@
 		    s.EMPLOYEE_DP,
 		    s.EMPLOYEE_GD,
 		    s.USAGE_YEAR,
-		    s.ANNUAL_UA, -- 사용연차
+		    a.ANNUAL_UA, -- 사용연차
 		    a.ANNUAL_AA AS TOTAL_ANNUAL, -- 총연차
 		    a.ANNUAL_RA AS REMAINING_ANNUAL -- 잔여연차
 		 FROM ANNUAL_SUMMARY s
-	LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD 
+	LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD AND A.ANNUAL_YR = '2025'
 		WHERE 1=1
 			<if test="!isAdmin or type == 1">
 			  AND s.EMPLOYEE_CD = #{employee_cd}

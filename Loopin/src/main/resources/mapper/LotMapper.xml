@@ -72,61 +72,77 @@
 	</select>
 
 	<select id="select_LOT_json" resultType="map">
-		WITH BOM_HIERARCHY (BOM_CD, PRODUCT_CD, BOM_AM, step, path, IS_RAW) AS (
-		    -- 🔥 최하위 원자재부터 시작 (BOM 테이블에서 직접 추출)
+		WITH BOM_HIERARCHY (BOM_CD, PRODUCT_CD, BOM_AM, STEP, PATH, IS_RAW) AS (
 		    SELECT 
-		        B.BOM_CD,         
-		        B.PRODUCT_CD,      
-		        B.BOM_AM,        
-		        1 AS step,                
-		        B.BOM_CD AS path,
+		        B.BOM_CD,
+		        B.PRODUCT_CD,
+		        B.BOM_AM,
+		        1 AS STEP,
+		        'JORDAN003' || ' > ' || B.BOM_CD AS PATH,
 		        CASE 
-		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하면 원자재
 		            ELSE 'N'
 		        END AS IS_RAW
 		    FROM BOM B
-		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
+		    WHERE B.BOMPRODUCT_CD = 'JORDAN003'
 		    UNION ALL
-		    SELECT 
-		        B.BOM_CD, 
-		        BP.PRODUCT_CD, 
-		        B.BOM_AM * NVL(PARENT_BOM.BOM_AM, 1),  -- 🚀 누적 소요량 계산
-		        BH.step + 1,
-		        BH.path || ' > ' || B.BOM_CD,
+		    SELECT
+		        B.BOM_CD,
+		        BP.PRODUCT_CD,
+		        B.BOM_AM * NVL(PARENT_BOM.BOM_AM, 1),
+		        BH.STEP + 1,
+		        -- 기존 path 뒤에 BOM_CD를 추가
+		        BH.PATH || ' > ' || B.BOM_CD,
 		        CASE 
-		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'  -- BUBU로 시작하는 것은 원자재
+		            WHEN B.BOM_CD LIKE 'BUBU%' THEN 'Y'
 		            ELSE 'N'
-		        END AS IS_RAW
+		        END
 		    FROM BOM B
-		    JOIN BOM_HIERARCHY BH ON B.PRODUCT_CD = BH.BOM_CD -- 🔥 부모 반제품과 연결
-		    JOIN BOMPROCESS BP ON BH.BOM_CD = BP.BOMPROCESS_CD -- 🔥 BOMPROCESS를 활용하여 반제품 연결
-		    LEFT JOIN BOM PARENT_BOM ON BP.BOMPROCESS_CD = PARENT_BOM.BOM_CD -- 🚀 BOM_AM 값을 조인하여 가져옴
-		    WHERE B.BOMPRODUCT_CD = #{PRODUCT_CD}
-		), BH AS (
-			   SELECT 
-				    BOM_CD, 
-				    PRODUCT_CD,
-				    SUM(BOM_AM) AS BOM_AM,  -- 🔥 중복된 원자재를 합산하여 소요량 계산
-				    step,
-				    path,
-				    IS_RAW  -- 🚀 원자재 여부 포함
-				FROM BOM_HIERARCHY
-				WHERE product_cd = #{PRODUCT_CD}
-				GROUP BY BOM_CD, PRODUCT_CD, step, path, IS_RAW
-				ORDER BY step DESC, BOM_AM DESC
+		    JOIN BOM_HIERARCHY BH 
+		      ON B.PRODUCT_CD = BH.BOM_CD
+		    JOIN BOMPROCESS BP 
+		      ON BH.BOM_CD = BP.BOMPROCESS_CD
+		    LEFT JOIN BOM PARENT_BOM 
+		      ON BP.BOMPROCESS_CD = PARENT_BOM.BOM_CD
+		    WHERE B.BOMPRODUCT_CD = 'JORDAN003'
+		),
+		BH AS (
+		    SELECT 
+		        BOM_CD,
+		        PRODUCT_CD,
+		        SUM(BOM_AM) AS BOM_AM,
+		        STEP,
+		        PATH,
+		        IS_RAW
+		    FROM BOM_HIERARCHY
+		    WHERE PRODUCT_CD = 'JORDAN003'
+		    GROUP BY BOM_CD, PRODUCT_CD, STEP, PATH, IS_RAW
+		    ORDER BY STEP DESC, BOM_AM DESC
 		)
-		SELECT BH.*
-			 , BP.PROCESS_CD PROCESS_CD
-			 , w.workorder_st
-			 , c.common_nm
-		  FROM BH
-		  LEFT JOIN BOMPROCESS BP
-		    ON BH.BOM_CD = BP.BOMPROCESS_CD
-		   AND BH.PRODUCT_CD = BP.PRODUCT_CD 
-		   LEFT JOIN LOT l ON l.PROCESS_CD = bp.PROCESS_CD AND l.lot_cd = #{LOT_CD}
-		   LEFT JOIN WORKORDER w ON w.PROCESS_CD = bp.PROCESS_CD AND w.lot_cd = #{LOT_CD}
-		   LEFT JOIN INOUT i ON i.ITEM_CD = BH.BOM_CD AND i.INOUT_CO = #{CONTRACT_CD} AND i.inout_io = 'O' AND i.lot_cd = #{LOT_CD}
-		   LEFT JOIN COMMON_CODE c ON c.COMMON_CC = i.INOUT_IO AND c.COMMON_GC = 'IOTYPE'
+		SELECT 
+		    BH.*,
+		    BP.PROCESS_CD,
+		    W.WORKORDER_ST,
+		    C.COMMON_NM,
+		    l.LOT_CD
+		FROM BH
+		LEFT JOIN BOMPROCESS BP 
+		       ON BH.BOM_CD = BP.BOMPROCESS_CD 
+		      AND BH.PRODUCT_CD = BP.PRODUCT_CD
+		LEFT JOIN LOT L 
+		       ON L.PROCESS_CD = BP.PROCESS_CD 
+		      AND L.LOT_CD = 'JORDAN003_20250226_01336'
+		LEFT JOIN WORKORDER W 
+		       ON W.PROCESS_CD = BP.PROCESS_CD 
+		      AND W.LOT_CD = 'JORDAN003_20250226_01336'
+		LEFT JOIN INOUT I 
+		       ON I.ITEM_CD = BH.BOM_CD 
+		      AND I.INOUT_CO = 'CT25-0031'
+		      AND I.LOT_CD = 'JORDAN003_20250226_01336'
+		      AND I.INOUT_IO = 'O'
+		LEFT JOIN COMMON_CODE C 
+		       ON C.COMMON_CC = I.INOUT_IO 
+		      AND C.COMMON_GC = 'IOTYPE'
 	</select>
 	
 	<select id="select_LOTHISTORY_list" resultType="map">
