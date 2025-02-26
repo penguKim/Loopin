@@ -36,10 +36,10 @@ public class MenuController {
             headerMenu.add(Map.of("name", "ERP", "dataMenu", "ERP"));
             headerMenu.add(Map.of("name", "MES", "dataMenu", "MES"));
         } else {
-            if (isHrAdmin || isAtAdmin || isPrAdmin) {
+            if (isHrAdmin || isAtAdmin || isPrAdmin || isBnAdmin) {
                 headerMenu.add(Map.of("name", "ERP", "dataMenu", "ERP"));
             }
-            if (isBnAdmin || isMfAdmin) {
+            if (isMfAdmin) {
                 headerMenu.add(Map.of("name", "MES", "dataMenu", "MES"));
             }
         }

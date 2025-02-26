@@ -188,13 +188,13 @@
 	            { header: '근속연수', name: 'SERVICE_YEARS', align: 'center', sortable: true },
 	            { header: '사용연차', name: 'ANNUAL_UA', align: 'center', sortable: true },
 	            { header: '잔여연차', name: 'ANNUAL_RA', align: 'center', sortable: true },
-	            { header: '예상 총연차', name: 'EXPECT_ANNUAL', align: 'center', sortable: true },
+	            { header: '총 연차', name: 'ANNUAL_AA', align: 'center', sortable: true },
 	        ],
 			summary: {
 			    height: 40,
 			    position: 'bottom', // or 'top'
 			    columnContent: {
-			    	EXPECT_ANNUAL: {
+			    	ANNUAL_AA: {
 			            template: (valueMap) => {
 			                return `총  ${valueMap.cnt} 건`
 			            }
