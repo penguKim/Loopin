@@ -69,7 +69,7 @@ public class MenuController {
         // ✅ 사이드바 메뉴 설정 (menuType에 따라 필터링)
         if ("ERP".equals(menuType)) {
         	if(isHrAdmin || isSysAdmin) {
-        		sidebarMenu.add(Map.of("name", "인사관리", "link", "1"));
+        		sidebarMenu.add(Map.of("name", "인사", "link", "1"));
         		sidebarMenu.add(Map.of("name", "인사카드", "link", "/employee_list"));
         		sidebarMenu.add(Map.of("name", "인사현황", "link", "/employee_chart" ));
         		sidebarMenu.add(Map.of("name", "인사발령", "link", "/transfer_list" ));
@@ -108,8 +108,8 @@ public class MenuController {
         	}
         	if(isMfAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "자재", "link", "1"));
-        		sidebarMenu.add(Map.of("name", "재고현황", "link", "/stock_list" ));
-        		sidebarMenu.add(Map.of("name", "입출고현황", "link", "/inout_list" ));
+        		sidebarMenu.add(Map.of("name", "재고관리", "link", "/stock_list" ));
+        		sidebarMenu.add(Map.of("name", "입출고관리", "link", "/inout_list" ));
         	}
         	if(isMfAdmin || isSysAdmin) {
         		sidebarMenu.add(Map.of("name", "생산", "link", "1"));
