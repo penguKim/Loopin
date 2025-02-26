@@ -46,8 +46,7 @@
 	const token = $("meta[name='_csrf']").attr("content")
 	const header = $("meta[name='_csrf_header']").attr("content");
 	var empcd = document.getElementById('employee_cd').textContent;
-	tui.Grid.setLanguage('ko');
-	tui.Grid.applyTheme('striped');
+	setGridTheme();
 	
 	function formatCurrency(value) {
 	  if (typeof value === 'number') {

@@ -30,7 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, ProductPK> {
     @Query("DELETE FROM Product p WHERE p.product_cd IN :productCodes")
 	void deleteByProductCdIn(@Param("productCodes") List<String> procudtCodes);
     
-    @Query("SELECT p.product_cd FROM Product p WHERE p.product_cd = :productCd")
+    @Query("SELECT p FROM Product p WHERE p.product_cd = :productCd")
     List<Product> findByProductCd(@Param("productCd") String product_cd);
 
     @Query("SELECT p.product_cd, p.product_pc FROM Product p WHERE p.product_cd= :productCd GROUP BY p.product_cd, p.product_pc")

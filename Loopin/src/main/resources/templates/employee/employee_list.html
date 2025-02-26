@@ -1329,7 +1329,7 @@
 		
 		function refreshGridData() {
 		    $.ajax({
-		        url: '/select_EMPLOYEE',
+		        url: requestUrl,
 		        method: 'GET',
 		        success: function (response) {
 		            grid.resetData(response);

@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
@@ -100,6 +101,26 @@ public class LotController {
 		}
 	}
 	
+	// 로트 상세조회
+	@ResponseBody
+	@GetMapping("/select_LOTHISTORY_list")
+	public ResponseEntity<Map<String, Object>> select_LOTHISTORY_list(@RequestParam("lot_cd") String lot_cd) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> list = lotService.select_LOTHISTORY_list(lot_cd);
+			Map<String, Object> data = new HashMap<>();
+			response.put("result", true);
+			data.put("contents", list);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
 	// 생산실적 조회
 	@ResponseBody
 	@PostMapping("/select_RESULT_list")
@@ -117,6 +138,28 @@ public class LotController {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
 		}
 	}
+	
+	// 생산실적 조회
+	@ResponseBody
+	@GetMapping("/select_RESULT_detail")
+	public ResponseEntity<Map<String, Object>> select_RESULT_detail(@RequestParam("contract_cd") String contract_cd) {
+		
+		Map<String, Object> response = new HashMap<>(); 
+		try {
+			List<Map<String, Object>> list = lotService.select_RESULT_detail(contract_cd);
+			Map<String, Object> data = new HashMap<>();
+			response.put("result", true);
+			data.put("contents", list);
+			response.put("data", data);
+			return ResponseEntity.ok(response);
+		} catch (Exception e) {
+			response.put("result", false);
+			response.put("msg", e.getMessage());
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+		}
+	}
+	
+	
 	
 //	// 생산실적 차트
 //	@ResponseBody

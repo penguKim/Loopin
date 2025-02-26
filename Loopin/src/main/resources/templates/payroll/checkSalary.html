@@ -21,8 +21,7 @@
 <script type="text/javascript">
 		var employee_cd = document.getElementById('employee_cd').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
 		var employee_nm = document.getElementById('employee_nm').textContent; // security 수정시 같이 수정 필요 > token에서 뽑아와야함
-		tui.Grid.setLanguage('ko');
-		tui.Grid.applyTheme('striped');
+		setGridTheme();
 		
 		function formatCurrency(value) {
 			if (typeof value === 'number') {
@@ -55,9 +54,9 @@
 		const grid = new tui.Grid({
 			el : document.getElementById('grid'),
 			responsive: true,
-			scrollX:true,
+			scrollX:false,
 			scrollY:true,
-			//bodyHeight : 485,
+			bodyHeight : 690,
 			columns : [ 
 				{
 					header : 'NO.',
@@ -91,6 +90,18 @@
                     }
 				} 
 			],
+// 			showDummyRows: true,
+			summary: {
+			    height: 30,
+			    position: 'bottom',
+			    columnContent: {
+			    	details: {
+			            template: (valueMap) => {
+			                return `총  ${valueMap.cnt} 개`
+			            }
+			        },
+			    }
+			},
 		});
 		
 		// 이벤트 위임 방식으로 클릭 이벤트 처리
@@ -323,7 +334,7 @@
 			setElementHeight('#div_card', -105);
 			setElementHeight('#div_calendar', -320);
 			if(grid != null) {
-				setGridHeight(grid, -430);
+				setGridHeight(grid, -250);
 			}
 		});
 

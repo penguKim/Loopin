@@ -5,20 +5,53 @@
 <mapper namespace="com.itwillbs.c4d2412t3p1.mapper.BomMapper">
 
 <select id="selectBomAll" resultType="map"> 
-<!-- 임시..!!! 이거 다시 조건걸어서 가져와야한다. 각 부모 품목별로는 중복이라도 나와야함...아닌가? 아닐수도?ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ 이건 이야기해보자 이거 그대로 둘거면 모달에 불러오는 데이터를 손대야함.-->
-	SELECT DISTINCT
-		bp.BOMPROCESS_CD,
-		pd.PRODUCT_NM,
-		bp.PROCESS_CD,
-		pc.PROCESS_NM,
-		pc.PROCESS_GC,
-		pc.PROCESS_CC,
-		bp.BOMPROCESS_RT,
-		bp.BOMPROCESS_BG
-	FROM BOMPROCESS bp
-	JOIN PROCESS pc ON bp.PROCESS_CD = pc.PROCESS_CD
-	JOIN PRODUCT pd ON bp.BOMPROCESS_CD = pd.PRODUCT_CD
-	ORDER BY bp.BOMPROCESS_CD
+	WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
+	    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 AS LVL
+	    FROM BOMPROCESS
+	    WHERE BOMPROCESS_AP = 'NONE'
+	    UNION ALL
+	    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 AS LVL
+	    FROM BOMPROCESS BP
+	    JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
+	)
+	SELECT DISTINCT 
+	    BP.BOMPROCESS_CD, 
+	    PR2.PRODUCT_NM AS BOMPROCESS_NM,
+	    PR2.PRODUCT_UN,
+	    BP.PRODUCT_CD, 
+	    PR.PRODUCT_NM,
+	    BP.PROCESS_CD, 
+	    P.PROCESS_NM, 
+	    PR.PRODUCT_GC, 
+	    PR.PRODUCT_CC,
+	    PC.PROCESS_NM AS BOMPROCESS_AN,  
+	    BP.BOMPROCESS_RT, 
+	    BP.BOMPROCESS_ER, 
+	    BP.BOMPROCESS_AP, 
+	    BP.BOMPROCESS_BG,
+	    BH.LVL,
+	    (SELECT COUNT(*)  
+	     FROM BOM_HIERARCHY BH2
+	     WHERE BH2.PRODUCT_CD = BH.PRODUCT_CD 
+	       AND BH2.LVL = BH.LVL + 1 AND BH2.BOMPROCESS_AP = BH.CURRENT_PROCESS) AS PC_CHILD,
+	    (SELECT COUNT(*)
+	     FROM BOM B
+	     WHERE B.BOMPRODUCT_CD = BP.PRODUCT_CD
+	       AND B.PRODUCT_CD = BP.BOMPROCESS_CD) AS BM_COUNT
+	FROM 
+	    BOMPROCESS BP
+	LEFT JOIN 
+	    PRODUCT PR ON BP.PRODUCT_CD = PR.PRODUCT_CD
+	LEFT JOIN 
+	    PRODUCT PR2 ON BP.BOMPROCESS_CD = PR2.PRODUCT_CD
+	LEFT JOIN 
+	    PROCESS P ON BP.PROCESS_CD = P.PROCESS_CD
+    LEFT JOIN 
+	    PROCESS PC ON BP.BOMPROCESS_AP = PC.PROCESS_CD
+	JOIN 
+	    BOM_HIERARCHY BH ON BP.PRODUCT_CD = BH.PRODUCT_CD AND BP.BOMPROCESS_CD = BH.BOMPROCESS_CD
+	ORDER BY 
+	    BP.PRODUCT_CD, BH.LVL
 </select>
 
 <select id="selectPD" resultType="map">
@@ -75,6 +108,183 @@
     <foreach collection="ckrowpds" item="pdc" open="(" close=")" separator=",">
         #{pdc}
     </foreach>
+    <if test="ckrowpds == null or ckrowpds.size() == 0">
+        ('')
+    </if>
+</select>
+
+<select id="selectpcsfrompd" resultType="map">
+	WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
+	  SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 LVL
+	    FROM BOMPROCESS
+	   WHERE BOMPROCESS_AP = #{bpap}
+	   		AND PRODUCT_CD  = #{pdcd}
+	   UNION ALL
+	  SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 LVL
+	    FROM BOMPROCESS BP
+	    JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
+	)
+	SELECT DISTINCT
+	    BP.BOMPROCESS_CD, 
+	    PR2.PRODUCT_NM AS BOMPROCESS_NM,
+	    BP.PRODUCT_CD, 
+	    PR.PRODUCT_NM,
+	    BP.PROCESS_CD, 
+	    P.PROCESS_NM, 
+	    PR.PRODUCT_GC, 
+	    PR.PRODUCT_CC, 
+	    BP.BOMPROCESS_RT, 
+	    BP.BOMPROCESS_ER,
+	    BP.BOMPROCESS_AP, 
+	    BP.BOMPROCESS_BG,
+	    BH.LVL,
+	    (SELECT COUNT(*)  
+	     FROM BOM_HIERARCHY BH2
+	     WHERE BH2.PRODUCT_CD = BH.PRODUCT_CD 
+	       AND BH2.LVL = BH.LVL + 1 AND BH2.BOMPROCESS_AP = BH.CURRENT_PROCESS) AS PC_CHILD,
+	    (SELECT COUNT(*)
+	     FROM BOM B
+	     WHERE B.BOMPRODUCT_CD = BP.PRODUCT_CD
+	       AND B.PRODUCT_CD = BP.BOMPROCESS_CD) AS BM_COUNT
+	FROM 
+	    BOMPROCESS BP
+	LEFT JOIN 
+	    PRODUCT PR 
+	    ON BP.PRODUCT_CD = PR.PRODUCT_CD
+	LEFT JOIN 
+	    PRODUCT PR2 
+	    ON BP.BOMPROCESS_CD = PR2.PRODUCT_CD
+	LEFT JOIN 
+	    PROCESS P 
+	    ON BP.PROCESS_CD = P.PROCESS_CD
+	JOIN BOM_HIERARCHY BH 
+	    ON BP.PRODUCT_CD = BH.PRODUCT_CD
+	    AND BP.BOMPROCESS_CD = BH.BOMPROCESS_CD
+	WHERE BP.BOMPROCESS_AP = #{bppc}
+	ORDER BY BP.PRODUCT_CD, BH.LVL
+</select>
+
+<select id="selectbomsformpd" resultType="map">
+	SELECT DISTINCT 
+	    BM.BOM_CD,
+	    BM.PRODUCT_CD,
+	    BM.BOMPRODUCT_CD, 
+	    PR.PRODUCT_NM,
+	    PR.PRODUCT_GC, 
+	    PR.PRODUCT_CC,
+	    PR.PRODUCT_UN,
+	    BM.BOM_AM
+	FROM 
+	    BOM BM
+	LEFT JOIN 
+	    PRODUCT PR 
+	    ON BM.BOM_CD = PR.PRODUCT_CD
+	WHERE BM.BOMPRODUCT_CD = #{pdcd}
+		AND BM.PRODUCT_CD = #{bpcd}
+		AND PR.PRODUCT_NM IS NOT NULL
+	UNION ALL
+	SELECT DISTINCT 
+	    BM.BOM_CD,
+	    BM.PRODUCT_CD, 
+	    BM.BOMPRODUCT_CD,
+	    MT.MATERIAL_NM AS PRODUCT_NM,
+	    MT.MATERIAL_GC AS PRODUCT_GC, 
+	    MT.MATERIAL_CC AS PRODUCT_CC, 
+	    MT.MATERIAL_UN AS PRODUCT_UN,
+	    BM.BOM_AM
+	FROM 
+	    BOM BM
+	LEFT JOIN 
+	    MATERIAL MT 
+	    ON BM.BOM_CD = MT.MATERIAL_CD
+	WHERE BM.BOMPRODUCT_CD = #{pdcd}
+		AND BM.PRODUCT_CD = #{bpcd}
+		AND MT.MATERIAL_NM IS NOT NULL
+	ORDER BY PRODUCT_NM
+</select>
+
+<delete id="deletebom" parameterType="map">
+ 	DELETE FROM BOM B 
+ 	WHERE 
+ 	<foreach collection="rowdata" item="item" open="(" close=")" separator="OR">
+	 	(B.BOMPRODUCT_CD = #{item.bomproduct_cd} 
+	 	AND B.PRODUCT_CD = #{item.product_cd} 
+	 	AND B.BOM_CD = #{item.bom_cd})
+ 	</foreach>
+</delete>
+
+<select id="selectfilter" resultType="map"> 
+	WITH BOM_HIERARCHY (PRODUCT_CD, CURRENT_PROCESS, BOMPROCESS_CD, BOMPROCESS_AP, LVL) AS (
+	    SELECT PRODUCT_CD, PROCESS_CD, BOMPROCESS_CD, BOMPROCESS_AP, 0 AS LVL
+	    FROM BOMPROCESS
+	    WHERE BOMPROCESS_AP = 'NONE'
+	    UNION ALL
+	    SELECT BP.PRODUCT_CD, BP.PROCESS_CD, BP.BOMPROCESS_CD, BP.BOMPROCESS_AP, BH.LVL + 1 AS LVL
+	    FROM BOMPROCESS BP
+	    JOIN BOM_HIERARCHY BH ON BP.BOMPROCESS_AP = BH.CURRENT_PROCESS AND BP.PRODUCT_CD = BH.PRODUCT_CD
+	)
+	SELECT DISTINCT 
+	    BP.BOMPROCESS_CD, 
+	    PR2.PRODUCT_NM AS BOMPROCESS_NM,
+	    PR2.PRODUCT_UN,
+	    BP.PRODUCT_CD, 
+	    PR.PRODUCT_NM,
+	    BP.PROCESS_CD, 
+	    P.PROCESS_NM, 
+	    PR.PRODUCT_GC, 
+	    PR.PRODUCT_CC,
+	    PC.PROCESS_NM AS BOMPROCESS_AN,  
+	    BP.BOMPROCESS_RT, 
+	    BP.BOMPROCESS_ER, 
+	    BP.BOMPROCESS_AP, 
+	    BP.BOMPROCESS_BG,
+	    BH.LVL,
+	    (SELECT COUNT(*)  
+	     FROM BOM_HIERARCHY BH2
+	     WHERE BH2.PRODUCT_CD = BH.PRODUCT_CD 
+	       AND BH2.LVL = BH.LVL + 1 AND BH2.BOMPROCESS_AP = BH.CURRENT_PROCESS) AS PC_CHILD,
+	    (SELECT COUNT(*)
+	     FROM BOM B
+	     WHERE B.BOMPRODUCT_CD = BP.PRODUCT_CD
+	       AND B.PRODUCT_CD = BP.BOMPROCESS_CD) AS BM_COUNT
+	FROM 
+	    BOMPROCESS BP
+	LEFT JOIN 
+	    PRODUCT PR ON BP.PRODUCT_CD = PR.PRODUCT_CD
+	LEFT JOIN 
+	    PRODUCT PR2 ON BP.BOMPROCESS_CD = PR2.PRODUCT_CD
+	LEFT JOIN 
+	    PROCESS P ON BP.PROCESS_CD = P.PROCESS_CD
+    LEFT JOIN 
+	    PROCESS PC ON BP.BOMPROCESS_AP = PC.PROCESS_CD
+	JOIN 
+	    BOM_HIERARCHY BH ON BP.PRODUCT_CD = BH.PRODUCT_CD AND BP.BOMPROCESS_CD = BH.BOMPROCESS_CD
+	WHERE 1=1
+	<foreach collection="value" item="item" open="" close="" separator="AND">
+        <if test="item.bomprocess_cd != null and item.bomprocess_cd != ''">
+	        AND BP.BOMPROCESS_CD = #{item.bomprocess_cd} 
+        </if>
+        <if test="item.product_nm != null and item.product_nm != ''">
+	        AND PR2.PRODUCT_NM = #{item.product_nm}
+        </if>
+        <if test="item.process_nm != null and item.process_nm != ''">
+	        AND P.PROCESS_NM = #{item.process_nm}
+        </if>
+        <if test="item.product_gc != null and item.product_gc != ''">
+	        AND PR.PRODUCT_GC = #{item.product_gc}
+        </if>
+        <if test="item.product_cc != null and item.product_cc != ''">
+	        AND PR.PRODUCT_CC = #{item.product_cc}
+        </if>
+    </foreach>
+	ORDER BY BP.PRODUCT_CD, BH.LVL
+</select>
+
+<select id="checkplanstate" resultType="map">
+	SELECT pp.PRODUCTPLAN_ST
+	FROM PRODUCTPLAN pp 
+	WHERE pp.PRODUCT_CD = #{pdcd}
+	AND pp.PRODUCTPLAN_SD > SYSDATE
 </select>
 
 </mapper>

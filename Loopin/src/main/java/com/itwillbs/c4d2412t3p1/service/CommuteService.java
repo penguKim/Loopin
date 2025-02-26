@@ -7,9 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,30 +23,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.itwillbs.c4d2412t3p1.config.EmployeeDetails;
-import com.itwillbs.c4d2412t3p1.domain.ApprovalDTO;
 import com.itwillbs.c4d2412t3p1.domain.Common_codeDTO;
 import com.itwillbs.c4d2412t3p1.domain.CommuteDTO;
-import com.itwillbs.c4d2412t3p1.domain.CommuteRequestDTO;
 import com.itwillbs.c4d2412t3p1.domain.EmployeeDTO;
 import com.itwillbs.c4d2412t3p1.domain.WorkinghourDTO;
-import com.itwillbs.c4d2412t3p1.domain.WorktypeDTO;
-import com.itwillbs.c4d2412t3p1.entity.Approval;
-import com.itwillbs.c4d2412t3p1.entity.Comhistory;
-import com.itwillbs.c4d2412t3p1.entity.ComhistoryPK;
-import com.itwillbs.c4d2412t3p1.entity.Common_code;
 import com.itwillbs.c4d2412t3p1.entity.Commute;
 import com.itwillbs.c4d2412t3p1.entity.CommutePK;
-import com.itwillbs.c4d2412t3p1.entity.Employee;
 import com.itwillbs.c4d2412t3p1.entity.Holiday;
 import com.itwillbs.c4d2412t3p1.entity.Workinghour;
-import com.itwillbs.c4d2412t3p1.entity.common_codePK;
-import com.itwillbs.c4d2412t3p1.mapper.CommonMapper;
 import com.itwillbs.c4d2412t3p1.mapper.CommuteMapper;
 import com.itwillbs.c4d2412t3p1.mapper.HolidayMapper;
-import com.itwillbs.c4d2412t3p1.repository.ComhistoryRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommonRepository;
 import com.itwillbs.c4d2412t3p1.repository.CommuteRepository;
-import com.itwillbs.c4d2412t3p1.repository.EmployeeRepository;
 import com.itwillbs.c4d2412t3p1.repository.HolidayRepository;
 import com.itwillbs.c4d2412t3p1.repository.WorkinghourRepository;
 import com.itwillbs.c4d2412t3p1.util.FilterRequest.CommuteFilterRequest;
@@ -525,6 +511,30 @@ public class CommuteService {
 	}
 
 
+
+	// 근로코드 조회
+	public List<WorkinghourDTO> select_WORKINGHOUR_CD() {
+		return commuteMapper.select_WORKINGHOUR_CD();
+	}
+
+	// 근로관리 항목 삭제
+	@Transactional
+	public void delete_WORKINGHOUR(List<WorkinghourDTO> workinghourList) {
+		
+		for(WorkinghourDTO work : workinghourList) {
+			int count = commuteMapper.countEmployeeWorkinghour(work.getWorkinghour_id());
+			if(count> 0) {
+				throw new RuntimeException("사원이 지정되어 삭제가 불가능합니다.");
+			}
+		}
+		
+		
+	    List<String> workCodes = workinghourList.stream()
+		        .map(WorkinghourDTO::getWorkinghour_id)
+		        .collect(Collectors.toList());
+	    workinghourRepository.deleteByworkCodes(workCodes);
+		
+	}
 
 
 
