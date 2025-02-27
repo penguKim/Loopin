@@ -179,7 +179,6 @@
 					}
 				}
 			},
-
 		});
 		
 		
@@ -215,7 +214,7 @@
 			}
 		});
 	}
-	/*
+	
 	function mergeProcess(oldProc, newProc) {
 		// 우선순위: "진행중" > "완료" > "대기" > "N/A"
 		
@@ -234,7 +233,7 @@
 		// oldProc === "N/A" or 기타
 		return newProc;
 	}
-	*/
+	
 
 	// 트리 데이터 함수
 	function buildTree(data) {
@@ -442,7 +441,7 @@
 			rowHeaders : [
 				{type : 'rowNum',},
 			],
-			bodyHeight : 200,
+			bodyHeight : 400,
 			columns : [
 				{header : '로트번호', name : 'LOT_CD', sortable : true, filter: 'text', width: 200,},
 				{header : '수주번호', name : 'CONTRACT_CD', sortable : true, filter: 'text'},
@@ -459,11 +458,12 @@
 				position: 'bottom', // or 'top'
 				columnContent: {
 					LOTHISTORY_BQ: {
-						template: (valueMap) => {
-							return `총 ${valueMap.cnt} 건`
-						}
-					}
-				}
+			            template: (valueMap) => `총 수량: ${valueMap.sum.toLocaleString()}`
+			        },
+			        LOTHISTORY_WQ: {
+			            template: (valueMap) => `총 수량: ${valueMap.sum.toLocaleString()}`
+			        }
+			    }
 			},
 		});
 	}
