@@ -196,6 +196,7 @@ public class AttendanceController {
 			
 			response.put("result", true);
 			response.put("data", data);
+			log.info("response" + response);
 			return ResponseEntity.ok(response);
 				
 		} catch (Exception e) {

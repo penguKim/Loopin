@@ -10,7 +10,7 @@
 				<div class="col-lg-12">
 					<div class="card" id="div_card" style="min-height: 400px;">
 						<div class="card-body">
-							<h5 class="card-title">출퇴근 현황</h5>
+							<h5 class="card-title">출퇴근현황</h5>
 							<!-- 탭 헤드 -->
 							<div class="d-flex justify-content-between">
 								<div>
@@ -99,8 +99,9 @@
 	let grid, lineChart, commuteChart, gradeChart, deptChart;
 	
 	let date = new Date();
-	const oneMonthAgo = new Date();
-	oneMonthAgo.setMonth(date.getMonth() - 1); // 1달 전 날짜 계산
+// 	const oneMonthAgo = new Date();
+// 	oneMonthAgo.setMonth(date.getMonth() - 1); // 1달 전 날짜 계산
+	const startDate = new Date(getPrevDate(7));
 	
 	const btn_chart_tab = $('#btn_chart_tab');
 	const btn_grid_tab = $('#btn_grid_tab');
@@ -120,7 +121,7 @@
 		// 범위 선택기 초기화
 		const rangePicker = tui.DatePicker.createRangePicker({
 		    startpicker: {
-		        date: oneMonthAgo,
+		        date: startDate,
 		        input: '#mainDateRangeStartInput',
 		        container: '#mainDateRangeStartContainer'
 		    },
@@ -143,7 +144,7 @@
 
 		// 초기화
 		$('#resetFilter').on('click', function() {
-			rangePicker.setStartDate(oneMonthAgo);
+			rangePicker.setStartDate(startDate);
 			rangePicker.setEndDate(date);
 		});
 		// 검색

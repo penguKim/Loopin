@@ -25,14 +25,15 @@
 	            ELSE 
 	                LEAST(15 + FLOOR((FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE(e.EMPLOYEE_HD, 'yyyy-MM-dd')) / 12) - 3) / 2), 25) + NVL(a.ANNUAL_RA, 0)
 	        END AS EXPECT_ANNUAL,
+	        a.ANNUAL_AA,
 	        CASE 
 	            WHEN a.ANNUAL_UA &lt; 1 AND a.ANNUAL_UA &gt; 0 THEN '0' || TO_CHAR(a.ANNUAL_UA) 
 	            ELSE TO_CHAR(a.ANNUAL_UA) 
-	        END AS ANNUAL_UA_FORMATTED,
+	        END AS ANNUAL_UA,
 	        CASE 
 	            WHEN a.ANNUAL_RA &lt; 1 AND a.ANNUAL_RA &gt; 0 THEN '0' || TO_CHAR(a.ANNUAL_RA) 
 	            ELSE TO_CHAR(a.ANNUAL_RA) 
-	        END AS ANNUAL_RA_FORMATTED
+	        END AS ANNUAL_RA
 	    FROM ANNUAL a
 	    LEFT JOIN EMPLOYEE e 
 	        ON a.EMPLOYEE_CD = e.EMPLOYEE_CD
@@ -153,11 +154,11 @@
 		    s.EMPLOYEE_DP,
 		    s.EMPLOYEE_GD,
 		    s.USAGE_YEAR,
-		    s.ANNUAL_UA, -- 사용연차
+		    a.ANNUAL_UA, -- 사용연차
 		    a.ANNUAL_AA AS TOTAL_ANNUAL, -- 총연차
 		    a.ANNUAL_RA AS REMAINING_ANNUAL -- 잔여연차
 		 FROM ANNUAL_SUMMARY s
-	LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD 
+	LEFT JOIN ANNUAL a ON s.EMPLOYEE_CD = a.EMPLOYEE_CD AND A.ANNUAL_YR = '2025'
 		WHERE 1=1
 			<if test="!isAdmin or type == 1">
 			  AND s.EMPLOYEE_CD = #{employee_cd}

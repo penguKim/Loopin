@@ -50,8 +50,7 @@
         <if test="filter.item_nm != null and filter.item_nm != ''">AND FI.ITEM_NM LIKE '%${filter.item_nm}%'</if>
         <if test="filter.employee_cd != null and filter.employee_cd != ''">AND FI.EMPLOYEE_CD LIKE '%${filter.employee_cd}%'</if>
         <if test="filter.employee_nm != null and filter.employee_nm!= ''">AND FI.EMPLOYEE_NM LIKE '%${filter.employee_nm}%'</if>
-        AND FI.INOUT_DT BETWEEN TO_TIMESTAMP('${filter.startDate} 00:00:00','YYYY-MM-DD HH24:MI:SS.FF3') 
-        AND TO_TIMESTAMP('${filter.endDate} 23:59:59','YYYY-MM-DD HH24:MI:SS.FF3')
+        AND FI.INOUT_DT BETWEEN '${filter.startDate} 00:00:00.000' AND '${filter.endDate} 23:59:59.999'
         ORDER BY FI.INOUT_DT DESC
 	</select>
 	
@@ -83,7 +82,7 @@
 			   CT.CONTRACT_SD INOUT_DT, CT.CONTRACT_PS EMPLOYEE_NM, CT.EMPLOYEE_CD
 		  FROM CONTRACT CT
 		  LEFT OUTER JOIN ACCOUNT AC ON AC.ACCOUNT_CD = CT.ACCOUNT_CD
-		 <!-- WHERE CT.CONTRACT_ST = '진행중' -->
+		 WHERE CT.CONTRACT_ST = '진행중'
 	</select>
 	
 	<!-- 수주건 로트조회 -->

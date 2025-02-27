@@ -289,7 +289,7 @@
 
 					<div class="card">
 						<div class="card-body">
-							<h5 class="card-title">인사카드 등록</h5>
+							<h5 class="card-title">인사카드</h5>
 								<div class="col-sm-12">
 									<div id="filterModule" class="mb-3"></div>
 									<div id="grid"></div>
@@ -511,6 +511,9 @@
 <!-- 필터 모듈 JS File -->
 <script th:inline="javascript">
 	$(document).ready(function () {
+		
+		setGridTheme();
+		
 	    const urlParams = new URLSearchParams(window.location.search);
 	    const type = urlParams.get("type");
 

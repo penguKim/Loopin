@@ -367,7 +367,7 @@
 		let baseColumns = [
 			{header: '보관창고', name: 'WAREHOUSE_NM', sortable: true, filter: 'select'},
 			{header: '보관구역', name: 'WAREAREA_NM', sortable: true, filter: 'select'},
-		    {header: '구역 잔량', name: 'WAREAREA_CP', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString()}`},		    
+		    {header: '구역 잔량', name: 'WAREAREA_CP', sortable: true, formatter: (cell) => `${cell.value?.toLocaleString() || ''}`},		    
 		    {header: '품목대분류', name: 'ITEM_GN', sortable: true, filter: 'select'},
 		    {header: '품목소분류', name: 'ITEM_CN', sortable: true, filter: 'select'},
 		    // {header: '품목대분류코드', name: 'stock_cd', hidden: true},
@@ -1115,11 +1115,14 @@
 				} else {
 					$('#modal_warearea_cd').val('');
 				}
+			} else {
+				$('#modal_warearea_aq').val(stock['warearea_cp'].toLocaleString());
+				$('#modal_warearea_sq').val(stock['stock_aq'].toLocaleString());
 			}
 			
 		} catch (error) {
 			console.log(error);
-			showAlert('', 'error', '삭제 실패', error['msg']);
+			showAlert('', 'error', '조회 실패','다시 시도해주세요.');
 		}
 	}
 
