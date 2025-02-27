@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
 import com.itwillbs.c4d2412t3p1.mapper.ProcessMapper;
 import com.itwillbs.c4d2412t3p1.repository.ProcessRepository;
 
@@ -70,6 +71,15 @@ public class ProcessService {
 
 	public List<Map<String, Object>> selectpc(String pccd) {
 		List<Map<String, Object>> list = pcM.selectpc(pccd);
+		return list;
+	}
+
+	public List<Map<String, Object>> filter(List<com.itwillbs.c4d2412t3p1.entity.Process> value) {
+		
+		List<Map<String, Object>> list = pcM.filter(value);
+		
+		System.out.println("결과 가져와봐"+list);
+		
 		return list;
 	}
 

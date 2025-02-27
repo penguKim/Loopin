@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.entity;
 
-import java.security.Timestamp;
+
+import java.sql.Timestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

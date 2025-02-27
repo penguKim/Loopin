@@ -3,6 +3,7 @@ package com.itwillbs.c4d2412t3p1.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -103,6 +104,15 @@ public class ProcessController {
 		List<Map<String,Object>> list = pcS.selectpc(pccd); 
 		
 		return list;
+	}
+	
+	@PostMapping("/filter")
+	public ResponseEntity<List<Map<String, Object>>> selectfilter(@RequestBody List<com.itwillbs.c4d2412t3p1.entity.Process> value ) {
+		
+		System.out.println(">>>>>>>>>>>>>>>>>>>>> "+value.get(0));
+		List<Map<String, Object>> list = pcS.filter(value); 
+		
+		return ResponseEntity.ok(list);
 	}
 	
 }

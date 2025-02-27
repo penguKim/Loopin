@@ -6,6 +6,8 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import com.itwillbs.c4d2412t3p1.domain.BomallDTO;
+
 @Mapper
 public interface ProcessMapper {
 
@@ -22,5 +24,7 @@ public interface ProcessMapper {
 	String checkpccd(@Param("cdvalue") String cdvalue);
 
 	List<Map<String, Object>> selectpc(@Param("pccd") String pccd);
+
+	List<Map<String, Object>> filter(@Param("value") List<com.itwillbs.c4d2412t3p1.entity.Process> value);
 
 }

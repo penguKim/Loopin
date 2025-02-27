@@ -151,5 +151,53 @@
 		FROM PROCESS pc
 		WHERE pc.PROCESS_CD = #{cdvalue}	
 	</select>
+
+	<select id="filter" resultType="map">
+		SELECT 
+		    PROCESS_CD,
+		    PROCESS_NM,
+		    PROCESS_US,
+		    PROCESS_BG,
+		    PROCESS_EQ,
+		    LISTAGG(DISTINCT pc.PRODUCT_NM, ',') WITHIN GROUP (ORDER BY pp.PART_NO) AS PROCESS_EN, 
+		    eq.EQUIPMENT_NM, 
+		    PROCESS_PD
+		FROM 
+		    (
+		        SELECT 
+		            pc.PROCESS_CD,
+		            pc.PROCESS_NM,
+		            pc.PROCESS_US,
+		            pc.PROCESS_BG,
+		            pc.PROCESS_EQ,
+		            pc.PROCESS_PD,
+		            REGEXP_SUBSTR(pc.PROCESS_PD, '[^,]+', 1, LEVEL) AS NAME_PART,
+		            LEVEL AS PART_NO
+		        FROM 
+		            PROCESS pc
+		        CONNECT BY 
+		            PRIOR pc.PROCESS_CD = pc.PROCESS_CD
+		            AND PRIOR DBMS_RANDOM.VALUE IS NOT NULL
+		            AND LEVEL &lt;= LENGTH(pc.PROCESS_PD) - LENGTH(REPLACE(pc.PROCESS_PD, ',', '')) + 1
+		        ORDER BY LEVEL
+		    ) pp
+		LEFT JOIN 
+		    PRODUCT pc ON pp.NAME_PART = pc.PRODUCT_CD
+		LEFT JOIN 
+		    EQUIPMENT eq ON pp.PROCESS_EQ = eq.EQUIPMENT_CD 
+		WHERE 1=1 
+			<foreach collection="value" item="item" open="" close="" separator="AND">
+		        <if test="item.process_cd != null and item.process_cd != ''">
+					AND pp.PROCESS_CD = #{item.process_cd} 
+		        </if>
+		        <if test="item.process_nm != null and item.process_nm != ''">
+					AND pp.PROCESS_NM =  #{item.process_nm} 
+		        </if>
+		    </foreach>
+		GROUP BY 
+		    pp.PROCESS_CD, pp.PROCESS_NM, pp.PROCESS_US, pp.PROCESS_BG, pp.PROCESS_EQ, pp.PROCESS_PD, eq.EQUIPMENT_NM
+		ORDER BY 
+		    pp.PROCESS_CD	
+	</select>
 	
 </mapper>
