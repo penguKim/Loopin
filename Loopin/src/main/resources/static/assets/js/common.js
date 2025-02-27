@@ -85,6 +85,25 @@ function getDate(date) {
 		return `${year}-${month}-${day}`;
 }
 
+// 문자열 -> Date 객체 파싱 후 처리
+function getDateStr(dateInput) {
+  // 1) 문자열을 Date로 변환
+  const dt = new Date(dateInput);
+
+  // 2) Date 파싱 실패 시 (NaN) 처리
+  if (isNaN(dt)) {
+    return ""; // 혹은 return dateInput;
+  }
+
+  // 3) 연-월-일 추출
+  const year  = dt.getFullYear();
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const day   = String(dt.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`; // 예: "2024-02-19"
+}
+
+
 /**
  * 파라미터 만큼의 이전 날짜 문자열 리턴
  * @param {number} num n일 전
@@ -146,6 +165,23 @@ function getDateTime(date) {
 		
 		return `${year}년 ${month}월 ${day}일 ${hours}:${minutes}:${seconds}`;
 }
+
+/**
+ * 시:분 -> 문자열("HH:MM") 리턴
+ * @param {Date} date JS Date 객체
+ * @returns {String} "HH:MM"
+ */
+function getTimeMS(dateInput) {
+  const dt = new Date(dateInput);
+  if (isNaN(dt)) {
+    return "";
+  }
+
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const mm = String(dt.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`; // 예: "13:00"
+}
+
 
 /**
  * card 영역 높이 지정

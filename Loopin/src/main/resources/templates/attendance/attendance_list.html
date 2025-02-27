@@ -321,6 +321,7 @@
 			}),
 			success: function(data) {
 				grid.resetData(data['data']);
+				console.log(data['data']);
 			},
 			error : function(xhr, textStatus, errorThrown) {
 				console.log('조회 실패');

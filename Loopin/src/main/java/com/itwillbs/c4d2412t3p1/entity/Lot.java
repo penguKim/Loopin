@@ -51,8 +51,8 @@ public class Lot {
     @Column(name = "product_sz", length = 30)
     private String product_sz;
     
-    @Column(name = "productplan_js")
-    private Integer productplan_js;
+    @Column(name = "dailyproductplan_js")
+    private Integer dailyproductplan_js;
     
     @Column(name = "lot_cr")
     private Timestamp lot_cr;
@@ -64,7 +64,7 @@ public class Lot {
             .contract_cd(lot.getContract_cd())
             .product_cr(lot.getProduct_cr())
             .product_sz(lot.getProduct_sz())
-            .productplan_js(lot.getProductplan_js())
+            .dailyproductplan_js(lot.getProductplan_js())
             .lot_cr(lot.getLot_cr())
             .build();
     }

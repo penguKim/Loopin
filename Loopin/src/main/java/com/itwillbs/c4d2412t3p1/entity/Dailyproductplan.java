@@ -39,4 +39,7 @@ public class Dailyproductplan {
     
     @Column(name = "DAILYPRODUCTPLAN_MD")
     private Timestamp dailyproductplan_md;
+    
+    @Column(name = "PROCESS_SE", length = 255)
+    private String process_se;
 }
