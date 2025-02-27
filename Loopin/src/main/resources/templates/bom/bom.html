@@ -449,6 +449,7 @@ const mgrid = new tui.Grid({
 	  columns: [
 		  {header:'품목코드', name:'BOMPROCESS_CD', align:'center'},
 		  {header:'품목명', name:'PRODUCT_NM', align:'center'},
+		  {header:'품목명', name:'BOMPROCESS_NM', align:'center'},
 		  {header:'품목대분류', name:'PRODUCT_GC', align:'center'},
 		  {header:'품목소분류', name:'PRODUCT_CC', align:'center'},
 		  {header:'공정명', name:'PROCESS_NM', align:'center'}, // PROCESS_CD는 가지고 있어야함
@@ -1172,6 +1173,7 @@ pdgrid.on('dblclick', async function(e) {
 	pdcinput.value = dblrow.PRODUCT_CD;
 	pdninput.value = dblrow.PRODUCT_NM;
 	mgrid.resetData([dblrow]);
+	mgrid.hideColumn('PRODUCT_NM');
 	m_bomgrid.resetData(bomdata);
 	m_matStorage[e.rowKey] = bomdata;
 	regimodal.show();
