@@ -285,6 +285,7 @@
 	FROM PRODUCTPLAN pp 
 	WHERE pp.PRODUCT_CD = #{pdcd}
 	AND pp.PRODUCTPLAN_SD > SYSDATE
+	AND pp.PRODUCTPLAN_ST  IN ('계획','대기')
 </select>
 
 </mapper>
