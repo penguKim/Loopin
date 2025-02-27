@@ -172,6 +172,38 @@
 	
 	fetchProcesslist();
 	
+	const fetchFilter = async (filterdata) =>{
+		console.log('필터가져왔냐? '+ JSON.stringify(filterdata));
+		try{
+			const response = await fetch(`/filter`,{
+				method:"POST",
+				headers:{
+					"Content-Type":"application/json",
+					[csrfHeader]: csrfToken,
+				},
+				body:JSON.stringify([filterdata])
+			});
+			const data = await response.json();
+			console.log('필터 데이터'+JSON.stringify(data));
+			console.log(data);
+		    const setdata = data.map(i=>{
+		    	return {
+		    		...i,
+		    		PROCESS_US: (i.PROCESS_US == 1?"사용":"미사용")
+		    	}
+		    });
+		    console.log(setdata);
+			grid.resetData(setdata);
+		} catch(error) {
+			console.log('필터 검색에 실패했습니다.'+error);
+			swal.fire({
+				title:"검색에 실패했습니다.",
+				text:"관리자에게 문의해주세요.",
+				icon:"error"
+			})
+		}
+	}
+	
 	// 모달 품목분류 패치
 	const fetchpdgclist = async (COMMON_GC) => {
 	  try {
@@ -726,6 +758,12 @@
 	
 	 initializeFilterModule('filterModule', filterConfig, (filterValues) => {
 		 console.log('filtertest',filterValues);
+		 const filterdata = Object.keys(filterValues).reduce((acc, key) => {
+			  const newKey = key.replace('f', '');
+			  acc[newKey] = filterValues[key];
+			  return acc;
+			}, {});
+		 fetchFilter(filterdata);
      });
 	
 	/* document.addEventlistener('filterToggled', function(e) {
@@ -786,8 +824,8 @@
 		      // 모달 값 채우기
 		      const processGcElem = document.getElementById('PROCESS_GC');
 		      const processCcElem = document.getElementById('PROCESS_CC');
-		      const processPdElem = $('#PROCESS_PD');
-		      const processEqElem = $('#PROCESS_EQ');
+		      const processPdElem = $('#PROCESS_PD').select2();
+		      const processEqElem = $('#PROCESS_EQ').select2();
 		      const processGcValue = item.PROCESS_GC; 
 		      const processCcValue = item.PROCESS_CC; 
 		      const processPdValue = item.PROCESS_PD ? item.PROCESS_PD.split(',') : []; 
@@ -800,7 +838,6 @@
 		      
 		      fetchpdgclist(processGcValue).then(()=>{
 		    	  processCcElem.value = processCcValue;
-		    	  
 		    	  const ev = new Event('change');
 		    	  processCcElem.dispatchEvent(ev);
 		      })
@@ -839,7 +876,29 @@
 // 		      });
 		     
 		    }
-		    
+		// select2가 초기화되지 않은 경우에만 초기화하도록 하기
+		  if (!$('#PROCESS_PD').hasClass('select2-hidden-accessible')) {
+		      $('#PROCESS_PD').select2({
+		          placeholder: '품목을 선택하세요',
+		          allowClear: true,
+		          dropdownParent: $('#registermodal'),
+		          multiple: true,
+		      });
+		  }
+
+		  if (!$('#PROCESS_EQ').hasClass('select2-hidden-accessible')) {
+		      $('#PROCESS_EQ').select2({
+		          placeholder: '설비를 선택하세요',
+		          allowClear: true,
+		          dropdownParent: $('#registermodal'),
+		          multiple: true,
+		          language: {
+		              noResults: function() {
+		                  return "해당설비가 없습니다.";
+		              }
+		          }
+		      });
+		  } 
 		  } catch (error) {
 		    console.error('모달 수정 데이터를 불러오는데 실패했습니다.', error);
 		    swal.fire({
