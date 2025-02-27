@@ -9,6 +9,21 @@
 .tui-datepicker, .tui-timepicker, .tui-calendar {
 	z-index: 9999 !important;
 }
+/* #subGrid1, #subGrid2 { */
+/*   height: 180px;  /* 원하는 고정 높이 (예: 300px) */
+*
+/
+/*   overflow-y: auto; */
+/*   overflow-x: hidden; */
+/* } */
+/* #dailyGrid { */
+/*   height: 400px;  /* 원하는 고정 높이 (예: 300px) */
+ 
+*
+/
+/*   overflow-y: auto; */
+/*   overflow-x: hidden; */
+/* } */
 </style>
 </head>
 <body>
@@ -157,51 +172,44 @@
 												data-bs-dismiss="modal" aria-label="Close"></button>
 										</div>
 										<div class="modal-body">
+											<!-- 일일생산계획 등록 모달 내 폼 부분 수정 -->
 											<form id="dailyProductPlanForm">
 												<div class="row mb-3">
-													<!-- 작업일자 (DatePicker) -->
-													<div class="col-md-3">
+													<!-- 작업일자, 공정코드, 품목코드를 12컬럼 기준 col-md-4씩 -->
+													<div class="col-md-4">
 														<label for="dailyproductplan_sd" class="form-label">작업일자</label>
 														<input type="text" class="form-control"
 															id="dailyproductplan_sd" readonly>
 														<div id="datepicker-container"></div>
 													</div>
-													<!-- 공정코드 -->
-													<div class="col-md-3">
+													<div class="col-md-4">
 														<label for="process_cd" class="form-label">공정코드</label> <select
 															class="form-select" id="process_cd"></select>
 													</div>
-													<!-- ★ 작업자번호 필드 삭제 ★ -->
-
-													<!-- 품목코드 -->
-													<div class="col-md-3">
+													<div class="col-md-4">
 														<label for="dailyproductplan_product_cd"
 															class="form-label">품목코드</label> <select
 															class="form-select" id="dailyproductplan_product_cd"></select>
 													</div>
 												</div>
-												<!-- 추가: 색상, 사이즈, 작업수량 -->
 												<div class="row mb-3">
-													<div class="col-md-3">
+													<!-- 색상, 사이즈, 전체수량을 12컬럼 기준 col-md-4씩 -->
+													<div class="col-md-4">
 														<label for="dailyproductplan_cr" class="form-label">색상</label>
 														<select class="form-select" id="dailyproductplan_cr"></select>
 													</div>
-													<div class="col-md-3">
+													<div class="col-md-4">
 														<label for="dailyproductplan_sz" class="form-label">사이즈</label>
 														<select class="form-select" id="dailyproductplan_sz"></select>
 													</div>
-													<div class="col-md-3">
+													<div class="col-md-4">
 														<label for="dailyproductplan_js" class="form-label">전체수량</label>
-														<input type="number" class="form-control"
-															id="dailyproductplan_js">
-													</div>
-													<div class="col-md-3">
-														<label for="dailyproductplan_js" class="form-label">작업수량</label>
 														<input type="number" class="form-control"
 															id="dailyproductplan_js">
 													</div>
 												</div>
 											</form>
+
 											<hr>
 											<h5>일일생산계획 조회</h5>
 											<div id="dailyGrid"></div>
@@ -227,6 +235,7 @@
 
 	<!-- 스크립트 (필요한 라이브러리 로드 후 아래 스크립트 포함) -->
 	<script th:inline="javascript">
+	  setGridTheme();
 	  // 전역 변수들
 	  let rangePicker, subGrid1, subGrid2, dailyPicker, dailyGrid;
 	  let contractDetailList = []; // 색상/사이즈 목록
@@ -308,7 +317,13 @@
 	      scrollX: false,
 	      scrollY: true
 	    });
-	  
+	  	
+	    if (dailyGrid) {
+                setGridHeight(dailyGrid, -500);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
+	    
 	    // 헬퍼 함수들
 	    function formatDate(dateObj) {
 	      const yyyy = dateObj.getFullYear();
@@ -533,6 +548,13 @@
 	      scrollX: false,
 	      scrollY: true
 	    });
+	    
+	    if (subGrid1) {
+                setGridHeight(subGrid1, -900);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
+	    
 	    subGrid2 = new tui.Grid({
 	      el: document.getElementById("subGrid2"),
 	      columns: [
@@ -545,7 +567,13 @@
 	      scrollX: false,
 	      scrollY: true
 	    });
-	  
+	  	
+	    if (subGrid2) {
+                setGridHeight(subGrid2, -900);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
+	    
 	    subGrid1.on('beforeEdit', (ev) => {
 	      const rowData = subGrid1.getRow(ev.rowKey);
 	      if (ev.columnName === 'process_se' && !['PHYLON','OUTSOLE','UPPER','INSOLE'].includes(rowData.process_cd)) {
@@ -654,6 +682,7 @@
 	      data: [],
 	      scrollX: false,
 	      scrollY: true,
+	      bodyHeight : 30,
           summary: {
               height: 40,
               position: 'bottom',
@@ -690,7 +719,7 @@
                 console.warn('Grid가 초기화되지 않았습니다.');
             }
 		
-	    
+
 	    // ---------------------------
 	    // 생산계획 목록 조회
 	    // ---------------------------
