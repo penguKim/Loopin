@@ -108,6 +108,7 @@ public class LotController {
 	@GetMapping("/select_LOTHISTORY_list")
 	public ResponseEntity<Map<String, Object>> select_LOTHISTORY_list(@RequestParam("lot_cd") String lot_cd) {
 		
+		log.info("select_LOTHISTORY_list"+lot_cd);
 		Map<String, Object> response = new HashMap<>(); 
 		try {
 			List<Map<String, Object>> list = lotService.select_LOTHISTORY_list(lot_cd);

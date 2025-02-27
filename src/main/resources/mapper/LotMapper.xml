@@ -119,6 +119,7 @@
 			 , BP.PROCESS_CD PROCESS_CD
 			 , w.workorder_st
 			 , c.common_nm
+			 , #{LOT_CD} AS LOT_CD
 		  FROM BH
 		  LEFT JOIN BOMPROCESS BP
 		    ON BH.BOM_CD = BP.BOMPROCESS_CD

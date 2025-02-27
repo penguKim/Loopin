@@ -116,7 +116,7 @@ public class MenuController {
         		sidebarMenu.add(Map.of("name", "BOM", "link", "/bom" ));
         		sidebarMenu.add(Map.of("name", "생산계획", "link", "/product_plan_list" ));
         		sidebarMenu.add(Map.of("name", "로트추적", "link", "/lot_list" ));
-        		sidebarMenu.add(Map.of("name", "생산실적", "link", "/product_result" ));
+//        		sidebarMenu.add(Map.of("name", "생산실적", "link", "/product_result" ));
         	}
         }
         if ("SYS".equals(menuType)) {

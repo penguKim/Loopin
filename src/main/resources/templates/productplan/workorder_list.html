@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+	xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+	layout:decorate="~{layout}" layout:fragment="content">
+<head>
+<meta charset="UTF-8">
+<title>작업지시</title>
+<style>
+.tui-datepicker, .tui-timepicker, .tui-calendar {
+	z-index: 9999 !important;
+}
+
+/* #searchGrid { */
+/* 	height: 400px; /* 원하는 고정 높이 (예: 300px) */
+*
+/
+/* 	overflow-y: auto; */
+/* 	overflow-x: hidden; */
+/* } */
+
+/* .search-modal-dialog { */
+/*   max-width: 60%; /* 원하는 너비로 조정 */
+ 
+*
+/
+/* } */
+</style>
+</head>
+<body>
+	<main id="main" class="main">
+		<section class="section">
+			<div class="row">
+				<div class="col-lg-12">
+					<div class="card" id="div_card">
+						<div class="card-body">
+							<h5 class="card-title">작업지시 관리</h5>
+
+							<!-- 필터 UI (LOT번호, 작업시작일, 작업상태 등) -->
+							<div id="filterModule" class="mb-3"></div>
+
+							<!-- 메인 그리드: 작업지시 목록 -->
+							<div id="grid"></div>
+
+							<!-- 버튼 영역 -->
+							<div id="btn_area" class="mt-3 d-flex">
+								<div>
+									<button type="button" class="btn btn-primary" id="btn_insert">등록</button>
+									<button type="button" class="btn btn-primary" id="btn_delete">삭제</button>
+								</div>
+							</div>
+							<br>
+
+							<!-- 작업지시 등록/수정 모달 -->
+							<div class="modal" id="workorderModal" tabindex="-1"
+								aria-labelledby="modalLabel" aria-hidden="true">
+								<div class="modal-dialog modal-dialog-centered modal-lg">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="workorderModalTitle">작업지시 등록</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal" aria-label="Close"></button>
+										</div>
+										<div class="modal-body">
+											<form id="workorderForm">
+												<div class="row mb-3">
+													<!-- LOT번호 (필드 클릭 → 검색 모달) -->
+													<div class="col-md-4">
+														<label for="lot_cd" class="form-label">LOT 번호</label> <input
+															type="text" class="form-control" id="lot_cd" readonly>
+													</div>
+													<!-- 공정코드 (LOT 선택 시 자동) -->
+													<div class="col-md-4">
+														<label for="process_cd" class="form-label">공정코드</label> <input
+															type="text" class="form-control" id="process_cd" readonly>
+													</div>
+													<!-- 작업자(dailyproductplan_jb) : 필드 클릭 → 검색 모달 -->
+													<div class="col-md-4">
+														<label for="workorder_jb" class="form-label">작업자번호</label>
+														<input type="text" class="form-control" id="workorder_jb"
+															readonly>
+													</div>
+												</div>
+												<div class="row mb-3">
+													<!-- 작업일자(dailyproductplan_sd) : LOT에서 product_cd 찾아 조회 -->
+													<div class="col-md-4">
+														<label for="dailyplan_sd" class="form-label">작업일자</label>
+														<input type="text" class="form-control" id="dailyplan_sd"
+															readonly>
+													</div>
+													<!-- 작업시작시간(workorder_sd) : 사용자 입력 -->
+													<div class="col-md-4">
+														<label for="workorder_sd" class="form-label">작업시작시간</label>
+														<input type="text" class="form-control" id="workorder_sd">
+													</div>
+													<!-- 작업종료시간(workorder_ed) : 사용자 입력 -->
+													<div class="col-md-4">
+														<label for="workorder_ed" class="form-label">작업종료시간</label>
+														<input type="text" class="form-control" id="workorder_ed">
+													</div>
+												</div>
+												<div class="row mb-3"></div>
+												<!-- 작업지시상태  : hidden -->
+												<input type="hidden" id="workorder_st" value="대기"> <input
+													type="hidden" id="product_cd" /> <input type="hidden"
+													id="new_process_time" value="0">
+											</form>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">취소</button>
+											<button type="button" class="btn btn-primary"
+												id="btnSaveWorkOrder">저장</button>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- 검색 모달 (LOT / WORKER) -->
+							<div class="modal" id="searchModal" tabindex="-1">
+								<div
+									class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg search-modal-dialog">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title" id="searchModalTitle">검색 모달</h5>
+											<button type="button" class="btn-close"
+												data-bs-dismiss="modal"></button>
+										</div>
+										<br>
+										<div class="col d-flex align-items-center">
+											<input type="text" id="searchInput" class="form-control me-2"
+												placeholder="검색어 입력"
+												style="width: 150px; margin-left: 15px;"> <input
+												type="button" id="btnSearch" class="btn btn-primary"
+												value="검색">
+										</div>
+										<div class="modal-body">
+											<div id="searchGrid"></div>
+										</div>
+										<div class="modal-footer">
+											<button type="button" class="btn btn-secondary"
+												data-bs-dismiss="modal">닫기</button>
+											<button type="button" class="btn btn-primary" id="selectBtn">추가</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- 검색 모달 끝 -->
+
+						</div>
+						<!-- card-body -->
+					</div>
+					<!-- card -->
+				</div>
+			</div>
+		</section>
+	</main>
+
+	<script th:inline="javascript">
+	
+	document.addEventListener("DOMContentLoaded", function() {
+	    setGridTheme();
+
+	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+	    // ---------------------------
+	    // 1) 작업지시 목록 그리드
+	    // ---------------------------
+	    const grid = new tui.Grid({
+	        el: document.getElementById("grid"),
+	        rowHeaders: ['checkbox'],
+	        columns: [{
+	                header: '작업지시번호',
+	                name: 'workorder_cd'
+	            },
+	            {
+	                header: 'LOT 번호',
+	                name: 'lot_cd'
+	            },
+	            {
+	                header: '공정코드',
+	                name: 'process_cd'
+	            },
+	            {
+	                header: '작업일자',
+	                name: 'dailyproductplan_sd',
+	                formatter: (cellInfo) => {
+	                    return getDateStr(cellInfo.value); // → "2024-02-19"
+	                }
+	            },
+	            {
+	                header: '작업시작시간',
+	                name: 'workorder_sd',
+	                formatter: (cellInfo) => {
+	                    return getTimeMS(cellInfo.value); // → "13:00"
+	                }
+	            },
+	            {
+	                header: '작업종료시간',
+	                name: 'workorder_ed',
+	                formatter: (cellInfo) => {
+	                    return getTimeMS(cellInfo.value); // → "16:00"
+	                }
+	            },
+	            {
+	                header: '작업자',
+	                name: 'dailyproductplan_jb'
+	            },
+	            {
+	                header: '상태',
+	                name: 'workorder_st'
+	            }
+	        ],
+	        data: [],
+	        scrollX: false,
+	        scrollY: false
+	    });
+
+	    // ---------------------------
+	    // 2) 검색 모달용 그리드
+	    // ---------------------------
+	    let searchGrid;
+	    let searchMode = ""; // "lot" or "worker"
+
+	    // ---------------------------
+	    // 3) 작업지시 등록 모달
+	    // ---------------------------
+	    const workorderModalEl = document.getElementById("workorderModal");
+	    const workorderModal = new bootstrap.Modal(workorderModalEl);
+
+	    // 필드들
+	    const lotCdInput = document.getElementById("lot_cd");
+	    const processCdInput = document.getElementById("process_cd");
+	    const dailyplanSdInput = document.getElementById("dailyplan_sd"); // 작업일자
+	    const workorderSdInput = document.getElementById("workorder_sd"); // 작업시작시간
+	    const workorderEdInput = document.getElementById("workorder_ed"); // 작업종료시간
+	    const workorderJbInput = document.getElementById("workorder_jb"); // 작업자
+	    const workorderStInput = document.getElementById("workorder_st");
+	    const newProcTimeHidden = document.getElementById("new_process_time"); // 공정소요시간(정수)
+
+	    function openWorkOrderModal(mode, rowData = null) {
+	        if (mode === "insert") {
+	            document.getElementById("workorderModalTitle").textContent = "작업지시 등록";
+	            // 시퀀스 처리
+	            lotCdInput.value = "";
+	            processCdInput.value = "";
+	            dailyplanSdInput.value = "";
+	            workorderSdInput.value = "";
+	            workorderEdInput.value = "";
+	            workorderJbInput.value = "";
+	            workorderStInput.value = "대기"; // 대기
+	            newProcTimeHidden.value = "0";
+	        } else if (mode === "update" && rowData) {
+	            document.getElementById("workorderModalTitle").textContent = "작업지시 수정";
+	            lotCdInput.value = rowData.lot_cd || "";
+	            processCdInput.value = rowData.process_cd || "";
+	            dailyplanSdInput.value = rowData.dailyproductplan_sd || "";
+	            workorderSdInput.value = rowData.workorder_sd || "";
+	            workorderEdInput.value = rowData.workorder_ed || "";
+	            workorderJbInput.value = rowData.dailyproductplan_jb || "";
+	            workorderStInput.value = rowData.workorder_st || "10";
+	        }
+	        workorderModal.show();
+	    }
+
+	    // 저장
+	    document.getElementById("btnSaveWorkOrder").addEventListener("click", () => {
+
+	        const datePart = dailyplanSdInput.value; // "2025-02-27"
+	        const timePart = workorderSdInput.value; // "13:00"
+	        // 종료시간도 마찬가지: 
+	        const endTimePart = workorderEdInput.value; // "16:00" etc.
+
+	        // 1) 시작시간을 "YYYY-MM-DDTHH:mm:ss" 형태로 만들기
+	        //    "2025-02-27T13:00:00"
+	        const combinedStart = datePart + "T" + timePart + ":00";
+	        // 2) 종료시간도 동일
+	        const combinedEnd = datePart + "T" + endTimePart + ":00";
+
+	        console.log(datePart);
+	        console.log(timePart);
+	        console.log(endTimePart);
+	        console.log(combinedStart);
+	        console.log(combinedEnd);
+
+	        const reqBody = {
+	            lot_cd: lotCdInput.value,
+	            process_cd: processCdInput.value,
+	            dailyproductplan_sd: dailyplanSdInput.value, // 작업일자
+	            workorder_sd: combinedStart, // 시작시간
+	            workorder_ed: combinedEnd, // 종료시간
+	            dailyproductplan_jb: workorderJbInput.value, // 작업자
+	            workorder_st: workorderStInput.value // "대기"
+	        };
+
+	        fetch("/save_WORKORDER", {
+	                method: "POST",
+	                headers: {
+	                    "Content-Type": "application/json",
+	                    [csrfHeader]: csrfToken
+	                },
+	                body: JSON.stringify(reqBody)
+	            })
+	            .then(res => {
+	                if (!res.ok) throw new Error("작업지시 저장 실패");
+	                return res.text(); // or res.json()
+	            })
+	            .then(data => {
+	                alert("작업지시 저장 완료");
+	                workorderModal.hide();
+	                fetchWorkOrderList();
+	            })
+	            .catch(err => {
+	                console.error("작업지시 저장 오류:", err);
+	                alert("작업지시 저장 중 오류 발생");
+	            });
+	    });
+
+	    // 등록 버튼 → insert 모달
+	    document.getElementById("btn_insert").addEventListener("click", () => {
+	        openWorkOrderModal("insert");
+	    });
+
+	    // 그리드 더블클릭 → update 모달
+	    grid.on("dblclick", (ev) => {
+	        const rowData = grid.getRow(ev.rowKey);
+	        if (!rowData) return;
+	        openWorkOrderModal("update", rowData);
+	    });
+
+	    // 작업지시 목록 조회
+	    function fetchWorkOrderList() {
+	        fetch("/select_WORKORDER_list")
+	            .then(res => res.json())
+	            .then(data => {
+	                grid.resetData(data);
+	            })
+	            .catch(err => console.error("작업지시 조회 오류:", err));
+	    }
+
+	    // ---------------------------
+	    // 4) 필드 클릭 → 검색 모달
+	    // ---------------------------
+	    // 로트번호 필드 클릭
+	    lotCdInput.addEventListener("click", () => {
+	        openSearchModal("lot");
+	    });
+	    // 작업자 필드 클릭
+	    workorderJbInput.addEventListener("click", () => {
+	        openSearchModal("worker");
+	    });
+
+	    // ---------------------------
+	    // 검색 모달
+	    // ---------------------------
+	    const searchModalEl = document.getElementById("searchModal");
+	    const searchModal = new bootstrap.Modal(searchModalEl, {
+	        backdrop: false
+	    });
+	    const searchInput = document.getElementById("searchInput");
+	    const btnSearch = document.getElementById("btnSearch");
+
+	    function openSearchModal(mode) {
+	        searchMode = mode;
+	        document.getElementById("searchModalTitle").textContent =
+	            (mode === "lot") ? "LOT 검색" : "작업자 검색";
+
+	        // 검색 그리드 생성
+	        const searchGridContainer = document.getElementById("searchGrid");
+	        searchGridContainer.innerHTML = "";
+	        searchGrid = new tui.Grid({
+	            el: searchGridContainer,
+	            columns: [],
+	            scrollX: false,
+	            scrollY: true,
+	            rowHeaders: ["checkbox"],
+	            autoResize: true
+	        });
+	        
+	        if (searchGrid) {
+	                setGridHeight(searchGrid, -500);
+	            } else {
+	                console.warn('Grid가 초기화되지 않았습니다.');
+	            }
+
+	        // 모드별 컬럼 & 데이터
+	        if (mode === "lot") {
+	            console.log(mode);
+	            searchGrid.setColumns([{
+	                    header: "LOT번호",
+	                    name: "lot_cd",
+	                    align: "center",
+	                    width: 190
+	                },
+	                {
+	                    header: "공정코드",
+	                    name: "process_cd",
+	                    align: "center"
+	                },
+	                {
+	                    header: "생성일시",
+	                    name: "lot_cr",
+	                    align: "center",
+	                    width: 110
+	                },
+	                {
+	                    header: "수주번호",
+	                    name: "contract_cd",
+	                    align: "center"
+	                },
+	                {
+	                    header: "품목코드",
+	                    name: "product_cd",
+	                    align: "center",
+	                    width: 80
+	                },
+	                {
+	                    header: "색상",
+	                    name: "product_cr",
+	                    align: "center",
+	                    width: 60
+	                },
+	                {
+	                    header: "사이즈",
+	                    name: "product_sz",
+	                    align: "center",
+	                    width: 50
+	                },
+	                {
+	                    header: "수량",
+	                    name: "dailyproductplan_js",
+	                    align: "center",
+	                    width: 50
+	                }
+	            ]);
+	            fetchSearchList("/select_LOT_list_for_workorder", searchGrid);
+
+	            // 더블클릭 시 → LOT정보 & 작업일자(dailyproductplan_sd)
+	            searchGrid.on("dblclick", (ev) => {
+	                const rowData = searchGrid.getRow(ev.rowKey);
+	                if (!rowData) return;
+
+	                // LOT번호, 공정코드
+	                lotCdInput.value = rowData.lot_cd || "";
+	                processCdInput.value = rowData.process_cd || "";
+
+	                document.getElementById("product_cd").value = rowData.product_cd || "";
+
+	                // (1) baseProductCd 추출
+	                // product_cd 예: "JORDAN001-220-BLACK"
+	                // SUBSTR + INSTR 인덱스 쓰려면 baseProductCd = "JORDAN001"
+	                let baseProductCd = rowData.product_cd;
+	                if (baseProductCd) {
+	                    const idx = baseProductCd.indexOf("-");
+	                    if (idx > 0) {
+	                        baseProductCd = baseProductCd.substring(0, idx);
+	                    }
+	                } else {
+	                    baseProductCd = "";
+	                }
+
+	                // (2) 개별 파라미터 준비
+	                const contractCd = rowData.contract_cd || "";
+	                const productCr = rowData.product_cr || "";
+	                const productSz = rowData.product_sz || "";
+	                const processCd = rowData.process_cd || "";
+
+	                // (3) 일일생산계획(dailyproductplan) 조회
+	                // ex) /select_DAILYPLAN_one?baseProductCd=xxx&contractCd=yyy&processCd=zzz&productCr=aaa&productSz=bbb
+	                const url = `/select_DAILYPLAN_one?baseProductCd=${encodeURIComponent(baseProductCd)}
+	      &contractCd=${encodeURIComponent(contractCd)}
+	      &processCd=${encodeURIComponent(processCd)}
+	      &productCr=${encodeURIComponent(productCr)}
+	      &productSz=${encodeURIComponent(productSz)}`.replace(/\s+/g, "");
+
+	                fetch(url)
+	                    .then(res => res.json())
+	                    .then(planData => {
+	                        // planData.dailyproductplan_sd = "2025-02-26"
+	                        dailyplanSdInput.value = planData.dailyproductplan_sd || "";
+	                    })
+	                    .catch(err => console.error("일일생산계획 조회 오류:", err));
+
+	                // 검색 모달 닫기 + 작업지시 모달
+	                bootstrap.Modal.getInstance(document.getElementById("searchModal")).hide();
+	                workorderModal.show();
+	            });
+	        } else if (mode === "worker") {
+	            // 작업자 검색
+	            searchGrid.setColumns([{
+	                    header: "사원번호",
+	                    name: "employee_cd",
+	                    align: "center"
+	                },
+	                {
+	                    header: "작업자명",
+	                    name: "employee_nm",
+	                    align: "center"
+	                },
+	                {
+	                    header: "총 근무 시간",
+	                    name: "total_hours",
+	                    align: "center"
+	                },
+	                {
+	                    header: "근무 가능 시간",
+	                    name: "remaining_hours",
+	                    align: "center"
+	                },
+	                {
+	                    header: "공정소요시간",
+	                    name: "new_process_time",
+	                    align: "center"
+	                }
+	            ]);
+	            fetchSearchList("/select_WORKABLE_EMPLOYEE_list", searchGrid);
+
+	            // 더블클릭 시 → 작업자
+	            searchGrid.on("dblclick", (ev) => {
+	                const rowData = searchGrid.getRow(ev.rowKey);
+	                if (!rowData) return;
+
+	                // 작업자
+	                workorderJbInput.value = rowData.employee_cd || "";
+
+	                // 공정 소요시간 (정수)
+	                const newProcessTime = rowData.new_process_time || 0;
+	                // 1) 숨김 필드에 저장
+	                document.getElementById("new_process_time").value = newProcessTime;
+
+	                // 검색 모달 닫기 + 작업지시 모달
+	                bootstrap.Modal.getInstance(searchModalEl).hide();
+	                workorderModal.show();
+	            });
+	        }
+
+	        // 검색 모달 표시
+	        searchModal.show();
+	    }
+
+	    // 실제 검색 (ex: /select_LOT_list_for_workorder?searchValue=xxx)
+	    function fetchSearchList(apiUrl, grid) {
+	        // 만약 URL에 "select_WORKABLE_EMPLOYEE_list"가 포함되어 있다면
+	        if (apiUrl.includes("select_WORKABLE_EMPLOYEE_list")) {
+	            // 1) 현재 화면(모달 등)에서 필요한 필드값 가져오기
+	            //    - "작업일자" 필드 (dailyplanSdInput 등)
+	            //    - "productCd" (lot 검색 후 저장된 필드)
+	            //    - "processCd" (공정코드 필드)
+
+	            const workDateVal = dailyplanSdInput.value; // 예: "2025-02-27"
+	            const productCdVal = document.getElementById("product_cd").value; // LOT 검색 시 품목코드
+	            const processCdVal = processCdInput.value; // "OUTSOLE" 등
+
+	            // 2) 쿼리 파라미터 붙이기
+	            //    /select_WORKABLE_EMPLOYEE_list?workDate=...&productCd=...&processCd=...
+	            apiUrl += `?workDate=${encodeURIComponent(workDateVal)}` +
+	                `&productCd=${encodeURIComponent(productCdVal)}` +
+	                `&processCd=${encodeURIComponent(processCdVal)}`;
+	        }
+
+	        // 공통 fetch 로직
+	        fetch(apiUrl)
+	            .then(response => response.json())
+	            .then(data => {
+	                grid.resetData(data);
+	            })
+	            .catch(err => console.error("검색 오류:", err));
+	    }
+
+	    workorderSdInput.addEventListener("change", () => {
+	        // 1) 사용자가 입력한 값 ex) "830", "1310"
+	        const typedValue = workorderSdInput.value.trim();
+
+	        // 2) parseTimeInput -> "HH:MM"
+	        const startHHMM = parseTimeInput(typedValue);
+	        // 필드에 "HH:MM"로 표시
+	        workorderSdInput.value = startHHMM;
+
+	        // 3) 공정소요시간 hidden 필드 값
+	        //    (작업자 모달에서 new_process_time을 가져옴)
+	        const newProcessTime = parseInt(newProcTimeHidden.value, 10) || 0;
+
+	        // 4) 종료시간 계산
+	        const endHHMM = addHoursToTime(startHHMM, newProcessTime);
+	        workorderEdInput.value = endHHMM;
+	    });
+
+
+	    /* =============================
+	     * 1) 시간 파싱 / 포맷 함수
+	     * ============================= */
+	    /**
+	     * 사용자가 숫자로 입력한 시간을 "HH:MM" 문자열로 변환
+	     * 예) "1310" -> "13:10", "830" -> "08:30", "5" -> "00:05"
+	     */
+	    function parseTimeInput(value) {
+	        // 숫자 이외 문자 제거
+	        value = value.replace(/\D/g, '');
+	        if (!value) return "00:00";
+
+	        let hour = 0,
+	            min = 0;
+
+	        if (value.length <= 2) {
+	            // ex) "5" -> hour=0, min=5 => "00:05"
+	            min = parseInt(value, 10);
+	        } else if (value.length === 3) {
+	            // ex) "830" -> hour=8, min=30 => "08:30"
+	            hour = parseInt(value.slice(0, 1), 10);
+	            min = parseInt(value.slice(1), 10);
+	        } else {
+	            // ex) "1310" -> hour=13, min=10 => "13:10"
+	            hour = parseInt(value.slice(0, 2), 10);
+	            min = parseInt(value.slice(2), 10);
+	        }
+
+	        // 범위 보정
+	        if (hour < 0) hour = 0;
+	        if (hour > 23) hour = 23;
+	        if (min < 0) min = 0;
+	        if (min > 59) min = 59;
+
+	        // "HH:MM" 형식
+	        return String(hour).padStart(2, '0') + ":" + String(min).padStart(2, '0');
+	    }
+
+	    /**
+	     * "HH:MM" 형태의 startHHMM + addHours(정수) => 종료 "HH:MM"
+	     * 예) start="13:10", addHours=3 -> "16:10"
+	     */
+	    function addHoursToTime(startHHMM, addHours) {
+	        const [sh, sm] = startHHMM.split(":").map(Number);
+	        let totalMin = (sh * 60) + sm + (addHours * 60);
+
+	        // 하루 24시간 넘어가면 %24 처리 (원하는 로직에 따라)
+	        let newHour = Math.floor(totalMin / 60) % 24;
+	        let newMin = totalMin % 60;
+
+	        return String(newHour).padStart(2, '0') + ":" + String(newMin).padStart(2, '0');
+	    }
+
+
+
+
+	    // -----------------------------------------
+	    // 초기 조회
+	    fetchWorkOrderList();
+	});
+</script>
+</body>
+</html>

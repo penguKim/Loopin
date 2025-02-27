@@ -63,8 +63,8 @@
 								<p class="col-lg-5 col-md-4 label " th:text="|${['COMMON_NM']}팀|"></p>
 							</div>
 							<div class="row">
-								<h6 class="col-lg-5 col-md-4 label">오늘날짜</h6>
-								<p class="col-lg-5 col-md-4 label" id="current_day"></p>
+								<h6 class="col-lg-5 col-md-4 label">입사일</h6>
+								<p class="col-lg-5 col-md-4 label" th:text="|${['EMPLOYEE_HD']}"></p>
 							</div>
 							<div class="row">
 								<h6 class="col-lg-5 col-md-4 label">근무일정</h6>
@@ -127,7 +127,6 @@
 
 		// <h1> 태그의 텍스트를 동적으로 업데이트
 		$(".pagetitle h1").text(`${year}년 ${month}월`);
-		$("#current_day").text(`${year}년 ${month}월 ${day}일`);
 		$("#current_time").text(`${year}-${month}-${day} ${hours}:${minutes}:${seconds} `);
 		
 		make_calendar();

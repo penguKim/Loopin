@@ -1115,11 +1115,14 @@
 				} else {
 					$('#modal_warearea_cd').val('');
 				}
+			} else {
+				$('#modal_warearea_aq').val(stock['warearea_cp'].toLocaleString());
+				$('#modal_warearea_sq').val(stock['stock_aq'].toLocaleString());
 			}
 			
 		} catch (error) {
 			console.log(error);
-			showAlert('', 'error', '삭제 실패', error['msg']);
+			showAlert('', 'error', '조회 실패','다시 시도해주세요.');
 		}
 	}
 
