@@ -213,6 +213,29 @@
 	        scrollX: false,
 	        scrollY: false
 	    });
+	
+	    $(window).resize(function() {
+	        setElementHeight('#div_card', -105);
+	        if (grid != null) {
+	            setGridHeight(grid, -480);
+	        }
+	    });
+	    
+		 $(document).on('filterToggled', function(e) {
+			 console.log(grid);
+			    if(e.detail.isVisible) {
+			        setGridHeight(grid, -480);
+			    } else {
+			        setGridHeight(grid, -410);
+			    }
+			});
+	    
+	    if (grid) {
+                setElementHeight('#div_card', -105);
+                setGridHeight(grid, -300);
+            } else {
+                console.warn('Grid가 초기화되지 않았습니다.');
+            }
 
 	    // ---------------------------
 	    // 2) 검색 모달용 그리드
