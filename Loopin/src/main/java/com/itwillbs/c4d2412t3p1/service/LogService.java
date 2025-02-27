@@ -40,7 +40,6 @@ public class LogService {
 		
 	    // 조인된 로그 데이터 조회
 	    List<Log> logs = logRepository.findAllLogsWithEmployee();
-	    log.info("Service_logs@@ : " + logs.toString());
 
 	    // 엔티티를 DTO로 변환하며 log_jd를 가공
 	    return logs.stream()

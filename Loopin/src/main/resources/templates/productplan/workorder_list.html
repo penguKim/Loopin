@@ -9,6 +9,21 @@
 .tui-datepicker, .tui-timepicker, .tui-calendar {
 	z-index: 9999 !important;
 }
+
+/* #searchGrid { */
+/* 	height: 400px; /* 원하는 고정 높이 (예: 300px) */
+*
+/
+/* 	overflow-y: auto; */
+/* 	overflow-x: hidden; */
+/* } */
+
+/* .search-modal-dialog { */
+/*   max-width: 60%; /* 원하는 너비로 조정 */
+ 
+*
+/
+/* } */
 </style>
 </head>
 <body>
@@ -103,7 +118,7 @@
 							<!-- 검색 모달 (LOT / WORKER) -->
 							<div class="modal" id="searchModal" tabindex="-1">
 								<div
-									class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+									class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg search-modal-dialog">
 									<div class="modal-content">
 										<div class="modal-header">
 											<h5 class="modal-title" id="searchModalTitle">검색 모달</h5>
@@ -141,7 +156,9 @@
 	</main>
 
 	<script th:inline="javascript">
+	
 	document.addEventListener("DOMContentLoaded", function() {
+	    setGridTheme();
 
 	    const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
 	    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
@@ -250,7 +267,7 @@
 
 	        const datePart = dailyplanSdInput.value; // "2025-02-27"
 	        const timePart = workorderSdInput.value; // "13:00"
-	        // 종료시간도 마찬가지:
+	        // 종료시간도 마찬가지: 
 	        const endTimePart = workorderEdInput.value; // "16:00" etc.
 
 	        // 1) 시작시간을 "YYYY-MM-DDTHH:mm:ss" 형태로 만들기
@@ -358,6 +375,12 @@
 	            rowHeaders: ["checkbox"],
 	            autoResize: true
 	        });
+	        
+	        if (searchGrid) {
+	                setGridHeight(searchGrid, -500);
+	            } else {
+	                console.warn('Grid가 초기화되지 않았습니다.');
+	            }
 
 	        // 모드별 컬럼 & 데이터
 	        if (mode === "lot") {
@@ -366,7 +389,7 @@
 	                    header: "LOT번호",
 	                    name: "lot_cd",
 	                    align: "center",
-	                    width: 220
+	                    width: 190
 	                },
 	                {
 	                    header: "공정코드",
@@ -376,7 +399,8 @@
 	                {
 	                    header: "생성일시",
 	                    name: "lot_cr",
-	                    align: "center"
+	                    align: "center",
+	                    width: 110
 	                },
 	                {
 	                    header: "수주번호",
@@ -386,22 +410,26 @@
 	                {
 	                    header: "품목코드",
 	                    name: "product_cd",
-	                    align: "center"
+	                    align: "center",
+	                    width: 80
 	                },
 	                {
 	                    header: "색상",
 	                    name: "product_cr",
-	                    align: "center"
+	                    align: "center",
+	                    width: 60
 	                },
 	                {
 	                    header: "사이즈",
 	                    name: "product_sz",
-	                    align: "center"
+	                    align: "center",
+	                    width: 50
 	                },
 	                {
 	                    header: "수량",
 	                    name: "dailyproductplan_js",
-	                    align: "center"
+	                    align: "center",
+	                    width: 50
 	                }
 	            ]);
 	            fetchSearchList("/select_LOT_list_for_workorder", searchGrid);

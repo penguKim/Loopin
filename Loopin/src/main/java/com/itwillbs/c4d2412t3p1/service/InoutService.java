@@ -153,7 +153,7 @@ public class InoutService {
 	}
 
 	// 출고 처리 로직
-	private void setOutboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
+	public void setOutboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
 	    int withdrawalQty = warehouse.getOw_inout_nn(); // 출발창고에서 차감할 수량
 	    Stock sourceStock = stockRepository.findById(
 	            new StockPK(inoutDTO.getItem_cd(), warehouse.getOw_warehouse_cd(), warehouse.getOw_warearea_cd()))
@@ -197,7 +197,7 @@ public class InoutService {
 	}
 
 	// 입고 처리 로직
-	private void setInboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
+	public void setInboundStock(InoutDTO inoutDTO, InoutWarehouseDTO warehouse, String regUser, Timestamp time) {
 	    int additionQty = warehouse.getIw_inout_nn();  // 도착창고에서 추가할 수량
 	    String inboundWareareaCd = (warehouse.getIw_warearea_cd() == null) ? "NONE" : warehouse.getIw_warearea_cd();
 		System.out.println("입고 저장: 입고창고=" + warehouse.getIw_warehouse_cd() + ", 입고구역=" + inboundWareareaCd + 

@@ -1,6 +1,7 @@
 package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -31,4 +32,7 @@ public interface BomRepository extends JpaRepository<Bom, BomId> {
 
 	void save(BomallDTO bomItem);
 
+	@Query("SELECT b FROM Bom b WHERE b.bomproduct_cd = :bomProductCd AND b.product_cd = :productCd")
+	Optional<Bom> findByBomProductCdAndProductCd(@Param("bomProductCd") String bomProductCd,
+			@Param("productCd") String productCd);
 }
