@@ -896,7 +896,7 @@ async function clickambtnadd (){
 			updateSelectOption(selopdata);
 			console.log('그리드 데이터 확인'+ JSON.stringify( mgrid.getColumn('BOMPROCESS_AP')));
 			mgrid.resetData(updatedData);
-			mgrid.hideColumn('PRODUCT_NM');
+			mgrid.hideColumn('BOMPROCESS_NM');
 			mgrid.uncheckAll();
 			mgrid.refreshLayout();
 			addmodal.hide();
