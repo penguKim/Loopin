@@ -28,16 +28,16 @@ public class WorkorderScheduler {
     /**
      * 서버 실행 시 한 번 실행
      */
-//    @PostConstruct
-//    public void init() {
-//        log.info("서버 실행: 작업지시 처리 즉시 실행!");
-//        process_workorders();
-//    }
+    @PostConstruct
+    public void init() {
+        log.info("서버 실행: 작업지시 처리 즉시 실행!");
+        process_workorders();
+    }
     
     // 매 분마다 실행 – 현재 시간(HH:mm)을 기준으로 처리
-//  @Scheduled(cron = "0 * * * * *")
     // 매 시간마다 실행 – 현재 시간(HH:mm)을 기준으로 처리
-    @Scheduled(cron = "0 0 * * * *")
+//    @Scheduled(cron = "0 0 * * * *")
+    @Scheduled(cron = "0 * * * * *")
     @Transactional
     public void process_workorders() {
         LocalDateTime now = LocalDateTime.now();
