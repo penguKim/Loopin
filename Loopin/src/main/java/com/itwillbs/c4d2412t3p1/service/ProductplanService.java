@@ -1,11 +1,14 @@
 package com.itwillbs.c4d2412t3p1.service;
 
 import java.math.BigDecimal;
+
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,6 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import com.itwillbs.c4d2412t3p1.domain.BomMaterialDTO;
@@ -182,82 +186,87 @@ public class ProductplanService {
 			// 필요한 필드만 매핑
 			result.add(dto);
 		}
-
+		
+		log.info(result.toString());
+		
 		return result;
 	}
 
-//     최종 완제품 productCd를 만들기 위해 필요한
-//     모든 원자재/부자재 + 소요량(합산) 목록 반환.
-//     특정 제품(Product)의 모든 원자재/부자재 및 소요량 반환
+//  최종 완제품 productCd를 만들기 위해 필요한
+//  모든 원자재/부자재 + 소요량(합산) 목록 반환.
+//  특정 제품(Product)의 모든 원자재/부자재 및 소요량 반환
 	public List<BomMaterialDTO> findAllMaterialsForProduct(String productCd) {
-		// 자재별 총 소요량
-		Map<String, Long> materialAmountMap = new HashMap<>();
-
-		// 경로 기반 중복 탐색 방지용 Set
-		Set<String> visited = new HashSet<>();
-
-		// 재귀 호출
-		collectBOM(productCd, 1L, materialAmountMap, new HashSet<>());
-
-		// 결과 DTO 변환
-		List<BomMaterialDTO> result = new ArrayList<>();
-		for (Map.Entry<String, Long> entry : materialAmountMap.entrySet()) {
-			String materialCd = entry.getKey();
-			Long totalAmount = entry.getValue();
-
-			Material material = materialRepository.findMaterialEntityByCd(materialCd);
-			if (material != null) {
-				BomMaterialDTO dto = new BomMaterialDTO();
-				dto.setMaterial_cd(material.getMaterial_cd());
-				dto.setMaterial_nm(material.getMaterial_nm());
-				dto.setMaterial_gc(material.getMaterial_gc());
-				dto.setTotalAmount(totalAmount);
-				result.add(dto);
-			}
-		}
-
-		return result;
+	    // 자재별 총 소요량을 저장할 맵
+	    Map<String, Long> materialAmountMap = new HashMap<>();
+	    
+	    // 탐색할 제품을 저장하는 스택 (제품 코드와 소요량 배수)
+	    Deque<Pair<String, Long>> stack = new ArrayDeque<>();
+	    stack.push(Pair.of(productCd, 1L));
+	    
+	    // 이미 탐색한 제품을 기록하여 중복 처리 방지
+	    Set<String> visited = new HashSet<>();
+	    
+	    // 최종적으로 필요한 자재 코드들을 모아둘 집합 (배치 조회용)
+	    Set<String> allMaterialCds = new HashSet<>();
+	    
+	    // Material의 자재 구분(materialGc)을 캐싱하는 Map
+	    Map<String, String> materialGcCache = new HashMap<>();
+	    
+	    // 반복문을 통한 BOM 탐색
+	    while (!stack.isEmpty()) {
+	        Pair<String, Long> node = stack.pop();
+	        String currentProduct = node.getKey();
+	        Long multiplier = node.getValue();
+	        
+	        // 이미 방문한 제품은 건너뜀
+	        if (!visited.add(currentProduct)) continue;
+	        
+	        // 현재 제품의 BOM 목록을 조회
+	        List<Bom> bomList = bomRepository.findByProductCd(currentProduct);
+	        for (Bom bom : bomList) {
+	            String childCd = bom.getBom_cd();
+	            Long total = bom.getBom_am() * multiplier;
+	            
+	            // 캐시에 materialGc가 있으면 재사용, 없으면 DB 호출 후 캐싱
+	            String materialGc = materialGcCache.get(childCd);
+	            if (materialGc == null) {
+	                materialGc = materialRepository.findMaterialGcByMaterialCd(childCd);
+	                materialGcCache.put(childCd, materialGc);
+	            }
+	            
+	            // 자재 분류가 MATERIALS 또는 SUBMAT이면 최종 원자재로 처리
+	            if ("MATERIALS".equals(materialGc) || "SUBMAT".equals(materialGc)) {
+	                materialAmountMap.merge(childCd, total, Long::sum);
+	                allMaterialCds.add(childCd);
+	            } else {
+	                // 반제품이라면 스택에 추가하여 재탐색
+	                stack.push(Pair.of(childCd, total));
+	            }
+	        }
+	    }
+	    
+	    // 최종적으로 모은 자재 코드를 한 번에 조회하여 N+1 문제 해소
+	    List<Material> materials = materialRepository.findByMaterialCdIn(allMaterialCds);
+	    Map<String, Material> materialMap = materials.stream()
+	        .collect(Collectors.toMap(Material::getMaterial_cd, m -> m));
+	    
+	    // 결과 DTO로 변환
+	    List<BomMaterialDTO> result = new ArrayList<>();
+	    for (Map.Entry<String, Long> entry : materialAmountMap.entrySet()) {
+	        Material material = materialMap.get(entry.getKey());
+	        if (material != null) {
+	            BomMaterialDTO dto = new BomMaterialDTO();
+	            dto.setMaterial_cd(material.getMaterial_cd());
+	            dto.setMaterial_nm(material.getMaterial_nm());
+	            dto.setMaterial_gc(material.getMaterial_gc());
+	            dto.setTotalAmount(entry.getValue());
+	            result.add(dto);
+	        }
+	    }
+	    
+	    return result;
 	}
 
-	/**
-	 * 재귀 메서드: BOM 재귀 탐색 (경로 기반 중복 방지 포함)
-	 *
-	 * @param currentProduct 현재 탐색 중인 제품 코드
-	 * @param multiplier     상위 BOM의 소요량 배수
-	 * @param accumMap       자재별 누적 소요량 맵
-	 * @param pathSet        경로 기반 중복 방지용 Set
-	 */
-	private void collectBOM(String currentProduct, Long multiplier, Map<String, Long> accumMap, Set<String> pathSet) {
-
-		// 경로 중복 방지 (경로 내 동일 제품 재탐색 금지)
-		if (pathSet.contains(currentProduct)) {
-			return;
-		}
-		pathSet.add(currentProduct);
-
-		// 현재 제품의 BOM 조회
-		List<Bom> bomList = bomRepository.findByProductCd(currentProduct);
-
-		for (Bom bom : bomList) {
-			String childCd = bom.getBom_cd();
-			Long childAmount = bom.getBom_am();
-			Long total = childAmount * multiplier;
-
-			// MATERIAL 구분 조회
-			String materialGc = materialRepository.findMaterialGcByMaterialCd(childCd);
-
-			if ("MATERIALS".equals(materialGc) || "SUBMAT".equals(materialGc)) {
-				// 자재면 누적
-				accumMap.merge(childCd, total, Long::sum);
-			} else {
-				// 반제품이면 재귀 탐색
-				collectBOM(childCd, total, accumMap, new HashSet<>(pathSet));
-			}
-		}
-
-		// 경로 해제 (재귀 종료)
-		pathSet.remove(currentProduct);
-	}
 
 	@Transactional
 	public void save_PRODUCTPLAN(ProductPlanSaveRequest req) {
@@ -290,7 +299,7 @@ public class ProductplanService {
 				planDTO.getProduct_cd());
 		planEntity.setProductplan_js(totalAmount != null ? totalAmount : 0); // null 방지
 
-		// 4️⃣ **초기 상태 = "대기" (일일생산계획이 등록되면 "계획"으로 변경됨)**
+		// 4️) **초기 상태 = "대기" (일일생산계획이 등록되면 "계획"으로 변경됨)**
 		planEntity.setProductplan_st("대기");
 
 		// 5) DB 저장

@@ -29,13 +29,45 @@ public interface LogRepository extends JpaRepository<Log, String> {
 	@Query(value = "SELECT LOG_SEQ.NEXTVAL FROM DUAL", nativeQuery = true)
 	Long getNextSequenceValue();
 
+//	@Query("""
+//			 SELECT lo
+//			 FROM LOG lo
+//			 ORDER BY lo.log_od DESC
+//			""")
+//	List<Log> findAllLogsWithEmployee();
+
+//	@Query("""
+//			SELECT lo
+//			FROM LOG lo
+//			LEFT JOIN FETCH lo.employee
+//			ORDER BY lo.log_od DESC
+//			""")
+//	List<Log> findAllLogsWithEmployee();
+
+	// 요약 조회: log_jd를 제외한 필드만 조회 (엔티티의 log_jd가 LAZY로 설정되어 있고,
+	// 생성자 표현식을 사용하여 log_jd를 로드하지 않도록 함)
 	@Query("""
-			    SELECT lo
-			    FROM LOG lo
-			    LEFT JOIN FETCH lo.employee em
-			    ORDER BY lo.log_od DESC
+			SELECT new com.itwillbs.c4d2412t3p1.entity.Log(
+			    lo.log_cd,
+			    lo.log_sj,
+			    lo.log_ju,
+			    lo.log_od,
+			    lo.log_oi,
+			    lo.log_bj,
+			    lo.employee.employee_cd
+			)
+			FROM LOG lo
+			ORDER BY lo.log_od DESC
 			""")
-	List<Log> findAllLogsWithEmployee();
+	List<Log> findAllLogSummaries();
+
+	// 상세 조회: 특정 로그의 전체 데이터를 조회(필요할 때만 log_jd를 가져옴)
+	@Query("""
+			SELECT lo
+			FROM LOG lo
+			WHERE lo.log_cd = :logCd
+			""")
+	Optional<Log> findDetailedLogById(@Param("logCd") String logCd);
 
 	@Query("""
 			    SELECT LO

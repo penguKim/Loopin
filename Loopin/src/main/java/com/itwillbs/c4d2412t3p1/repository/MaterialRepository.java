@@ -2,6 +2,7 @@ package com.itwillbs.c4d2412t3p1.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -31,5 +32,9 @@ public interface MaterialRepository extends JpaRepository<Material, MaterialPK> 
 //     자재코드로 자재 구분(MATERIALS or SUBMAT)만 반환
     @Query("SELECT m.material_gc FROM Material m WHERE m.material_cd = :materialCd")
     String findMaterialGcByMaterialCd(@Param("materialCd") String materialCd);
-
+    
+    @Query("SELECT m FROM Material m WHERE m.material_cd IN :materialCds")
+    List<Material> findByMaterialCdIn(@Param("materialCds") Set<String> materialCds);
+    
+    
 }

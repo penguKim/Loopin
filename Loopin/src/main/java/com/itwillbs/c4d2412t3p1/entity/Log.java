@@ -4,11 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -21,7 +23,7 @@ import lombok.ToString;
 @Table(name = "LOG")
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "employee")
 @lombok.extern.java.Log
 public class Log {
 
@@ -42,6 +44,8 @@ public class Log {
 	@Column(name = "log_ju", length = 255, nullable = true)
 	private String log_ju;
 
+	@Lob
+	@Basic(fetch = FetchType.LAZY)
 	@Column(name = "log_jd", columnDefinition = "CLOB", nullable = true)
 	private String log_jd;
 
@@ -53,7 +57,27 @@ public class Log {
 
 	@Column(name = "log_bj", length = 255, nullable = true)
 	private String log_bj;
-	
+
+	// 기본 생성자 (JPA 용)
+	public Log() {
+	}
+
+	// log_jd를 제외한 생성자 (요약 조회용)
+	public Log(String log_cd, String log_sj, String log_ju, String log_od, String log_oi, String log_bj,
+			String employee_cd) {
+		this.log_cd = log_cd;
+		this.log_sj = log_sj;
+		this.log_ju = log_ju;
+		this.log_od = log_od;
+		this.log_oi = log_oi;
+		this.log_bj = log_bj;
+		if (employee_cd != null) {
+			Employee emp = new Employee();
+			emp.setEmployee_cd(employee_cd);
+			this.employee = emp;
+		}
+	}
+
 	@PrePersist
 	public void prePersist() {
 		// 현재 년도 (두 자리 형식)

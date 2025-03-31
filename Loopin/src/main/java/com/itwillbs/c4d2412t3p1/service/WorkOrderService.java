@@ -8,7 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 import com.itwillbs.c4d2412t3p1.domain.InoutDTO;
 import com.itwillbs.c4d2412t3p1.domain.InoutWarehouseDTO;
@@ -70,7 +72,7 @@ public class WorkOrderService {
 	}
 
 	// 작업시작 처리: UPPER 공정의 입력 자재 투입(출고)
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void process_workorder_start(Workorder workorder) {
 		try {
 			// LOT 조회 (복합키 사용)
@@ -81,21 +83,17 @@ public class WorkOrderService {
 			// BOMPROCESS에서 현재 공정(UPPER)의 행 조회
 			Optional<BomProcess> bpOpt = bomProcessRepository.findByProductCd(lot.getProduct_cd()).stream()
 					.filter(bp -> bp.getProcess_cd().equals(lot.getId().getProcess_cd())).findFirst();
-			if (!bpOpt.isPresent())
+			if (!bpOpt.isPresent()) {
 				throw new RuntimeException(
 						"BOMPROCESS 정보 없음: " + lot.getProduct_cd() + ", " + lot.getId().getProcess_cd());
+			}
 			BomProcess bp = bpOpt.get();
 
 			// UPPER 공정의 투입 자재는, BOM 테이블에서 finished product(lot.getProduct_cd())와 연관된 행 중,
 			// product_cd가 bp.getBomprocess_cd()인 행의 bom_cd가 사용됨.
 			Optional<Bom> bomOpt = bomRepository.findByBomProductCdAndProductCd(lot.getProduct_cd(),
 					bp.getBomprocess_cd());
-			String inputMaterialCode;
-			if (bomOpt.isPresent()) {
-				inputMaterialCode = bomOpt.get().getBom_cd();
-			} else {
-				inputMaterialCode = bp.getBomprocess_cd();
-			}
+			String inputMaterialCode = bomOpt.map(Bom::getBom_cd).orElse(bp.getBomprocess_cd());
 
 			// 출고용 InoutDTO 구성: 투입 자재 코드(inputMaterialCode) 사용
 			InoutDTO outboundDTO = new InoutDTO();
@@ -106,10 +104,11 @@ public class WorkOrderService {
 			outboundDTO.setInout_nn(lot.getDailyproductplan_js());
 			outboundDTO.setInout_io("O");
 
-			// STOCK에서 해당 투입 자재의 재고 정보를 조회하여 창고 및 구역 정보를 동적으로 할당
-			List<Stock> stockList = stockRepository.findByItem_cd(outboundDTO.getItem_cd());
-			if (stockList.isEmpty())
+			// STOCK에서 해당 투입 자재의 재고 정보를 조회하여 비관적 락 적용 (PESSIMISTIC_WRITE)
+			List<Stock> stockList = stockRepository.findStockForUpdate(outboundDTO.getItem_cd());
+			if (stockList.isEmpty()) {
 				throw new RuntimeException("출고 재고 정보가 없습니다: " + outboundDTO.getItem_cd());
+			}
 			Stock sourceStock = stockList.get(0);
 			InoutWarehouseDTO outboundWarehouse = InoutWarehouseDTO.builder()
 					.ow_warehouse_cd(sourceStock.getWarehouse_cd()).ow_warearea_cd(sourceStock.getWarearea_cd())
@@ -119,16 +118,18 @@ public class WorkOrderService {
 			String regUser = "system";
 
 			inoutService.setOutboundStock(outboundDTO, outboundWarehouse, regUser, nowTimestamp);
+
 			workorder.setWorkorder_st("진행중");
 			workorderRepository.save(workorder);
 		} catch (Exception e) {
 			log.severe("작업시작 처리 실패 - Workorder: " + workorder.getWorkorder_cd() + " / " + e.getMessage());
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			throw new RuntimeException(e);
 		}
 	}
 
 	// 작업종료 처리: UPPER 공정의 산출 결과만 입고 처리
-	// → 여기서는 BOMPROCESS의 bomprocess_cd (예: "UP002")를 그대로 산출 자재 코드로 사용함.
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void process_workorder_end(Workorder workorder) {
 		try {
 			LotPK lotPk = new LotPK(workorder.getLot_cd(), workorder.getProcess_cd());
@@ -138,9 +139,10 @@ public class WorkOrderService {
 			// BOMPROCESS에서 현재 공정(예: UPPER)의 정보를 조회
 			Optional<BomProcess> bpOpt = bomProcessRepository.findByProductCd(lot.getProduct_cd()).stream()
 					.filter(bp -> bp.getProcess_cd().equals(lot.getId().getProcess_cd())).findFirst();
-			if (!bpOpt.isPresent())
+			if (!bpOpt.isPresent()) {
 				throw new RuntimeException(
 						"BOMPROCESS 정보 없음: " + lot.getProduct_cd() + ", " + lot.getId().getProcess_cd());
+			}
 			BomProcess bp = bpOpt.get();
 
 			// 작업수량(workQty)을 그대로 산출량으로 사용 (투입 100개 → 100개 산출)
@@ -167,24 +169,19 @@ public class WorkOrderService {
 			inboundDTO.setItem_cd(outputCode);
 			inboundDTO.setLot_cd(lot.getId().getLot_cd());
 			inboundDTO.setProcess_cd(lot.getId().getProcess_cd());
-			// 입고 수량은 양품만
-			inboundDTO.setInout_nn(goodQty);
-			// 불량 수량 기록
-			inboundDTO.setInout_fn(defectiveQty);
+			inboundDTO.setInout_nn(goodQty); // 양품 입고 수량
+			inboundDTO.setInout_fn(defectiveQty); // 불량 수량 기록
 			inboundDTO.setInout_io("I");
 
-			// STOCK에서 해당 산출 자재의 재고 정보를 조회하여, 입고 창고 정보를 동적으로 할당
-			List<Stock> stockList = stockRepository.findByItem_cd(inboundDTO.getItem_cd());
+			// STOCK에서 해당 산출 자재의 재고 정보를 조회 (비관적 락 적용)
+			List<Stock> stockList = stockRepository.findStockForUpdate(inboundDTO.getItem_cd());
 			if (stockList.isEmpty()) {
 				throw new RuntimeException("입고 재고 정보가 없습니다: " + inboundDTO.getItem_cd());
 			}
 			Stock destStock = stockList.get(0);
-			// inboundWarehouse에 양품 수량(goodQty)와 불량 수량(defectiveQty) 모두 설정
 			InoutWarehouseDTO inboundWarehouse = InoutWarehouseDTO.builder()
 					.iw_warehouse_cd(destStock.getWarehouse_cd()).iw_warearea_cd(destStock.getWarearea_cd())
-					.iw_inout_nn(goodQty) // STOCK 업데이트에는 양품만 추가됨
-					.iw_inout_fn(defectiveQty) // 불량 수량 전달하여 Inout 레코드에 기록하도록 함
-					.build();
+					.iw_inout_nn(goodQty).iw_inout_fn(defectiveQty).build();
 
 			Timestamp nowTimestamp = Timestamp.valueOf(LocalDateTime.now());
 			String regUser = "system";
@@ -194,7 +191,8 @@ public class WorkOrderService {
 			workorderRepository.save(workorder);
 		} catch (Exception e) {
 			log.severe("작업종료 처리 실패 - Workorder: " + workorder.getWorkorder_cd() + " / " + e.getMessage());
+			TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+			throw new RuntimeException(e);
 		}
 	}
-
 }
