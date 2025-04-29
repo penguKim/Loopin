@@ -25,7 +25,7 @@ ERP와 MES 시스템의 데이터를 통합하여, 인사 및 근태 관리부�
 
 
 ## 📌 기능
-[기능 PPT](https://docs.google.com/presentation/d/1W6Ja5vFwht-jYqhw13vYUf5IHsDqyF66xl25lu3o3ts/edit#slide=id.g331e82d9fff_1_0)
+[기능 PPT](https://docs.google.com/presentation/d/e/2PACX-1vTLgZanPxII-VW8GstjqZVlSabxmOVV-670Oa47Dj9BjSvdcSbnudj88YOP0Tr6F_o80gSxzWlmQ7pY/pub?start=false&loop=false&delayms=3000)
 - 공통
   - 공통 코드 관리: 시스템 전반에서 사용되는 기준 코드를 효율적으로 관리하여 일관된 데이터 처리를 지원합니다.
   - 로그 관리: 시스템 사용 및 데이터 변경 내역을 기록하여 문제 발생 시 신속한 원인 분석 및 대응이 가능합니다.
